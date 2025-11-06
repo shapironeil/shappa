@@ -48,6 +48,41 @@ const EBAY_CONFIG = {
     apiUrl: process.env.EBAY_API_URL,
     scopes: process.env.EBAY_SCOPES
 };
+// === eBay FULL SCOPES (richiesta massima) ===
+const ALL_EBAY_SCOPES = [
+    'https://api.ebay.com/oauth/api_scope',
+    'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
+    'https://api.ebay.com/oauth/api_scope/commerce.catalog.readonly',
+    'https://api.ebay.com/oauth/api_scope/commerce.notification.subscription',
+    'https://api.ebay.com/oauth/api_scope/sell.inventory',
+    'https://api.ebay.com/oauth/api_scope/sell.inventory.readonly',
+    'https://api.ebay.com/oauth/api_scope/sell.account',
+    'https://api.ebay.com/oauth/api_scope/sell.account.readonly',
+    'https://api.ebay.com/oauth/api_scope/sell.fulfillment',
+    'https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly',
+    'https://api.ebay.com/oauth/api_scope/sell.marketing',
+    'https://api.ebay.com/oauth/api_scope/sell.marketing.readonly',
+    'https://api.ebay.com/oauth/api_scope/sell.analytics.readonly',
+    'https://api.ebay.com/oauth/api_scope/sell.finances',
+    'https://api.ebay.com/oauth/api_scope/sell.payment.dispute',
+    'https://api.ebay.com/oauth/api_scope/buy.shopping.cart',
+    'https://api.ebay.com/oauth/api_scope/buy.deal.readonly',
+    'https://api.ebay.com/oauth/api_scope/buy.marketing.readonly',
+    'https://api.ebay.com/oauth/api_scope/buy.browse',
+    'https://api.ebay.com/oauth/api_scope/buy.offer.auction',
+    'https://api.ebay.com/oauth/api_scope/buy.order.readonly',
+    'https://api.ebay.com/oauth/api_scope/buy.product.summary',
+    'https://api.ebay.com/oauth/api_scope/buy.product.conclusion'
+];
+function buildAllScopes(custom) {
+    const customParts = String(custom || '').split(/\s+/).filter(Boolean);
+    const merged = [...ALL_EBAY_SCOPES, ...customParts];
+    const seen = new Set();
+    const uniq = [];
+    for (const s of merged) { if (!seen.has(s)) { seen.add(s); uniq.push(s); } }
+    return uniq.join(' ');
+}
+const FULL_SCOPES = buildAllScopes(EBAY_CONFIG.scopes);
 
 if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
     console.warn('eBay redirectUri is using http:// — this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
@@ -83,7 +118,7 @@ app.get('/api/ebay/auth-url', (req, res) => {
         authUrl.searchParams.append('redirect_uri', EBAY_CONFIG.ruName);
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
-        authUrl.searchParams.append('scope', EBAY_CONFIG.scopes);
+        authUrl.searchParams.append('scope', FULL_SCOPES);
         // opzionale: forza login esplicito
         // authUrl.searchParams.append('prompt', 'login');
         
@@ -150,7 +185,7 @@ app.get('/auth/ebay/callback', async (req, res) => {
                 access_token: tokenData.access_token,
                 refresh_token: tokenData.refresh_token,
                 token_type: tokenData.token_type,
-                scope: EBAY_CONFIG.scopes,
+                scope: FULL_SCOPES,
                 userId
             };
             await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
@@ -211,7 +246,7 @@ app.get('/api/ebay/status', async (req, res) => {
                     access_token: tokenData.access_token,
                     refresh_token: data.refresh_token,
                     token_type: tokenData.token_type,
-                    scope: EBAY_CONFIG.scopes,
+                    scope: FULL_SCOPES,
                     userId
                 };
                 await fsPromises.writeFile(tokenPath, JSON.stringify(data, null, 2));
@@ -255,7 +290,7 @@ app.post('/api/ebay/refresh', async (req, res) => {
             access_token: tokenData.access_token,
             refresh_token: refreshToken, // eBay typically returns same refresh token
             token_type: tokenData.token_type,
-            scope: EBAY_CONFIG.scopes
+            scope: FULL_SCOPES
         };
         await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
         return res.json({ success: true, expiresAt: payload.expiresAt });
@@ -275,7 +310,7 @@ app.get('/api/ebay/profile', async (req, res) => {
 
         async function fetchProfile(accessToken) {
             const response = await axios.get(EBAY_CONFIG.apiUrl + '/commerce/identity/v1/user/', {
-                headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
+                  headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
             });
             return response.data;
         }
@@ -300,7 +335,7 @@ app.get('/api/ebay/profile', async (req, res) => {
                     access_token: tokenData.access_token,
                     refresh_token: saved.refresh_token,
                     token_type: tokenData.token_type,
-                    scope: EBAY_CONFIG.scopes,
+                    scope: FULL_SCOPES,
                     userId
                 };
                 await fsPromises.writeFile(tokenPath, JSON.stringify(saved, null, 2));
@@ -310,8 +345,30 @@ app.get('/api/ebay/profile', async (req, res) => {
             throw err;
         }
     } catch (e) {
-        console.error('profile error:', e.response?.data || e.message);
-        return res.status(500).json({ success: false, error: 'profile_failed', details: e.response?.data || e.message });
+        const status = e.response?.status;
+        const data = e.response?.data;
+        const insufficient = status === 403 || (data && (data.error === 'insufficient_scope' || data.error_description?.includes('insufficient')));
+        if (insufficient) {
+            return res.status(403).json({ success: false, error: 'insufficient_scope' });
+        }
+        if (status === 404) {
+            return res.status(404).json({ success: false, error: 'profile_not_found' });
+        }
+        console.error('profile error:', data || e.message);
+        return res.status(500).json({ success: false, error: 'profile_failed', details: data || e.message });
+    }
+});
+
+// Debug endpoint per ispezionare token/scope salvati (per-utente)
+app.get('/api/ebay/token-info', async (req, res) => {
+    try {
+        const userId = req.query.userId || 'default';
+        const tokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
+        if (!fs.existsSync(tokenPath)) return res.json({ exists: false });
+        const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+        return res.json({ exists: true, userId, scope: saved.scope, expiresAt: saved.expiresAt });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 });
 

@@ -1141,10 +1141,18 @@
                     const j = await r.json();
                     if (j.success) {
                         const u = j.user || {};
-                        // Mostra info principali (username, userId, status)
-                        statusDiv.innerHTML = `✅ Connesso ad eBay<br><small>Utente: ${u.username || u.userId || 'n/d'}${u.email ? ' • ' + u.email : ''}</small>`;
+                        const namePieces = [];
+                        if (u.username) namePieces.push(u.username);
+                        if (u.userId && u.userId !== u.username) namePieces.push('ID: ' + u.userId);
+                        if (u.email) namePieces.push(u.email);
+                        const line = namePieces.length ? namePieces.join(' • ') : 'Profilo base disponibile';
+                        statusDiv.innerHTML = `✅ Connesso ad eBay<br><small>${line}</small>`;
+                    } else if (j.error === 'insufficient_scope') {
+                        statusDiv.innerHTML = '⚠️ Connesso ma mancano permessi Identity.<br><button class="venus-btn venus-btn-primary" style="margin-top:6px" onclick="reconnectEbayPermissions()">Aggiorna Permessi</button>';
+                    } else if (j.error === 'profile_not_found') {
+                        statusDiv.innerHTML = 'ℹ️ Connesso: nessun profilo dettagliato disponibile (404).';
                     } else {
-                        statusDiv.innerHTML = '✅ Connesso ad eBay (impossibile recuperare profilo)';
+                        statusDiv.innerHTML = '✅ Connesso ad eBay (profilo non disponibile)';
                     }
                 } catch (e) {
                     statusDiv.innerHTML = '✅ Connesso ad eBay (profilo non disponibile)';
@@ -1161,6 +1169,10 @@
                 statusDiv.style.background = 'var(--venus-bg-gray)';
                 statusDiv.style.color = 'var(--venus-text-muted)';
             }
+        }
+
+        function reconnectEbayPermissions() {
+            disconnectEbay().then(()=>configureEbay());
         }
 
         // Aggiorna stato da backend (per-utente)

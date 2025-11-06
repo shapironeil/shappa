@@ -89,6 +89,43 @@ Important
 
 # Shappa - Stato Sviluppo eBay OAuth & Account Integration
 
+## Scopes OAuth eBay (Produzione)
+
+Per garantire massima flessibilità futura, il backend richiede ora per default un set esteso di scopes eBay al momento del login (FULL_SCOPES), che include:
+
+- https://api.ebay.com/oauth/api_scope
+- https://api.ebay.com/oauth/api_scope/commerce.identity.readonly
+- https://api.ebay.com/oauth/api_scope/commerce.catalog.readonly
+- https://api.ebay.com/oauth/api_scope/commerce.notification.subscription
+- https://api.ebay.com/oauth/api_scope/sell.inventory (+ readonly)
+- https://api.ebay.com/oauth/api_scope/sell.account (+ readonly)
+- https://api.ebay.com/oauth/api_scope/sell.fulfillment (+ readonly)
+- https://api.ebay.com/oauth/api_scope/sell.marketing (+ readonly)
+- https://api.ebay.com/oauth/api_scope/sell.analytics.readonly
+- https://api.ebay.com/oauth/api_scope/sell.finances
+- https://api.ebay.com/oauth/api_scope/sell.payment.dispute
+- https://api.ebay.com/oauth/api_scope/buy.shopping.cart
+- https://api.ebay.com/oauth/api_scope/buy.deal.readonly
+- https://api.ebay.com/oauth/api_scope/buy.marketing.readonly
+- https://api.ebay.com/oauth/api_scope/buy.browse
+- https://api.ebay.com/oauth/api_scope/buy.offer.auction
+- https://api.ebay.com/oauth/api_scope/buy.order.readonly
+- https://api.ebay.com/oauth/api_scope/buy.product.summary
+- https://api.ebay.com/oauth/api_scope/buy.product.conclusion
+
+Nota: puoi ridurre gli scopes impostando la variabile d'ambiente `EBAY_SCOPES` (spazio-separati); il sistema unirà comunque i tuoi scopes con quelli di default evitando duplicati.
+
+### Re-consent necessario
+
+Se hai effettuato la connessione eBay in precedenza con scopes più limitati, per ottenere accesso ai nuovi permessi (es. Identity) devi:
+
+1. Disconnettere in Settings (o revocare l'app da eBay → Account → Security → Third-party apps)
+2. Cliccare “Connetti eBay” e completare nuovamente il consenso
+
+### Gestione errori profilo
+
+La chiamata `/api/ebay/profile` risponde con `403 insufficient_scope` se l'account non ha concesso i permessi necessari (es. manca `commerce.identity.readonly`). In tal caso la UI mostra una CTA per aggiornare i permessi rifacendo il login eBay.
+
 ## Stato attuale
 
 - **eBay OAuth 2.0 Sandbox** integrato con tutti gli scope necessari (identity, account, analytics, reputation, finances, ecc.).
