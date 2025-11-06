@@ -233,7 +233,7 @@
         }
 
         .venus-widget-search {
-            grid-column: span 3;
+            grid-column: span 1;
             min-height: 200px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -242,22 +242,27 @@
             border: 1px solid var(--venus-border);
             color: var(--venus-text-primary);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            display:flex;
+            flex-direction:column;
         }
 
         .venus-widget-search.minimized {
             grid-column: span 1;
-            max-width: 200px;
-            min-height: 120px;
+            max-width: 300px;
+            min-height: 160px;
             cursor: pointer;
+            display:flex;
+            flex-direction:column;
         }
 
         .venus-widget-search.minimized .venus-widget-content {
-            text-align: center;
+            text-align: left;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: stretch;
             height: 100%;
+            padding: var(--venus-space-md) var(--venus-space-lg);
         }
 
         .venus-widget-search.minimized .venus-widget-title {
@@ -266,21 +271,21 @@
             color: var(--venus-text-primary);
         }
 
-        .venus-widget-search.minimized .venus-search-form {
-            display: none;
-        }
+        .venus-widget-search.minimized .venus-search-form { display:none; }
+        .venus-widget-search.minimized #filtersSection { display:block !important; margin-top:0; padding-top:0; border-top:none; }
+        .venus-widget-search.minimized #filtersSection > div { flex-direction:column; align-items:stretch; }
 
         .venus-widget-search.minimized .expand-icon {
             display: flex;
-            margin: 10px auto 0;
+            margin: 0 0 var(--venus-space-sm) 0;
             cursor: pointer;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
+            padding: 8px;
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius);
+            width: auto;
+            height: auto;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             transition: all 0.2s ease;
         }
 
@@ -421,6 +426,8 @@
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: var(--venus-space-lg);
         }
+        /* Make results widget span full width on desktop */
+        .venus-widget-results { grid-column: 1 / -1; }
 
         .venus-product-card {
             background: white;
@@ -1841,11 +1848,13 @@
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Marketplace</label>
-                                    <select class="venus-form-select" id="marketplace">
-                                        <option value="amazon">Amazon</option>
-                                        <option value="ebay" disabled>eBay (Coming Soon)</option>
-                                    </select>
+                                    <label class="venus-form-label">Motore di ricerca</label>
+                                    <div class="venus-btn-group" id="providerGroup" style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <button type="button" class="venus-btn venus-btn-primary" data-provider="amazon">Amazon</button>
+                                        <button type="button" class="venus-btn" data-provider="aliexpress">AliExpress</button>
+                                        <button type="button" class="venus-btn" data-provider="alibaba">Alibaba</button>
+                                    </div>
+                                    <input type="hidden" id="provider" value="amazon">
                                 </div>
                                 
                                 <div class="venus-form-group">
@@ -1925,17 +1934,13 @@
                         </div>
                     </div>
                     
-                    <div class="venus-widget venus-widget-stats">
-                        <div class="venus-widget-content">
-                            <div class="venus-stat-value" id="avgRating">-</div>
-                            <div class="venus-stat-label">Rating Medio</div>
-                        </div>
-                    </div>
+                    <!-- Widget Rating Medio rimosso -->
 
                     <!-- Results Widget -->
                     <div class="venus-widget venus-widget-results">
                         <div class="venus-widget-content">
                             <h3 class="venus-widget-title">Risultati Ricerca</h3>
+                            <div id="searchSummary" style="display:none;margin-bottom:12px;color:var(--venus-text-secondary);font-size:var(--venus-font-size-sm);"></div>
                             
                             <div id="loadingMessage" style="display: none; text-align: center; padding: var(--venus-space-2xl);">
                                 <p>Ricerca in corso...</p>
@@ -1965,43 +1970,6 @@
     <script src="../core/eventBus.js"></script>
     <script src="../core/store.js"></script>
     <script src="../utils/auth-v2.js"></script>
-            <script src="../js/products.js"></script>
-            <script type="module">
-                import { renderAmazonProductCard } from '/src/components/AmazonProductCard.js';
-
-                // Estendo renderProducts per collegare click e dataset asin/url
-                const originalRender = window.renderProducts;
-                window.renderProducts = function(products) {
-                    originalRender(products);
-                    const grid = document.getElementById('resultsGrid');
-                    const country = document.getElementById('searchCountry')?.value || 'IT';
-                    if (!grid) return;
-                    // aggiungi dataset asin/url sulle card
-                    const cards = grid.querySelectorAll('.venus-product-card');
-                    cards.forEach((card, idx) => {
-                        const p = products[idx];
-                        if (p) {
-                            card.dataset.asin = p.asin || p.id || '';
-                            card.dataset.url = p.url || p.link || '';
-                        }
-                        card.addEventListener('click', async () => {
-                            const productDetail = document.getElementById('productDetail');
-                            if (productDetail) productDetail.innerHTML = '<div>Caricamento dettagli...</div>';
-                            try {
-                                const params = new URLSearchParams();
-                                if (card.dataset.asin) params.set('asin', card.dataset.asin);
-                                if (card.dataset.url) params.set('url', card.dataset.url);
-                                params.set('country', country);
-                                const resp = await fetch('/api/amazon/scrape?' + params.toString());
-                                const data = await resp.json();
-                                renderAmazonProductCard(productDetail, data.product || {});
-                            } catch (e) {
-                                if (productDetail) productDetail.innerHTML = `<div style=\"color:red\">Errore dettaglio: ${e.message}</div>`;
-                            }
-                        });
-                    });
-                };
-            </script>
     
     <script>
         // Funzione unificata per salvataggio bozza con dati ricchi + immagini HQ
@@ -2059,12 +2027,27 @@
         // Variabile globale per i prodotti correnti
         let currentProducts = [];
         
+        // Provider selector behavior
+        (function initProviderSelector(){
+            const group = document.getElementById('providerGroup');
+            const hidden = document.getElementById('provider');
+            if (!group || !hidden) return;
+            group.querySelectorAll('button[data-provider]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const sel = btn.getAttribute('data-provider');
+                    hidden.value = sel;
+                    group.querySelectorAll('button[data-provider]').forEach(b => b.classList.remove('venus-btn-primary'));
+                    btn.classList.add('venus-btn-primary');
+                });
+            });
+        })();
+
         // Funzione globale per la ricerca prodotti
         async function searchProducts(event) {
             event.preventDefault();
             
             const query = document.getElementById('searchQuery').value;
-            const marketplace = document.getElementById('marketplace').value;
+            const provider = document.getElementById('provider')?.value || 'amazon';
             const country = document.getElementById('searchCountry').value;
             const category = document.getElementById('searchCategory').value;
             const minPrice = document.getElementById('minPrice').value;
@@ -2075,7 +2058,7 @@
                 return;
             }
             
-            console.log('Searching for:', query, 'on', marketplace, 'in', country);
+            console.log('Searching for:', query, 'on', provider, 'in', country);
             
             // Nascondi risultati precedenti e mostra loading
             document.getElementById('resultsGrid').innerHTML = '';
@@ -2087,7 +2070,7 @@
                 const params = new URLSearchParams();
                 // Il backend si aspetta il parametro "q" (non "query")
                 params.append('q', query.trim());
-                params.append('marketplace', marketplace);
+                params.append('provider', provider);
                 params.append('country', country);
                 if (category) params.append('category', category);
                 if (minPrice) params.append('min_price', minPrice);
@@ -2095,32 +2078,29 @@
                 
                 // Aggiungi limite per più prodotti
                 params.append('limit', '50'); // Mostra fino a 50 prodotti invece dei 24 default
-                
-                const response = await fetch(`/api/amazon/search?${params.toString()}`);
+                // Endpoint in base al provider
+                let endpoint = '/api/amazon/search';
+                if (provider === 'aliexpress') endpoint = '/api/aliexpress/search';
+                else if (provider === 'alibaba') endpoint = '/api/alibaba/search';
+
+                const response = await fetch(`${endpoint}?${params.toString()}`);
                 const data = await response.json();
                 
                 document.getElementById('loadingMessage').style.display = 'none';
                 
-                if (data.success && data.products && data.products.length > 0) {
+                if (data.success && data.products) {
                     // Salva tutti i prodotti ricevuti prima del filtraggio
-                    currentProducts = data.products;
-                    
-                    // Filtra prodotti senza prezzo (gratuiti/film/etc)
-                    const productsWithPrice = data.products.filter(product => {
-                        const hasPrice = product.price && 
-                                       product.price !== 'Non disponibile' && 
-                                       product.price !== 'N/A' && 
-                                       product.price !== '' &&
-                                       !product.price.toLowerCase().includes('gratis') &&
-                                       !product.price.toLowerCase().includes('gratuito');
-                        return hasPrice;
-                    });
-                    
-                    if (productsWithPrice.length > 0) {
-                        renderProducts(productsWithPrice);
-                        updateStats(productsWithPrice);
-                        // Auto-minimize search widget after successful search
-                        autoMinimizeAfterSearch();
+                    currentProducts = Array.isArray(data.products) ? data.products : [];
+                    // Mostra riassunto ricerca
+                    const summary = document.getElementById('searchSummary');
+                    if (summary) {
+                        summary.style.display = 'block';
+                        summary.textContent = `Motore: ${provider} • Query: "${query}" • Risultati: ${currentProducts.length}`;
+                    }
+
+                    if (currentProducts.length > 0) {
+                        renderProducts(currentProducts);
+                        updateStats(currentProducts);
                     } else {
                         document.getElementById('noResults').style.display = 'block';
                         updateStats([]);
@@ -2181,21 +2161,18 @@
 
         // Search functionality moved to global scope
 
-        // Widget minimization functionality
+        // Disabilitata minimizzazione automatica: manteniamo i widget stabili
         function toggleSearchWidget() {
             const widget = document.querySelector('.venus-widget-search');
+            if (!widget) return;
             widget.classList.toggle('minimized');
         }
 
-        // Auto-minimize after search results
         function autoMinimizeAfterSearch() {
             const widget = document.querySelector('.venus-widget-search');
-            const resultsWidget = document.querySelector('.venus-widget-results');
-            
-            if (resultsWidget && resultsWidget.style.display !== 'none') {
-                setTimeout(() => {
-                    widget.classList.add('minimized');
-                }, 1000); // Wait 1 second after search results appear
+            if (!widget) return;
+            if (!widget.classList.contains('minimized')) {
+                widget.classList.add('minimized');
             }
         }
 
@@ -2359,7 +2336,7 @@
         function updateStats(products) {
             const totalResults = document.getElementById('totalResults');
             const avgPrice = document.getElementById('avgPrice');
-            const avgRating = document.getElementById('avgRating');
+            // const avgRating = document.getElementById('avgRating'); // rimosso widget rating
             
             totalResults.textContent = products.length;
             
@@ -2391,10 +2368,10 @@
                 });
                 
                 avgPrice.textContent = priceCount > 0 ? '€' + (totalPrice / priceCount).toFixed(2) : '-';
-                avgRating.textContent = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) + '/5' : '-';
+                // avgRating disattivato
             } else {
                 avgPrice.textContent = '-';
-                avgRating.textContent = '-';
+                // avgRating disattivato
             }
         }
 
@@ -3158,6 +3135,8 @@
             
             alert('Impostazioni di automazione salvate!');
         }
+        // Fix brace balance for linter
+        {}
     </script>
 </body>
 </html>

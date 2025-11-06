@@ -328,6 +328,17 @@ app.get('/api/amazon/search', async (req, res) => {
     });
 });
 
+// Stub search endpoints per altri provider (placeholder finché non implementati)
+app.get('/api/aliexpress/search', async (req, res) => {
+    const query = req.query.q || req.query.query || '';
+    return res.json({ success: true, products: [], source: 'stub', provider: 'aliexpress', message: 'Motore Aliexpress non ancora disponibile', query });
+});
+
+app.get('/api/alibaba/search', async (req, res) => {
+    const query = req.query.q || req.query.query || '';
+    return res.json({ success: true, products: [], source: 'stub', provider: 'alibaba', message: 'Motore Alibaba non ancora disponibile', query });
+});
+
 // Get detailed product information by ASIN
 app.get('/api/amazon/product/:asin', async (req, res) => {
     const { asin } = req.params;
