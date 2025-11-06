@@ -170,10 +170,10 @@
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, #20bf6b 0%, #0fb9b1 100%);
-            border: none;
-            color: white;
-            box-shadow: 0 8px 25px rgba(32, 191, 107, 0.25);
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            color: var(--venus-text-primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
         }
 
         .venus-widget-search.minimized {
@@ -195,7 +195,7 @@
         .venus-widget-search.minimized .venus-widget-title {
             font-size: 16px;
             margin: 0 0 10px 0;
-            color: white;
+            color: var(--venus-text-primary);
         }
 
         .venus-widget-search.minimized .venus-search-form {
@@ -233,34 +233,32 @@
         }
 
         .venus-widget-search .venus-widget-title {
-            color: white;
+            color: var(--venus-text-primary);
             font-weight: 700;
         }
 
         .venus-widget-search .venus-form-input,
         .venus-widget-search .venus-form-select {
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
         }
 
         .venus-widget-search .venus-form-label {
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--venus-text-primary);
             font-weight: 600;
         }
 
         .venus-widget-search .venus-btn-primary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border: none;
             font-weight: 600;
         }
 
         .venus-widget-search .venus-btn-primary:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--venus-primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(87, 107, 249, 0.3);
         }
 
         .venus-widget-stats {
