@@ -110,3 +110,6 @@ EBAY_INTEGRATION_GUIDE.md
 EBAY_OAUTH_SETUP.md
 docs/ebay-oauth-checkpoint.md
 ebay-config-help.html
+
+# Private configuration file (keep local only)
+.env.private
