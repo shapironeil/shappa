@@ -130,6 +130,26 @@ app.get('/auth/ebay/callback', async (req, res) => {
         
         const tokenData = tokenResponse.data;
         console.log('Tokens obtained successfully');
+
+        // Persist token to disk so the session remains connected across restarts
+        try {
+            const tokensDir = path.join(__dirname, 'data', 'ebay');
+            await fsPromises.mkdir(tokensDir, { recursive: true });
+            const tokenPath = path.join(tokensDir, 'tokens.json');
+            const payload = {
+                obtainedAt: new Date().toISOString(),
+                expiresIn: tokenData.expires_in,
+                expiresAt: new Date(Date.now() + (tokenData.expires_in || 0) * 1000).toISOString(),
+                access_token: tokenData.access_token,
+                refresh_token: tokenData.refresh_token,
+                token_type: tokenData.token_type,
+                scope: EBAY_CONFIG.scopes
+            };
+            await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
+            console.log('eBay tokens persisted to', tokenPath);
+        } catch (persistErr) {
+            console.error('Failed to persist eBay tokens:', persistErr.message);
+        }
         
         const tokenJson = JSON.stringify({
             access_token: tokenData.access_token,
@@ -148,6 +168,59 @@ app.get('/auth/ebay/callback', async (req, res) => {
         } catch (e) { /* ignore logging issues */ }
         console.error('Token exchange error:', err.message);
         res.status(500).send('<!DOCTYPE html><html><head><title>Error</title></head><body><h1>Token Exchange Failed</h1><pre>' + (err.response && err.response.data ? JSON.stringify(err.response.data) : err.message) + '</pre><script>if(window.opener){window.opener.postMessage({type:"ebay-oauth-result",success:false,error:"token_exchange_failed",details:' + JSON.stringify(err.response && err.response.data ? err.response.data : { message: err.message }) + '},"*")}setTimeout(()=>window.close(),3000)</script></body></html>');
+    }
+});
+
+// Endpoint to check current eBay token status
+app.get('/api/ebay/status', async (req, res) => {
+    try {
+        const tokenPath = path.join(__dirname, 'data', 'ebay', 'tokens.json');
+        if (!fs.existsSync(tokenPath)) return res.json({ connected: false });
+        const data = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+        const expiresAt = data.expiresAt ? new Date(data.expiresAt).getTime() : 0;
+        const now = Date.now();
+        const secondsLeft = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        return res.json({ connected: true, expiresAt: data.expiresAt, secondsLeft });
+    } catch (e) {
+        return res.status(500).json({ connected: false, error: e.message });
+    }
+});
+
+// Refresh access token using saved refresh token
+app.post('/api/ebay/refresh', async (req, res) => {
+    try {
+        const tokenPath = path.join(__dirname, 'data', 'ebay', 'tokens.json');
+        if (!fs.existsSync(tokenPath)) return res.status(400).json({ success: false, error: 'No token stored' });
+        const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+        const refreshToken = saved.refresh_token;
+        if (!refreshToken) return res.status(400).json({ success: false, error: 'No refresh token available' });
+
+        const credentials = Buffer.from(EBAY_CONFIG.clientId + ':' + EBAY_CONFIG.clientSecret).toString('base64');
+        const resp = await axios.post(
+            EBAY_CONFIG.tokenUrl,
+            new URLSearchParams({
+                grant_type: 'refresh_token',
+                refresh_token: refreshToken,
+                scope: EBAY_CONFIG.scopes
+            }),
+            { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
+        );
+
+        const tokenData = resp.data;
+        const payload = {
+            obtainedAt: new Date().toISOString(),
+            expiresIn: tokenData.expires_in,
+            expiresAt: new Date(Date.now() + (tokenData.expires_in || 0) * 1000).toISOString(),
+            access_token: tokenData.access_token,
+            refresh_token: refreshToken, // eBay typically returns same refresh token
+            token_type: tokenData.token_type,
+            scope: EBAY_CONFIG.scopes
+        };
+        await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
+        return res.json({ success: true, expiresAt: payload.expiresAt });
+    } catch (e) {
+        console.error('Refresh token failed:', e.response?.data || e.message);
+        return res.status(500).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
     }
 });
 
@@ -184,7 +257,8 @@ app.post('/api/ebay/user-info', async (req, res) => {
 });
 
 app.get('/api/amazon/search', async (req, res) => {
-    const query = req.query.q;
+    // Accetta sia ?q= che ?query=
+    const query = req.query.q || req.query.query;
     const country = req.query.country || 'IT';
     const page = req.query.page ? Number(req.query.page) : 1;
     const limit = req.query.limit ? Number(req.query.limit) : 24;
@@ -219,76 +293,38 @@ app.get('/api/amazon/search', async (req, res) => {
         console.error('[API] Original scraper failed:', originalErr.message);
     }
     
-    // Fallback to demo data
-    console.log('[API] Both scrapers failed, using demo data...');
-    const demoProducts = [
-        {
-            asin: 'B09ABC123',
-            url: 'https://amazon.it/dp/B09ABC123',
-            title: `${query} - Prodotto Esempio Premium`,
-            price: '€29,99',
-            brand: 'BrandTest',
-            image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Prodotto+1',
-            rating: '4,5 su 5 stelle',
-            shipping: 'Spedizione GRATUITA',
-            isPrime: true,
-            description: `Prodotto di alta qualità per ${query}. Ottimo rapporto qualità-prezzo.`
-        },
-        {
-            asin: 'B09DEF456',
-            url: 'https://amazon.it/dp/B09DEF456',
-            title: `${query} Set Completo Deluxe`,
-            price: '€49,90',
-            brand: 'SuperBrand',
-            image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Prodotto+2',
-            rating: '4,7 su 5 stelle',
-            shipping: 'Consegna domani',
-            isPrime: true,
-            description: `Set completo per ${query} con accessori inclusi. Garanzia 2 anni.`
-        },
-        {
-            asin: 'B09GHI789',
-            url: 'https://amazon.it/dp/B09GHI789',
-            title: `${query} Economico Ma Buono`,
-            price: '€15,50',
-            brand: 'ValueBrand',
-            image: 'https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=Prodotto+3',
-            rating: '4,2 su 5 stelle',
-            shipping: 'Spedizione €3,99',
-            isPrime: false,
-            description: `Opzione economica per ${query}. Buona qualità al giusto prezzo.`
-        },
-        {
-            asin: 'B09JKL012',
-            url: 'https://amazon.it/dp/B09JKL012',
-            title: `${query} Versione Professionale`,
-            price: '€79,90',
-            brand: 'ProBrand',
-            image: 'https://via.placeholder.com/300x300/9B59B6/FFFFFF?text=Prodotto+4',
-            rating: '4,8 su 5 stelle',
-            shipping: 'Spedizione GRATUITA',
-            isPrime: true,
-            description: `Versione professionale per ${query}. Qualità superiore garantita.`
-        },
-        {
-            asin: 'B09MNO345',
-            url: 'https://amazon.it/dp/B09MNO345',
-            title: `${query} Kit Starter`,
-            price: '€19,99',
-            brand: 'StarterBrand',
-            image: 'https://via.placeholder.com/300x300/F39C12/FFFFFF?text=Prodotto+5',
-            rating: '4,0 su 5 stelle',
-            shipping: 'Spedizione €4,99',
-            isPrime: false,
-            description: `Kit perfetto per iniziare con ${query}. Include tutto il necessario.`
-        }
-    ].slice(0, limit);
-    
-    return res.json({ 
-        success: true, 
-        products: demoProducts,
-        source: 'demo_data',
-        message: 'Dati di esempio - scraping temporaneamente non disponibile'
+    // Entrambi gli scraper falliti
+    if (process.env.USE_AMAZON_DEMO === '1') {
+        console.log('[API] Both scrapers failed, USING demo fallback (USE_AMAZON_DEMO=1)');
+        const demoProducts = [
+            {
+                asin: 'DEMO-1',
+                url: 'https://amazon.it/dp/DEMO-1',
+                title: `${query} (Demo) Esempio 1`,
+                price: '€29,99',
+                brand: 'DemoBrand',
+                image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Demo+1',
+                rating: '4,3 su 5 stelle',
+                isPrime: true
+            },
+            {
+                asin: 'DEMO-2',
+                url: 'https://amazon.it/dp/DEMO-2',
+                title: `${query} (Demo) Esempio 2`,
+                price: '€19,90',
+                brand: 'DemoBrand',
+                image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Demo+2',
+                rating: '4,1 su 5 stelle',
+                isPrime: false
+            }
+        ].slice(0, limit);
+        return res.json({ success: true, products: demoProducts, source: 'demo_fallback' });
+    }
+    console.log('[API] Both scrapers failed, NO fallback (returning 503)');
+    return res.status(503).json({
+        success: false,
+        error: 'Ricerca temporaneamente non disponibile. Riprova tra qualche minuto.',
+        message: 'Amazon scraping failed - no results from both stealth and original scrapers'
     });
 });
 

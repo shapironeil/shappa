@@ -26,6 +26,74 @@
         }
 
         /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
 
         .venus-user-avatar {
             width: 40px;
@@ -263,14 +331,14 @@
 
         .venus-widget-stats {
             grid-column: span 1;
-            min-height: 120px;
-        }
-
-        .venus-widget-results {
-            grid-column: span 3;
-            min-height: 400px;
-        }
-        .venus-results-grid .result-card {
+        min-height: 200px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        background: var(--venus-bg-card);
+        border: 1px solid var(--venus-border);
+        color: var(--venus-text-primary);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             background: #fff;
             border: 1px solid var(--venus-border);
             border-radius: var(--venus-radius);
@@ -945,9 +1013,9 @@
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            color: var(--venus-text-primary);
 
         .zoom-btn:hover {
             background: #e88900;
@@ -2017,7 +2085,8 @@
             
             try {
                 const params = new URLSearchParams();
-                params.append('query', query.trim());
+                // Il backend si aspetta il parametro "q" (non "query")
+                params.append('q', query.trim());
                 params.append('marketplace', marketplace);
                 params.append('country', country);
                 if (category) params.append('category', category);
