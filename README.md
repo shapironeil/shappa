@@ -266,3 +266,22 @@ Questa configurazione è validata e funzionante per lo sviluppo locale con eBay 
 Per dettagli e backup, vedi `docs/ebay-oauth-checkpoint.md`.
 
 Se devi andare online/produzione, crea una nuova configurazione e aggiorna solo dopo test e backup.
+
+---
+
+## 🔐 Protezione Pagine Private (Login Obbligatorio)
+
+Le pagine applicative core ora richiedono obbligatoriamente che l'utente sia autenticato. Protezione attiva su:
+`src/pages/dashboard.html`, `src/pages/products.html`, `src/pages/listings.html`, `src/pages/reports.html`, `src/pages/settings.html`.
+
+Meccanismo:
+- Lista `enforcedPages` e funzione `enforceProtection()` in `src/utils/auth-v2.js`.
+- Fallback inline su ciascuna pagina che reindirizza a `index.html#login` se la sessione non è valida.
+- In caso di localStorage corrotto o svuotato l'accesso viene negato e si forza il logout silenzioso.
+
+Verifica rapida post-deploy:
+1. Apri una finestra anonima e visita direttamente `/src/pages/dashboard.html` → redirect a `index.html#login`.
+2. Effettua login → riapri `/src/pages/dashboard.html` → accesso consentito.
+3. Esegui logout → qualsiasi URL protetto torna al login.
+
+Nota: aggiunta pagina placeholder `src/pages/reports.html` per evitare link rotti nel menu e già coperta da protezione.

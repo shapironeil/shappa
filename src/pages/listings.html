@@ -1455,6 +1455,10 @@
     <script src="../core/eventBus.js"></script>
     <script src="../core/store.js"></script>
     <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Fallback: se per qualunque motivo l'enforceProtection non parte, faccio redirect qui
+        try { if (!(window.AuthManager && window.AuthManager.isLoggedIn())) { window.location.replace('../../index.html#login'); } } catch {}
+    </script>
     
     <script>
         // Initialize Auth System
@@ -1466,11 +1470,7 @@
             console.error('❌ Failed to load auth system:', error);
         }
 
-        // Allow direct access without login check for testing
-        // if (authSystem && !authSystem.isLoggedIn()) {
-        //     console.log('⚠️ User not logged in, redirecting...');
-        //     window.location.href = '../../index.html#login';
-        // }
+    // Accesso pubblico per test rimosso: la pagina è protetta, redirect gestito sopra
 
         // Update user info if logged in
         if (authSystem && authSystem.isLoggedIn()) {

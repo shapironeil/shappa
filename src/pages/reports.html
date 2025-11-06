@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shappa - Report</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/venus.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+  <style>
+    body { font-family: var(--venus-font-family); background:#fafbfc; margin:0; height:100vh; overflow:hidden; }
+    .venus-dashboard-layout { display:flex; height:100vh; }
+    .venus-sidebar { width:280px; background:var(--venus-bg-card); border-right:1px solid var(--venus-border); display:flex; flex-direction:column; }
+    .venus-sidebar-header { padding:var(--venus-space-xl) var(--venus-space-lg); border-bottom:1px solid var(--venus-border); }
+    .venus-logo-text { font-size:var(--venus-font-size-lg); font-weight:var(--venus-font-weight-semibold); }
+    .venus-sidebar-menu { flex:1; padding:var(--venus-space-lg) 0; overflow-y:auto; }
+    .venus-menu-item { display:flex; padding:var(--venus-space-md) var(--venus-space-lg); margin:0 var(--venus-space-sm); border-radius:var(--venus-radius-sm); color:var(--venus-text-secondary); text-decoration:none; font-size:var(--venus-font-size-sm); font-weight:var(--venus-font-weight-medium); transition:all var(--venus-transition); }
+    .venus-menu-item:hover { background:var(--venus-bg-gray); color:var(--venus-text-primary); }
+    .venus-menu-item.venus-active { background:var(--venus-primary); color:var(--venus-text-white); }
+    .venus-sidebar-footer { padding:var(--venus-space-lg); border-top:1px solid var(--venus-border); }
+    .venus-user-profile { display:flex; gap:var(--venus-space-md); align-items:center; margin-bottom:var(--venus-space-lg); }
+    .venus-user-avatar { width:40px; height:40px; background:var(--venus-gradient-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:var(--venus-font-weight-semibold); }
+    .venus-main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .venus-content-area { flex:1; padding:var(--venus-space-2xl); overflow-y:auto; background:#f8f9fa; }
+    .reports-header { margin:0 0 var(--venus-space-xl) 0; }
+    .reports-title { font-size:var(--venus-font-size-2xl); font-weight:var(--venus-font-weight-bold); margin:0 0 4px; }
+    .reports-sub { font-size:var(--venus-font-size-sm); color:var(--venus-text-secondary); margin:0; }
+    .reports-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:var(--venus-space-xl); }
+    .report-card { background:#fff; border:1px solid var(--venus-border); border-radius:var(--venus-radius); padding:var(--venus-space-xl); box-shadow:var(--venus-shadow-sm); transition:all var(--venus-transition); display:flex; flex-direction:column; gap:var(--venus-space-md); }
+    .report-card:hover { border-color:var(--venus-primary); box-shadow:var(--venus-shadow-md); transform:translateY(-2px); }
+    .report-title { font-size:var(--venus-font-size-base); font-weight:var(--venus-font-weight-semibold); margin:0; }
+    .report-desc { font-size:var(--venus-font-size-xs); color:var(--venus-text-secondary); line-height:1.5; margin:0; }
+    .report-actions { display:flex; gap:var(--venus-space-sm); }
+    .venus-btn { border:1px solid var(--venus-border); background:#fff; color:var(--venus-text-primary); padding:8px 12px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+    .venus-btn:hover { box-shadow:0 2px 6px rgba(0,0,0,0.06); transform:translateY(-1px); }
+    .venus-btn-primary { background:var(--venus-primary); color:#fff; border-color:var(--venus-primary); }
+    .venus-btn-primary:hover { background:var(--venus-primary-dark); }
+    @media (max-width:768px){ .venus-sidebar{ position:fixed; left:-280px; z-index:1000; transition:left var(--venus-transition);} .venus-sidebar.venus-open{ left:0;} }
+  </style>
+</head>
+<body>
+  <div class="venus-dashboard-layout">
+    <aside class="venus-sidebar">
+      <div class="venus-sidebar-header"><span class="venus-logo-text">SHAPPA</span></div>
+      <nav class="venus-sidebar-menu">
+        <a href="dashboard.html" class="venus-menu-item">Dashboard</a>
+        <a href="products.html" class="venus-menu-item">Cerca Prodotti</a>
+        <a href="listings.html" class="venus-menu-item">Listing</a>
+        <a href="reports.html" class="venus-menu-item venus-active">Report</a>
+        <a href="settings.html" class="venus-menu-item">Impostazioni</a>
+      </nav>
+      <div class="venus-sidebar-footer">
+        <div class="venus-user-profile">
+          <div class="venus-user-avatar" id="userAvatar">U</div>
+          <div>
+            <div class="venus-user-name" id="userName">User</div>
+            <div class="venus-user-role">Member</div>
+          </div>
+        </div>
+        <button class="venus-logout-btn" id="logoutBtn">Log Out</button>
+      </div>
+    </aside>
+    <main class="venus-main-content">
+      <div class="venus-content-area">
+        <header class="reports-header">
+          <h1 class="reports-title">Report & Analytics</h1>
+          <p class="reports-sub">Area protetta: accesso consentito solo se loggato</p>
+        </header>
+        <div class="reports-grid" id="reportsGrid">
+          <div class="report-card">
+            <h3 class="report-title">Performance Vendite</h3>
+            <p class="report-desc">Grafici e metriche sulle vendite dei tuoi listing (coming soon).</p>
+            <div class="report-actions">
+              <button class="venus-btn venus-btn-primary" disabled>Apri</button>
+              <button class="venus-btn" disabled>Esporta</button>
+            </div>
+          </div>
+          <div class="report-card">
+            <h3 class="report-title">Margini & Profitti</h3>
+            <p class="report-desc">Analisi margini, fee e trend dei profitti (coming soon).</p>
+            <div class="report-actions">
+              <button class="venus-btn venus-btn-primary" disabled>Apri</button>
+              <button class="venus-btn" disabled>Esporta</button>
+            </div>
+          </div>
+          <div class="report-card">
+            <h3 class="report-title">eBay Listing Status</h3>
+            <p class="report-desc">Stato, scadenze e salute dei listing eBay (coming soon).</p>
+            <div class="report-actions">
+              <button class="venus-btn venus-btn-primary" disabled>Apri</button>
+              <button class="venus-btn" disabled>Esporta</button>
+            </div>
+          </div>
+          <div class="report-card">
+            <h3 class="report-title">Amazon Monitor</h3>
+            <p class="report-desc">Storico variazioni prezzo e opportunità arbitraggio (coming soon).</p>
+            <div class="report-actions">
+              <button class="venus-btn venus-btn-primary" disabled>Apri</button>
+              <button class="venus-btn" disabled>Esporta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../core/apiClient.js"></script>
+  <script src="../core/eventBus.js"></script>
+  <script src="../core/store.js"></script>
+  <script src="../utils/auth-v2.js"></script>
+  <script>
+    // Fallback rapido se per qualche motivo l'enforceProtection non scatta
+    try { if (!(window.AuthManager && window.AuthManager.isLoggedIn())) { window.location.replace('../../index.html#login'); } } catch {}
+
+    // Aggiorna avatar/nome
+    (function updateUserBox(){
+      try { const u = window.AuthManager?.getCurrentUser(); if(!u) return; const nEl = document.getElementById('userName'); const aEl = document.getElementById('userAvatar'); if(nEl) nEl.textContent = u.username; if(aEl) aEl.textContent = u.username.charAt(0).toUpperCase(); } catch(e){ console.warn('User box update failed', e); } })();
+
+    // Logout
+    document.getElementById('logoutBtn')?.addEventListener('click', ()=> { try { window.AuthManager?.logout(); } catch(e){ console.error(e); } });
+  </script>
+  <script src="../utils/navbar-universal.js"></script>
+</body>
+</html>
