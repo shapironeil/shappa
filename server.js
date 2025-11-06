@@ -79,10 +79,13 @@ app.get('/api/ebay/auth-url', (req, res) => {
         
         const authUrl = new URL(EBAY_CONFIG.authUrl);
         authUrl.searchParams.append('client_id', EBAY_CONFIG.clientId);
-        authUrl.searchParams.append('redirect_uri', EBAY_CONFIG.redirectUri);
+        // eBay richiede il valore RUName nel parametro redirect_uri (non l'URL del callback)
+        authUrl.searchParams.append('redirect_uri', EBAY_CONFIG.ruName);
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
         authUrl.searchParams.append('scope', EBAY_CONFIG.scopes);
+        // opzionale: forza login esplicito
+        // authUrl.searchParams.append('prompt', 'login');
         
         console.log('Generated eBay auth URL');
         res.json({ success: true, authUrl: authUrl.toString(), state });
@@ -118,7 +121,8 @@ app.get('/auth/ebay/callback', async (req, res) => {
             new URLSearchParams({
                 grant_type: 'authorization_code',
                 code,
-                redirect_uri: EBAY_CONFIG.redirectUri
+                // Nello scambio token, redirect_uri deve essere identico al valore usato in authorize: RUName
+                redirect_uri: EBAY_CONFIG.ruName
             }),
             {
                 headers: {
