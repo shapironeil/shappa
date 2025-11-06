@@ -258,8 +258,7 @@ app.get('/api/ebay/status', async (req, res) => {
                     EBAY_CONFIG.tokenUrl,
                     new URLSearchParams({
                         grant_type: 'refresh_token',
-                        refresh_token: data.refresh_token,
-                        scope: EBAY_CONFIG.scopes
+                        refresh_token: data.refresh_token
                     }),
                     { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
                 );
@@ -271,7 +270,8 @@ app.get('/api/ebay/status', async (req, res) => {
                     access_token: tokenData.access_token,
                     refresh_token: data.refresh_token,
                     token_type: tokenData.token_type,
-                    scope: grantedScope,
+                    // eBay in refresh raramente ritorna gli scope: preserva quelli precedenti
+                    scope: data.scope,
                     userId
                 };
                 await fsPromises.writeFile(tokenPath, JSON.stringify(data, null, 2));
@@ -301,8 +301,7 @@ app.post('/api/ebay/refresh', async (req, res) => {
             EBAY_CONFIG.tokenUrl,
             new URLSearchParams({
                 grant_type: 'refresh_token',
-                refresh_token: refreshToken,
-                scope: EBAY_CONFIG.scopes
+                refresh_token: refreshToken
             }),
             { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
         );
@@ -315,7 +314,8 @@ app.post('/api/ebay/refresh', async (req, res) => {
             access_token: tokenData.access_token,
             refresh_token: refreshToken, // eBay typically returns same refresh token
             token_type: tokenData.token_type,
-            scope: FULL_SCOPES
+            // preserva scope precedente; eBay può non restituirlo nel refresh
+            scope: (JSON.parse(await fsPromises.readFile(tokenPath, 'utf8')).scope) || FULL_SCOPES
         };
         await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
         return res.json({ success: true, expiresAt: payload.expiresAt });
@@ -349,7 +349,7 @@ app.get('/api/ebay/profile', async (req, res) => {
                 const credentials = Buffer.from(EBAY_CONFIG.clientId + ':' + EBAY_CONFIG.clientSecret).toString('base64');
                 const resp = await axios.post(
                     EBAY_CONFIG.tokenUrl,
-                    new URLSearchParams({ grant_type: 'refresh_token', refresh_token: saved.refresh_token, scope: EBAY_CONFIG.scopes }),
+                    new URLSearchParams({ grant_type: 'refresh_token', refresh_token: saved.refresh_token }),
                     { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
                 );
                 const tokenData = resp.data;
@@ -360,7 +360,7 @@ app.get('/api/ebay/profile', async (req, res) => {
                     access_token: tokenData.access_token,
                     refresh_token: saved.refresh_token,
                     token_type: tokenData.token_type,
-                    scope: FULL_SCOPES,
+                    scope: saved.scope,
                     userId
                 };
                 await fsPromises.writeFile(tokenPath, JSON.stringify(saved, null, 2));

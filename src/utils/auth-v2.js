@@ -12,6 +12,14 @@ class ShappaAuth {
         this.dbKey = 'shappa_users_db_v2';
         this.currentUserKey = 'shappa_current_user_v2';
         this.initialized = false;
+        // Nomi file da proteggere (agnostico al path assoluto)
+        this.enforcedPageNames = new Set([
+            'dashboard.html',
+            'listings.html',
+            'reports.html',
+            'settings.html'
+        ]);
+        this.redirectTarget = '../../index.html#login';
 
         // Inizializza automaticamente
         this.init();
@@ -38,6 +46,7 @@ class ShappaAuth {
 
             this.initialized = true;
             console.log('✅ ShappaAuth initialized successfully');
+            this.enforceProtection();
 
         } catch (error) {
             console.error('❌ ShappaAuth initialization failed:', error);
@@ -347,7 +356,7 @@ class ShappaAuth {
     }
 
     isLoggedIn() {
-        return this.currentUser !== null;
+        return !!(this.currentUser && this.currentUser.username && this.currentUser.email);
     }
 
     getCurrentUser() {
@@ -365,6 +374,36 @@ class ShappaAuth {
             console.error('❌ Error loading current user:', error);
             localStorage.removeItem(this.currentUserKey);
         }
+    }
+
+    // Enforce protected pages: if not logged redirect to home login
+    enforceProtection() {
+        try {
+            const path = window.location.pathname.replace(/\\/g,'/');
+            const pageName = (path.split('/').pop() || '').toLowerCase();
+            const isProtected = this.enforcedPageNames.has(pageName);
+            if (!isProtected) return; // page is public or not in enforced list
+            if (!this.isLoggedIn()) {
+                console.warn('🔐 Accesso negato (non loggato) -> redirect login');
+                window.location.replace(this.redirectTarget + '&from=' + encodeURIComponent(path));
+                return;
+            }
+            // Basic integrity check: utente presente ma database mancante
+            const db = localStorage.getItem(this.dbKey);
+            if (!db) {
+                console.warn('⚠️ Database utenti mancante, forzo logout e redirect');
+                this.logoutSilent();
+                window.location.replace(this.redirectTarget + '&from=' + encodeURIComponent(path));
+                return;
+            }
+        } catch (e) {
+            console.error('❌ enforceProtection error:', e.message);
+        }
+    }
+
+    logoutSilent() {
+        this.currentUser = null;
+        localStorage.removeItem(this.currentUserKey);
     }
 
     saveCurrentUser(user) {
