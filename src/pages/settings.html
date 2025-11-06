@@ -1137,6 +1137,14 @@
                 try {
                     const currentUser = authSystem?.getCurrentUser();
                     const userId = currentUser?.username || 'default';
+                    // Verifica scopes salvati
+                    try {
+                        const ti = await fetch('/api/ebay/token-info?userId=' + encodeURIComponent(userId)).then(r=>r.json());
+                        const scopeStr = (ti && ti.scope) || '';
+                        if (!scopeStr.includes('commerce.identity.readonly')) {
+                            statusDiv.innerHTML = '⚠️ Connesso con permessi limitati. Per mostrare info profilo abilita i permessi Identity.<br><button class="venus-btn venus-btn-primary" style="margin-top:6px" onclick="reconnectEbayPermissions()">Aggiorna Permessi</button>';
+                        }
+                    } catch {}
                     const r = await fetch('/api/ebay/profile?userId=' + encodeURIComponent(userId));
                     const j = await r.json();
                     if (j.success) {
