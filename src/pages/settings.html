@@ -1063,7 +1063,8 @@
                 // Get auth URL from backend
         const currentUser = authSystem?.getCurrentUser();
         const userId = currentUser?.username || 'default';
-        const response = await fetch('/api/ebay/auth-url?userId=' + encodeURIComponent(userId));
+    // Avvio con profilo "basic" (login rapido). In seguito la UI può chiedere upgrade a "full".
+    const response = await fetch('/api/ebay/auth-url?profile=basic&userId=' + encodeURIComponent(userId));
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -1093,6 +1094,13 @@
                             try { localStorage.setItem('ebay_tokens_' + userId, JSON.stringify(event.data.tokenData)); } catch {}
                             // Aggiorna UI e status server-side
                             updateEbayStatusUI();
+                            // Proponi upgrade permessi per funzioni avanzate
+                            setTimeout(()=>{
+                                const statusDiv = document.getElementById('ebay-status');
+                                if (statusDiv && !String(event.data.tokenData?.scope||'').includes('sell.inventory')) {
+                                    statusDiv.innerHTML += '<br><button class="venus-btn" style="margin-top:6px" onclick="requestFullEbayPermissions()">Abilita permessi avanzati</button>';
+                                }
+                            }, 500);
                         } else {
                             console.error('eBay OAuth failed:', event.data.error);
                             alert('Connessione eBay fallita: ' + (event.data.error || 'Unknown error'));
@@ -1181,6 +1189,18 @@
 
         function reconnectEbayPermissions() {
             disconnectEbay().then(()=>configureEbay());
+        }
+
+        async function requestFullEbayPermissions() {
+            try {
+                const currentUser = authSystem?.getCurrentUser();
+                const userId = currentUser?.username || 'default';
+                const response = await fetch('/api/ebay/auth-url?profile=full&userId=' + encodeURIComponent(userId));
+                const data = await response.json();
+                if (data && data.success && data.authUrl) {
+                    window.open(data.authUrl, 'ebay-oauth-full', 'width=600,height=700,scrollbars=yes,resizable=yes');
+                }
+            } catch (e) { console.error(e); }
         }
 
         // Aggiorna stato da backend (per-utente)

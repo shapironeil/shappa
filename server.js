@@ -82,7 +82,27 @@ function buildAllScopes(custom) {
     for (const s of merged) { if (!seen.has(s)) { seen.add(s); uniq.push(s); } }
     return uniq.join(' ');
 }
-const FULL_SCOPES = buildAllScopes(EBAY_CONFIG.scopes);
+// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalità.
+const SCOPE_PROFILES = {
+    basic: [
+        'https://api.ebay.com/oauth/api_scope',
+        'https://api.ebay.com/oauth/api_scope/commerce.identity.readonly',
+        'https://api.ebay.com/oauth/api_scope/sell.account.readonly'
+    ],
+    full: ALL_EBAY_SCOPES // usa la lista completa definita sopra
+};
+
+function getScopesForProfile(profile, custom) {
+    const base = SCOPE_PROFILES[profile] || SCOPE_PROFILES.basic;
+    const merged = [...base, ...String(custom||'').split(/\s+/).filter(Boolean)];
+    const seen = new Set();
+    const uniq = [];
+    for (const s of merged) { if (s && !seen.has(s)) { seen.add(s); uniq.push(s); } }
+    return uniq.join(' ');
+}
+
+// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilità dove veniva usato.
+const FULL_SCOPES = getScopesForProfile('full', EBAY_CONFIG.scopes);
 
 if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
     console.warn('eBay redirectUri is using http:// — this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
@@ -110,7 +130,9 @@ app.get('/api/health', (req, res) => {
 app.get('/api/ebay/auth-url', (req, res) => {
     try {
         const state = generateState();
-        sessions.set(state, { timestamp: Date.now(), userId: req.query.userId || null });
+        const profile = (req.query.profile || 'basic').toLowerCase();
+        const requestedScopes = getScopesForProfile(profile, EBAY_CONFIG.scopes);
+        sessions.set(state, { timestamp: Date.now(), userId: req.query.userId || null, scopeProfile: profile, requestedScopes });
         
         const authUrl = new URL(EBAY_CONFIG.authUrl);
         authUrl.searchParams.append('client_id', EBAY_CONFIG.clientId);
@@ -118,12 +140,12 @@ app.get('/api/ebay/auth-url', (req, res) => {
         authUrl.searchParams.append('redirect_uri', EBAY_CONFIG.ruName);
         authUrl.searchParams.append('response_type', 'code');
         authUrl.searchParams.append('state', state);
-        authUrl.searchParams.append('scope', FULL_SCOPES);
+    authUrl.searchParams.append('scope', requestedScopes);
         // opzionale: forza login esplicito
         // authUrl.searchParams.append('prompt', 'login');
         
         console.log('Generated eBay auth URL');
-        res.json({ success: true, authUrl: authUrl.toString(), state });
+        res.json({ success: true, authUrl: authUrl.toString(), state, profile, scopes: requestedScopes });
     } catch (error) {
         console.error('Error generating auth URL:', error);
         res.status(500).json({ success: false, error: 'Failed to generate authorization URL' });
@@ -148,6 +170,7 @@ app.get('/auth/ebay/callback', async (req, res) => {
     }
     // Conserva userId PRIMA di eliminare lo state dalla memoria
     const callbackUserId = sessionData.userId || 'default';
+    const requestedScopes = sessionData.requestedScopes || FULL_SCOPES;
     sessions.delete(state);
     
     try {
@@ -178,6 +201,8 @@ app.get('/auth/ebay/callback', async (req, res) => {
             const tokensDir = path.join(__dirname, 'data', 'ebay', userId);
             await fsPromises.mkdir(tokensDir, { recursive: true });
             const tokenPath = path.join(tokensDir, 'tokens.json');
+            // eBay restituisce l'elenco effettivo degli scope concessi (tokenData.scope)
+            const grantedScope = tokenData.scope || requestedScopes;
             const payload = {
                 obtainedAt: new Date().toISOString(),
                 expiresIn: tokenData.expires_in,
@@ -185,7 +210,7 @@ app.get('/auth/ebay/callback', async (req, res) => {
                 access_token: tokenData.access_token,
                 refresh_token: tokenData.refresh_token,
                 token_type: tokenData.token_type,
-                scope: FULL_SCOPES,
+                scope: grantedScope,
                 userId
             };
             await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
@@ -246,7 +271,7 @@ app.get('/api/ebay/status', async (req, res) => {
                     access_token: tokenData.access_token,
                     refresh_token: data.refresh_token,
                     token_type: tokenData.token_type,
-                    scope: FULL_SCOPES,
+                    scope: grantedScope,
                     userId
                 };
                 await fsPromises.writeFile(tokenPath, JSON.stringify(data, null, 2));
