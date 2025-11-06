@@ -46,7 +46,8 @@ const EBAY_CONFIG = {
     authUrl: process.env.EBAY_AUTH_URL,
     tokenUrl: process.env.EBAY_TOKEN_URL,
     apiUrl: process.env.EBAY_API_URL,
-    scopes: process.env.EBAY_SCOPES
+    scopes: process.env.EBAY_SCOPES,
+    marketplaceId: process.env.EBAY_MARKETPLACE_ID || 'EBAY_IT'
 };
 // === eBay FULL SCOPES (richiesta massima) ===
 const ALL_EBAY_SCOPES = [
@@ -381,6 +382,50 @@ app.get('/api/ebay/profile', async (req, res) => {
         }
         console.error('profile error:', data || e.message);
         return res.status(500).json({ success: false, error: 'profile_failed', details: data || e.message });
+    }
+});
+
+// Aggregated Account Info: Identity + Sell Account Privileges (best-effort)
+app.get('/api/ebay/account-info', async (req, res) => {
+    try {
+        const userId = req.query.userId || 'default';
+        const tokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
+        if (!fs.existsSync(tokenPath)) return res.status(401).json({ success: false, error: 'not_connected' });
+        const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+
+        const headers = {
+            'Authorization': 'Bearer ' + saved.access_token,
+            'Content-Type': 'application/json',
+            'X-EBAY-C-MARKETPLACE-ID': EBAY_CONFIG.marketplaceId
+        };
+
+        const results = { success: true, userId, scope: saved.scope, identity: null, privilege: null, errors: {} };
+
+        // Identity
+        try {
+            const r = await axios.get(EBAY_CONFIG.apiUrl + '/commerce/identity/v1/user/', { headers });
+            results.identity = r.data || null;
+        } catch (e) {
+            const st = e.response?.status;
+            if (st === 403) results.errors.identity = 'insufficient_scope';
+            else if (st === 404) results.errors.identity = 'profile_not_found';
+            else results.errors.identity = e.response?.data || e.message;
+        }
+
+        // Sell Account Privileges (requires sell.account.readonly)
+        try {
+            const r2 = await axios.get(EBAY_CONFIG.apiUrl + '/sell/account/v1/privilege', { headers });
+            results.privilege = r2.data || null;
+        } catch (e) {
+            const st = e.response?.status;
+            if (st === 403) results.errors.privilege = 'insufficient_scope';
+            else if (st === 404) results.errors.privilege = 'not_found';
+            else results.errors.privilege = e.response?.data || e.message;
+        }
+
+        return res.json(results);
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 
