@@ -285,3 +285,21 @@ Verifica rapida post-deploy:
 3. Esegui logout → qualsiasi URL protetto torna al login.
 
 Nota: aggiunta pagina placeholder `src/pages/reports.html` per evitare link rotti nel menu e già coperta da protezione.
+
+---
+
+## ℹ️ Endpoint eBay: Account Info Aggregato
+
+Endpoint: `GET /api/ebay/account-info?userId=<username>`
+
+Restituisce in un'unica risposta:
+- `identity`: dati da `/commerce/identity/v1/user/` (scope richiesto: `commerce.identity.readonly`)
+- `privilege`: dati da `/sell/account/v1/privilege` (scope richiesto: `sell.account.readonly`)
+- `scope`: stringa degli scope concessi e salvati per l'utente
+- `errors`: mappa con eventuali errori per sezione (`insufficient_scope`, `profile_not_found`, ecc.)
+
+Header marketplace: il server invia `X-EBAY-C-MARKETPLACE-ID` con valore `EBAY_IT` (sovrascrivibile via env `EBAY_MARKETPLACE_ID`).
+
+Note:
+- Il refresh token ora non invia più lo scope (conforme alla guida OAuth eBay) e mantiene gli scope già concessi.
+- Se in passato hai concesso permessi limitati, usa la UI in `settings.html` per eseguire l'upgrade a permessi avanzati (profilo `full`).
