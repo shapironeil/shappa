@@ -111,6 +111,8 @@ app.get('/auth/ebay/callback', async (req, res) => {
     if (!sessionData) {
         return res.status(400).send('Invalid or expired state parameter');
     }
+    // Conserva userId PRIMA di eliminare lo state dalla memoria
+    const callbackUserId = sessionData.userId || 'default';
     sessions.delete(state);
     
     try {
@@ -137,7 +139,7 @@ app.get('/auth/ebay/callback', async (req, res) => {
 
         // Persist token to disk so the session remains connected across restarts
         try {
-            const userId = (sessions.get(state) && sessions.get(state).userId) || 'default';
+            const userId = callbackUserId;
             const tokensDir = path.join(__dirname, 'data', 'ebay', userId);
             await fsPromises.mkdir(tokensDir, { recursive: true });
             const tokenPath = path.join(tokensDir, 'tokens.json');
