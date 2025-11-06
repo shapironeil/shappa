@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Prodotti Monitorati</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        .monitored-products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .monitored-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .monitored-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .monitored-info {
+            flex: 1;
+        }
+        .price-history {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .price-change {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .price-up { background: #fed7d7; color: #c53030; }
+        .price-down { background: #c6f6d5; color: #276749; }
+        .price-same { background: #e2e8f0; color: #4a5568; }
+    </style>
+</head>
+<body>
+    <!-- Navbar Universal -->
+    <nav id="navbar" style="background:#2d3748;color:white;padding:1rem;position:sticky;top:0;z-index:100;">
+        <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;gap:2rem;align-items:center;">
+                <a href="../pages/dashboard.html" style="color:white;text-decoration:none;font-weight:700;font-size:1.25rem;">📊 Shappa</a>
+                <a href="../pages/products.html" style="color:#e2e8f0;text-decoration:none;">🔍 Cerca Prodotti</a>
+                <a href="../pages/listings.html" style="color:#e2e8f0;text-decoration:none;">📋 Listings</a>
+                <a href="../pages/settings.html" style="color:#e2e8f0;text-decoration:none;">⚙️ Impostazioni</a>
+                <a href="#" style="color:white;text-decoration:none;font-weight:600;">📈 Monitorati</a>
+            </div>
+            <div id="nav-user" style="display:flex;gap:1rem;align-items:center;">
+                <span id="userDisplay">Caricamento...</span>
+                <button id="logoutBtn" style="background:#e53e3e;color:white;border:0;padding:0.5rem 1rem;border-radius:4px;cursor:pointer;">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <main style="max-width:1200px;margin:2rem auto;padding:0 1rem;">
+        <h1>📈 Prodotti Monitorati</h1>
+        <p style="color:#666;margin-bottom:2rem;">Traccia i prezzi dei prodotti Amazon che stai monitorando per identificare opportunità di acquisto e rivendita.</p>
+
+        <div style="margin-bottom:1rem;">
+            <button id="refreshPricesBtn" style="background:#4299e1;color:white;border:0;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-weight:600;">🔄 Aggiorna Prezzi</button>
+            <button id="clearMonitoredBtn" style="background:#e53e3e;color:white;border:0;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-weight:600;margin-left:1rem;">🗑️ Svuota Lista</button>
+        </div>
+
+        <div id="loadingMessage" style="text-align:center;padding:2rem;display:none;">⏳ Aggiornamento prezzi in corso...</div>
+        <div id="noMonitored" style="text-align:center;padding:2rem;color:#666;display:none;">
+            <p>📊 Nessun prodotto monitorato</p>
+            <p><a href="../pages/products.html" style="color:#4299e1;text-decoration:none;">Vai a cercare prodotti →</a></p>
+        </div>
+        <div class="monitored-products-grid" id="monitoredGrid"></div>
+    </main>
+
+    <script>
+        let monitoredProducts = [];
+
+        // Carica prodotti monitorati all'avvio
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadMonitoredProducts();
+            updateUserDisplay();
+        });
+
+        // IndexedDB per prodotti monitorati
+        async function openMonitoredProductsDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('ShappaMonitoredProducts', 1);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('monitoredProducts')) {
+                        const store = db.createObjectStore('monitoredProducts', { keyPath: 'asin' });
+                        store.createIndex('lastUpdated', 'lastUpdated');
+                    }
+                };
+
+                request.onsuccess = (event) => resolve(event.target.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        // Carica prodotti monitorati
+        async function loadMonitoredProducts() {
+            try {
+                const db = await openMonitoredProductsDB();
+                const transaction = db.transaction(['monitoredProducts'], 'readonly');
+                const store = transaction.objectStore('monitoredProducts');
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    monitoredProducts = request.result;
+                    renderMonitoredProducts();
+                };
+                request.onerror = () => {
+                    console.error('Errore caricamento prodotti monitorati');
+                    showToast('❌ Errore caricamento prodotti monitorati');
+                };
+            } catch (error) {
+                console.error('Errore:', error);
+            }
+        }
+
+        // Render prodotti monitorati
+        function renderMonitoredProducts() {
+            const grid = document.getElementById('monitoredGrid');
+            const noMonitored = document.getElementById('noMonitored');
+
+            if (monitoredProducts.length === 0) {
+                grid.innerHTML = '';
+                noMonitored.style.display = 'block';
+                return;
+            }
+
+            noMonitored.style.display = 'none';
+            grid.innerHTML = monitoredProducts.map(product => `
+                <div class="monitored-card">
+                    <img src="${product.image || '/assets/no-image-280x200.png'}" alt="${product.title}" onerror="this.src='/assets/no-image-280x200.png'">
+                    <div class="monitored-info">
+                        <h3 style="margin:0 0 0.5rem 0;font-size:1rem;">${product.title}</h3>
+                        <p style="margin:0;color:#666;font-size:0.9rem;">${product.brand || 'N/A'}</p>
+                        <p style="margin:0.25rem 0;font-weight:600;color:#2d3748;">
+                            Prezzo attuale: ${product.currentPrice || 'N/A'} ${product.currency || '€'}
+                        </p>
+                        <div class="price-history">
+                            Monitorato dal: ${new Date(product.lastUpdated).toLocaleDateString('it-IT')}
+                            ${product.priceHistory && product.priceHistory.length > 1 ?
+                                `<br>Storico: ${product.priceHistory.length} aggiornamenti` : ''}
+                        </div>
+                        <button onclick="removeMonitored('${product.asin}')" style="background:#e53e3e;color:white;border:0;padding:0.25rem 0.5rem;border-radius:4px;cursor:pointer;font-size:0.8rem;margin-top:0.5rem;">Rimuovi</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Aggiorna prezzi
+        document.getElementById('refreshPricesBtn').addEventListener('click', async () => {
+            const loading = document.getElementById('loadingMessage');
+            loading.style.display = 'block';
+
+            try {
+                for (const product of monitoredProducts) {
+                    try {
+                        const response = await fetch(`/api/amazon/product/${encodeURIComponent(product.asin)}?country=IT`);
+                        const data = await response.json();
+
+                        if (data.success && data.product) {
+                            const newPrice = data.product.price;
+                            if (newPrice && newPrice !== product.currentPrice) {
+                                product.priceHistory = product.priceHistory || [];
+                                product.priceHistory.push({
+                                    price: newPrice,
+                                    date: new Date().toISOString()
+                                });
+                                product.currentPrice = newPrice;
+                                product.lastUpdated = new Date().toISOString();
+
+                                // Salva nel DB
+                                const db = await openMonitoredProductsDB();
+                                await db.put('monitoredProducts', product);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Errore aggiornamento ${product.asin}:`, error);
+                    }
+                }
+
+                renderMonitoredProducts();
+                showToast('✅ Prezzi aggiornati!');
+            } catch (error) {
+                console.error('Errore aggiornamento prezzi:', error);
+                showToast('❌ Errore aggiornamento prezzi');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        // Rimuovi prodotto monitorato
+        async function removeMonitored(asin) {
+            try {
+                const db = await openMonitoredProductsDB();
+                await db.delete('monitoredProducts', asin);
+                monitoredProducts = monitoredProducts.filter(p => p.asin !== asin);
+                renderMonitoredProducts();
+                showToast('✅ Prodotto rimosso dal monitoraggio');
+            } catch (error) {
+                console.error('Errore rimozione:', error);
+                showToast('❌ Errore rimozione prodotto');
+            }
+        }
+
+        // Svuota lista monitorati
+        document.getElementById('clearMonitoredBtn').addEventListener('click', async () => {
+            if (!confirm('Sei sicuro di voler rimuovere tutti i prodotti monitorati?')) return;
+
+            try {
+                const db = await openMonitoredProductsDB();
+                const transaction = db.transaction(['monitoredProducts'], 'readwrite');
+                const store = transaction.objectStore('monitoredProducts');
+                await new Promise((resolve, reject) => {
+                    const request = store.clear();
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+
+                monitoredProducts = [];
+                renderMonitoredProducts();
+                showToast('✅ Lista svuotata');
+            } catch (error) {
+                console.error('Errore svuotamento:', error);
+                showToast('❌ Errore svuotamento lista');
+            }
+        });
+
+        // User display e logout
+        async function updateUserDisplay() {
+            try {
+                const response = await fetch('/api/auth/user');
+                const data = await response.json();
+                if (data.user) {
+                    document.getElementById('userDisplay').textContent = data.user.username;
+                }
+            } catch (error) {
+                console.error('Errore caricamento utente:', error);
+            }
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '../index.html';
+            } catch (error) {
+                console.error('Errore logout:', error);
+            }
+        });
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg;
+            el.style.position = 'fixed';
+            el.style.bottom = '16px';
+            el.style.right = '16px';
+            el.style.background = '#2d3748';
+            el.style.color = 'white';
+            el.style.padding = '0.5rem 1rem';
+            el.style.borderRadius = '6px';
+            el.style.zIndex = 3000;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 2500);
+        }
+    </script>
+
+    <!-- Navbar Universal - Click Handler -->
+    <script src="../utils/navbar-universal.js"></script>
+</body>
+</html>

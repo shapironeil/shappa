@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Cache Refresh</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .refresh-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 15px;
+            max-width: 500px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 1rem;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="refresh-container">
+        <h1>🔄 Shappa Cache Refresh</h1>
+        <p>Questo strumento forza l'aggiornamento della cache del browser per assicurarti di vedere sempre le ultime modifiche.</p>
+        
+        <div class="spinner"></div>
+        
+        <p id="status">Pulizia cache in corso...</p>
+        
+        <div style="margin-top: 2rem;">
+            <button class="btn" onclick="goToRegister()">📝 Vai alla Registrazione</button>
+            <button class="btn" onclick="goToLogin()">🔐 Vai al Login</button>
+            <button class="btn" onclick="goToHome()">🏠 Vai alla Home</button>
+        </div>
+        
+        <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
+            <p>💡 <strong>Suggerimento per Chrome:</strong></p>
+            <p>Premi <kbd>Ctrl+Shift+R</kbd> (Windows) o <kbd>Cmd+Shift+R</kbd> (Mac) per un hard refresh</p>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔄 Cache refresh utility loaded');
+        
+        // Forza pulizia cache
+        function forceCacheRefresh() {
+            // Pulisci localStorage specifico dell'app (mantenendo dati utenti)
+            const keysToKeep = ['shappa_users_db', 'shappa_current_user'];
+            const allKeys = Object.keys(localStorage);
+            
+            allKeys.forEach(key => {
+                if (key.startsWith('shappa_') && !keysToKeep.includes(key)) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            // Pulisci sessionStorage
+            sessionStorage.clear();
+            
+            // Aggiorna timestamp
+            const timestamp = Date.now();
+            localStorage.setItem('shappa_cache_refresh', timestamp.toString());
+            
+            console.log('✅ Cache cleaned at:', new Date(timestamp));
+            
+            return timestamp;
+        }
+        
+        // Esegui pulizia automatica
+        setTimeout(() => {
+            const timestamp = forceCacheRefresh();
+            document.getElementById('status').textContent = '✅ Cache aggiornata alle ' + new Date(timestamp).toLocaleTimeString();
+        }, 2000);
+        
+        // Funzioni di navigazione con timestamp
+        function goToRegister() {
+            window.location.href = 'register.html?refresh=' + Date.now();
+        }
+        
+        function goToLogin() {
+            window.location.href = 'login.html?refresh=' + Date.now();
+        }
+        
+        function goToHome() {
+            window.location.href = '../index.html?refresh=' + Date.now();
+        }
+        
+        // Debug info
+        const userDB = localStorage.getItem('shappa_users_db');
+        const currentUser = localStorage.getItem('shappa_current_user');
+        
+        console.log('👥 Users in DB:', userDB ? JSON.parse(userDB).length : 0);
+        console.log('🔐 Current user:', currentUser ? JSON.parse(currentUser).username : 'none');
+    </script>
+</body>
+</html>

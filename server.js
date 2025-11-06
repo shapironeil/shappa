@@ -1,0 +1,1173 @@
+// Endpoint placeholder: listare un prodotto su eBay (sandbox)
+// Note: questo è un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const crypto = require('crypto');
+const axios = require('axios');
+const path = require('path');
+const https = require('https');
+const fs = require('fs');
+const { promises: fsPromises } = require('fs');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(__dirname));
+
+// Endpoint placeholder: listare un prodotto su eBay (sandbox)
+// Note: questo è un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+app.post('/api/ebay/list', express.json(), async (req, res) => {
+    try {
+        const { id, title, price, automation } = req.body || {};
+        if (!id) return res.status(400).json({ success: false, error: 'id richiesto' });
+        // Simula risposta eBay sandbox
+        const listingId = 'EBY-' + id + '-' + Date.now();
+        return res.json({ success: true, listingId, message: 'Mock listing creato (sandbox)' });
+    } catch (err) {
+        console.error('ebay list error', err);
+        return res.status(500).json({ success: false, error: 'internal_error' });
+    }
+});
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+const sessions = new Map();
+
+const EBAY_CONFIG = {
+    clientId: process.env.EBAY_CLIENT_ID,
+    clientSecret: process.env.EBAY_CLIENT_SECRET,
+    devId: process.env.EBAY_DEV_ID,
+    ruName: process.env.EBAY_RUNAME,
+    // Ensure redirectUri uses https for localhost to satisfy eBay OAuth requirements
+    redirectUri: process.env.EBAY_REDIRECT_URI || 'https://localhost:3000/auth/ebay/callback',
+    authUrl: process.env.EBAY_AUTH_URL,
+    tokenUrl: process.env.EBAY_TOKEN_URL,
+    apiUrl: process.env.EBAY_API_URL,
+    scopes: process.env.EBAY_SCOPES
+};
+
+if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
+    console.warn('eBay redirectUri is using http:// — this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
+}
+
+// Amazon scraper (Playwright)
+const { scrapeAmazonProduct } = require('./lib/scraper/amazonScraper');
+const priceMonitor = require('./lib/services/priceMonitor');
+
+// Small admin protection token to allow clearing caches during development
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || null;
+
+function generateState() {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', port: PORT });
+});
+
+app.get('/api/ebay/auth-url', (req, res) => {
+    try {
+        const state = generateState();
+        sessions.set(state, { timestamp: Date.now(), userId: req.query.userId || null });
+        
+        const authUrl = new URL(EBAY_CONFIG.authUrl);
+        authUrl.searchParams.append('client_id', EBAY_CONFIG.clientId);
+        authUrl.searchParams.append('redirect_uri', EBAY_CONFIG.redirectUri);
+        authUrl.searchParams.append('response_type', 'code');
+        authUrl.searchParams.append('state', state);
+        authUrl.searchParams.append('scope', EBAY_CONFIG.scopes);
+        
+        console.log('Generated eBay auth URL');
+        res.json({ success: true, authUrl: authUrl.toString(), state });
+    } catch (error) {
+        console.error('Error generating auth URL:', error);
+        res.status(500).json({ success: false, error: 'Failed to generate authorization URL' });
+    }
+});
+
+app.get('/auth/ebay/callback', async (req, res) => {
+    const { code, state, error, error_description } = req.query;
+    
+    if (error) {
+        console.error('eBay OAuth error:', error, error_description);
+        return res.send('<!DOCTYPE html><html><head><title>Error</title></head><body><h1>Connection Failed</h1><p>' + (error_description || 'Authorization failed') + '</p><script>if(window.opener){window.opener.postMessage({type:"ebay-oauth-result",success:false,error:"' + error + '"},"*")}setTimeout(()=>window.close(),3000)</script></body></html>');
+    }
+    
+    if (!code || !state) {
+        return res.status(400).send('Missing required parameters');
+    }
+    
+    const sessionData = sessions.get(state);
+    if (!sessionData) {
+        return res.status(400).send('Invalid or expired state parameter');
+    }
+    sessions.delete(state);
+    
+    try {
+        const credentials = Buffer.from(EBAY_CONFIG.clientId + ':' + EBAY_CONFIG.clientSecret).toString('base64');
+        
+        const tokenResponse = await axios.post(
+            EBAY_CONFIG.tokenUrl,
+            new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: EBAY_CONFIG.redirectUri
+            }),
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + credentials
+                }
+            }
+        );
+        
+        const tokenData = tokenResponse.data;
+        console.log('Tokens obtained successfully');
+        
+        const tokenJson = JSON.stringify({
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_in: tokenData.expires_in,
+            token_type: tokenData.token_type
+        });
+        
+        res.send('<!DOCTYPE html><html><head><title>Success</title></head><body><h1>Connected Successfully!</h1><script>if(window.opener){window.opener.postMessage({type:"ebay-oauth-result",success:true,tokenData:' + tokenJson + '},"*")}setTimeout(()=>window.close(),2000)</script></body></html>');
+    } catch (err) {
+        // Log fuller error info for debugging (including response body when available)
+        try {
+            if (err.response && err.response.data) {
+                console.error('Token exchange error response data:', JSON.stringify(err.response.data));
+            }
+        } catch (e) { /* ignore logging issues */ }
+        console.error('Token exchange error:', err.message);
+        res.status(500).send('<!DOCTYPE html><html><head><title>Error</title></head><body><h1>Token Exchange Failed</h1><pre>' + (err.response && err.response.data ? JSON.stringify(err.response.data) : err.message) + '</pre><script>if(window.opener){window.opener.postMessage({type:"ebay-oauth-result",success:false,error:"token_exchange_failed",details:' + JSON.stringify(err.response && err.response.data ? err.response.data : { message: err.message }) + '},"*")}setTimeout(()=>window.close(),3000)</script></body></html>');
+    }
+});
+
+app.post('/api/ebay/user-info', async (req, res) => {
+    const { access_token } = req.body;
+    if (!access_token) return res.status(400).json({ success: false, error: 'Missing access_token' });
+    
+    try {
+        const response = await axios.get(EBAY_CONFIG.apiUrl + '/commerce/identity/v1/user/', {
+            headers: { 'Authorization': 'Bearer ' + access_token, 'Content-Type': 'application/json' }
+        });
+        
+        const userData = {
+            userId: response.data.userId || 'eBay User',
+            username: response.data.username || 'eBay User',
+            email: response.data.email || null,
+            accountType: response.data.accountType || 'INDIVIDUAL',
+            status: response.data.status || 'CONFIRMED'
+        };
+        
+        return res.json({ success: true, userData });
+    } catch (error) {
+        return res.json({
+            success: true,
+            userData: {
+                userId: 'eBay User',
+                username: 'eBay User',
+                email: null,
+                accountType: 'INDIVIDUAL',
+                status: 'CONFIRMED'
+            }
+        });
+    }
+});
+
+app.get('/api/amazon/search', async (req, res) => {
+    const query = req.query.q;
+    const country = req.query.country || 'IT';
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const limit = req.query.limit ? Number(req.query.limit) : 24;
+    if (!query) return res.status(400).json({ success: false, error: 'Missing search query' });
+    
+    // Try stealth scraper first
+    try {
+        console.log(`[API] Attempting stealth scraper for "${query}"`);
+        const { StealthAmazonScraper } = require('./lib/scraper/stealthAmazonScraper');
+        const scraper = new StealthAmazonScraper();
+        const products = await scraper.searchProducts(query, country, limit);
+        
+        if (products && products.length > 0) {
+            console.log(`[API] Stealth scraper succeeded with ${products.length} products`);
+            return res.json({ success: true, products, source: 'stealth_scraper' });
+        }
+    } catch (stealthErr) {
+        console.error('[API] Stealth scraper failed:', stealthErr.message);
+    }
+    
+    // Try original scraper as backup
+    try {
+        console.log(`[API] Attempting original scraper for "${query}"`);
+        const { scrapeAmazonSearch } = require('./lib/scraper/amazonScraper');
+        const products = await scrapeAmazonSearch({ query, country, page, limit });
+        
+        if (products && products.length > 0) {
+            console.log(`[API] Original scraper succeeded with ${products.length} products`);
+            return res.json({ success: true, products, source: 'original_scraper' });
+        }
+    } catch (originalErr) {
+        console.error('[API] Original scraper failed:', originalErr.message);
+    }
+    
+    // Fallback to demo data
+    console.log('[API] Both scrapers failed, using demo data...');
+    const demoProducts = [
+        {
+            asin: 'B09ABC123',
+            url: 'https://amazon.it/dp/B09ABC123',
+            title: `${query} - Prodotto Esempio Premium`,
+            price: '€29,99',
+            brand: 'BrandTest',
+            image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Prodotto+1',
+            rating: '4,5 su 5 stelle',
+            shipping: 'Spedizione GRATUITA',
+            isPrime: true,
+            description: `Prodotto di alta qualità per ${query}. Ottimo rapporto qualità-prezzo.`
+        },
+        {
+            asin: 'B09DEF456',
+            url: 'https://amazon.it/dp/B09DEF456',
+            title: `${query} Set Completo Deluxe`,
+            price: '€49,90',
+            brand: 'SuperBrand',
+            image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Prodotto+2',
+            rating: '4,7 su 5 stelle',
+            shipping: 'Consegna domani',
+            isPrime: true,
+            description: `Set completo per ${query} con accessori inclusi. Garanzia 2 anni.`
+        },
+        {
+            asin: 'B09GHI789',
+            url: 'https://amazon.it/dp/B09GHI789',
+            title: `${query} Economico Ma Buono`,
+            price: '€15,50',
+            brand: 'ValueBrand',
+            image: 'https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=Prodotto+3',
+            rating: '4,2 su 5 stelle',
+            shipping: 'Spedizione €3,99',
+            isPrime: false,
+            description: `Opzione economica per ${query}. Buona qualità al giusto prezzo.`
+        },
+        {
+            asin: 'B09JKL012',
+            url: 'https://amazon.it/dp/B09JKL012',
+            title: `${query} Versione Professionale`,
+            price: '€79,90',
+            brand: 'ProBrand',
+            image: 'https://via.placeholder.com/300x300/9B59B6/FFFFFF?text=Prodotto+4',
+            rating: '4,8 su 5 stelle',
+            shipping: 'Spedizione GRATUITA',
+            isPrime: true,
+            description: `Versione professionale per ${query}. Qualità superiore garantita.`
+        },
+        {
+            asin: 'B09MNO345',
+            url: 'https://amazon.it/dp/B09MNO345',
+            title: `${query} Kit Starter`,
+            price: '€19,99',
+            brand: 'StarterBrand',
+            image: 'https://via.placeholder.com/300x300/F39C12/FFFFFF?text=Prodotto+5',
+            rating: '4,0 su 5 stelle',
+            shipping: 'Spedizione €4,99',
+            isPrime: false,
+            description: `Kit perfetto per iniziare con ${query}. Include tutto il necessario.`
+        }
+    ].slice(0, limit);
+    
+    return res.json({ 
+        success: true, 
+        products: demoProducts,
+        source: 'demo_data',
+        message: 'Dati di esempio - scraping temporaneamente non disponibile'
+    });
+});
+
+// Get detailed product information by ASIN
+app.get('/api/amazon/product/:asin', async (req, res) => {
+    const { asin } = req.params;
+    const country = req.query.country || 'IT';
+    
+    if (!asin) return res.status(400).json({ success: false, error: 'ASIN required' });
+    
+    try {
+        console.log(`[API] Getting product details for ASIN: ${asin}`);
+        const { StealthAmazonScraper } = require('./lib/scraper/stealthAmazonScraper');
+        const scraper = new StealthAmazonScraper();
+        const productDetails = await scraper.getProductDetails(asin, country);
+        
+        console.log(`[API] Successfully got details for ${asin}`);
+        return res.json({ success: true, product: productDetails, source: 'stealth_scraper' });
+        
+    } catch (err) {
+        console.error(`[API] Product details failed for ${asin}:`, err.message);
+        
+        // Fallback to demo data for the specific ASIN
+        const demoProduct = {
+            asin,
+            title: `Prodotto ${asin} - Dettagli Completi`,
+            brand: 'BrandDemo',
+            price: '€39,99',
+            originalPrice: '€49,99',
+            rating: '4.5 su 5 stelle',
+            reviewsCount: '1,234',
+            mainImage: 'https://via.placeholder.com/500x500/4A90E2/FFFFFF?text=Prodotto+Dettaglio',
+            images: [
+                'https://via.placeholder.com/500x500/4A90E2/FFFFFF?text=Immagine+1',
+                'https://via.placeholder.com/500x500/50C878/FFFFFF?text=Immagine+2',
+                'https://via.placeholder.com/500x500/FF6B6B/FFFFFF?text=Immagine+3',
+                'https://via.placeholder.com/500x500/9B59B6/FFFFFF?text=Immagine+4'
+            ],
+            features: [
+                'Caratteristica principale del prodotto con descrizione dettagliata',
+                'Materiali di alta qualità utilizzati nella costruzione',
+                'Design ergonomico per il massimo comfort',
+                'Compatibile con diversi sistemi e dispositivi',
+                'Garanzia di 2 anni inclusa'
+            ],
+            techDetails: {
+                'Dimensioni': '25 x 15 x 8 cm',
+                'Peso': '500g',
+                'Materiale': 'Plastica ABS, Metallo',
+                'Colore': 'Blu, Nero, Bianco',
+                'Produttore': 'BrandDemo'
+            },
+            availability: 'Disponibile',
+            delivery: 'Consegna entro 2-3 giorni lavorativi',
+            isPrime: true,
+            variants: {
+                'Colore': ['Blu', 'Nero', 'Bianco'],
+                'Taglia': ['S', 'M', 'L', 'XL']
+            },
+            categories: ['Elettronica', 'Accessori', 'Gadget'],
+            url: `https://amazon.it/dp/${asin}`
+        };
+        
+        return res.json({ 
+            success: true, 
+            product: demoProduct,
+            source: 'demo_data',
+            message: 'Dati di esempio - scraping dettagli temporaneamente non disponibile'
+        });
+    }
+});
+
+// On-demand scrape of a specific product page (legacy endpoint)
+app.get('/api/amazon/scrape', async (req, res) => {
+    try {
+        const { url, asin, country = 'IT' } = req.query;
+        const { scrapeAmazonProduct } = require('./lib/scraper/amazonScraper');
+        if (!url && !asin) return res.status(400).json({ success: false, error: 'Provide url or asin' });
+        const product = await scrapeAmazonProduct({ url, asin, country });
+        return res.json({ success: true, product });
+    } catch (err) {
+        console.error('Scrape error:', err);
+        return res.status(500).json({ success: false, error: err.message || 'scrape_failed' });
+    }
+});
+
+// Save product endpoint
+app.post('/api/products/save', (req, res) => {
+    try {
+        const productData = req.body;
+        
+        if (!productData.asin) {
+            return res.status(400).json({ success: false, error: 'ASIN required' });
+        }
+
+        // Create saved products directory if it doesn't exist
+        const fs = require('fs');
+        const path = require('path');
+        const savedProductsDir = path.join(__dirname, 'data', 'saved-products');
+        
+        if (!fs.existsSync(savedProductsDir)) {
+            fs.mkdirSync(savedProductsDir, { recursive: true });
+        }
+
+        // Save product to JSON file
+        const filename = `${productData.asin}.json`;
+        const filepath = path.join(savedProductsDir, filename);
+        
+        const savedProduct = {
+            ...productData,
+            savedAt: new Date().toISOString(),
+            id: productData.asin
+        };
+
+        fs.writeFileSync(filepath, JSON.stringify(savedProduct, null, 2));
+        
+        console.log(`[API] Product ${productData.asin} saved successfully`);
+        
+        // Download images in background (don't wait for completion)
+        if (productData.images || productData.mainImage) {
+            console.log(`[API] Starting background image download for ${productData.asin}`);
+            setImmediate(async () => {
+                try {
+                    const imagesToDownload = [];
+                    if (productData.mainImage) imagesToDownload.push(productData.mainImage);
+                    if (productData.images && Array.isArray(productData.images)) {
+                        imagesToDownload.push(...productData.images);
+                    }
+                    
+                    // Remove duplicates
+                    const uniqueImages = [...new Set(imagesToDownload)];
+                    
+                    // Trigger image download
+                    const imageReq = {
+                        body: {
+                            asin: productData.asin,
+                            images: uniqueImages,
+                            mainImage: productData.mainImage,
+                            title: productData.title
+                        }
+                    };
+                    
+                    const imageRes = {
+                        json: (data) => console.log(`[API] Background image download result:`, data),
+                        status: (code) => ({ json: (data) => console.log(`[API] Image download error ${code}:`, data) })
+                    };
+                    
+                    // Call the image download function
+                    await downloadProductImages(imageReq, imageRes);
+                } catch (error) {
+                    console.error(`[API] Background image download failed for ${productData.asin}:`, error.message);
+                }
+            });
+        }
+        
+        return res.json({ 
+            success: true, 
+            message: 'Prodotto salvato con successo. Immagini in download...',
+            productId: productData.asin
+        });
+
+    } catch (error) {
+        console.error('[API] Error saving product:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'Errore nel salvataggio del prodotto' 
+        });
+    }
+});
+
+// Download and archive product images at maximum resolution
+async function downloadProductImages(req, res) {
+    try {
+        const { asin, images, mainImage, title } = req.body;
+        
+        if (!asin || (!images && !mainImage)) {
+            return res.status(400).json({ success: false, error: 'ASIN and images required' });
+        }
+
+        console.log(`[ImageDownloader] Starting download for ASIN: ${asin}`);
+        
+        // Create images directory structure
+        const imagesDir = path.join(__dirname, 'data', 'product-images', asin);
+        await fsPromises.mkdir(imagesDir, { recursive: true });
+        
+        const downloadedImages = [];
+        let imageIndex = 0;
+        
+        // Download main image first
+        if (mainImage) {
+            try {
+                const filename = `main-image.jpg`;
+                const filepath = path.join(imagesDir, filename);
+                
+                console.log(`[ImageDownloader] Downloading main image: ${mainImage}`);
+                await downloadImageToFile(mainImage, filepath);
+                
+                // Verify image dimensions
+                const dimensions = await getImageDimensions(filepath);
+                console.log(`[ImageDownloader] Main image saved: ${dimensions.width}x${dimensions.height}px - ${Math.round(dimensions.fileSize/1024)}KB`);
+                
+                downloadedImages.push({
+                    type: 'main',
+                    filename,
+                    filepath,
+                    originalUrl: mainImage,
+                    dimensions
+                });
+            } catch (error) {
+                console.error(`[ImageDownloader] Failed to download main image:`, error.message);
+            }
+        }
+        
+        // Download additional images
+        if (images && Array.isArray(images)) {
+            for (const imageUrl of images) {
+                if (imageUrl === mainImage) continue; // Skip if same as main
+                
+                try {
+                    imageIndex++;
+                    const filename = `image-${imageIndex}.jpg`;
+                    const filepath = path.join(imagesDir, filename);
+                    
+                    console.log(`[ImageDownloader] Downloading image ${imageIndex}: ${imageUrl}`);
+                    await downloadImageToFile(imageUrl, filepath);
+                    
+                    // Verify image dimensions
+                    const dimensions = await getImageDimensions(filepath);
+                    console.log(`[ImageDownloader] Image ${imageIndex} saved: ${dimensions.width}x${dimensions.height}px - ${Math.round(dimensions.fileSize/1024)}KB`);
+                    
+                    downloadedImages.push({
+                        type: 'additional',
+                        filename,
+                        filepath,
+                        originalUrl: imageUrl,
+                        dimensions
+                    });
+                } catch (error) {
+                    console.error(`[ImageDownloader] Failed to download image ${imageIndex}:`, error.message);
+                }
+            }
+        }
+        
+        // Save download metadata
+        const metadata = {
+            asin,
+            title,
+            downloadDate: new Date().toISOString(),
+            totalImages: downloadedImages.length,
+            images: downloadedImages,
+            status: 'completed'
+        };
+        
+        const metadataPath = path.join(imagesDir, 'metadata.json');
+        await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        
+        console.log(`[ImageDownloader] ✅ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
+        
+        return res.json({
+            success: true,
+            message: `Downloaded ${downloadedImages.length} images at maximum resolution`,
+            asin,
+            imagesPath: imagesDir,
+            images: downloadedImages
+        });
+        
+    } catch (error) {
+        console.error('[ImageDownloader] Error:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to download images'
+        });
+    }
+}
+
+app.post('/api/products/download-images', downloadProductImages);
+
+// Get product images status
+app.get('/api/products/:asin/images', async (req, res) => {
+    try {
+        const { asin } = req.params;
+        const imagesDir = path.join(__dirname, 'data', 'product-images', asin);
+        const metadataPath = path.join(imagesDir, 'metadata.json');
+        
+        // Check if images directory exists
+        if (!fs.existsSync(imagesDir)) {
+            return res.json({
+                success: true,
+                asin,
+                status: 'not_downloaded',
+                images: []
+            });
+        }
+        
+        // Check if metadata exists
+        if (!fs.existsSync(metadataPath)) {
+            return res.json({
+                success: true,
+                asin,
+                status: 'in_progress',
+                images: []
+            });
+        }
+        
+        // Read metadata
+        const metadata = JSON.parse(await fsPromises.readFile(metadataPath, 'utf8'));
+        
+        return res.json({
+            success: true,
+            asin,
+            status: metadata.status || 'completed',
+            downloadDate: metadata.downloadDate,
+            totalImages: metadata.totalImages,
+            images: metadata.images
+        });
+        
+    } catch (error) {
+        console.error('[API] Error getting image status:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to get image status'
+        });
+    }
+});
+
+// Helper function to download image to file
+async function downloadImageToFile(url, filepath) {
+    const response = await axios({
+        method: 'GET',
+        url: url,
+        responseType: 'stream',
+        timeout: 30000,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+    });
+    
+    const writer = fs.createWriteStream(filepath);
+    response.data.pipe(writer);
+    
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
+
+// Helper function to get image dimensions
+async function getImageDimensions(filepath) {
+    try {
+        // Simple approach: try to read basic image info
+        const stats = await fsPromises.stat(filepath);
+        return {
+            width: 'Unknown',
+            height: 'Unknown',
+            fileSize: stats.size
+        };
+    } catch (error) {
+        return {
+            width: 'Unknown',
+            height: 'Unknown',
+            fileSize: 0
+        };
+    }
+}
+
+// Get saved products
+app.get('/api/products/saved', (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const savedProductsDir = path.join(__dirname, 'data', 'saved-products');
+        
+        if (!fs.existsSync(savedProductsDir)) {
+            return res.json({ success: true, products: [] });
+        }
+
+        const files = fs.readdirSync(savedProductsDir);
+        const products = [];
+
+        files.forEach(file => {
+            if (file.endsWith('.json')) {
+                try {
+                    const filepath = path.join(savedProductsDir, file);
+                    const productData = JSON.parse(fs.readFileSync(filepath, 'utf8'));
+                    products.push(productData);
+                } catch (error) {
+                    console.error(`Error reading product file ${file}:`, error);
+                }
+            }
+        });
+
+        // Sort by savedAt date (most recent first)
+        products.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+        return res.json({ success: true, products });
+
+    } catch (error) {
+        console.error('[API] Error getting saved products:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'Errore nel recupero dei prodotti salvati' 
+        });
+    }
+});
+
+// API endpoint per ottenere lo stato delle immagini di un prodotto
+app.get('/api/images/status/:asin', async (req, res) => {
+  try {
+    const { asin } = req.params;
+    const productDir = path.join(__dirname, 'data', 'product-images', asin);
+    const metadataPath = path.join(productDir, 'metadata.json');
+    
+    // Controlla se la cartella esiste
+    if (!fs.existsSync(productDir)) {
+      return res.json({
+        downloaded: false,
+        downloading: false,
+        count: 0,
+        maxDimensions: '0x0'
+      });
+    }
+    
+    // Controlla se esiste il file metadata.json
+    if (!fs.existsSync(metadataPath)) {
+      // Controlla se ci sono file nella cartella (download in corso)
+      const files = fs.readdirSync(productDir).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
+      
+      // Se ci sono file ma nessun metadata, potrebbe essere un download interrotto
+      // Controlla l'età dei file per determinare se è ancora in corso
+      if (files.length > 0) {
+        const newestFile = files.map(f => ({
+          name: f,
+          mtime: fs.statSync(path.join(productDir, f)).mtime
+        })).sort((a, b) => b.mtime - a.mtime)[0];
+        
+        const ageMinutes = (Date.now() - newestFile.mtime.getTime()) / (1000 * 60);
+        
+        // Se il file più recente è più vecchio di 5 minuti, considera il download fallito
+        const downloading = ageMinutes < 5;
+        
+        return res.json({
+          downloaded: false,
+          downloading: downloading,
+          count: files.length,
+          progress: downloading ? 50 : 0,
+          maxDimensions: '0x0',
+          status: downloading ? 'in_progress' : 'incomplete'
+        });
+      }
+      
+      return res.json({
+        downloaded: false,
+        downloading: false,
+        count: 0,
+        progress: 0,
+        maxDimensions: '0x0'
+      });
+    }
+    
+    // Leggi i metadata
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+    const files = fs.readdirSync(productDir).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
+    
+    // Calcola le dimensioni massime
+    let maxWidth = 0;
+    let maxHeight = 0;
+    
+    if (metadata.images && metadata.images.length > 0) {
+      metadata.images.forEach(img => {
+        if (img.dimensions) {
+          const [width, height] = img.dimensions.split('x').map(Number);
+          maxWidth = Math.max(maxWidth, width);
+          maxHeight = Math.max(maxHeight, height);
+        }
+      });
+    }
+    
+    res.json({
+      downloaded: true,
+      downloading: false,
+      count: files.length,
+      maxDimensions: `${maxWidth}x${maxHeight}`,
+      downloadDate: metadata.downloadDate,
+      images: metadata.images || []
+    });
+    
+  } catch (error) {
+    console.error('Errore nel controllo stato immagini:', error);
+    res.status(500).json({ error: 'Errore nel controllo stato immagini' });
+  }
+});
+
+// API endpoint per avviare il download delle immagini di un prodotto
+app.post('/api/images/download', async (req, res) => {
+  try {
+    const { asin, images } = req.body;
+    
+    if (!asin || !images || !Array.isArray(images)) {
+      return res.status(400).json({ error: 'ASIN e array di immagini richiesti' });
+    }
+    
+    console.log(`[ImageDownload] Avvio download per ASIN: ${asin} - ${images.length} immagini`);
+    
+    // Avvia il download in background
+    downloadProductImages(asin, images);
+    
+    res.json({ 
+      success: true, 
+      message: 'Download immagini avviato in background',
+      asin: asin,
+      imageCount: images.length
+    });
+    
+  } catch (error) {
+    console.error('Errore nell\'avvio del download immagini:', error);
+    res.status(500).json({ error: 'Errore nell\'avvio del download immagini' });
+  }
+});
+
+// API endpoint per ottenere le immagini HD scaricate di un prodotto
+app.get('/api/images/downloaded/:asin', async (req, res) => {
+  try {
+    const { asin } = req.params;
+    const productDir = path.join(__dirname, 'data', 'product-images', asin);
+    const metadataPath = path.join(productDir, 'metadata.json');
+    
+    if (!fs.existsSync(productDir) || !fs.existsSync(metadataPath)) {
+      return res.json({ images: [] });
+    }
+    
+    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
+    const downloadedImages = [];
+    
+    if (metadata.images && metadata.images.length > 0) {
+      for (const imgInfo of metadata.images) {
+        const imagePath = path.join(productDir, imgInfo.filename);
+        if (fs.existsSync(imagePath)) {
+          // Converti il path in URL servibile
+          const imageUrl = `/api/images/serve/${asin}/${imgInfo.filename}`;
+          downloadedImages.push({
+            url: imageUrl,
+            originalUrl: imgInfo.originalUrl,
+            filename: imgInfo.filename,
+            dimensions: imgInfo.dimensions,
+            fileSize: imgInfo.fileSize,
+            downloadDate: imgInfo.downloadDate
+          });
+        }
+      }
+    }
+    
+    res.json({ 
+      images: downloadedImages,
+      count: downloadedImages.length,
+      downloadDate: metadata.downloadDate
+    });
+    
+  } catch (error) {
+    console.error('Errore nel recupero immagini scaricate:', error);
+    res.status(500).json({ error: 'Errore nel recupero immagini scaricate' });
+  }
+});
+
+// API endpoint per servire le immagini scaricate
+app.get('/api/images/serve/:asin/:filename', (req, res) => {
+  try {
+    const { asin, filename } = req.params;
+    const imagePath = path.join(__dirname, 'data', 'product-images', asin, filename);
+    
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).json({ error: 'Immagine non trovata' });
+    }
+    
+    // Imposta gli headers per la cache
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 ore
+    res.setHeader('Content-Type', 'image/jpeg');
+    
+    // Serve l'immagine
+    res.sendFile(path.resolve(imagePath));
+    
+  } catch (error) {
+    console.error('Errore nel servire immagine:', error);
+    res.status(500).json({ error: 'Errore nel servire immagine' });
+  }
+});
+
+// API endpoint per creare listing eBay
+app.post('/api/ebay/create-listing', async (req, res) => {
+  try {
+    const { sku, title, description, price, images, categoryId, condition, quantity, marketplace } = req.body;
+    
+    console.log(`[eBayAPI] Creating listing: ${title}`);
+    
+    // Validazione dati richiesti
+    if (!sku || !title || !price) {
+      return res.status(400).json({ 
+        error: 'SKU, titolo e prezzo sono richiesti' 
+      });
+    }
+    
+    // Simulazione creazione listing eBay (sostituire con vera API eBay)
+    const mockEbayResponse = {
+      success: true,
+      listingId: `eBay-${sku}-${Date.now()}`,
+      itemId: Math.floor(Math.random() * 1000000000),
+      sku: sku,
+      title: title,
+      price: price,
+      condition: condition || 'NEW',
+      marketplace: marketplace || 'EBAY_IT',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      ebayUrl: `https://www.ebay.it/itm/${Math.floor(Math.random() * 1000000000)}`
+    };
+    
+    // TODO: Integrare con vera eBay API
+    // const ebayClient = new eBayApi({
+    //   clientId: process.env.EBAY_CLIENT_ID,
+    //   clientSecret: process.env.EBAY_CLIENT_SECRET,
+    //   env: 'PRODUCTION' // or 'SANDBOX'
+    // });
+    
+    // const ebayListing = await ebayClient.sell.inventory.createOffer({
+    //   sku: sku,
+    //   marketplaceId: marketplace,
+    //   format: 'FIXED_PRICE',
+    //   availableQuantity: quantity,
+    //   categoryId: categoryId,
+    //   listingDescription: description,
+    //   pricingSummary: {
+    //     price: {
+    //       currency: 'EUR',
+    //       value: price.toString()
+    //     }
+    //   }
+    // });
+    
+    console.log(`[eBayAPI] Listing created (mock): ${mockEbayResponse.listingId}`);
+    
+    res.json(mockEbayResponse);
+    
+  } catch (error) {
+    console.error('[eBayAPI] Error creating listing:', error);
+    res.status(500).json({ 
+      error: 'Errore nella creazione del listing eBay',
+      details: error.message 
+    });
+  }
+});
+
+// Delete saved product
+app.delete('/api/products/saved/:asin', (req, res) => {
+    try {
+        const { asin } = req.params;
+        const fs = require('fs');
+        const path = require('path');
+        const filepath = path.join(__dirname, 'data', 'saved-products', `${asin}.json`);
+        
+        if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+            console.log(`[API] Product ${asin} deleted successfully`);
+            return res.json({ success: true, message: 'Prodotto eliminato' });
+        } else {
+            return res.status(404).json({ success: false, error: 'Prodotto non trovato' });
+        }
+
+    } catch (error) {
+        console.error('[API] Error deleting product:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: 'Errore nell\'eliminazione del prodotto' 
+        });
+    }
+});
+
+// Price monitor endpoints
+app.post('/api/monitor/add', (req, res) => {
+    try {
+        const { asin, country } = req.body || {};
+        if (!asin) return res.status(400).json({ success: false, error: 'asin required' });
+        const info = priceMonitor.addMonitor({ asin, country, onChange: ({ asin, oldPrice, newPrice }) => {
+            console.log(`Price changed for ${asin}: ${oldPrice} -> ${newPrice}`);
+            // TODO: trigger eBay price update rule here
+        }});
+        return res.json({ success: true, monitor: info });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/monitor/remove', (req, res) => {
+    const { asin } = req.body || {};
+    if (!asin) return res.status(400).json({ success: false, error: 'asin required' });
+    priceMonitor.removeMonitor(asin);
+    return res.json({ success: true });
+});
+
+app.get('/api/monitor/list', (req, res) => {
+    return res.json({ success: true, monitors: priceMonitor.listMonitors() });
+});
+
+// eBay Listings Management Endpoints
+app.get('/api/ebay/listings', async (req, res) => {
+    // Get user's eBay listings
+    try {
+        // For now return empty array - in production would fetch from eBay API
+        const listings = [];
+        
+        // TODO: Implement actual eBay API call to get listings
+        // const response = await ebayApi.getMyListings(accessToken);
+        
+        res.json({ success: true, listings });
+    } catch (error) {
+        console.error('Error fetching eBay listings:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch listings' });
+    }
+});
+
+app.post('/api/ebay/sync-listings', async (req, res) => {
+    // Sync listings with eBay
+    try {
+        console.log('Syncing eBay listings...');
+        
+        // TODO: Implement actual eBay sync
+        // const response = await ebayApi.syncListings(accessToken);
+        
+        res.json({ success: true, message: 'Listings synced successfully' });
+    } catch (error) {
+        console.error('Error syncing eBay listings:', error);
+        res.status(500).json({ success: false, error: 'Failed to sync listings' });
+    }
+});
+
+app.post('/api/ebay/publish', async (req, res) => {
+    // Publish draft to eBay
+    try {
+        const { title, description, price, image, brand, sourceProduct } = req.body;
+        
+        console.log('Publishing to eBay:', { title, price });
+        
+        // TODO: Implement actual eBay listing creation
+        // const listingData = {
+        //     title,
+        //     description,
+        //     price: parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.')),
+        //     image,
+        //     brand,
+        //     category: 'Electronics' // Default category
+        // };
+        // const response = await ebayApi.createListing(accessToken, listingData);
+        
+        // For now return success
+        const mockListingId = 'eb_' + Date.now();
+        
+        res.json({ 
+            success: true, 
+            listingId: mockListingId,
+            message: 'Draft published to eBay successfully'
+        });
+    } catch (error) {
+        console.error('Error publishing to eBay:', error);
+        res.status(500).json({ success: false, error: 'Failed to publish to eBay' });
+    }
+});
+
+app.post('/api/ebay/listings/:id/end', async (req, res) => {
+    // End eBay listing
+    try {
+        const listingId = req.params.id;
+        console.log('Ending eBay listing:', listingId);
+        
+        // TODO: Implement actual eBay listing end
+        // const response = await ebayApi.endListing(accessToken, listingId);
+        
+        res.json({ success: true, message: 'Listing ended successfully' });
+    } catch (error) {
+        console.error('Error ending eBay listing:', error);
+        res.status(500).json({ success: false, error: 'Failed to end listing' });
+    }
+});
+
+app.post('/api/ebay/listings/:id/relist', async (req, res) => {
+    // Relist eBay item
+    try {
+        const listingId = req.params.id;
+        console.log('Relisting eBay item:', listingId);
+        
+        // TODO: Implement actual eBay relisting
+        // const response = await ebayApi.relistItem(accessToken, listingId);
+        
+        const newListingId = 'eb_relist_' + Date.now();
+        
+        res.json({ 
+            success: true, 
+            newListingId,
+            message: 'Item relisted successfully' 
+        });
+    } catch (error) {
+        console.error('Error relisting eBay item:', error);
+        res.status(500).json({ success: false, error: 'Failed to relist item' });
+    }
+});
+
+// Product details (by ASIN) - useful for price refresh on single product
+app.get('/api/amazon/product/:asin', async (req, res) => {
+    const asin = req.params.asin;
+    if (!asin) return res.status(400).json({ success: false, error: 'Missing asin' });
+    try {
+        // In futuro: scraping diretto per singolo prodotto
+        const product = await scrapeAmazonProduct({ asin, country: req.query.country || 'IT' });
+        return res.json({ success: true, product });
+    } catch (err) {
+        console.error('Product details error:', err && err.message ? err.message : err);
+        return res.status(502).json({ success: false, error: 'Failed to fetch product details', details: err.message });
+    }
+});
+
+// Admin: clear internal caches (protected by ADMIN_TOKEN env). Not exposed in production without token.
+app.post('/api/admin/clear-cache', (req, res) => {
+    const token = req.headers['x-admin-token'] || req.body && req.body.token;
+    if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) return res.status(401).json({ success: false, error: 'unauthorized' });
+    try {
+        // Nessuna cache da pulire (SerpApi rimosso)
+        return res.json({ success: true, message: 'No cache to clear (SerpApi removed)' });
+    } catch (err) {
+        return res.status(500).json({ success: false, error: err.message || 'failed' });
+    }
+});
+
+function startHttp() {
+    console.log('� Starting HTTP server as fallback...');
+    const httpServer = app.listen(PORT, '0.0.0.0', () => {
+        const addr = httpServer.address();
+    console.log('✅ Shappa Backend Server Running (HTTP)');
+    console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('🌐 URL: http://localhost:' + PORT);
+    });
+}
+
+try {
+    let httpsOptions = {};
+    const pfxPath = path.join(__dirname, 'ssl', 'key.pfx');
+    const pemKeyPath = path.join(__dirname, 'ssl', 'key.pem');
+    const pemCertPath = path.join(__dirname, 'ssl', 'cert.pem');
+    if (fs.existsSync(pfxPath)) {
+        try {
+            httpsOptions.pfx = fs.readFileSync(pfxPath);
+            httpsOptions.passphrase = process.env.DEV_PFX_PASSPHRASE || 'shappa-dev';
+            console.log('🔐 Using PFX for HTTPS from', pfxPath);
+        } catch (e) {
+            console.warn('⚠️ Failed to read PFX, falling back to PEM if available', e.message);
+        }
+    }
+    if (!httpsOptions.pfx && fs.existsSync(pemKeyPath) && fs.existsSync(pemCertPath)) {
+        httpsOptions.key = fs.readFileSync(pemKeyPath);
+        httpsOptions.cert = fs.readFileSync(pemCertPath);
+        console.log('🔐 Using PEM key/cert for HTTPS from ssl folder');
+    }
+    console.log('� Starting HTTPS server...');
+    const httpsServer = https.createServer(httpsOptions, app);
+    httpsServer.on('error', (err) => {
+        console.error('❌ HTTPS server error:', err.message);
+        console.warn('🔄 Falling back to HTTP...');
+        startHttp();
+    });
+    httpsServer.listen(PORT, '0.0.0.0', () => {
+        const addr = httpsServer.address();
+        console.log('✅ Shappa Backend Server Running (HTTPS)');
+        console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('🌐 URL: https://localhost:' + PORT);
+        try {
+            priceMonitor.startPriceMonitor();
+            console.log('⏱️ Price monitor started (every 30m)');
+        } catch (e) {
+            console.log('Price monitor failed to start:', e.message);
+        }
+    });
+} catch (err) {
+    console.error('❌ HTTPS startup failed:', err.message);
+    console.warn('🔄 Falling back to HTTP...');
+    startHttp();
+}

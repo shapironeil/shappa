@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}} - Shappa Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-primary);
+            border-radius: var(--venus-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--venus-font-size-lg);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-logo-subtitle {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+            margin-left: auto;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-menu-icon {
+            font-size: var(--venus-font-size-base);
+            opacity: 0.8;
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            margin: 0 0 var(--venus-space-xs) 0;
+            font-weight: var(--venus-font-weight-normal);
+        }
+
+        .venus-page-subtitle {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            min-width: 300px;
+        }
+
+        .venus-search-icon {
+            color: var(--venus-text-muted);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .venus-search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-search-input::placeholder {
+            color: var(--venus-text-muted);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: var(--venus-space-2xl);
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Venus Responsive */
+        @media (max-width: 768px) {
+            .venus-sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                transition: left var(--venus-transition);
+            }
+
+            .venus-sidebar.venus-open {
+                left: 0;
+            }
+
+            .venus-main-content {
+                width: 100%;
+            }
+
+            .venus-main-header {
+                padding: var(--venus-space-lg);
+            }
+
+            .venus-content-area {
+                padding: var(--venus-space-lg);
+            }
+
+            .venus-search-box {
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Venus Dashboard Layout -->
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-icon">🚀</span>
+                    <span class="venus-logo-text">SHAPPA</span>
+                    <span class="venus-logo-subtitle">DASHBOARD</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item {{DASHBOARD_ACTIVE}}">
+                    <span class="venus-menu-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="products.html" class="venus-menu-item {{PRODUCTS_ACTIVE}}">
+                    <span class="venus-menu-icon">�</span>
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item {{LISTINGS_ACTIVE}}">
+                    <span class="venus-menu-icon">�</span>
+                    Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item {{REPORTS_ACTIVE}}">
+                    <span class="venus-menu-icon">�</span>
+                    Report
+                </a>
+                <a href="settings.html" class="venus-menu-item {{SETTINGS_ACTIVE}}">
+                    <span class="venus-menu-icon">⚙️</span>
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    <span class="venus-menu-icon">🚪</span>
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            <div class="venus-main-header">
+                <div class="venus-header-left">
+                    <h1 class="venus-page-title">{{GREETING}}</h1>
+                    <h2 class="venus-page-subtitle">{{PAGE_SUBTITLE}}</h2>
+                </div>
+                <div class="venus-header-right">
+                    <div class="venus-search-box">
+                        <span class="venus-search-icon">🔍</span>
+                        <input type="text" class="venus-search-input" placeholder="Search">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="venus-content-area">
+                {{PAGE_CONTENT}}
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Auth System -->
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    
+    <script>
+        // Initialize Auth System
+        let authSystem;
+        try {
+            authSystem = new ShappaAuth();
+            console.log('✅ Auth system loaded');
+        } catch (error) {
+            console.error('❌ Failed to load auth system:', error);
+        }
+
+        // Allow direct access without login check for testing
+        // if (authSystem && !authSystem.isLoggedIn()) {
+        //     console.log('⚠️ User not logged in, redirecting...');
+        //     window.location.href = '../../index.html#login';
+        // }
+
+        // Update user info if logged in
+        if (authSystem && authSystem.isLoggedIn()) {
+            const currentUser = authSystem.getCurrentUser();
+            if (currentUser) {
+                const userNameElement = document.getElementById('userName');
+                const userAvatarElement = document.getElementById('userAvatar');
+                
+                if (userNameElement) {
+                    userNameElement.textContent = currentUser.username;
+                }
+                
+                if (userAvatarElement) {
+                    userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            if (authSystem) {
+                authSystem.logout();
+                window.location.href = '../../index.html';
+            }
+        });
+    </script>
+</body>
+</html>

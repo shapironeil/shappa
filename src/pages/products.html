@@ -1,0 +1,3096 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerca Prodotti - Shappa Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="stylesheet" href="../../assets/styles/amazon-card.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%23ff9900'/></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            margin: 0 0 var(--venus-space-xs) 0;
+            font-weight: var(--venus-font-weight-normal);
+        }
+
+        .venus-page-subtitle {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            min-width: 300px;
+        }
+
+        .venus-search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-search-input::placeholder {
+            color: var(--venus-text-muted);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: var(--venus-space-2xl);
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Products Widgets Grid */
+        .venus-products-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: var(--venus-space-lg);
+            width: 100%;
+        }
+
+        .venus-widget {
+            background: #ffffff;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            transition: all var(--venus-transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .venus-widget:hover {
+            border-color: var(--venus-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .venus-widget-search {
+            grid-column: span 3;
+            min-height: 200px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #20bf6b 0%, #0fb9b1 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 8px 25px rgba(32, 191, 107, 0.25);
+        }
+
+        .venus-widget-search.minimized {
+            grid-column: span 1;
+            max-width: 200px;
+            min-height: 120px;
+            cursor: pointer;
+        }
+
+        .venus-widget-search.minimized .venus-widget-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+
+        .venus-widget-search.minimized .venus-widget-title {
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            color: white;
+        }
+
+        .venus-widget-search.minimized .venus-search-form {
+            display: none;
+        }
+
+        .venus-widget-search.minimized .expand-icon {
+            display: flex;
+            margin: 10px auto 0;
+            cursor: pointer;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .venus-widget-search.minimized .expand-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .expand-icon {
+            display: none;
+        }
+
+        .venus-widget-search .venus-widget-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            margin: 8px;
+        }
+
+        .venus-widget-search .venus-widget-title {
+            color: white;
+            font-weight: 700;
+        }
+
+        .venus-widget-search .venus-form-input,
+        .venus-widget-search .venus-form-select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .venus-widget-search .venus-form-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+        }
+
+        .venus-widget-search .venus-btn-primary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+        }
+
+        .venus-widget-search .venus-btn-primary:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+        }
+
+        .venus-widget-stats {
+            grid-column: span 1;
+            min-height: 120px;
+        }
+
+        .venus-widget-results {
+            grid-column: span 3;
+            min-height: 400px;
+        }
+        .venus-results-grid .result-card {
+            background: #fff;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-md);
+            cursor: pointer;
+        }
+
+        .venus-widget-content {
+            width: 100%;
+            height: 100%;
+        }
+
+        .venus-widget-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-lg) 0;
+        }
+
+        /* Search Form Styles */
+        .venus-search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--venus-space-lg);
+            align-items: end;
+        }
+
+        .venus-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-form-group-main {
+            grid-column: 1 / -1;
+        }
+
+        .venus-form-label {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-form-input,
+        .venus-form-select {
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            font-size: var(--venus-font-size-base);
+            font-family: var(--venus-font-family);
+            transition: all var(--venus-transition);
+            background: var(--venus-bg-card);
+        }
+
+        .venus-form-input:focus,
+        .venus-form-select:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px var(--venus-primary-light);
+        }
+
+        /* Stats Styles */
+        .venus-stat-value {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            text-align: center;
+            margin-bottom: var(--venus-space-sm);
+        }
+
+        .venus-stat-label {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-secondary);
+            text-align: center;
+        }
+
+        /* Results Grid */
+        .venus-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--venus-space-lg);
+        }
+
+        .venus-product-card {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .venus-product-card:hover {
+            border-color: #ff9900;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .product-image-container {
+            position: relative;
+            padding: 15px;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            overflow: hidden;
+        }
+
+        .product-image {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .venus-product-card:hover .product-image {
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Loading placeholder per immagini */
+        .product-image:not([src]), .product-image[src=""] {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        .product-image.error-image {
+            opacity: 0.7;
+            filter: grayscale(30%);
+        }
+
+        .product-image.lazy-load:not([src]) {
+            background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            min-height: 200px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .discount-tag {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #B12704;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .product-badges {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .badge {
+            background: rgba(0, 113, 133, 0.9);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .product-content {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .product-title {
+            font-size: 0.95em;
+            color: #232f3e;
+            line-height: 1.3;
+            margin: 0;
+            font-weight: 400;
+            display: -webkit-box;
+            /* Standard property for compatibility */
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.6em;
+        }
+
+        .product-brand {
+            color: #007185;
+            font-size: 0.85em;
+            font-weight: 400;
+        }
+
+        .product-rating-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 20px;
+        }
+
+        .rating-stars {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stars {
+            color: #ff9900;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .rating-text {
+            font-size: 0.85em;
+            color: #232f3e;
+            font-weight: 400;
+        }
+
+        .reviews-count {
+            color: #007185;
+            font-size: 0.8em;
+        }
+
+        .product-price-row {
+            margin: 5px 0;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .current-price {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #B12704;
+        }
+
+        .original-price {
+            font-size: 0.9em;
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .product-shipping-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 24px;
+        }
+
+        .prime-badge {
+            background: #007185;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: 500;
+        }
+
+        .shipping-info {
+            font-size: 0.8em;
+            color: #007185;
+        }
+
+        .product-snippet {
+            color: #666;
+            font-size: 0.8em;
+            line-height: 1.3;
+            margin: 5px 0;
+            flex: 1;
+        }
+
+        .product-actions {
+            margin-top: auto;
+            display: flex;
+            gap: 8px;
+            padding-top: 10px;
+        }
+
+        /* Stili per i bottoni prodotto */
+        .btn-info, .btn-draft {
+            flex: 1;
+            padding: 12px 16px;
+            margin: 0 6px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            color: #333;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-info:hover, .btn-draft:hover {
+            background: white;
+            border-color: #ff9900;
+            color: #ff9900;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(255, 153, 0, 0.25);
+        }
+
+        .btn-info:active, .btn-draft:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(255, 153, 0, 0.3);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Product Card Enhanced Styles */
+        .venus-btn {
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            background: var(--venus-bg-card);
+            color: var(--venus-text-primary);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-btn:hover {
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+            transform: translateY(-1px);
+        }
+
+        .venus-btn-primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-primary:hover {
+            background: var(--venus-primary-dark);
+            color: var(--venus-text-white);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .venus-sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                transition: left var(--venus-transition);
+            }
+
+            .venus-sidebar.venus-open {
+                left: 0;
+            }
+
+            .venus-main-content {
+                width: 100%;
+            }
+
+            .venus-products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .venus-widget-search,
+            .venus-widget-results {
+                grid-column: span 1;
+            }
+        }
+
+        /* Product Detail Modal Styles */
+        .product-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .product-modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 1200px;
+            max-height: 90vh;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e1e8ed;
+            background: #f8f9fa;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.4em;
+            color: #232f3e;
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e1e8ed;
+            color: #232f3e;
+        }
+
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff9900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .demo-badge {
+            background: linear-gradient(135deg, #ff9900, #ffb84d);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .main-image img {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: high-quality;
+            /* Standard property for compatibility */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        .image-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: high-quality;
+            background: #fafafa;
+            padding: 4px;
+        }
+
+        .thumbnail:hover {
+            border-color: #ff9900;
+            transform: scale(1.05);
+        }
+
+        /* Zoom Modal Styles */
+        .image-zoom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-overlay {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .zoom-container {
+            background: white;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            cursor: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoom-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .zoom-header h3 {
+            margin: 0;
+            color: #232f3e;
+            font-size: 1.2em;
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .zoom-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .zoom-close:hover {
+            background: #f5f5f5;
+            color: #000;
+        }
+
+        .zoom-image-container {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            min-height: 500px;
+            max-height: 80vh;
+            position: relative;
+            background: #fafafa;
+        }
+
+        .zoom-image {
+            max-width: none;
+            max-height: none;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            image-rendering: high-quality;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            border-top: 1px solid #e1e8ed;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .zoom-btn {
+            background: #ff9900;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: #e88900;
+            transform: translateY(-1px);
+        }
+
+        .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-header h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
+            color: #232f3e;
+            line-height: 1.4;
+        }
+
+        .product-brand {
+            color: #007185;
+            font-size: 0.95em;
+        }
+
+        .rating-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stars {
+            color: #ff9900;
+            font-size: 1.1em;
+        }
+
+        .rating-text {
+            font-weight: 500;
+            color: #232f3e;
+        }
+
+        .reviews-count {
+            color: #007185;
+            font-size: 0.9em;
+        }
+
+        .price-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .current-price {
+            font-size: 1.8em;
+            font-weight: 500;
+            color: #B12704;
+        }
+
+        .original-price {
+            font-size: 1.1em;
+            text-decoration: line-through;
+            color: #666;
+        }
+
+        .discount-badge {
+            background: #B12704;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .delivery-section {
+            padding: 15px;
+            background: #f0f2f2;
+            border-radius: 8px;
+        }
+
+        .prime-badge {
+            background: #007185;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .availability, .delivery {
+            margin: 5px 0;
+            font-size: 0.95em;
+        }
+
+        .variants-section h4 {
+            margin: 0 0 15px 0;
+            color: #232f3e;
+        }
+
+        .variant-group {
+            margin-bottom: 15px;
+        }
+
+        .variant-options {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .variant-option {
+            padding: 6px 12px;
+            border: 1px solid #d5dbdb;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .variant-option:hover {
+            border-color: #ff9900;
+            box-shadow: 0 0 0 1px #ff9900;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #ff9900;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #e88b00;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #232f3e;
+            border: 1px solid #d5dbdb;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f2f2;
+            border-color: #bbb;
+        }
+
+        .features-section, .tech-details-section, .categories-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .features-section h4, .tech-details-section h4, .categories-section h4 {
+            margin: 0 0 20px 0;
+            color: #232f3e;
+            font-size: 1.1em;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .features-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f2f2;
+            line-height: 1.5;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            color: #007185;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .tech-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .tech-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .tech-key {
+            font-weight: 500;
+            color: #232f3e;
+            flex: 1;
+        }
+
+        .tech-value {
+            color: #666;
+            text-align: right;
+            flex: 1;
+        }
+
+        .categories-list {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .category-tag {
+            background: #e1e8ed;
+            color: #232f3e;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .error-state h3 {
+            color: #B12704;
+            margin-bottom: 15px;
+        }
+
+        .retry-btn {
+            background: #ff9900;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        /* Save Product Modal Styles */
+        .save-product-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .save-product-modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .product-preview {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .preview-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .preview-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.1em;
+            color: #232f3e;
+            line-height: 1.3;
+        }
+
+        .preview-price {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #B12704;
+            margin: 5px 0;
+        }
+
+        .preview-brand {
+            color: #007185;
+            font-size: 0.9em;
+            margin: 0;
+        }
+
+        .save-options h4 {
+            margin: 0 0 20px 0;
+            color: #232f3e;
+            font-size: 1.1em;
+        }
+
+        .save-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .save-buttons button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save.btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-save.btn-primary:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-view-details.btn-secondary {
+            background: #007185;
+            color: white;
+        }
+
+        .btn-view-details.btn-secondary:hover {
+            background: #005a6b;
+            transform: translateY(-1px);
+        }
+
+        .btn-skip.btn-tertiary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-skip.btn-tertiary:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+        }
+
+        .demo-note {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .save-action-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .btn-save-product, .btn-open-amazon {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-save-product {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-save-product:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-open-amazon {
+            background: #ff9900;
+            color: white;
+        }
+
+        .btn-open-amazon:hover {
+            background: #e88b00;
+            transform: translateY(-1px);
+        }
+
+        /* Toast Notification Styles */
+        /* Product Menu Bar and Tabs */
+        .product-menu-bar {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 25px;
+            gap: 4px;
+        }
+
+        .menu-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #666;
+            font-size: 0.95em;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .menu-tab:hover {
+            background: rgba(255, 153, 0, 0.1);
+            color: #ff9900;
+        }
+
+        .menu-tab.active {
+            background: #ff9900;
+            color: white;
+            box-shadow: 0 2px 4px rgba(255, 153, 0, 0.3);
+        }
+
+        .tab-content-container {
+            position: relative;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Automation Tab Styles */
+        .automation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .automation-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+        }
+
+        .automation-section h4 {
+            margin: 0 0 15px 0;
+            color: #232f3e;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .automation-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #232f3e;
+        }
+
+        .control-input, .control-select {
+            padding: 8px 12px;
+            border: 1px solid #d5dbdb;
+            border-radius: 4px;
+            font-size: 0.9em;
+            background: white;
+        }
+
+        .control-input:focus, .control-select:focus {
+            outline: none;
+            border-color: #ff9900;
+            box-shadow: 0 0 0 2px rgba(255, 153, 0, 0.2);
+        }
+
+        .checkbox-group {
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .control-checkbox {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-automation {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-monitor {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-monitor:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-listing {
+            background: #007185;
+            color: white;
+        }
+
+        .btn-listing:hover {
+            background: #005a6b;
+            transform: translateY(-1px);
+        }
+
+        .btn-stock {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .btn-stock:hover {
+            background: #5a32a3;
+            transform: translateY(-1px);
+        }
+
+        .btn-notifications {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .btn-notifications:hover {
+            background: #e8681c;
+            transform: translateY(-1px);
+        }
+
+        /* Fixed Action Buttons */
+        .fixed-action-buttons {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 10001;
+        }
+
+        .fixed-action-buttons button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 160px;
+            justify-content: center;
+        }
+
+        .fixed-action-buttons .btn-save-product {
+            background: #28a745;
+            color: white;
+        }
+
+        .fixed-action-buttons .btn-save-product:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.3);
+        }
+
+        .fixed-action-buttons .btn-open-amazon {
+            background: #ff9900;
+            color: white;
+        }
+
+        .fixed-action-buttons .btn-open-amazon:hover {
+            background: #e88b00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 153, 0, 0.3);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 11000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            border-left: 4px solid #007185;
+        }
+
+        .toast-success {
+            border-left-color: #28a745;
+        }
+
+        .toast-error {
+            border-left-color: #dc3545;
+        }
+
+        .toast-info {
+            border-left-color: #007185;
+        }
+
+        .toast-show {
+            transform: translateX(0);
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+        }
+
+        .toast-icon {
+            font-size: 1.2em;
+        }
+
+        .toast-message {
+            color: #232f3e;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .product-modal {
+                margin: 10px;
+                max-height: 95vh;
+            }
+            
+            .product-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .modal-header {
+                padding: 15px 20px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+            
+            .tech-details-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .save-product-modal {
+                margin: 10px;
+            }
+
+            .product-preview {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .preview-image {
+                align-self: center;
+            }
+
+            .save-action-bar {
+                flex-direction: column;
+            }
+
+            .toast {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                transform: translateY(-100px);
+            }
+
+            .toast-show {
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Venus Dashboard Layout -->
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="products.html" class="venus-menu-item venus-active">
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item">
+                    Report
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            
+            <div class="venus-content-area">
+                <!-- Products Widgets Grid -->
+                <div class="venus-products-grid">
+                    <!-- Search Widget -->
+                    <div class="venus-widget venus-widget-search">
+                        <div class="venus-widget-content">
+                            <h3 class="venus-widget-title">Ricerca Prodotti</h3>
+                            <div class="expand-icon" onclick="toggleSearchWidget()">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </svg>
+                            </div>
+                            <form class="venus-search-form" onsubmit="searchProducts(event)">
+                                <div class="venus-form-group venus-form-group-main">
+                                    <label class="venus-form-label">Prodotto da cercare</label>
+                                    <input type="text" class="venus-form-input" id="searchQuery" placeholder="Inserisci il nome del prodotto..." required>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Marketplace</label>
+                                    <select class="venus-form-select" id="marketplace">
+                                        <option value="amazon">Amazon</option>
+                                        <option value="ebay" disabled>eBay (Coming Soon)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Paese</label>
+                                    <select class="venus-form-select" id="searchCountry">
+                                        <option value="IT" selected>Italia</option>
+                                        <option value="US">Stati Uniti</option>
+                                        <option value="DE">Germania</option>
+                                        <option value="FR">Francia</option>
+                                        <option value="ES">Spagna</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Categoria</label>
+                                    <select class="venus-form-select" id="searchCategory">
+                                        <option value="">Tutte le categorie</option>
+                                        <option value="electronics">Elettronica</option>
+                                        <option value="books">Libri</option>
+                                        <option value="home">Casa e Giardino</option>
+                                        <option value="fashion">Abbigliamento</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Prezzo Min</label>
+                                    <input type="number" class="venus-form-input" id="minPrice" placeholder="€0.00" step="0.01" min="0">
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Prezzo Max</label>
+                                    <input type="number" class="venus-form-input" id="maxPrice" placeholder="€999.99" step="0.01" min="0">
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <button type="submit" class="venus-btn venus-btn-primary">
+                                        Cerca Prodotti
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <!-- Filtri e Ordinamento -->
+                            <div id="filtersSection" style="margin-top: var(--venus-space-xl); padding-top: var(--venus-space-lg); border-top: 1px solid var(--venus-border); display: none;">
+                                <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary);">Filtri e Ordinamento</h4>
+                                <div style="display: flex; gap: var(--venus-space-md); flex-wrap: wrap; align-items: center;">
+                                    <button class="venus-btn" onclick="sortProducts('price_asc')" style="font-size: var(--venus-font-size-sm);">
+                                        Prezzo Crescente
+                                    </button>
+                                    <button class="venus-btn" onclick="sortProducts('price_desc')" style="font-size: var(--venus-font-size-sm);">
+                                        Prezzo Decrescente
+                                    </button>
+                                    <button class="venus-btn" onclick="sortProducts('rating_desc')" style="font-size: var(--venus-font-size-sm);">
+                                        Per Feedback
+                                    </button>
+                                    <div style="display: flex; align-items: center; gap: var(--venus-space-xs);">
+                                        <label style="font-size: var(--venus-font-size-sm); color: var(--venus-text-primary);">Amazon Prime:</label>
+                                        <input type="checkbox" id="primeVideoFilter" checked onchange="togglePrimeVideoFilter()" style="margin: 0;">
+                                        <span style="font-size: var(--venus-font-size-sm); color: var(--venus-text-muted);">ON</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Widgets -->
+                    <div class="venus-widget venus-widget-stats">
+                        <div class="venus-widget-content">
+                            <div class="venus-stat-value" id="totalResults">0</div>
+                            <div class="venus-stat-label">Totale Risultati</div>
+                        </div>
+                    </div>
+                    
+                    <div class="venus-widget venus-widget-stats">
+                        <div class="venus-widget-content">
+                            <div class="venus-stat-value" id="avgPrice">-</div>
+                            <div class="venus-stat-label">Prezzo Medio</div>
+                        </div>
+                    </div>
+                    
+                    <div class="venus-widget venus-widget-stats">
+                        <div class="venus-widget-content">
+                            <div class="venus-stat-value" id="avgRating">-</div>
+                            <div class="venus-stat-label">Rating Medio</div>
+                        </div>
+                    </div>
+
+                    <!-- Results Widget -->
+                    <div class="venus-widget venus-widget-results">
+                        <div class="venus-widget-content">
+                            <h3 class="venus-widget-title">Risultati Ricerca</h3>
+                            
+                            <div id="loadingMessage" style="display: none; text-align: center; padding: var(--venus-space-2xl);">
+                                <p>Ricerca in corso...</p>
+                            </div>
+                            
+                            <div id="errorMessage" style="display: none; text-align: center; padding: var(--venus-space-2xl); color: var(--venus-danger);">
+                            </div>
+                            
+                            <div id="noResults" style="display: none; text-align: center; padding: var(--venus-space-2xl);">
+                                <h4>Nessun risultato trovato</h4>
+                                <p>Prova con termini di ricerca diversi.</p>
+                            </div>
+                            
+                            <div class="venus-results-grid" id="resultsGrid">
+                                <!-- I risultati verranno inseriti qui dinamicamente -->
+                            </div>
+                            <div id="productDetail" style="margin-top:24px"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Auth System -->
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+            <script src="../js/products.js"></script>
+            <script type="module">
+                import { renderAmazonProductCard } from '/src/components/AmazonProductCard.js';
+
+                // Estendo renderProducts per collegare click e dataset asin/url
+                const originalRender = window.renderProducts;
+                window.renderProducts = function(products) {
+                    originalRender(products);
+                    const grid = document.getElementById('resultsGrid');
+                    const country = document.getElementById('searchCountry')?.value || 'IT';
+                    if (!grid) return;
+                    // aggiungi dataset asin/url sulle card
+                    const cards = grid.querySelectorAll('.venus-product-card');
+                    cards.forEach((card, idx) => {
+                        const p = products[idx];
+                        if (p) {
+                            card.dataset.asin = p.asin || p.id || '';
+                            card.dataset.url = p.url || p.link || '';
+                        }
+                        card.addEventListener('click', async () => {
+                            const productDetail = document.getElementById('productDetail');
+                            if (productDetail) productDetail.innerHTML = '<div>Caricamento dettagli...</div>';
+                            try {
+                                const params = new URLSearchParams();
+                                if (card.dataset.asin) params.set('asin', card.dataset.asin);
+                                if (card.dataset.url) params.set('url', card.dataset.url);
+                                params.set('country', country);
+                                const resp = await fetch('/api/amazon/scrape?' + params.toString());
+                                const data = await resp.json();
+                                renderAmazonProductCard(productDetail, data.product || {});
+                            } catch (e) {
+                                if (productDetail) productDetail.innerHTML = `<div style=\"color:red\">Errore dettaglio: ${e.message}</div>`;
+                            }
+                        });
+                    });
+                };
+            </script>
+    
+    <script>
+        // Funzione unificata per salvataggio bozza con dati ricchi + immagini HQ
+        window.saveDraftUnified = function(product, opts = {}) {
+            const nowIso = new Date().toISOString();
+            const priceString = product.price_display || product.price || '';
+            const priceValue = (function(p){ const n=(p||'').replace(/[^0-9.,]/g,'').replace('.', '').replace(',', '.'); const v=parseFloat(n); return isNaN(v)?null:v; })(priceString);
+            function toHQ(u){
+                if (!u) return u; try {
+                    if (typeof getMaxResolutionUrl === 'function') return getMaxResolutionUrl(u);
+                    if (typeof getHighResImageUrl === 'function') return getHighResImageUrl(u);
+                } catch {}
+                try { let out=String(u); out=out.replace(/\._SR\d+,_?\d+_\.jpg/i,'._SL1500_.jpg').replace(/\._AC_SX\d+_\.jpg/i,'._SL1500_.jpg').replace(/\._AC_.*?\.jpg/i,'._SL1500_.jpg').replace(/\._SL\d+_\.jpg/i,'._SL1500_.jpg'); return out; } catch { return u; }
+            }
+            const primary = toHQ(product.mainImage || product.image || product.thumbnail);
+            const imgsRaw = Array.isArray(product.images) ? product.images : [];
+            const imgsHQ = Array.from(new Set(imgsRaw.map(toHQ).filter(Boolean)));
+            const draft = {
+                id: 'draft_' + (product.asin || Math.random().toString(36).slice(2)) + '_' + Date.now(),
+                title: product.title || '', price: priceString || product.price || '', priceValue,
+                brand: product.brand || '', image: primary || '', rating: product.rating || '',
+                asin: product.asin || product.id || '', url: product.url || product.link || '',
+                sourceProduct: product, enrichedProduct: (product.techDetails || product.technicalDetails || (imgsHQ.length>0)) ? product : undefined,
+                imagesStaged: [], createdAt: nowIso, updatedAt: nowIso, status: 'draft'
+            };
+            if (imgsHQ.length && !draft.image) draft.image = imgsHQ[0];
+            if (imgsHQ.length) {
+                draft.sourceProduct = { ...(draft.sourceProduct||{}), images: imgsHQ };
+                if (draft.enrichedProduct) draft.enrichedProduct = { ...(draft.enrichedProduct||{}), images: imgsHQ };
+            }
+            const asinKey = draft.asin;
+            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const idx = asinKey ? drafts.findIndex(d => (d.asin||d.sourceProduct?.asin) === asinKey) : -1;
+            if (idx >= 0) {
+                const existing = drafts[idx];
+                drafts[idx] = { ...existing, ...draft, id: existing.id || draft.id, createdAt: existing.createdAt || nowIso, imagesStaged: existing.imagesStaged || [], primaryImage: existing.primaryImage || draft.image, sourceProduct: { ...(existing.sourceProduct||{}), ...(draft.sourceProduct||{}) }, enrichedProduct: draft.enrichedProduct || existing.enrichedProduct };
+            } else { drafts.push(draft); }
+            localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+        };
+
+        // Re-wrap di saveAsDraft per usare la funzione unificata
+        const __orig_saveAsDraft = window.saveAsDraft;
+        window.saveAsDraft = function(encodedProduct){
+            let product=null; try {
+                if (!encodedProduct) throw new Error('No product data');
+                if (encodedProduct instanceof HTMLElement) { const s=encodedProduct.dataset.product; product=JSON.parse(decodeURIComponent(s)); }
+                else if (typeof encodedProduct==='string'){ try{ product=JSON.parse(decodeURIComponent(encodedProduct)); }catch(e){ product=JSON.parse(encodedProduct); } }
+                else if (typeof encodedProduct==='object'){ product=encodedProduct; }
+            } catch(err){ console.error('saveAsDraft parse error', err); alert('Errore salvataggio bozza.'); return; }
+            window.saveDraftUnified(product, { source:'quick' });
+            const overlayEl = document.querySelector('.modal-overlay'); if (overlayEl) overlayEl.remove();
+            const msg = document.createElement('div'); msg.style.cssText = 'position:fixed;top:20px;right:20px;background:var(--venus-success);color:#fff;padding:12px 16px;border-radius:8px;box-shadow:var(--venus-shadow-lg);z-index:10001;font-weight:600;'; msg.textContent='✅ Prodotto aggiunto alle bozze!'; document.body.appendChild(msg); setTimeout(()=>msg.remove(),3000);
+            try{ const drafts=JSON.parse(localStorage.getItem('shappa_drafts')||'[]'); const countEl=document.getElementById('currentGroupCount'); if(countEl) countEl.textContent=String(drafts.length);}catch{}
+        };
+        // Variabile globale per i prodotti correnti
+        let currentProducts = [];
+        
+        // Funzione globale per la ricerca prodotti
+        async function searchProducts(event) {
+            event.preventDefault();
+            
+            const query = document.getElementById('searchQuery').value;
+            const marketplace = document.getElementById('marketplace').value;
+            const country = document.getElementById('searchCountry').value;
+            const category = document.getElementById('searchCategory').value;
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            
+            if (!query.trim()) {
+                alert('Inserisci un termine di ricerca');
+                return;
+            }
+            
+            console.log('Searching for:', query, 'on', marketplace, 'in', country);
+            
+            // Nascondi risultati precedenti e mostra loading
+            document.getElementById('resultsGrid').innerHTML = '';
+            document.getElementById('noResults').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('loadingMessage').style.display = 'block';
+            
+            try {
+                const params = new URLSearchParams();
+                params.append('query', query.trim());
+                params.append('marketplace', marketplace);
+                params.append('country', country);
+                if (category) params.append('category', category);
+                if (minPrice) params.append('min_price', minPrice);
+                if (maxPrice) params.append('max_price', maxPrice);
+                
+                // Aggiungi limite per più prodotti
+                params.append('limit', '50'); // Mostra fino a 50 prodotti invece dei 24 default
+                
+                const response = await fetch(`/api/amazon/search?${params.toString()}`);
+                const data = await response.json();
+                
+                document.getElementById('loadingMessage').style.display = 'none';
+                
+                if (data.success && data.products && data.products.length > 0) {
+                    // Salva tutti i prodotti ricevuti prima del filtraggio
+                    currentProducts = data.products;
+                    
+                    // Filtra prodotti senza prezzo (gratuiti/film/etc)
+                    const productsWithPrice = data.products.filter(product => {
+                        const hasPrice = product.price && 
+                                       product.price !== 'Non disponibile' && 
+                                       product.price !== 'N/A' && 
+                                       product.price !== '' &&
+                                       !product.price.toLowerCase().includes('gratis') &&
+                                       !product.price.toLowerCase().includes('gratuito');
+                        return hasPrice;
+                    });
+                    
+                    if (productsWithPrice.length > 0) {
+                        renderProducts(productsWithPrice);
+                        updateStats(productsWithPrice);
+                        // Auto-minimize search widget after successful search
+                        autoMinimizeAfterSearch();
+                    } else {
+                        document.getElementById('noResults').style.display = 'block';
+                        updateStats([]);
+                    }
+                } else {
+                    document.getElementById('noResults').style.display = 'block';
+                    updateStats([]);
+                }
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorMessage').innerHTML = '<p>Errore durante la ricerca. Riprova più tardi.</p>';
+                updateStats([]);
+            }
+        }
+
+        // Initialize Auth System
+        let authSystem;
+        try {
+            authSystem = new ShappaAuth();
+            console.log('✅ Auth system loaded');
+        } catch (error) {
+            console.error('❌ Failed to load auth system:', error);
+        }
+
+        // Allow direct access without login check for testing
+        // if (authSystem && !authSystem.isLoggedIn()) {
+        //     console.log('⚠️ User not logged in, redirecting...');
+        //     window.location.href = '../../index.html#login';
+        // }
+
+        // Update user info if logged in
+        if (authSystem && authSystem.isLoggedIn()) {
+            const currentUser = authSystem.getCurrentUser();
+            if (currentUser) {
+                const userNameElement = document.getElementById('userName');
+                const userAvatarElement = document.getElementById('userAvatar');
+                
+                if (userNameElement) {
+                    userNameElement.textContent = currentUser.username;
+                }
+                
+                if (userAvatarElement) {
+                    userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            if (authSystem) {
+                authSystem.logout();
+                window.location.href = '../../index.html';
+            }
+        });
+
+        // Search functionality moved to global scope
+
+        // Widget minimization functionality
+        function toggleSearchWidget() {
+            const widget = document.querySelector('.venus-widget-search');
+            widget.classList.toggle('minimized');
+        }
+
+        // Auto-minimize after search results
+        function autoMinimizeAfterSearch() {
+            const widget = document.querySelector('.venus-widget-search');
+            const resultsWidget = document.querySelector('.venus-widget-results');
+            
+            if (resultsWidget && resultsWidget.style.display !== 'none') {
+                setTimeout(() => {
+                    widget.classList.add('minimized');
+                }, 1000); // Wait 1 second after search results appear
+            }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('resultsGrid');
+            grid.innerHTML = '';
+            
+            // currentProducts viene aggiornato solo nella funzione di ricerca iniziale
+            // per mantenere l'insieme completo di prodotti per i filtri
+            
+            // Mostra sezione filtri se ci sono prodotti
+            const filtersSection = document.getElementById('filtersSection');
+            if (products.length > 0) {
+                filtersSection.style.display = 'block';
+            } else {
+                filtersSection.style.display = 'none';
+            }
+            
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'venus-product-card';
+                
+                // Estrae più informazioni da SerpApi
+                const price = product.price_display || product.price || 'Prezzo non disponibile';
+                // Funzione per convertire URL immagini Amazon in alta risoluzione
+                function getHighResImageUrl(imageUrl) {
+                    if (!imageUrl || imageUrl.includes('placeholder')) return imageUrl;
+                    try {
+                        let highResUrl = imageUrl;
+                        
+                        console.log(`[HTML] Processing: ${imageUrl}`);
+                        
+                        // STEP 1: Try original uncompressed (best quality for eBay)
+                        if (highResUrl.includes('._') && highResUrl.includes('images/I/')) {
+                            const imageId = highResUrl.match(/images\/I\/([^._]+)/);
+                            if (imageId && imageId[1]) {
+                                const baseUrl = highResUrl.split('images/I/')[0];
+                                const extension = highResUrl.includes('.jpg') ? '.jpg' : 
+                                               highResUrl.includes('.png') ? '.png' : 
+                                               highResUrl.includes('.webp') ? '.jpg' : '.jpg';
+                                
+                                const originalUrl = `${baseUrl}images/I/${imageId[1]}${extension}`;
+                                console.log(`[HTML] Original: ${originalUrl}`);
+                                return originalUrl;
+                            }
+                        }
+                        
+                        // STEP 2: Force maximum dimensions (2000px for eBay quality)
+                        highResUrl = highResUrl.replace(/\._AC_UL\d+_/, '._AC_UL2000_');
+                        highResUrl = highResUrl.replace(/\._AC_SX\d+_/, '._AC_SX2000_');
+                        highResUrl = highResUrl.replace(/\._AC_SY\d+_/, '._AC_SY2000_');
+                        highResUrl = highResUrl.replace(/\._SX\d+_/, '._SX2000_');
+                        highResUrl = highResUrl.replace(/\._SY\d+_/, '._SY2000_');
+                        highResUrl = highResUrl.replace(/\._UL\d+_/, '._UL2000_');
+                        highResUrl = highResUrl.replace(/\._UX\d+_/, '._UX2000_');
+                        highResUrl = highResUrl.replace(/\._UY\d+_/, '._UY2000_');
+                        highResUrl = highResUrl.replace(/\._SL\d+_/, '._SL2000_');
+                        
+                        // Remove compression and constraints
+                        highResUrl = highResUrl.replace(/\._CR\d+,\d+,\d+,\d+_/, '');
+                        highResUrl = highResUrl.replace(/\._SS\d+_/, '');
+                        highResUrl = highResUrl.replace(/\._QL\d+_/, '');
+                        highResUrl = highResUrl.replace(/\._TTW_/, '');
+                        highResUrl = highResUrl.replace(/\._FMwebp_/, '');
+                        highResUrl = highResUrl.replace(/\._PIbundle-\d+,TopRight,\d+,\d+_/, '');
+                        
+                        // Clean up
+                        highResUrl = highResUrl.replace(/\.\./, '.');
+                        highResUrl = highResUrl.replace(/\._$/, '');
+                        
+                        console.log(`[HTML] Final: ${highResUrl}`);
+                        return highResUrl;
+                    } catch (error) {
+                        console.error(`[HTML] Error: ${error}`);
+                        return imageUrl;
+                    }
+                }
+                
+                const image = getHighResImageUrl(product.image || product.thumbnail) || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 200'><rect width='100%' height='100%' fill='%23e9ecef'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236c757d' font-size='18'>No Image</text></svg>";
+                const title = product.title || 'Titolo non disponibile';
+                const brand = product.brand || '';
+                const rating = product.rating ? `${product.rating}` : '';
+                const reviews = product.reviews ? `(${product.reviews} recensioni)` : '';
+                const prime = product.raw?.prime ? '🚚 Prime' : '';
+                const offers = product.raw?.offers && product.raw.offers.length > 0 ? product.raw.offers[0] : '';
+                
+                // Badge speciali
+                const badges = [];
+                if (product.raw?.prime) badges.push('<span style="background: #ff9900; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">PRIME</span>');
+                if (product.raw?.sponsored) badges.push('<span style="background: #4dabf7; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">SPONSORIZZATO</span>');
+                if (product.raw?.snap_ebt_eligible) badges.push('<span style="background: #51cf66; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">EBT</span>');
+                
+                card.innerHTML = `
+                    <div class="product-image-container">
+                        <img class="product-image lazy-load" 
+                             data-src="${image}" 
+                             alt="${title}"
+                             loading="lazy"
+                             onerror="this.onerror=null; this.src=\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 250'><rect width='100%' height='100%' fill='%23e9ecef'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236c757d' font-size='16'>Immagine Non Disponibile</text></svg>\"; this.classList.add('error-image');">
+                        ${badges.length > 0 ? `<div style="position: absolute; top: 8px; left: 8px; display: flex; gap: 4px; flex-wrap: wrap; z-index: 2;">${badges.join('')}</div>` : ''}
+                    </div>
+                    <div class="venus-product-info" style="padding: var(--venus-space-md) 0;">
+                        <div class="venus-product-title" style="font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-xs); color: var(--venus-text-primary); height: 2.4em; overflow: hidden; line-height: 1.2;">${title}</div>
+                        ${brand ? `<div class="venus-product-brand" style="font-size: var(--venus-font-size-sm); color: var(--venus-text-muted); margin-bottom: var(--venus-space-xs);">${brand}</div>` : ''}
+                        <div class="venus-product-price" style="font-size: var(--venus-font-size-lg); font-weight: var(--venus-font-weight-bold); color: var(--venus-primary); margin-bottom: var(--venus-space-xs);">${price}</div>
+                        ${rating ? `<div class="venus-product-rating" style="font-size: var(--venus-font-size-sm); margin-bottom: var(--venus-space-xs); color: var(--venus-warning);">${rating} ${reviews}</div>` : ''}
+                        ${offers ? `<div style="font-size: var(--venus-font-size-xs); color: var(--venus-success); margin-bottom: var(--venus-space-xs);">${offers}</div>` : ''}
+                        ${product.raw?.bought_last_month ? `<div style="font-size: var(--venus-font-size-xs); color: var(--venus-text-muted); margin-bottom: var(--venus-space-md);">${product.raw.bought_last_month}</div>` : ''}
+                        <div class="venus-product-actions" style="display: flex; gap: var(--venus-space-xs);">
+                            <button class="btn-info" onclick="showProductDetailWithSaveOption(${JSON.stringify(product).replace(/'/g, '&apos;')})">
+                                Ottieni informazioni
+                            </button>
+                            <button class="btn-draft" onclick="saveAsDraft('${encodeURIComponent(JSON.stringify(product))}')">
+                                Aggiungi alle bozze
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            // Attiva lazy loading per le nuove immagini
+            initLazyLoading();
+        }
+
+        // Lazy loading per le immagini
+        function initLazyLoading() {
+            const lazyImages = document.querySelectorAll('.lazy-load:not([src])');
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            const src = img.getAttribute('data-src');
+                            if (src) {
+                                img.src = src;
+                                img.removeAttribute('data-src');
+                                img.classList.remove('lazy-load');
+                                observer.unobserve(img);
+                            }
+                        }
+                    });
+                });
+
+                lazyImages.forEach(img => imageObserver.observe(img));
+            } else {
+                // Fallback per browser che non supportano IntersectionObserver
+                lazyImages.forEach(img => {
+                    const src = img.getAttribute('data-src');
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                        img.classList.remove('lazy-load');
+                    }
+                });
+            }
+        }
+
+        function updateStats(products) {
+            const totalResults = document.getElementById('totalResults');
+            const avgPrice = document.getElementById('avgPrice');
+            const avgRating = document.getElementById('avgRating');
+            
+            totalResults.textContent = products.length;
+            
+            if (products.length > 0) {
+                // Calculate average price using SerpApi data
+                let totalPrice = 0;
+                let priceCount = 0;
+                let totalRating = 0;
+                let ratingCount = 0;
+                
+                products.forEach(product => {
+                    // Usa price_value se disponibile, altrimenti prova a parsare price_display
+                    if (product.price_value && !isNaN(product.price_value)) {
+                        totalPrice += product.price_value;
+                        priceCount++;
+                    } else if (product.price || product.price_display) {
+                        const priceStr = product.price_display || product.price;
+                        const priceValue = parseFloat(priceStr.replace(/[^\d,.]/g, '').replace(',', '.'));
+                        if (!isNaN(priceValue)) {
+                            totalPrice += priceValue;
+                            priceCount++;
+                        }
+                    }
+                    
+                    if (product.rating && !isNaN(product.rating)) {
+                        totalRating += parseFloat(product.rating);
+                        ratingCount++;
+                    }
+                });
+                
+                avgPrice.textContent = priceCount > 0 ? '€' + (totalPrice / priceCount).toFixed(2) : '-';
+                avgRating.textContent = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) + '/5' : '-';
+            } else {
+                avgPrice.textContent = '-';
+                avgRating.textContent = '-';
+            }
+        }
+
+        function viewProductDetails(productId, encodedProduct) {
+            const product = JSON.parse(decodeURIComponent(encodedProduct));
+            showProductModal(product);
+        }
+
+        function showProductModal(product) {
+            // Create modal overlay
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: var(--venus-space-lg);
+            `;
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: var(--venus-radius);
+                max-width: 1000px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: var(--venus-shadow-lg);
+            `;
+            
+            // Estrae tutte le informazioni disponibili da SerpApi
+            const raw = product.raw || {};
+            const price = product.price_display || product.price || 'Prezzo non disponibile';
+            const oldPrice = raw.old_price || raw.extracted_old_price;
+            const image = product.image || product.thumbnail || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='100%' height='100%' fill='%23e9ecef'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236c757d' font-size='18'>No Image</text></svg>";
+            const title = product.title || 'Titolo non disponibile';
+            const brand = product.brand || 'Marca non specificata';
+            const rating = product.rating || 'N/A';
+            const reviews = product.reviews || raw.reviews || 0;
+            const details = product.details || 'Descrizione non disponibile';
+            const asin = product.id || raw.asin || 'N/A';
+            const url = raw.link_clean || raw.url || product.url;
+            
+            // Informazioni aggiuntive da SerpApi
+            const prime = raw.prime ? 'Prime disponibile' : 'Non Prime';
+            const delivery = raw.delivery && Array.isArray(raw.delivery) ? raw.delivery.join('<br>') : '';
+            const offers = raw.offers && Array.isArray(raw.offers) ? raw.offers : [];
+            const priceUnit = raw.price_unit || '';
+            const boughtLastMonth = raw.bought_last_month || '';
+            const snapEbt = raw.snap_ebt_eligible ? 'SNAP EBT eligible' : '';
+            const smallBusiness = raw.small_business ? 'Small Business' : '';
+            const sustainability = raw.sustainability_features || [];
+            const tags = raw.tags && Array.isArray(raw.tags) ? raw.tags : [];
+            const options = raw.options || '';
+            const moreBuyingChoices = raw.more_buying_choices || '';
+            
+            // Funzione per convertire URL immagini Amazon in alta risoluzione
+            function getHighResImageUrl(imageUrl) {
+                if (!imageUrl) return '';
+                try {
+                    let highResUrl = imageUrl;
+                    
+                    console.log(`[HTML-2] Processing: ${imageUrl}`);
+                    
+                    // STEP 1: Try original uncompressed (best for eBay listings)
+                    if (highResUrl.includes('._') && highResUrl.includes('images/I/')) {
+                        const imageId = highResUrl.match(/images\/I\/([^._]+)/);
+                        if (imageId && imageId[1]) {
+                            const baseUrl = highResUrl.split('images/I/')[0];
+                            const extension = highResUrl.includes('.jpg') ? '.jpg' : 
+                                           highResUrl.includes('.png') ? '.png' : 
+                                           highResUrl.includes('.webp') ? '.jpg' : '.jpg';
+                            
+                            const originalUrl = `${baseUrl}images/I/${imageId[1]}${extension}`;
+                            console.log(`[HTML-2] Original: ${originalUrl}`);
+                            return originalUrl;
+                        }
+                    }
+                    
+                    // STEP 2: Force maximum dimensions (2000px+)
+                    highResUrl = highResUrl.replace(/\._AC_UL\d+_/, '._AC_UL2000_');
+                    highResUrl = highResUrl.replace(/\._AC_SX\d+_/, '._AC_SX2000_');
+                    highResUrl = highResUrl.replace(/\._AC_SY\d+_/, '._AC_SY2000_');
+                    highResUrl = highResUrl.replace(/\._SX\d+_/, '._SX2000_');
+                    highResUrl = highResUrl.replace(/\._SY\d+_/, '._SY2000_');
+                    highResUrl = highResUrl.replace(/\._UL\d+_/, '._UL2000_');
+                    highResUrl = highResUrl.replace(/\._UX\d+_/, '._UX2000_');
+                    highResUrl = highResUrl.replace(/\._UY\d+_/, '._UY2000_');
+                    highResUrl = highResUrl.replace(/\._SL\d+_/, '._SL2000_');
+                    
+                    // Remove compression and constraints  
+                    highResUrl = highResUrl.replace(/\._CR\d+,\d+,\d+,\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._SS\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._QL\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._TTW_/, '');
+                    highResUrl = highResUrl.replace(/\._FMwebp_/, '');
+                    highResUrl = highResUrl.replace(/\._PIbundle-\d+,TopRight,\d+,\d+_/, '');
+                    
+                    // Clean up
+                    highResUrl = highResUrl.replace(/\.\./, '.');
+                    highResUrl = highResUrl.replace(/\._$/, '');
+                    
+                    console.log(`[HTML-2] Final: ${highResUrl}`);
+                    return highResUrl;
+                } catch (error) {
+                    console.error(`[HTML-2] Error: ${error}`);
+                    return imageUrl;
+                }
+            }
+
+            // Costruisce le immagini aggiuntive se disponibili con alta risoluzione
+            const images = product.images && Array.isArray(product.images) ? 
+                product.images.map(img => getHighResImageUrl(img)) : 
+                [getHighResImageUrl(image)];
+            const imageGallery = images.length > 1 ? 
+                `<div style="display: flex; gap: var(--venus-space-sm); margin-top: var(--venus-space-md); overflow-x: auto;">
+                    ${images.slice(1, 4).map(img => `<img src="${img}" style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--venus-radius); cursor: pointer;" onclick="document.querySelector('.main-product-image').src='${img}'">`).join('')}
+                </div>` : '';
+            
+            modal.innerHTML = `
+                <div style="padding: var(--venus-space-2xl);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--venus-space-xl);">
+                        <h2 style="margin: 0; color: var(--venus-text-primary);">Dettagli Prodotto</h2>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--venus-text-muted);">&times;</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-2xl); margin-bottom: var(--venus-space-2xl);">
+                        <div>
+                            <img src="${getHighResImageUrl(image)}" alt="${title}" class="main-product-image" style="width: 100%; border-radius: var(--venus-radius); box-shadow: var(--venus-shadow-md);">
+                            ${imageGallery}
+                        </div>
+                        <div>
+                            <h3 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary); line-height: 1.3;">${title}</h3>
+                            
+                            ${brand !== 'Marca non specificata' ? `<p style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-muted);"><strong>Marca:</strong> ${brand}</p>` : ''}
+                            
+                            <div style="margin: 0 0 var(--venus-space-md) 0;">
+                                <div style="color: var(--venus-primary); font-size: var(--venus-font-size-xl); font-weight: var(--venus-font-weight-bold);">${price}</div>
+                                ${oldPrice ? `<div style="color: var(--venus-text-muted); text-decoration: line-through; font-size: var(--venus-font-size-sm);">Prezzo precedente: ${oldPrice}</div>` : ''}
+                                ${priceUnit ? `<div style="color: var(--venus-text-muted); font-size: var(--venus-font-size-sm);">${priceUnit}</div>` : ''}
+                            </div>
+                            
+                            ${rating !== 'N/A' ? `<p style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-warning);"><strong>${rating}/5</strong> ${reviews > 0 ? `(${reviews.toLocaleString()} recensioni)` : ''}</p>` : ''}
+                            
+                            ${tags.length > 0 ? `<div style="margin-bottom: var(--venus-space-md);"><strong>Caratteristiche:</strong> ${tags.join(', ')}</div>` : ''}
+                            
+                            ${options ? `<div style="margin-bottom: var(--venus-space-md); color: var(--venus-text-secondary);"><strong>Opzioni:</strong> ${options}</div>` : ''}
+                            
+                            <div style="display: flex; gap: var(--venus-space-md); margin-bottom: var(--venus-space-lg);">
+                                <button onclick="saveAsDraft('${encodeURIComponent(JSON.stringify(product))}')" class="venus-btn venus-btn-primary" style="flex: 1;">
+                                    Salva come Bozza
+                                </button>
+                                ${url ? `<button onclick="window.open('${url}', '_blank')" class="venus-btn" style="flex: 1;">Vedi su Amazon</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sezione Delivery e Offerte -->
+                    ${delivery || offers.length > 0 || prime || snapEbt || smallBusiness ? `
+                    <div style="border-top: 1px solid var(--venus-border); padding-top: var(--venus-space-lg); margin-bottom: var(--venus-space-lg);">
+                        <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary);">🚚 Consegna e Servizi</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--venus-space-md);">
+                            ${prime ? `<div style="padding: var(--venus-space-md); background: var(--venus-success-light); border-radius: var(--venus-radius);">${prime}</div>` : ''}
+                            ${delivery ? `<div style="padding: var(--venus-space-md); background: var(--venus-info-light); border-radius: var(--venus-radius);"><strong>Consegna:</strong><br>${delivery}</div>` : ''}
+                            ${snapEbt ? `<div style="padding: var(--venus-space-md); background: var(--venus-warning-light); border-radius: var(--venus-radius);">${snapEbt}</div>` : ''}
+                            ${smallBusiness ? `<div style="padding: var(--venus-space-md); background: var(--venus-primary-light); border-radius: var(--venus-radius);">${smallBusiness}</div>` : ''}
+                        </div>
+                        ${offers.length > 0 ? `
+                        <div style="margin-top: var(--venus-space-md);">
+                            <strong>Offerte disponibili:</strong>
+                            <ul style="margin: var(--venus-space-sm) 0; padding-left: var(--venus-space-lg);">
+                                ${offers.slice(0, 3).map(offer => `<li style="color: var(--venus-success); margin-bottom: var(--venus-space-xs);">${offer}</li>`).join('')}
+                            </ul>
+                        </div>` : ''}
+                        ${moreBuyingChoices ? `<div style="margin-top: var(--venus-space-md); color: var(--venus-text-secondary);">${moreBuyingChoices}</div>` : ''}
+                    </div>` : ''}
+                    
+                    ${boughtLastMonth ? `
+                    <div style="border-top: 1px solid var(--venus-border); padding-top: var(--venus-space-lg); margin-bottom: var(--venus-space-lg);">
+                        <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary);">Popolarità</h4>
+                        <div style="padding: var(--venus-space-md); background: var(--venus-success-light); border-radius: var(--venus-radius); color: var(--venus-success);">
+                            <strong>${boughtLastMonth}</strong>
+                        </div>
+                    </div>` : ''}
+                    
+                    ${sustainability.length > 0 ? `
+                    <div style="border-top: 1px solid var(--venus-border); padding-top: var(--venus-space-lg); margin-bottom: var(--venus-space-lg);">
+                        <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary);">🌱 Sostenibilità</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--venus-space-md);">
+                            ${sustainability.slice(0, 3).map(feature => `
+                                <div style="padding: var(--venus-space-md); background: var(--venus-success-light); border-radius: var(--venus-radius);">
+                                    <strong style="color: var(--venus-success);">${feature.name}</strong><br>
+                                    <span style="font-size: var(--venus-font-size-sm); color: var(--venus-text-secondary);">${feature.snippet || ''}</span>
+                                    ${feature.certified_by ? `<br><small style="color: var(--venus-text-muted);">Certificato da: ${feature.certified_by}</small>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>` : ''}
+                    
+                    <div style="border-top: 1px solid var(--venus-border); padding-top: var(--venus-space-lg);">
+                        <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary);">Informazioni Tecniche</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--venus-space-md);">
+                            <div>
+                                <strong>ASIN:</strong><br>
+                                <span style="color: var(--venus-text-muted); font-family: monospace;">${asin}</span>
+                            </div>
+                            <div>
+                                <strong>Posizione nella ricerca:</strong><br>
+                                <span style="color: var(--venus-text-muted);">#${raw.position || 'N/A'}</span>
+                            </div>
+                            <div>
+                                <strong>Sponsorizzato:</strong><br>
+                                <span style="color: var(--venus-text-muted);">${raw.sponsored ? 'Sì' : 'No'}</span>
+                            </div>
+                            <div>
+                                <strong>Fonte dati:</strong><br>
+                                <span style="color: var(--venus-text-muted);">SerpApi Amazon</span>
+                            </div>
+                        </div>
+                        ${details !== 'Descrizione non disponibile' ? `
+                        <div style="margin-top: var(--venus-space-lg);">
+                            <strong>Descrizione:</strong><br>
+                            <p style="margin: var(--venus-space-sm) 0; color: var(--venus-text-secondary); line-height: 1.6; background: var(--venus-gray-50); padding: var(--venus-space-md); border-radius: var(--venus-radius);">${details}</p>
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+            
+            modalOverlay.className = 'modal-overlay';
+            modalOverlay.appendChild(modal);
+            document.body.appendChild(modalOverlay);
+            
+            // Close on overlay click
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) {
+                    modalOverlay.remove();
+                }
+            });
+        }
+
+        function saveAsDraft(encodedProduct) {
+            let product = null;
+            try {
+                if (!encodedProduct) throw new Error('No product data');
+
+                // If passed a DOM element, read dataset
+                if (encodedProduct instanceof HTMLElement) {
+                    const s = encodedProduct.dataset.product;
+                    product = JSON.parse(decodeURIComponent(s));
+                } else if (typeof encodedProduct === 'string') {
+                    // Try decodeURIComponent first, fallback to raw parse
+                    try {
+                        product = JSON.parse(decodeURIComponent(encodedProduct));
+                    } catch (e) {
+                        product = JSON.parse(encodedProduct);
+                    }
+                } else if (typeof encodedProduct === 'object') {
+                    product = encodedProduct;
+                }
+            } catch (err) {
+                console.error('saveAsDraft: failed to parse product', err, encodedProduct);
+                alert('Errore salvando la bozza: dati prodotto non validi. Controlla la console.');
+                return;
+            }
+
+            try {
+                // Deriva image hi-res se possibile
+                const hiResImage = (function(img){
+                    try {
+                        if (typeof getHighResImageUrl === 'function') return getHighResImageUrl(img);
+                    } catch (e){}
+                    return img;
+                })(product.image || product.thumbnail);
+
+                // Normalizza prezzo numerico
+                const priceString = product.price_display || product.price || '';
+                const priceValue = (function(p){
+                    const n = (p||'').replace(/[^0-9.,]/g,'').replace('.', '').replace(',', '.');
+                    const v = parseFloat(n);
+                    return isNaN(v) ? null : v;
+                })(priceString);
+
+                // Create draft object
+                const draft = {
+                    id: 'draft_' + Date.now(),
+                    title: product.title,
+                    price: priceString || product.price,
+                    priceValue,
+                    brand: product.brand,
+                    image: hiResImage,
+                    description: product.details,
+                    rating: product.rating,
+                    sourceProduct: product,
+                    asin: product.asin || product.id || '',
+                    url: product.url || product.link || '',
+                    createdAt: new Date().toISOString(),
+                    status: 'draft'
+                };
+
+                // Save to localStorage for now (in production would save to backend)
+                let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                drafts.push(draft);
+                localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+
+                // Close modal if present
+                const overlayEl = document.querySelector('.modal-overlay');
+                if (overlayEl) overlayEl.remove();
+
+                // Show success message
+                alert('Prodotto salvato come bozza! Puoi visualizzarlo nella sezione Listing.');
+
+                console.log('Draft saved:', draft);
+            } catch (err) {
+                console.error('saveAsDraft: unexpected error', err);
+                alert('Errore interno durante il salvataggio della bozza. Controlla la console.');
+            }
+        }
+
+        // Funzioni per filtri e ordinamento
+        function sortProducts(sortType) {
+            if (currentProducts.length === 0) return;
+            
+            let sortedProducts = [...currentProducts];
+            
+            // Applica sempre il filtro sui prezzi
+            sortedProducts = sortedProducts.filter(product => {
+                const hasPrice = product.price && 
+                               product.price !== 'Non disponibile' && 
+                               product.price !== 'N/A' && 
+                               product.price !== '' &&
+                               !product.price.toLowerCase().includes('gratis') &&
+                               !product.price.toLowerCase().includes('gratuito');
+                return hasPrice;
+            });
+            
+            switch(sortType) {
+                case 'price_asc':
+                    sortedProducts.sort((a, b) => {
+                        const priceA = extractNumericPrice(a.price_display || a.price || '0');
+                        const priceB = extractNumericPrice(b.price_display || b.price || '0');
+                        return priceA - priceB;
+                    });
+                    break;
+                case 'price_desc':
+                    sortedProducts.sort((a, b) => {
+                        const priceA = extractNumericPrice(a.price_display || a.price || '0');
+                        const priceB = extractNumericPrice(b.price_display || b.price || '0');
+                        return priceB - priceA;
+                    });
+                    break;
+                case 'rating_desc':
+                    sortedProducts.sort((a, b) => {
+                        const ratingA = parseFloat(a.rating || 0);
+                        const ratingB = parseFloat(b.rating || 0);
+                        return ratingB - ratingA;
+                    });
+                    break;
+            }
+            
+            // Applica anche il filtro Prime se attivo
+            const checkbox = document.getElementById('primeVideoFilter');
+            if (checkbox && checkbox.checked) {
+                sortedProducts = sortedProducts.filter(product => product.raw?.prime);
+            }
+            
+            renderProducts(sortedProducts);
+        }
+
+        function extractNumericPrice(priceString) {
+            const numericValue = parseFloat(priceString.replace(/[^\d,.]/g, '').replace(',', '.'));
+            return isNaN(numericValue) ? 0 : numericValue;
+        }
+
+        function togglePrimeVideoFilter() {
+            const checkbox = document.getElementById('primeVideoFilter');
+            const label = checkbox.nextElementSibling;
+            label.textContent = checkbox.checked ? 'ON' : 'OFF';
+            
+            if (currentProducts.length === 0) return;
+            
+            let filteredProducts = [...currentProducts];
+            
+            // Escludi sempre prodotti senza prezzo (gratuiti/film/etc)
+            filteredProducts = filteredProducts.filter(product => {
+                const hasPrice = product.price && 
+                               product.price !== 'Non disponibile' && 
+                               product.price !== 'N/A' && 
+                               product.price !== '' &&
+                               !product.price.toLowerCase().includes('gratis') &&
+                               !product.price.toLowerCase().includes('gratuito');
+                return hasPrice;
+            });
+            
+            if (checkbox.checked) {
+                // Mostra solo prodotti Prime con prezzo
+                filteredProducts = filteredProducts.filter(product => product.raw?.prime);
+            }
+            
+            renderProducts(filteredProducts);
+        }
+
+        // Funzione per aggiungere alla lista "zozza"
+        function addToZozza(encodedProduct) {
+            const product = JSON.parse(decodeURIComponent(encodedProduct));
+            
+            // Crea oggetto per la lista zozza
+            const zozzaItem = {
+                id: 'zozza_' + Date.now(),
+                title: product.title,
+                price: product.price_display || product.price,
+                brand: product.brand,
+                image: product.image,
+                asin: product.id || product.asin,
+                rating: product.rating,
+                reviews: product.reviews,
+                sourceProduct: product,
+                addedAt: new Date().toISOString(),
+                status: 'in_zozza'
+            };
+            
+            // Salva in localStorage
+            let zozzaList = JSON.parse(localStorage.getItem('shappa_zozza') || '[]');
+            
+            // Controlla se già presente
+            const exists = zozzaList.some(item => item.asin === zozzaItem.asin);
+            if (exists) {
+                alert('Prodotto già presente nella lista!');
+                return;
+            }
+            
+            zozzaList.push(zozzaItem);
+            localStorage.setItem('shappa_zozza', JSON.stringify(zozzaList));
+            
+            // Feedback visivo
+            const button = document.querySelector(`button[onclick*="${encodeURIComponent(JSON.stringify(product))}"]`);
+            if (button && button.textContent.includes('Aggiungi')) {
+                const originalText = button.innerHTML;
+                button.innerHTML = 'Aggiunto!';
+                button.disabled = true;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }
+            
+            console.log('Added to zozza:', zozzaItem);
+        }
+
+        // Funzione per mostrare informazioni prodotto con nuovo design
+        async function showProductInfo(encodedProduct) {
+            const product = JSON.parse(decodeURIComponent(encodedProduct));
+            // Ottieni dettagli completi del prodotto dal backend
+            try {
+                const asin = product.id || product.asin || product.raw?.asin;
+                const country = document.getElementById('searchCountry')?.value || 'IT';
+                
+                if (asin) {
+                    // Usa l'endpoint specifico per i dettagli del prodotto
+                    const resp = await fetch(`/api/amazon/product/${asin}?country=${country}`);
+                    const json = await resp.json();
+                    if (json.success && json.product) {
+                        // Merge completo dei dati
+                        Object.assign(product, json.product);
+                        console.log('Product enriched with details:', product);
+                    }
+                } else {
+                    console.warn('No ASIN found for detailed product info');
+                }
+            } catch (e) {
+                console.warn('Failed to get detailed product info:', e.message);
+            }
+            
+            // Create modal overlay
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: var(--venus-space-lg);
+            `;
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                border-radius: var(--venus-radius);
+                max-width: 1200px;
+                width: 100%;
+                max-height: 90vh;
+                overflow: hidden;
+                box-shadow: var(--venus-shadow-lg);
+                display: flex;
+                flex-direction: column;
+            `;
+            
+            // Funzione per convertire URL immagini Amazon in alta risoluzione
+            function getHighResImageUrl(imageUrl) {
+                if (!imageUrl || imageUrl.includes('placeholder')) return imageUrl;
+                try {
+                    let highResUrl = imageUrl;
+                    
+                    console.log(`[HTML-3] Processing: ${imageUrl}`);
+                    
+                    // STEP 1: Try original uncompressed (perfect for eBay)
+                    if (highResUrl.includes('._') && highResUrl.includes('images/I/')) {
+                        const imageId = highResUrl.match(/images\/I\/([^._]+)/);
+                        if (imageId && imageId[1]) {
+                            const baseUrl = highResUrl.split('images/I/')[0];
+                            const extension = highResUrl.includes('.jpg') ? '.jpg' : 
+                                           highResUrl.includes('.png') ? '.png' : 
+                                           highResUrl.includes('.webp') ? '.jpg' : '.jpg';
+                            
+                            const originalUrl = `${baseUrl}images/I/${imageId[1]}${extension}`;
+                            console.log(`[HTML-3] Original: ${originalUrl}`);
+                            return originalUrl;
+                        }
+                    }
+                    
+                    // STEP 2: Force maximum dimensions (2000px+ for eBay listings)
+                    highResUrl = highResUrl.replace(/\._AC_UL\d+_/, '._AC_UL2000_');
+                    highResUrl = highResUrl.replace(/\._AC_SX\d+_/, '._AC_SX2000_');
+                    highResUrl = highResUrl.replace(/\._AC_SY\d+_/, '._AC_SY2000_');
+                    highResUrl = highResUrl.replace(/\._SX\d+_/, '._SX2000_');
+                    highResUrl = highResUrl.replace(/\._SY\d+_/, '._SY2000_');
+                    highResUrl = highResUrl.replace(/\._UL\d+_/, '._UL2000_');
+                    highResUrl = highResUrl.replace(/\._UX\d+_/, '._UX2000_');
+                    highResUrl = highResUrl.replace(/\._UY\d+_/, '._UY2000_');
+                    highResUrl = highResUrl.replace(/\._SL\d+_/, '._SL2000_');
+                    
+                    // Remove ALL compression and constraints
+                    highResUrl = highResUrl.replace(/\._CR\d+,\d+,\d+,\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._SS\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._QL\d+_/, '');
+                    highResUrl = highResUrl.replace(/\._TTW_/, '');
+                    highResUrl = highResUrl.replace(/\._FMwebp_/, '');
+                    highResUrl = highResUrl.replace(/\._PIbundle-\d+,TopRight,\d+,\d+_/, '');
+                    
+                    // Clean up
+                    highResUrl = highResUrl.replace(/\.\./, '.');
+                    highResUrl = highResUrl.replace(/\._$/, '');
+                    
+                    console.log(`[HTML-3] Final: ${highResUrl}`);
+                    return highResUrl;
+                } catch (error) {
+                    console.error(`[HTML-3] Error: ${error}`);
+                    return imageUrl;
+                }
+            }
+
+            const price = product.price_display || product.price || 'Prezzo non disponibile';
+            const image = product.image || product.thumbnail || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><rect width='100%' height='100%' fill='%23e9ecef'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%236c757d' font-size='18'>No Image</text></svg>";
+            const title = product.title || 'Titolo non disponibile';
+            const brand = product.brand || 'Marca non specificata';
+            const rating = product.rating || 'N/A';
+            const reviews = product.reviews || 0;
+            const asin = product.id || product.raw?.asin || 'N/A';
+            const url = product.raw?.link_clean || product.raw?.url || product.url;
+            
+            modal.innerHTML = `
+                <!-- Header e Menu Bar attaccati in alto -->
+                <div style="background: var(--venus-bg-card); border-bottom: 1px solid var(--venus-border);">
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: between; align-items: center; padding: var(--venus-space-lg) var(--venus-space-lg) 0;">
+                        <h2 style="margin: 0; color: var(--venus-text-primary);">Dettagli Prodotto</h2>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--venus-text-muted); margin-left: auto;">&times;</button>
+                    </div>
+                    
+                    <!-- Menu Bar attaccato -->
+                    <div class="product-menu-bar" style="margin: 0; border-radius: 0; background: transparent; padding: var(--venus-space-lg); padding-top: var(--venus-space-md); gap: var(--venus-space-sm);">
+                        <button class="menu-tab active" onclick="switchTab(this, 'info')" style="padding: var(--venus-space-sm) var(--venus-space-md); border: 1px solid var(--venus-border); background: var(--venus-primary); color: white; border-radius: var(--venus-radius); cursor: pointer;">
+                            Info Prodotto
+                        </button>
+                        <button class="menu-tab" onclick="switchTab(this, 'automation')" style="padding: var(--venus-space-sm) var(--venus-space-md); border: 1px solid var(--venus-border); background: var(--venus-bg-card); color: var(--venus-text-primary); border-radius: var(--venus-radius); cursor: pointer;">
+                            Automazione Impostazioni
+                        </button>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: var(--venus-space-md); padding: 0 var(--venus-space-lg) var(--venus-space-lg);">
+                        ${url ? `<button onclick="window.open('${url}', '_blank')" class="venus-btn venus-btn-primary">Rimanda al Prodotto</button>` : ''}
+                        <button onclick="loadListingDraft('${encodeURIComponent(JSON.stringify(product))}')" class="venus-btn">Carica Listing Bozza</button>
+                    </div>
+                </div>
+                
+                <!-- Content Area -->
+                <div style="flex: 1; overflow-y: auto; padding: var(--venus-space-xl);">
+                    <!-- Tab Info Prodotto -->
+                    <div id="tab-info" class="tab-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-2xl);">
+                            <div>
+                                <img src="${getHighResImageUrl(image)}" alt="${title}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--venus-radius); box-shadow: var(--venus-shadow-md); background: #f8f9fa; padding: var(--venus-space-md);">
+                            </div>
+                            <div>
+                                <h3 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary); line-height: 1.3;">${title}</h3>
+                                
+                                ${brand !== 'Marca non specificata' ? `<p style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-muted);"><strong>Marca:</strong> ${brand}</p>` : ''}
+                                
+                                <div style="margin: 0 0 var(--venus-space-lg) 0;">
+                                    <div style="color: var(--venus-primary); font-size: var(--venus-font-size-xl); font-weight: var(--venus-font-weight-bold);">${price}</div>
+                                </div>
+                                
+                                ${rating !== 'N/A' ? `<p style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-warning);"><strong>${rating}/5</strong> ${reviews > 0 ? `(${reviews.toLocaleString()} recensioni)` : ''}</p>` : ''}
+                                
+                                <div style="background: var(--venus-gray-50); padding: var(--venus-space-lg); border-radius: var(--venus-radius); margin-top: var(--venus-space-lg);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0;">Informazioni Tecniche</h4>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-md);">
+                                        <div><strong>ASIN:</strong><br><span style="font-family: monospace; color: var(--venus-text-muted);">${asin}</span></div>
+                                        <div><strong>Prime:</strong><br><span style="color: var(--venus-text-muted);">${product.raw?.prime ? 'Disponibile' : 'Non disponibile'}</span></div>
+                                        <div><strong>Sponsorizzato:</strong><br><span style="color: var(--venus-text-muted);">${product.raw?.sponsored ? 'Sì' : 'No'}</span></div>
+                                        <div><strong>Posizione:</strong><br><span style="color: var(--venus-text-muted);">#${product.raw?.position || 'N/A'}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Automazione Impostazioni -->
+                    <div id="tab-automation" class="tab-content" style="display: none;">
+                        <div style="background: var(--venus-gray-50); padding: var(--venus-space-xl); border-radius: var(--venus-radius); text-align: center;">
+                            <h3 style="color: var(--venus-text-primary); margin-bottom: var(--venus-space-lg);">Automazione Impostazioni</h3>
+                            <p style="color: var(--venus-text-muted); margin-bottom: var(--venus-space-xl);">Configura le impostazioni di automazione per questo prodotto</p>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--venus-space-lg); margin-top: var(--venus-space-xl);">
+                                <div style="background: white; padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0;">🔄 Auto Sync</h4>
+                                    <p style="color: var(--venus-text-muted); font-size: var(--venus-font-size-sm);">Sincronizzazione automatica prezzi e stock</p>
+                                    <label style="display: flex; align-items: center; gap: var(--venus-space-sm); margin-top: var(--venus-space-md);">
+                                        <input type="checkbox" id="autoSync">
+                                        <span>Abilita Auto Sync</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="background: white; padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0;">Price Monitoring</h4>
+                                    <p style="color: var(--venus-text-muted); font-size: var(--venus-font-size-sm);">Monitoraggio prezzi concorrenti</p>
+                                    <label style="display: flex; align-items: center; gap: var(--venus-space-sm); margin-top: var(--venus-space-md);">
+                                        <input type="checkbox" id="priceMonitoring">
+                                        <span>Abilita Monitoring</span>
+                                    </label>
+                                </div>
+                                
+                                <div style="background: white; padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0;">Smart Listing</h4>
+                                    <p style="color: var(--venus-text-muted); font-size: var(--venus-font-size-sm);">Ottimizzazione automatica listing</p>
+                                    <label style="display: flex; align-items: center; gap: var(--venus-space-sm); margin-top: var(--venus-space-md);">
+                                        <input type="checkbox" id="smartListing">
+                                        <span>Abilita Smart Listing</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button class="venus-btn venus-btn-primary" style="margin-top: var(--venus-space-xl);" onclick="saveAutomationSettings('${asin}')">
+                                Salva Impostazioni
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modalOverlay.className = 'modal-overlay';
+            modalOverlay.appendChild(modal);
+            document.body.appendChild(modalOverlay);
+        }
+
+        // Funzioni per gestire i tab del modal
+        function switchTab(clickedTab, tabId) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.menu-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.style.background = 'var(--venus-bg-card)';
+                tab.style.color = 'var(--venus-text-primary)';
+            });
+            
+            // Add active class to clicked tab
+            clickedTab.classList.add('active');
+            clickedTab.style.background = 'var(--venus-primary)';
+            clickedTab.style.color = 'white';
+            
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Show selected tab content
+            document.getElementById('tab-' + tabId).style.display = 'block';
+        }
+
+        // Funzione per caricare listing bozza — salva nei drafts (shappa_drafts)
+        function loadListingDraft(encodedProduct) {
+            const product = JSON.parse(decodeURIComponent(encodedProduct));
+
+            // Crea oggetto bozza compatibile con shappa_drafts
+            const draft = {
+                id: 'draft_' + Date.now(),
+                title: product.title,
+                price: product.price_display || product.price,
+                priceValue: (function(p){ const n = (p||'').replace(/[^0-9.,]/g,'').replace('.', '').replace(',', '.'); const v = parseFloat(n); return isNaN(v) ? null : v; })(product.price_display || product.price),
+                brand: product.brand,
+                image: product.image,
+                description: product.details || `Descrizione del prodotto: ${product.title}`,
+                rating: product.rating,
+                sourceProduct: product,
+                asin: product.id || product.asin || '',
+                url: product.url || product.link || '',
+                createdAt: new Date().toISOString(),
+                status: 'draft'
+            };
+
+            // Salva nella stessa chiave usata da listings (shappa_drafts)
+            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            drafts.push(draft);
+            localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+
+            // Chiudi modal se presente (safe)
+            const ov = document.querySelector('.modal-overlay');
+            if (ov) ov.remove();
+
+            // Feedback e redirect
+            alert('Listing bozza creato! Ti stiamo reindirizzando alla sezione Listing.');
+            setTimeout(() => {
+                window.location.href = 'listings.html';
+            }, 600);
+        }
+
+        function extractKeywords(title) {
+            return title.toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(word => word.length > 2)
+                .slice(0, 10)
+                .join(', ');
+        }
+
+        function saveAutomationSettings(asin) {
+            const settings = {
+                asin: asin,
+                autoSync: document.getElementById('autoSync').checked,
+                priceMonitoring: document.getElementById('priceMonitoring').checked,
+                smartListing: document.getElementById('smartListing').checked,
+                savedAt: new Date().toISOString()
+            };
+            
+            let automationSettings = JSON.parse(localStorage.getItem('shappa_automation') || '{}');
+            automationSettings[asin] = settings;
+            localStorage.setItem('shappa_automation', JSON.stringify(automationSettings));
+            
+            alert('Impostazioni di automazione salvate!');
+        }
+    </script>
+</body>
+</html>

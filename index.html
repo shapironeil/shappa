@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Piattaforma E-commerce Intelligente</title>
+    <link rel="stylesheet" href="/src/styles/venus.css">
+    <link rel="stylesheet" href="/src/styles/main.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <meta name="description" content="La piattaforma intelligente che rivoluziona il tuo business e-commerce. Gestisci Amazon, eBay e Vinted in un unico posto.">
+    <meta name="keywords" content="amazon, ebay, vinted, automation, dropshipping, arbitrage, vendita online, e-commerce">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Navigation Bar Venus Style */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(247, 249, 252, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--venus-border);
+            z-index: var(--venus-z-sticky);
+            padding: var(--venus-space-md) 0;
+            transition: all var(--venus-transition);
+        }
+
+        .navbar.scrolled {
+            background: rgba(247, 249, 252, 0.98);
+            box-shadow: var(--venus-shadow-lg);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 var(--venus-space-xl);
+        }
+
+        .nav-logo {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            text-decoration: none;
+            transition: all var(--venus-transition);
+        }
+
+        .nav-logo:hover {
+            color: var(--venus-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: var(--venus-space-xl);
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--venus-text-secondary);
+            font-weight: var(--venus-font-weight-medium);
+            transition: color var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: var(--venus-primary);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: var(--venus-space-md);
+            align-items: center;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 .emoji {
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero p {
+            font-size: var(--venus-font-size-xl);
+            margin-bottom: var(--venus-space-3xl);
+            opacity: 0.95;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: var(--venus-space-lg);
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .btn-hero {
+            padding: var(--venus-space-lg) var(--venus-space-2xl);
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-bold);
+            border-radius: var(--venus-radius);
+            text-decoration: none;
+            transition: all var(--venus-transition);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            cursor: pointer;
+            border: none;
+            font-family: var(--venus-font-family);
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .btn-hero.primary {
+            background: var(--venus-bg-card);
+            color: var(--venus-primary);
+            box-shadow: var(--venus-shadow-lg);
+        }
+
+        .btn-hero.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--venus-shadow-xl);
+        }
+
+        .btn-hero.secondary {
+            background: rgba(255,255,255,0.1);
+            color: var(--venus-text-white);
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-hero.secondary:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        /* Sections Venus Style */
+        .section {
+            padding: var(--venus-space-6xl) var(--venus-space-xl);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--venus-space-4xl);
+        }
+
+        .section-header h2 {
+            font-size: var(--venus-font-size-3xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .section-header p {
+            font-size: var(--venus-font-size-lg);
+            color: var(--venus-text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Features Section Venus Style */
+        .features {
+            background: var(--venus-bg-gray);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--venus-space-xl);
+        }
+
+        .feature-card {
+            background: var(--venus-bg-card);
+            padding: var(--venus-space-2xl);
+            border-radius: var(--venus-radius);
+            box-shadow: var(--venus-shadow-md);
+            text-align: center;
+            transition: all var(--venus-transition);
+            border: 1px solid var(--venus-border);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--venus-shadow-lg);
+            border-color: var(--venus-primary-light);
+        }
+
+        .feature-icon {
+            font-size: var(--venus-font-size-4xl);
+            margin-bottom: var(--venus-space-lg);
+            color: var(--venus-primary);
+        }
+
+        .feature-title {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .feature-description {
+            color: var(--venus-text-secondary);
+            line-height: 1.6;
+        }
+
+        /* About Section Venus Style */
+        .about {
+            background: var(--venus-bg-card);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--venus-space-4xl);
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-size: var(--venus-font-size-2xl);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xl);
+            font-weight: var(--venus-font-weight-bold);
+        }
+
+        .about-text p {
+            color: var(--venus-text-secondary);
+            margin-bottom: var(--venus-space-xl);
+            font-size: var(--venus-font-size-lg);
+            line-height: 1.6;
+        }
+
+        .about-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--venus-space-xl);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: var(--venus-space-xl);
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius);
+            border: 1px solid var(--venus-border);
+            transition: all var(--venus-transition);
+        }
+
+        .stat-item:hover {
+            border-color: var(--venus-primary-light);
+            transform: translateY(-2px);
+            box-shadow: var(--venus-shadow-md);
+        }
+
+        .stat-number {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--venus-text-secondary);
+            font-weight: var(--venus-font-weight-medium);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        /* Modal Styles Venus */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity var(--venus-transition);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal {
+            background: var(--venus-bg-card);
+            border-radius: var(--venus-radius-lg);
+            padding: var(--venus-space-3xl) var(--venus-space-3xl) var(--venus-space-xl);
+            max-width: 800px;
+            width: 96%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: var(--venus-space-lg);
+            box-shadow: var(--venus-shadow-xl);
+            border: 1px solid var(--venus-border);
+            transform: scale(0.8);
+            transition: transform var(--venus-transition);
+            position: relative;
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .modal-header h2 {
+            font-size: var(--venus-font-size-2xl);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-sm);
+            font-weight: var(--venus-font-weight-bold);
+        }
+
+        .modal-header p {
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-base);
+        }
+        /* Two-column layout for register form on wider screens */
+        @media (min-width: 720px) {
+            #registerForm .form-group-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: var(--venus-space-lg);
+            right: var(--venus-space-lg);
+            background: none;
+            border: none;
+            font-size: var(--venus-font-size-xl);
+            cursor: pointer;
+            color: var(--venus-text-muted);
+            transition: color var(--venus-transition);
+            border-radius: var(--venus-radius-sm);
+            padding: var(--venus-space-xs);
+        }
+
+        .modal-close:hover {
+            color: var(--venus-text-primary);
+            background: var(--venus-bg-gray);
+        }
+
+        .form-group {
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--venus-text-primary);
+            font-weight: var(--venus-font-weight-semibold);
+            margin-bottom: var(--venus-space-sm);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 2px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            font-size: var(--venus-font-size-base);
+            transition: all var(--venus-transition);
+            font-family: var(--venus-font-family);
+            background: var(--venus-bg-card);
+        }
+
+        /* Modal content area scrollable */
+        .modal form {
+            overflow-y: auto;
+            padding-right: var(--venus-space-xs);
+        }
+
+        /* Sticky action footer in modal */
+        .modal .modal-actions {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(to top, var(--venus-bg-card) 65%, rgba(255,255,255,0));
+            padding-top: var(--venus-space-sm);
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-md);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px var(--venus-primary-light);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--venus-space-xl);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            color: var(--venus-text-secondary);
+        }
+
+        .forgot-password {
+            color: var(--venus-primary);
+            text-decoration: none;
+            font-weight: var(--venus-font-weight-medium);
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+            color: var(--venus-primary-dark);
+        }
+
+        .btn-modal {
+            width: 100%;
+            padding: var(--venus-space-lg);
+            background: var(--venus-gradient-primary);
+            color: var(--venus-text-white);
+            border: none;
+            border-radius: var(--venus-radius);
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            font-family: var(--venus-font-family);
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--venus-shadow-lg);
+        }
+
+        .btn-modal:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-switch {
+            text-align: center;
+            margin-top: var(--venus-space-xl);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .modal-switch a {
+            color: var(--venus-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .modal-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message, .success-message {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error-message.show, .success-message.show {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                padding: 2rem;
+                max-width: 95%;
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <noscript style="color: red; background: #fff; padding: 2rem; text-align: center; font-size: 1.2rem;">⚠️ Javascript disabilitato o errore di caricamento. Controlla la console e ricarica la pagina.</noscript>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">🚀 Shappa</a>
+            
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#features">Funzionalità</a></li>
+                <li><a href="#about">Chi Siamo</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#contact">Contatti</a></li>
+            </ul>
+
+            <div class="nav-actions" id="navActions">
+                <!-- Bottoni default per utenti non loggati -->
+                <button class="btn btn-outline" onclick="openModal('login')" id="btnLogin">Accedi</button>
+                <button class="btn btn-primary" onclick="openModal('register')" id="btnRegister">Registrati</button>
+                
+                <!-- Bottone dashboard per utenti loggati (nascosto di default) -->
+                <a href="src/pages/dashboard.html" class="btn btn-primary" id="btnDashboard" style="display: none;">
+                    📊 Dashboard
+                </a>
+                
+                <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1><span class="emoji">🚀</span> Benvenuto in Shappa</h1>
+            <p>La piattaforma intelligente che rivoluziona il tuo business e-commerce. Gestisci Amazon, eBay e Vinted in un unico posto con automazione avanzata.</p>
+            
+            <div class="hero-actions">
+                <a href="#features" class="btn-hero primary">
+                    Scopri di più
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section features">
+        <div class="container">
+            <div class="section-header">
+                <h2>🎯 Funzionalità Avanzate</h2>
+                <p>Scopri tutti gli strumenti che Shappa mette a disposizione per far crescere il tuo business</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Ricerca Intelligente</h3>
+                    <p class="feature-description">Algoritmi avanzati per trovare prodotti profittevoli su Amazon e analizzare la concorrenza.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Listing Automatico</h3>
+                    <p class="feature-description">Crea listing eBay perfetti in secondi con titoli ottimizzati e prezzi competitivi.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Analytics Completa</h3>
+                    <p class="feature-description">Dashboard interattive per monitorare profitti, vendite e performance in tempo reale.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3 class="feature-title">Sincronizzazione</h3>
+                    <p class="feature-description">Mantieni prezzi e inventario aggiornati automaticamente tra tutti i marketplace.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="feature-title">Ottimizzazione Prezzi</h3>
+                    <p class="feature-description">Algoritmi intelligenti per massimizzare profitti mantenendo competitività.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">Sicurezza Totale</h3>
+                    <p class="feature-description">Connessioni sicure con API ufficiali. I tuoi dati sempre protetti.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>🏢 Chi Siamo</h3>
+                    <p>Shappa è nata dalla passione per l'e-commerce e l'innovazione tecnologica. Il nostro team di esperti ha sviluppato una piattaforma che semplifica e automatizza le operazioni di vendita online.</p>
+                    
+                    <p>Con anni di esperienza nel settore, abbiamo creato strumenti che permettono a seller di ogni livello di crescere e ottimizzare il proprio business su multiple piattaforme.</p>
+                    
+                    <p>La nostra missione è democratizzare l'accesso agli strumenti professionali di e-commerce, rendendo semplice ciò che prima era complesso.</p>
+                </div>
+                
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">10K+</span>
+                        <span class="stat-label">Listing Gestiti</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">€2.4M</span>
+                        <span class="stat-label">Volume Vendite</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">95%</span>
+                        <span class="stat-label">Automazione</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Supporto</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section id="faq" class="section features">
+        <div class="container">
+            <div class="section-header">
+                <h2>❓ Domande Frequenti</h2>
+                <p>Risposte alle domande più comuni su Shappa</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤔</div>
+                    <h3 class="feature-title">È legale l'arbitraggio?</h3>
+                    <p class="feature-description">Sì, l'arbitraggio tra marketplace è completamente legale. Utilizziamo solo API ufficiali e rispettiamo tutti i ToS.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3 class="feature-title">Quanto costa?</h3>
+                    <p class="feature-description">Offriamo piani flessibili a partire da €29/mese. Prova gratuita di 14 giorni per tutti i nuovi utenti.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3 class="feature-title">Quanto tempo per vedere risultati?</h3>
+                    <p class="feature-description">I primi risultati si vedono già dalla prima settimana. Il 90% degli utenti recupera l'investimento entro 30 giorni.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">È disponibile su mobile?</h3>
+                    <p class="feature-description">Sì, Shappa è completamente responsive e funziona perfettamente su tutti i dispositivi mobili.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🛠️</div>
+                    <h3 class="feature-title">Serve assistenza tecnica?</h3>
+                    <p class="feature-description">Il nostro sistema è plug-and-play. Setup in 5 minuti + supporto tecnico dedicato 24/7.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3 class="feature-title">I miei dati sono sicuri?</h3>
+                    <p class="feature-description">Utilizziamo crittografia end-to-end e standard bancari per la sicurezza. Zero accesso ai tuoi account.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section about">
+        <div class="container">
+            <div class="section-header">
+                <h2>📞 Contattaci</h2>
+                <p>Hai domande? Il nostro team è qui per aiutarti</p>
+            </div>
+            
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>💬 Supporto Clienti</h3>
+                    <p><strong>Email:</strong> support@shappa.it</p>
+                    <p><strong>Telefono:</strong> +39 02 1234 5678</p>
+                    <p><strong>Orari:</strong> Lun-Ven 9:00-18:00</p>
+                    
+                    <h3 style="margin-top: 2rem;">🏢 Uffici</h3>
+                    <p><strong>Sede Legale:</strong><br>
+                    Via Innovation 123<br>
+                    20100 Milano, Italia</p>
+                </div>
+                
+                <div class="about-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">< 1h</span>
+                        <span class="stat-label">Tempo Risposta</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">98%</span>
+                        <span class="stat-label">Soddisfazione</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">500+</span>
+                        <span class="stat-label">Clienti Attivi</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Disponibilità</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('login')">&times;</button>
+            
+            <div class="modal-header">
+                <h2>🔐 Accedi a Shappa</h2>
+                <p>Bentornato! Accedi al tuo account</p>
+            </div>
+
+            <div class="error-message" id="loginError"></div>
+            <div class="success-message" id="loginSuccess"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email o Username</label>
+                    <input type="text" id="loginEmail" name="loginEmail" required 
+                           placeholder="Inserisci email o username" autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="loginPassword" required 
+                           placeholder="Inserisci la password" autocomplete="current-password">
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="loginRemember" name="loginRemember">
+                        Ricordami
+                    </label>
+                    <a href="#" class="forgot-password">Password dimenticata?</a>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal" id="loginBtn">
+                        Accedi
+                    </button>
+                    <div class="modal-switch">
+                        Non hai un account? <a href="#" onclick="switchModal('login', 'register')">Registrati ora</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('register')">&times;</button>
+            
+            <div class="modal-header">
+                <h2>✨ Crea Account Shappa</h2>
+                <p>Inizia la tua avventura nell'e-commerce</p>
+            </div>
+
+            <div class="error-message" id="registerError"></div>
+            <div class="success-message" id="registerSuccess"></div>
+
+            <form id="registerForm">
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" name="registerUsername" required 
+                               placeholder="Scegli un username" autocomplete="username">
+                        <div id="usernameHelp" style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" name="registerEmail" required 
+                               placeholder="Inserisci la tua email" autocomplete="email">
+                        <div id="emailHelp" style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" name="registerPassword" required 
+                               placeholder="Crea una password sicura" autocomplete="new-password">
+                        <div class="password-strength" style="height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 0.5rem; overflow: hidden;">
+                            <div class="password-strength-bar" id="passwordStrengthBar" style="height: 100%; transition: all 0.3s ease; width: 0%;"></div>
+                        </div>
+                        <div id="passwordHelp" style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPasswordConfirm">Conferma Password</label>
+                        <input type="password" id="registerPasswordConfirm" name="registerPasswordConfirm" required 
+                               placeholder="Ripeti la password" autocomplete="new-password">
+                        <div id="confirmHelp" style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;"></div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn-modal" id="registerBtn">
+                        Crea Account
+                    </button>
+                    <div class="modal-switch">
+                        Hai già un account? <a href="#" onclick="switchModal('register', 'login')">Accedi ora</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth System -->
+    <script src="src/utils/auth-v2.js"></script>
+    <script>
+        // Initialize auth system
+        const authSystem = new ShappaAuth();
+
+        // Check if already logged in
+        if (authSystem.isLoggedIn()) {
+            console.log('✅ User already logged in');
+            updateNavForLoggedUser();
+        }
+
+        function updateNavForLoggedUser() {
+            const currentUser = authSystem.getCurrentUser();
+            
+            // Nascondi bottoni login/register
+            document.getElementById('btnLogin').style.display = 'none';
+            document.getElementById('btnRegister').style.display = 'none';
+            
+            // Mostra bottone dashboard
+            const btnDashboard = document.getElementById('btnDashboard');
+            btnDashboard.style.display = 'inline-block';
+            btnDashboard.textContent = '📊 Dashboard';
+            
+            console.log(`✅ Nav updated for user: ${currentUser.username}`);
+        }
+
+        // Modal Functions
+        function openModal(type) {
+            const modal = document.getElementById(type + 'Modal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(type) {
+            const modal = document.getElementById(type + 'Modal');
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        function switchModal(from, to) {
+            closeModal(from);
+            setTimeout(() => openModal(to), 200);
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        // Navigation smooth scroll
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorDiv = document.getElementById('loginError');
+            const successDiv = document.getElementById('loginSuccess');
+            const submitBtn = document.getElementById('loginBtn');
+
+            // Clear messages
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            // Get form data
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const remember = document.getElementById('loginRemember').checked;
+
+            if (!email || !password) {
+                errorDiv.textContent = '⚠️ Compila tutti i campi';
+                errorDiv.classList.add('show');
+                return;
+            }
+
+            // Loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Accesso...';
+
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Attempt login
+            const result = authSystem.login(email, password, remember);
+
+            if (result.success) {
+                successDiv.textContent = `✅ Benvenuto ${result.user.username}!`;
+                successDiv.classList.add('show');
+                submitBtn.textContent = '✅ Successo!';
+
+                // Chiudi la modale e aggiorna la navbar
+                setTimeout(() => {
+                    closeModal('login');
+                    updateNavForLoggedUser();
+                    
+                    // Reset form
+                    document.getElementById('loginForm').reset();
+                    errorDiv.classList.remove('show');
+                    successDiv.classList.remove('show');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }, 1200);
+            } else {
+                errorDiv.textContent = `❌ ${result.error}`;
+                errorDiv.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Register Form with Real-time Validation
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+        
+        // Real-time validation
+        document.getElementById('registerUsername').addEventListener('input', function() {
+            const username = this.value.trim();
+            const help = document.getElementById('usernameHelp');
+            
+            if (!username) {
+                help.textContent = '';
+                return;
+            }
+            
+            const validation = authSystem.validateUsername(username);
+            if (validation.isValid) {
+                help.style.color = '#10b981';
+                help.textContent = '✅ Username disponibile';
+                this.style.borderColor = '#10b981';
+            } else {
+                help.style.color = '#ef4444';
+                help.textContent = `❌ ${validation.error}`;
+                this.style.borderColor = '#ef4444';
+            }
+        });
+
+        document.getElementById('registerEmail').addEventListener('input', function() {
+            const email = this.value.trim();
+            const help = document.getElementById('emailHelp');
+            
+            if (!email) {
+                help.textContent = '';
+                return;
+            }
+            
+            const validation = authSystem.validateEmail(email);
+            if (validation.isValid) {
+                help.style.color = '#10b981';
+                help.textContent = '✅ Email valida';
+                this.style.borderColor = '#10b981';
+            } else {
+                help.style.color = '#ef4444';
+                help.textContent = `❌ ${validation.error}`;
+                this.style.borderColor = '#ef4444';
+            }
+        });
+
+        document.getElementById('registerPassword').addEventListener('input', function() {
+            const password = this.value;
+            const help = document.getElementById('passwordHelp');
+            const strengthBar = document.getElementById('passwordStrengthBar');
+            
+            if (!password) {
+                help.textContent = '';
+                strengthBar.style.width = '0%';
+                return;
+            }
+            
+            const validation = authSystem.validatePassword(password);
+            const strength = getPasswordStrength(password);
+            
+            // Update strength bar
+            strengthBar.style.width = (strength * 33.33) + '%';
+            strengthBar.className = `password-strength-bar ${strength === 1 ? 'weak' : strength === 2 ? 'medium' : 'strong'}`;
+            
+            if (validation.isValid) {
+                help.style.color = '#10b981';
+                help.textContent = '✅ Password sicura';
+                this.style.borderColor = '#10b981';
+            } else {
+                help.style.color = '#ef4444';
+                help.textContent = `❌ ${validation.error}`;
+                this.style.borderColor = '#ef4444';
+            }
+        });
+
+        document.getElementById('registerPasswordConfirm').addEventListener('input', function() {
+            const password = document.getElementById('registerPassword').value;
+            const confirm = this.value;
+            const help = document.getElementById('confirmHelp');
+            
+            if (!confirm) {
+                help.textContent = '';
+                return;
+            }
+            
+            if (password === confirm) {
+                help.style.color = '#10b981';
+                help.textContent = '✅ Password confermata';
+                this.style.borderColor = '#10b981';
+            } else {
+                help.style.color = '#ef4444';
+                help.textContent = '❌ Le password non coincidono';
+                this.style.borderColor = '#ef4444';
+            }
+        });
+
+        function getPasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            return Math.min(strength, 3);
+        }
+
+        // Register Form Submit
+        registerForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const errorDiv = document.getElementById('registerError');
+            const successDiv = document.getElementById('registerSuccess');
+
+            // Clear messages
+            errorDiv.classList.remove('show');
+            successDiv.classList.remove('show');
+
+            // Get form data
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerPasswordConfirm').value;
+
+            if (!username || !email || !password || !confirmPassword) {
+                errorDiv.textContent = '⚠️ Compila tutti i campi';
+                errorDiv.classList.add('show');
+                return;
+            }
+
+            // Loading state
+            const originalText = registerBtn.textContent;
+            registerBtn.disabled = true;
+            registerBtn.textContent = '🔄 Creazione account...';
+
+            // Simulate delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Attempt registration
+            const result = authSystem.register(username, email, password, confirmPassword);
+
+            if (result.success) {
+                successDiv.textContent = `✅ Account creato! Benvenuto ${result.user.username}!`;
+                successDiv.classList.add('show');
+                registerBtn.textContent = '✅ Account Creato!';
+
+                // Auto-login: salva la sessione
+                authSystem.login(email, password, false);
+
+                // Chiudi la modale e aggiorna la navbar
+                setTimeout(() => {
+                    closeModal('register');
+                    updateNavForLoggedUser();
+                    
+                    // Reset form
+                    document.getElementById('registerForm').reset();
+                    errorDiv.classList.remove('show');
+                    successDiv.classList.remove('show');
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = originalText;
+                }, 1200);
+            } else {
+                errorDiv.textContent = `❌ ${result.error}`;
+                errorDiv.classList.add('show');
+                registerBtn.disabled = false;
+                registerBtn.textContent = originalText;
+            }
+        });
+
+        // Add CSS for password strength
+        const strengthStyles = document.createElement('style');
+        strengthStyles.textContent = `
+            .password-strength-bar.weak { background: #ef4444; }
+            .password-strength-bar.medium { background: #f59e0b; }
+            .password-strength-bar.strong { background: #10b981; }
+        `;
+        document.head.appendChild(strengthStyles);
+    </script>
+</body>
+</html>
+
+<!-- UX helpers -->
+<script>
+    // Autofocus sul primo campo del form quando si apre la modale
+    function focusFirstField() {
+        setTimeout(() => {
+            const form = document.querySelector('.modal form');
+            if (form) {
+                const firstInput = form.querySelector('input');
+                if (firstInput) firstInput.focus();
+            }
+        }, 200);
+    }
+
+    // Hook openModal se esiste
+    if (typeof openModal === 'function') {
+        const originalOpenModal = openModal;
+        window.openModal = function(type) {
+            originalOpenModal(type);
+            focusFirstField();
+        };
+    }
+
+    // Invio con Enter su tutti i form modali
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.modal form').forEach(form => {
+            form.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+                    e.preventDefault();
+                    const btn = form.querySelector('button[type="submit"]');
+                    if (btn) btn.click();
+                }
+            });
+        });
+    });
+</script>

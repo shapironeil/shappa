@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connessione eBay - Shappa</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .callback-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="callback-container">
+        <div class="spinner"></div>
+        <h2>Connessione eBay in corso...</h2>
+        <p>Stiamo elaborando la tua autorizzazione</p>
+    </div>
+
+    <script>
+        // Gestisce il callback OAuth eBay
+        function handleOAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const error = urlParams.get('error');
+            
+            // Verifica errori
+            if (error) {
+                console.error('OAuth Error:', error);
+                alert('Errore durante la connessione eBay: ' + error);
+                window.close();
+                return;
+            }
+            
+            // Verifica state per sicurezza
+            const savedState = sessionStorage.getItem('ebay_oauth_state');
+            if (state !== savedState) {
+                console.error('State mismatch - possibile attacco CSRF');
+                alert('Errore di sicurezza durante la connessione');
+                window.close();
+                return;
+            }
+            
+            // Salva il codice di autorizzazione
+            if (code) {
+                sessionStorage.setItem('ebay_auth_code', code);
+                console.log('✅ Authorization code ricevuto');
+                
+                // Mostra successo e chiudi popup
+                document.querySelector('.callback-container').innerHTML = `
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                    <h2>Connessione Completata!</h2>
+                    <p>eBay è stato collegato con successo</p>
+                `;
+                
+                // Chiudi popup dopo 2 secondi
+                setTimeout(() => {
+                    window.close();
+                }, 2000);
+            } else {
+                console.error('No authorization code received');
+                alert('Nessun codice di autorizzazione ricevuto');
+                window.close();
+            }
+        }
+        
+        // Avvia gestione callback quando la pagina è caricata
+        document.addEventListener('DOMContentLoaded', handleOAuthCallback);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3003 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shappa - Listings</title>
+    <link rel="stylesheet" href="../styles/main.css" onerror="console.warn('CSS main.css non caricato')">
+    <link rel="stylesheet" href="../styles/venus.css" onerror="console.warn('CSS venus.css non caricato')">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <script>
+    // Previeni errori JS non gestiti
+    window.addEventListener('error', function(e) {
+        if (e.target.tagName === 'LINK' && e.target.rel === 'stylesheet') {
+            console.warn('CSS non caricato:', e.target.href);
+            return true; // Previeni propagazione dell'errore
+        }
+    });
+    
+    // Gestione errori fetch globali
+    window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('fetch')) {
+            console.warn('Fetch fallito (server non disponibile):', e.reason.message);
+            e.preventDefault(); // Previeni l'errore non gestito
+        }
+    });
+    </script>
+    <style>
+        /* Base Layout Styles */
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* cleaned: removed stray declarations */
+
+        .group-tab.active .count {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .listings-actions {
+            display: flex;
+            gap: var(--venus-space-sm);
+            flex-shrink: 0;
+        }
+
+        /* Table Enhancements */
+        .listing-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--venus-radius-sm);
+            border: 1px solid var(--venus-border);
+        }
+
+        .listing-title {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: var(--venus-font-weight-medium);
+        }
+
+        .listing-price {
+            font-weight: var(--venus-font-weight-medium);
+            color: var(--venus-success);
+        }
+
+        .listing-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-draft {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .listing-source {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-xs);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .source-amazon {
+            color: #ff9900;
+        }
+
+        .source-ebay {
+            color: #0064d2;
+        }
+
+        .listing-actions {
+            display: flex;
+            gap: var(--venus-space-xs);
+        }
+
+        /* Venus Button System */
+        .venus-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--venus-space-xs);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            background: var(--venus-bg-card);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            font-family: var(--venus-font-family);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            text-decoration: none;
+        }
+
+        .venus-btn:hover {
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--venus-shadow-sm);
+        }
+
+        .venus-btn-primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-primary:hover {
+            opacity: 0.9;
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-secondary {
+            background: var(--venus-bg-gray);
+            border-color: var(--venus-border);
+            color: var(--venus-text-secondary);
+        }
+
+        .venus-btn-secondary:hover {
+            background: var(--venus-bg-card);
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+        }
+
+        .venus-btn-icon {
+            padding: var(--venus-space-xs);
+            min-width: 32px;
+            min-height: 32px;
+            justify-content: center;
+        }
+
+        .venus-btn-icon span {
+            font-size: 14px;
+        }
+
+        .venus-btn-small {
+            padding: var(--venus-space-xs);
+            font-size: var(--venus-font-size-xs);
+            min-width: 28px;
+            min-height: 28px;
+        }
+
+        .venus-btn-small.venus-btn-icon {
+            padding: 4px;
+            min-width: 28px;
+            min-height: 28px;
+        }
+
+        /* Legacy action buttons compatibility */
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            background: var(--venus-bg-card);
+            color: var(--venus-text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .action-btn:hover {
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+        }
+
+        .action-btn.primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .action-btn.primary:hover {
+            opacity: 0.9;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            margin: 0 0 var(--venus-space-xs) 0;
+            font-weight: var(--venus-font-weight-normal);
+        }
+
+        .venus-page-subtitle {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            min-width: 300px;
+        }
+
+        .venus-search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-search-input::placeholder {
+            color: var(--venus-text-muted);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: var(--venus-space-2xl);
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Listings Widgets Grid */
+        .venus-listings-grid {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-lg);
+            width: 100%;
+            max-width: none;
+            height: 100%;
+        }
+
+        .venus-widget {
+            background: #ffffff;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            transition: all var(--venus-transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .venus-widget:hover {
+            border-color: var(--venus-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .venus-widget-stats {
+            display: none; /* Nascondo per dare più spazio al widget table */
+        }
+
+        .venus-widget-actions {
+            grid-column: span 4;
+            min-height: 80px;
+        }
+
+        .venus-widget-table {
+            grid-column: span 4;
+            min-height: 500px;
+        }
+
+        .venus-widget-content {
+            width: 100%;
+            height: 100%;
+        }
+
+        .venus-widget-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-lg) 0;
+        }
+
+        /* Stats Styles */
+        .venus-stat-value {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            text-align: center;
+            margin-bottom: var(--venus-space-sm);
+        }
+
+        .venus-stat-label {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-secondary);
+            text-align: center;
+        }
+
+        /* Actions Widget */
+        .venus-actions-row {
+            display: flex;
+            gap: var(--venus-space-lg);
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .venus-actions-group {
+            display: flex;
+            gap: var(--venus-space-md);
+        }
+
+        .venus-btn-action {
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            background: var(--venus-bg-card);
+            color: var(--venus-text-primary);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-btn-action:hover {
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+            transform: translateY(-1px);
+        }
+
+        .venus-btn-action.venus-btn-primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-action.venus-btn-primary:hover {
+            background: var(--venus-primary-dark);
+            color: var(--venus-text-white);
+        }
+
+        /* Table Styles */
+        .venus-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .venus-table th,
+        .venus-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f3f3f3;
+        }
+
+        .venus-table th {
+            background: var(--venus-bg-card);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            position: sticky;
+            top: 0;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-table tr:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .venus-table-container {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+        }
+
+        /* Responsive container specifico listing */
+        .listing-table-container {
+            max-width: 100%;
+            overflow-x: auto;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        table.listing-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* Primary button unified style */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+
+        .venus-status-badge {
+            padding: var(--venus-space-xs) var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            font-size: var(--venus-font-size-xs);
+            font-weight: var(--venus-font-weight-semibold);
+            text-transform: uppercase;
+        }
+
+        .venus-status-active {
+            background: var(--venus-success-light);
+            color: var(--venus-success);
+        }
+
+        .venus-status-draft {
+            background: var(--venus-warning-light);
+            color: var(--venus-warning);
+        }
+
+        .venus-status-sold {
+            background: var(--venus-primary-light);
+            color: var(--venus-primary);
+        }
+
+        .venus-status-ended {
+            background: var(--venus-gray-light);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-table-actions {
+            display: flex;
+            gap: var(--venus-space-xs);
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .venus-btn-small {
+            padding: var(--venus-space-xs) var(--venus-space-sm);
+            font-size: var(--venus-font-size-xs);
+            border-radius: var(--venus-radius-sm);
+            border: 1px solid var(--venus-border);
+            background: transparent;
+            color: var(--venus-text-secondary);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-btn-small:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        /* Empty State */
+        .venus-empty-state {
+            text-align: center;
+            padding: var(--venus-space-2xl);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-empty-state h4 {
+            margin: 0 0 var(--venus-space-md) 0;
+            color: var(--venus-text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .venus-sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                transition: left var(--venus-transition);
+            }
+
+            .venus-sidebar.venus-open {
+                left: 0;
+            }
+
+            .venus-main-content {
+                width: 100%;
+            }
+
+            .venus-listings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .venus-widget-stats,
+            .venus-widget-actions,
+            .venus-widget-table {
+                grid-column: span 1;
+            }
+
+            .venus-actions-row {
+                flex-direction: column;
+                gap: var(--venus-space-md);
+            }
+        }
+
+        /* Group Dropdown Styles - Sidebar Style */
+        .group-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .group-dropdown-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            padding: 12px 16px;
+            background: #6c5ce7;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            font-family: var(--venus-font-family);
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.25);
+        }
+
+        .group-dropdown-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.35);
+        }
+
+        .group-dropdown-btn:active {
+            transform: translateY(0);
+        }
+
+        .group-current {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            flex: 1;
+        }
+
+        .group-icon {
+            width: 18px;
+            height: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        .count {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .dropdown-arrow {
+            color: rgba(255, 255, 255, 0.8);
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+        }
+
+        .group-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .group-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+        }
+
+        .group-dropdown.open .group-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+
+        .group-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            color: var(--venus-text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+
+        .group-dropdown-item:hover {
+            background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+            color: var(--venus-primary);
+            transform: translateX(4px);
+        }
+
+        .group-dropdown-item:hover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--venus-primary);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .group-dropdown-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--venus-text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .group-dropdown-item:hover svg {
+            color: var(--venus-primary);
+            transform: scale(1.1);
+        }
+
+        .group-dropdown-item:not(:last-child) {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        /* Fixed table layout: no horizontal scroll, compact rows */
+        .venus-table {
+            table-layout: fixed;
+            width: 100%;
+        }
+        .venus-table thead th {
+            white-space: nowrap;
+            height: 40px;
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+        .venus-table tbody td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            height: 48px;
+            vertical-align: middle;
+            padding: var(--venus-space-sm) var(--venus-space-md);
+        }
+        .venus-table tbody tr { 
+            height: 48px; 
+        }
+        .venus-table .title-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            white-space: normal;
+            max-height: 2.6em;
+        }
+        .table-pagination .venus-btn-action { padding: 8px 12px; }
+
+        /* Enhanced Title Preview */
+        .title-preview {
+            cursor: pointer;
+            color: var(--venus-text-primary);
+            font-weight: var(--venus-font-weight-medium);
+            transition: color var(--venus-transition);
+        }
+
+        .title-preview:hover {
+            color: var(--venus-primary);
+        }
+
+        /* ASIN Link Styling */
+        .venus-table a {
+            color: var(--venus-primary);
+            text-decoration: none;
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-table a:hover {
+            text-decoration: underline;
+            opacity: 0.8;
+        }
+
+        /* Compact Layout Improvements */
+        .venus-table td {
+            vertical-align: middle;
+            padding: var(--venus-space-sm);
+        }
+
+        .venus-table img {
+            border: 1px solid var(--venus-border);
+            transition: transform var(--venus-transition);
+        }
+
+        .venus-table img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Product Info with Thumbnail */
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+        }
+
+        .product-thumbnail {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: var(--venus-radius-sm);
+            border: 1px solid var(--venus-border);
+            flex-shrink: 0;
+            transition: transform var(--venus-transition);
+        }
+
+        .product-thumbnail:hover {
+            transform: scale(1.1);
+        }
+
+        .title-preview {
+            cursor: pointer;
+            color: var(--venus-text-primary);
+            font-weight: var(--venus-font-weight-medium);
+            transition: color var(--venus-transition);
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        /* Widget Table Expansion - Venus Theme */
+        .venus-widget-table {
+            flex: 1;
+            width: 100%;
+            max-width: none;
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            color: var(--venus-text-primary);
+            box-shadow: var(--venus-shadow-sm);
+            border-radius: var(--venus-radius);
+            position: relative;
+            transition: all var(--venus-transition);
+            overflow: hidden;
+        }
+
+        .venus-widget-table.horizontal-mode {
+            position: fixed;
+            bottom: 0;
+            left: 280px;
+            right: 0;
+            height: 200px;
+            width: calc(100vw - 280px);
+            max-width: none;
+            z-index: 1000;
+            grid-column: unset !important;
+            background: var(--venus-bg-card);
+            border-top: 3px solid var(--venus-primary);
+            border-radius: 16px 16px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .venus-widget-table.horizontal-mode .venus-widget-content {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Header del widget listing (pulito, chiaro) */
+        .listings-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: #333;
+            border: 1px solid #e9ecef;
+        }
+
+        .venus-widget-table .listings-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .venus-widget-table .venus-btn-action {
+            background: var(--venus-bg-card);
+            color: var(--venus-primary);
+            border: 1px solid var(--venus-primary);
+            font-weight: var(--venus-font-weight-semibold);
+            transition: all var(--venus-transition);
+            padding: 10px 20px;
+            border-radius: var(--venus-radius);
+        }
+
+        .venus-widget-table .venus-btn-action:hover {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border-color: var(--venus-primary);
+            transform: translateY(-2px);
+        }
+
+        /* Unified buttons (similar to settings/dashboard) */
+        .venus-btn {
+            border: 1px solid #e9ecef;
+            background: #ffffff;
+            color: #2c3e50;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .venus-btn:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.06); transform: translateY(-1px); }
+        .venus-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .venus-btn-primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+        .venus-btn-primary:hover { background: var(--venus-primary-dark); border-color: var(--venus-primary-dark); }
+        .venus-btn-secondary {
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+        .venus-btn-small { padding: 6px 10px; font-size: 12px; border-radius: 8px; }
+    .venus-btn-icon { width: 40px; height: 40px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+
+        .venus-widget-table table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            color: #333;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .venus-widget-table th {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-bold);
+            padding: 18px;
+            text-align: left;
+            border: none;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .venus-widget-table td {
+            padding: 18px;
+            border-bottom: 1px solid var(--venus-border);
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        .venus-widget-table tr:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .venus-widget-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .venus-widget-table .venus-btn-small {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border: none;
+            padding: 8px 14px;
+            border-radius: var(--venus-radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-widget-table .venus-btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--venus-shadow-md);
+            opacity: 0.9;
+        }
+
+        .venus-widget-table .venus-status-badge {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .venus-widget-table .venus-status-draft {
+            background: rgba(255, 193, 7, 0.15);
+            color: #ff8f00;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .venus-widget-table .venus-status-active {
+            background: rgba(40, 167, 69, 0.15);
+            color: #28a745;
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        .venus-widget-table .venus-status-sold {
+            background: rgba(23, 162, 184, 0.15);
+            color: #17a2b8;
+            border: 1px solid rgba(23, 162, 184, 0.3);
+        }
+
+        .venus-widget-table .venus-status-ended {
+            background: rgba(108, 117, 125, 0.15);
+            color: #6c757d;
+            border: 1px solid rgba(108, 117, 125, 0.3);
+        }
+
+        /* Expanded Table Layout */
+        .venus-widget-table table {
+            min-width: 1200px;
+        }
+
+        .venus-widget-table th:nth-child(1) { width: 50px; }  /* Checkbox */
+        .venus-widget-table th:nth-child(2) { width: 80px; }  /* Immagine */
+        .venus-widget-table th:nth-child(3) { width: 30%; }   /* Titolo */
+        .venus-widget-table th:nth-child(4) { width: 10%; }   /* Prezzo */
+        .venus-widget-table th:nth-child(5) { width: 10%; }   /* Stato */
+        .venus-widget-table th:nth-child(6) { width: 8%; }    /* Fonte */
+        .venus-widget-table th:nth-child(7) { width: 10%; }   /* Data */
+        .venus-widget-table th:nth-child(8) { width: 15%; }   /* Azioni */
+
+        .venus-widget-table img {
+            transition: transform 0.2s ease;
+        }
+
+        .venus-widget-table img:hover {
+            transform: scale(1.1);
+        }
+
+        .listing-checkbox {
+            cursor: pointer;
+        }
+
+        /* Toggle View Button */
+        .widget-toggle-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            background: #6c5ce7;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .widget-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4);
+        }
+
+        .widget-toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .venus-widget-table.horizontal-mode .widget-toggle-btn svg {
+            transform: rotate(180deg);
+        }
+
+        /* Venus Theme for Buttons */
+        .venus-btn-action.venus-btn-primary {
+            background: var(--venus-primary);
+            border: none;
+            box-shadow: var(--venus-shadow-sm);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-btn-action.venus-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--venus-shadow-lg);
+            opacity: 0.9;
+        }
+
+        .venus-btn-small {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .venus-btn-small:hover {
+            background: var(--venus-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--venus-shadow-md);
+            opacity: 0.9;
+        }
+
+        /* Table Header Venus Theme */
+        .venus-table-header {
+            background: var(--venus-bg-gray);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-table-header th {
+            color: var(--venus-text-primary);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        /* Title Preview and Edit Banner */
+        .title-preview {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            position: relative;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .title-preview:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-primary);
+        }
+
+        .title-edit-banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-lg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 24px;
+            z-index: 2000;
+            min-width: 400px;
+            max-width: 600px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translate(-50%, -50%) scale(0.9);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .title-edit-banner.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .title-edit-banner h3 {
+            margin: 0 0 16px 0;
+            color: var(--venus-text-primary);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .title-edit-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            font-size: 14px;
+            font-family: var(--venus-font-family);
+            transition: border-color 0.2s ease;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .title-edit-input:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px var(--venus-primary-light);
+        }
+
+        .title-edit-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        /* Overlay del banner titolo */
+        .banner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .banner-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+<body>
+    <!-- Venus Dashboard Layout -->
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">Dashboard</a>
+                <a href="products.html" class="venus-menu-item">Cerca Prodotti</a>
+                <a href="listings.html" class="venus-menu-item venus-active">Listing</a>
+                <a href="reports.html" class="venus-menu-item">Report</a>
+                <a href="settings.html" class="venus-menu-item">Impostazioni</a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">Log Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            <div class="venus-content-area">
+                <!-- Listings Widgets Grid -->
+                <div class="venus-listings-grid">
+                    <!-- Listings Table Widget -->
+                    <div class="venus-widget venus-widget-table">
+                        <div class="venus-widget-content">
+                            <!-- Group Selector -->
+                            <div class="listings-header">
+                                <div class="group-selector">
+                                    <div class="group-dropdown">
+                                        <button class="group-dropdown-btn" onclick="toggleGroupDropdown()">
+                                            <span class="group-current">
+                                                <svg class="group-icon" id="currentGroupIcon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                </svg>
+                                                <span id="currentGroupLabel">Bozze</span>
+                                                <span class="count" id="currentGroupCount">0</span>
+                                            </span>
+                                            <svg class="dropdown-arrow" width="18" height="18" viewBox="0 0 12 12">
+                                                <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                            </svg>
+                                        </button>
+                                        <div class="group-dropdown-menu" id="groupDropdownMenu">
+                                            <button class="group-dropdown-item" onclick="selectGroup('drafts')">
+                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                </svg>
+                                                <span>Bozze</span>
+                                            </button>
+                                            <button class="group-dropdown-item" onclick="selectGroup('ebay')">
+                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                                                </svg>
+                                                <span>eBay</span>
+                                            </button>
+                                            <button class="group-dropdown-item" onclick="selectGroup('all')">
+                                                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+                                                    <path d="M3,5H9V3H3C1.89,3 1,3.89 1,5V19A2,2 0 0,0 3,21H9V19H3V5M10,3V21H12V19H18V21H20V19C21.11,19 22,18.11 22,17V7C22,5.89 21.11,5 20,5H12V3H10M20,17H12V7H20V17Z"/>
+                                                </svg>
+                                                <span>Tutti</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="listings-actions">
+                                    <button class="venus-btn-action venus-btn-primary" onclick="bulkPublish()">
+                                        Pubblica Selezionati
+                                    </button>
+                                    <button class="venus-btn-action venus-btn-secondary" onclick="importFromAmazon()">
+                                        Importa da Amazon
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="venus-table-container">
+                                <table class="venus-table" id="listingsTable" style="max-width: 1100px;">
+                                    <colgroup>
+                                        <col style="width:44px">
+                                        <col style="width:40%; min-width:250px">
+                                        <col style="width:110px">
+                                        <col style="width:140px">
+                                        <col style="width:200px">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 44px;">
+                                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                                            </th>
+                                            <th style="min-width: 250px;">Prodotto</th>
+                                            <th style="width: 110px;">Prezzo</th>
+                                            <th style="width: 140px;">ASIN</th>
+                                            <th style="width: 200px;">Azioni</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="listingsTableBody">
+                                        <!-- Listings will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination (no scrollbars) -->
+                            <div class="table-pagination" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 4px;">
+                                <div id="resultsInfo" style="font-size: 13px; color: var(--venus-text-muted);">0 risultati</div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button class="venus-btn-action" id="prevPageBtn" onclick="changePage(-1)">Prev</button>
+                                    <span id="pageInfo" style="font-size: 13px; color: var(--venus-text-primary); min-width: 100px; text-align:center;">Pag 1 di 1</span>
+                                    <button class="venus-btn-action" id="nextPageBtn" onclick="changePage(1)">Next</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Empty state (hidden by default) -->
+                            <div class="venus-empty-state" id="emptyState" style="display: none;">
+                                <h4>Nessun listing trovato</h4>
+                                <p>Inizia creando il tuo primo listing su eBay</p>
+                                <button class="venus-btn-action venus-btn-primary" style="margin-top: var(--venus-space-lg);" onclick="createNewListing()">
+                                    Crea Primo Listing
+                                </button>
+                            </div>
+                        </div>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Auth System -->
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    
+    <script>
+        // Initialize Auth System
+        let authSystem;
+        try {
+            authSystem = new ShappaAuth();
+            console.log('✅ Auth system loaded');
+        } catch (error) {
+            console.error('❌ Failed to load auth system:', error);
+        }
+
+        // Allow direct access without login check for testing
+        // if (authSystem && !authSystem.isLoggedIn()) {
+        //     console.log('⚠️ User not logged in, redirecting...');
+        //     window.location.href = '../../index.html#login';
+        // }
+
+        // Update user info if logged in
+        if (authSystem && authSystem.isLoggedIn()) {
+            const currentUser = authSystem.getCurrentUser();
+            if (currentUser) {
+                const userNameElement = document.getElementById('userName');
+                const userAvatarElement = document.getElementById('userAvatar');
+                
+                if (userNameElement) {
+                    userNameElement.textContent = currentUser.username;
+                }
+                
+                if (userAvatarElement) {
+                    userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            if (authSystem) {
+                authSystem.logout();
+                window.location.href = '../../index.html';
+            }
+        });
+
+        // Listings functionality
+        function createNewListing() {
+            console.log('Creating new listing...');
+            // Redirect to product search to find items to list
+            window.location.href = 'products.html';
+        }
+
+        async function syncWithEbay() {
+            console.log('Syncing with eBay...');
+            
+            // Show loading state
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Sincronizzando...';
+            btn.disabled = true;
+            
+            try {
+                // Call eBay sync endpoint
+                const response = await fetch('/api/ebay/sync-listings');
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Sync completed:', data);
+                    loadListings(); // Reload listings
+                } else {
+                    console.error('Sync failed:', data.error);
+                }
+            } catch (error) {
+                console.warn('Sync non disponibile (server offline):', error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function bulkActions() {
+            console.log('Bulk actions...');
+            // Show bulk actions modal or dropdown
+            showBulkActionsModal();
+        }
+
+        function editListing(id) {
+            console.log('Editing listing:', id);
+            // Open edit modal for active listing
+            showListingEditModal(id);
+        }
+
+        function viewListing(id) {
+            console.log('Viewing listing:', id);
+            // Open view modal for listing
+            showListingViewModal(id);
+        }
+
+        function endListing(id) {
+            console.log('Ending listing:', id);
+            // End listing immediately without confirmation
+            endListingNow(id);
+        }
+        // Mostra dettagli completi del listing (modal)
+        function viewListingDetails(listingId) {
+            const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const draft = drafts.find(d => d.id === listingId);
+            if (!draft) return alert('Dettagli non trovati');
+            const product = resolveProductData(draft);
+            const url = draft.url || product.url || '';
+            const asin = draft.asin || product.asin || '';
+            const details = draft.description || product.details || 'Descrizione non disponibile';
+            const image = draft.image || product.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+            // End listing immediately without confirmation
+            endListingNow(id);
+        }
+        // Mostra dettagli completi del listing (modal)
+        function viewListingDetails(listingId) {
+            const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const draft = drafts.find(d => d.id === listingId);
+            if (!draft) return alert('Dettagli non trovati');
+            const product = draft.sourceProduct || {};
+            const url = draft.url || product.url || '';
+            const asin = draft.asin || product.asin || '';
+            const details = draft.description || product.details || 'Descrizione non disponibile';
+            const image = draft.image || product.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            const modal = document.createElement('div');
+            modal.style.cssText = 'background:#fff;border-radius:12px;max-width:800px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.15);overflow:hidden;';
+            modal.innerHTML = `
+                <div style="padding:24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;">
+                    <h3 style="margin:0;color:var(--venus-primary);">Dettagli Listing</h3>
+                    <button style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                </div>
+                <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div>
+                        <img src="${image}" style="width:100%;border-radius:8px;object-fit:cover;" alt="${draft.title}">
+                    </div>
+                    <div>
+                        <div style="font-weight:700;margin-bottom:8px;">${draft.title}</div>
+                        <div style="color:#666;margin-bottom:8px;">ASIN: <span style="font-family:monospace;">${asin || '-'}</span></div>
+                        ${url ? `<div style="margin-bottom:8px;"><a href="${url}" target="_blank">Apri su Amazon</a></div>` : ''}
+                        <div style="color:#333;line-height:1.5;background:#fff6f6;border:1px solid #ffeaea;padding:12px;border-radius:8px;">${details}</div>
+                    </div>
+                </div>
+            `;
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+        }
+
+        function relistItem(id) {
+            console.log('Relisting item:', id);
+            // Relist item immediately
+            relistItemNow(id);
+        }
+
+        function publishListing(id) {
+            console.log('Publishing listing:', id);
+            // Publish draft to eBay immediately
+            publishToEbay(id);
+        }
+
+        // Filter and sort functionality
+        document.getElementById('filterStatus')?.addEventListener('change', function() {
+            console.log('Filtering by status:', this.value);
+            // TODO: Implement filtering
+        });
+
+        document.getElementById('sortBy')?.addEventListener('change', function() {
+            console.log('Sorting by:', this.value);
+            // TODO: Implement sorting
+        });
+
+        // Load listings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadListings();
+        });
+
+        async function loadListings() {
+            // Prevenzione doppio render (anti-sfarfallio)
+            if (window.listingsRendered) {
+                console.log('⚠️ loadListings già eseguita, skip per evitare sfarfallio');
+                return;
+            }
+            
+            // Load drafts from localStorage
+            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            console.log('📦 Loaded drafts from localStorage:', drafts);
+            
+            // Aggiungi drafts di test se non ce ne sono
+            if (drafts.length === 0) {
+                const testDrafts = [
+                    {
+                        id: `draft_test_${Date.now()}_1`,
+                        title: 'Amazon Echo Dot (5ª generazione) - Smart speaker con Alexa',
+                        description: 'Smart speaker con Alexa, qualità audio migliorata, hub per casa intelligente con controllo vocale e integrazione domotica.',
+                        price: '49.99',
+                        originalPrice: '59.99',
+                        quantity: 1,
+                        status: 'draft',
+                        createdAt: new Date().toLocaleDateString('it-IT'),
+                        views: 0,
+                        sourceData: {
+                            asin: 'B09B8V1LZ3',
+                            brand: 'Amazon',
+                            image: 'https://m.media-amazon.com/images/I/71dIZBSvzgL._AC_SL1000_.jpg',
+                            images: ['https://m.media-amazon.com/images/I/71dIZBSvzgL._AC_SL1000_.jpg'],
+                            features: ['Alexa integrata', 'Audio migliorato', 'Hub casa intelligente'],
+                            url: 'https://amazon.it/dp/B09B8V1LZ3'
+                        }
+                    },
+                    {
+                        id: `draft_test_${Date.now()}_2`,
+                        title: 'Apple AirPods Pro (2ª generazione) con Custodia di Ricarica MagSafe',
+                        description: 'Auricolari wireless con cancellazione attiva del rumore, audio spaziale personalizzato e custodia MagSafe.',
+                        price: '279.00',
+                        originalPrice: '299.00',
+                        quantity: 1,
+                        status: 'draft',
+                        createdAt: new Date().toLocaleDateString('it-IT'),
+                        views: 0,
+                        sourceData: {
+                            asin: 'B0BDHWDR12',
+                            brand: 'Apple',
+                            image: 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg',
+                            images: ['https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg'],
+                            features: ['Cancellazione rumore', 'Audio spaziale', 'Custodia MagSafe'],
+                            url: 'https://amazon.it/dp/B0BDHWDR12'
+                        }
+                    }
+                ];
+                drafts.push(...testDrafts);
+                localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+            }
+            
+            // Load real listings from backend
+            let allListings = [];
+            
+            try {
+                // Fetch real eBay listings
+                const response = await fetch('/api/ebay/listings');
+                const data = await response.json();
+                
+                if (data.success && data.listings) {
+                    allListings = data.listings;
+                } else {
+                    console.log('No eBay listings found or not connected');
+                }
+            } catch (error) {
+                console.warn('eBay listings non disponibili (server offline):', error.message);
+            }
+            
+            // Add drafts to listings (include image, asin, url)
+            drafts.forEach(draft => {
+                allListings.push({
+                    id: draft.id,
+                    title: draft.title,
+                    description: draft.description || 'Bozza salvata da ricerca prodotti',
+                    price: draft.price,
+                    image: draft.image,
+                    asin: draft.asin,
+                    url: draft.url,
+                    quantity: 1,
+                    status: draft.status || 'draft',
+                    createdAt: new Date(draft.createdAt).toLocaleDateString('it-IT'),
+                    views: draft.views || 0,
+                    sourceProduct: draft.sourceProduct
+                });
+            });
+
+            renderListings(allListings);
+            
+            // Inizializza il filtro di default (bozze)
+            applyFilter('drafts');
+
+            // Segna come renderizzato per evitare doppi render
+            window.listingsRendered = true;
+        }
+
+        // Pagination state (clean)
+        let ALL_LISTINGS_CACHE = [];
+        let FILTERED_CACHE = [];
+        let CURRENT_PAGE = 1;
+        const PAGE_SIZE = 10; // fixed rows per page
+
+        function updatePaginationUI() {
+            const total = FILTERED_CACHE.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            CURRENT_PAGE = Math.min(CURRENT_PAGE, totalPages);
+            const start = total === 0 ? 0 : (CURRENT_PAGE - 1) * PAGE_SIZE + 1;
+            const end = total === 0 ? 0 : Math.min(start + PAGE_SIZE - 1, total);
+            const resultsInfo = document.getElementById('resultsInfo');
+            const pageInfo = document.getElementById('pageInfo');
+            if (resultsInfo) resultsInfo.textContent = total === 0 ? '0 risultati' : `${start}-${end} di ${total}`;
+            if (pageInfo) pageInfo.textContent = `Pag ${CURRENT_PAGE} di ${totalPages}`;
+            const prev = document.getElementById('prevPageBtn');
+            const next = document.getElementById('nextPageBtn');
+            if (prev) prev.disabled = CURRENT_PAGE <= 1 || total === 0;
+            if (next) next.disabled = CURRENT_PAGE >= totalPages || total === 0;
+        }
+
+        function changePage(delta) {
+            CURRENT_PAGE = Math.max(1, CURRENT_PAGE + delta);
+            renderPage();
+        }
+
+        function renderPage() {
+            const tbody = document.getElementById('listingsTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const total = FILTERED_CACHE.length;
+            if (!Array.isArray(FILTERED_CACHE) || total === 0) {
+                if (tbody) tbody.innerHTML = '';
+                if (emptyState) emptyState.style.display = 'block';
+                updatePaginationUI();
+                return;
+            }
+            if (emptyState) emptyState.style.display = 'none';
+            if (tbody) tbody.innerHTML = '';
+
+            const startIndex = (CURRENT_PAGE - 1) * PAGE_SIZE;
+            const pageItems = FILTERED_CACHE.slice(startIndex, startIndex + PAGE_SIZE);
+            pageItems.forEach(listing => {
+                try {
+                    const row = document.createElement('tr');
+
+                    const statusClass = {
+                        'active': 'venus-status-active',
+                        'sold': 'venus-status-sold',
+                        'draft': 'venus-status-draft',
+                        'ended': 'venus-status-ended'
+                    }[listing.status] || 'venus-status-draft';
+
+                    const statusText = {
+                        'active': 'Attivo',
+                        'sold': 'Venduto', 
+                        'draft': 'Bozza',
+                        'ended': 'Terminato'
+                    }[listing.status] || 'Bozza';
+
+                    let actions = '';
+                    if ((listing.status || 'draft') === 'draft') {
+                        actions = `
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Modifica" onclick="editDraft('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="venus-btn venus-btn-primary venus-btn-small venus-btn-icon" title="Pubblica" onclick="publishDraft('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                            </button>
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Elimina" onclick="deleteDraft('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        `;
+                    } else if (listing.status === 'active') {
+                        actions = `
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Modifica" onclick="editListing('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                            </button>
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Termina" onclick="endListing('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 6h12v12H6z"/>
+                                </svg>
+                            </button>
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Elimina" onclick="deleteDraft('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        `;
+                    } else if (listing.status === 'sold') {
+                        actions = `
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Rilancia" onclick="relistItem('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 8.74C4.46 8.97 4 11.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                                </svg>
+                            </button>
+                            <button class="venus-btn venus-btn-secondary venus-btn-small venus-btn-icon" title="Elimina" onclick="deleteDraft('${listing.id}')">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                            </button>
+                        `;
+                    }
+
+                    const product = listing.sourceProduct || {};
+                    const rawImgs = Array.isArray(product.images) ? product.images : [];
+                    const derived = (function(){
+                        try { return deriveHQImages({ images: rawImgs }) || []; } catch { return []; }
+                    })();
+                    const stagedArr = Array.isArray(listing.imagesStaged) ? listing.imagesStaged : [];
+                    const firstHQ = derived[0] || rawImgs[0] || '';
+                    const imageUrl = listing.primaryImage || stagedArr[0] || listing.sourceData?.image || listing.image || firstHQ || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+                    const url = listing.url || product.url || '';
+                    const asinFromUrl = (()=>{ try { const m = url.match(/\/(dp|gp\/product)\/([A-Z0-9]{10})(?:[/?]|$)/i); return m ? m[2].toUpperCase() : ''; } catch { return ''; } })();
+                    const asin = listing.asin || product.asin || asinFromUrl || '';
+                    const amazonUrl = url || (asin ? `https://www.amazon.it/dp/${asin}` : '');
+                    // Spedizione rimossa (richiesta)
+
+                    row.innerHTML = `
+                        <td>
+                            <input type="checkbox" class="listing-checkbox" value="${listing.id}">
+                        </td>
+                        <td>
+                            <div class="product-info">
+                                <img src="${imageUrl}" alt="${listing.title}" class="product-thumbnail" 
+                                     onerror="this.onerror=null; this.src=&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'></rect></svg>&quot;">
+                                <div class="title-preview" onclick="showTitleEditBanner('${listing.id}', '')">${(listing.title || 'Senza titolo').replace(/["""''"]/g, '').trim()}</div>
+                            </div>
+                        </td>
+                        <td>€${listing.price || '-'}</td>
+                        <td>${asin ? `<a href="${amazonUrl || (asin ? `https://www.amazon.it/dp/${asin}` : '#')}" target="_blank" rel="noopener">${asin}</a>` : '-'}</td>
+                        <td>
+                            <div class="venus-table-actions">${actions}</div>
+                        </td>`;
+
+                    tbody.appendChild(row);
+                } catch (err) {
+                    console.error('renderPage: failed rendering listing', listing, err);
+                }
+            });
+            updatePaginationUI();
+        }
+
+        function renderListings(listings) {
+            ALL_LISTINGS_CACHE = Array.isArray(listings) ? listings : [];
+            applyFilter('drafts');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.group-dropdown');
+            if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        // Group dropdown logic
+        function toggleGroupDropdown() {
+            const el = document.querySelector('.group-dropdown');
+            el?.classList.toggle('open');
+        }
+
+        function selectGroup(group) {
+            const currentLabel = document.getElementById('currentGroupLabel');
+            const currentIcon = document.getElementById('currentGroupIcon');
+            switch(group) {
+                case 'drafts':
+                    if (currentLabel) currentLabel.textContent = 'Bozze';
+                    if (currentIcon) currentIcon.innerHTML = '<path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>';
+                    break;
+                case 'ebay':
+                    if (currentLabel) currentLabel.textContent = 'eBay';
+                    if (currentIcon) currentIcon.innerHTML = '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>';
+                    break;
+                case 'all':
+                    if (currentLabel) currentLabel.textContent = 'Tutti';
+                    if (currentIcon) currentIcon.innerHTML = '<path d="M3,5H9V3H3C1.89,3 1,3.89 1,5V19A2,2 0 0,0 3,21H9V19H3V5M10,3V21H12V19H18V21H20V19C21.11,19 22,18.11 22,17V7C22,5.89 21.11,5 20,5H12V3H10M20,17H12V7H20V17Z"/>';
+                    break;
+            }
+            applyFilter(group);
+            const el = document.querySelector('.group-dropdown');
+            el?.classList.remove('open');
+        }
+
+        function applyFilter(group) {
+            const normalized = (group || 'drafts').toLowerCase();
+            CURRENT_PAGE = 1;
+            if (normalized === 'all') {
+                FILTERED_CACHE = ALL_LISTINGS_CACHE.slice();
+            } else if (normalized === 'ebay') {
+                FILTERED_CACHE = ALL_LISTINGS_CACHE.filter(l => ['active','sold','ended'].includes((l.status||'').toLowerCase()));
+            } else {
+                FILTERED_CACHE = ALL_LISTINGS_CACHE.filter(l => ((l.status||'').toLowerCase() === 'draft'));
+            }
+            const count = document.getElementById('currentGroupCount');
+            if (count) count.textContent = FILTERED_CACHE.length.toString();
+            renderPage();
+        }
+
+        // Title Edit Banner Functions
+        function showTitleEditBanner(listingId, currentTitle) {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'banner-overlay';
+            overlay.onclick = () => closeTitleEditBanner();
+            
+            // Create banner
+            const banner = document.createElement('div');
+            banner.className = 'title-edit-banner';
+            banner.innerHTML = `
+                <h3>Modifica Titolo</h3>
+                <textarea class="title-edit-input" placeholder="Inserisci il nuovo titolo...">${currentTitle}</textarea>
+                <div class="title-edit-actions">
+                    <button class="title-edit-btn cancel" onclick="closeTitleEditBanner()">Annulla</button>
+                    <button class="title-edit-btn save" onclick="saveTitleEdit('${listingId}')">Salva</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(banner);
+            
+            // Show with animation
+            setTimeout(() => {
+                overlay.classList.add('show');
+                banner.classList.add('show');
+            }, 10);
+            
+            // Focus input
+            setTimeout(() => {
+                banner.querySelector('.title-edit-input').focus();
+            }, 300);
+        }
+
+        function closeTitleEditBanner() {
+            const overlay = document.querySelector('.banner-overlay');
+            const banner = document.querySelector('.title-edit-banner');
+            
+            if (overlay && banner) {
+                overlay.classList.remove('show');
+                banner.classList.remove('show');
+                
+                setTimeout(() => {
+                    overlay.remove();
+                    banner.remove();
+                }, 300);
+            }
+        }
+
+        function saveTitleEdit(listingId) {
+            const banner = document.querySelector('.title-edit-banner');
+            const newTitle = banner.querySelector('.title-edit-input').value.trim();
+            
+            if (!newTitle) {
+                alert('Il titolo non può essere vuoto');
+                return;
+            }
+            
+            // Update in localStorage
+            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const draftIndex = drafts.findIndex(d => d.id === listingId);
+            
+            if (draftIndex !== -1) {
+                drafts[draftIndex].title = newTitle;
+                localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                
+                showToast('Titolo aggiornato con successo!', 'success');
+                loadListings(); // Reload to show changes
+            }
+            
+            closeTitleEditBanner();
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 3000;
+                font-family: var(--venus-font-family);
+                font-size: 14px;
+                font-weight: 500;
+                opacity: 0;
+                transform: translateY(-20px);
+                transition: all 0.3s ease;
+            `;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        
+
+        // Select all functionality
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.listing-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        // Draft management functions
+        function editDraft(draftId) {
+            const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const draft = drafts.find(d => d.id === draftId);
+            
+            if (draft) {
+                showDraftModal(draft, 'edit');
+            }
+        }
+
+        function viewDraft(draftId) {
+            const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            const draft = drafts.find(d => d.id === draftId);
+            
+            if (draft) {
+                showDraftModal(draft, 'view');
+            }
+        }
+
+        function publishDraft(draftId) {
+            // Publish draft to eBay immediately
+            publishToEbay(draftId);
+        }
+
+        function deleteDraft(draftId) {
+            // Delete draft immediately without confirmation
+            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+            drafts = drafts.filter(d => d.id !== draftId);
+            localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+            loadListings(); // Reload the listings
+            console.log('Draft deleted:', draftId);
+        }
+
+        // Utility: elimina tutte le bozze/listing
+        function clearAllListings() {
+            localStorage.removeItem('shappa_drafts');
+            // opzionale: pulire anche eventuali cache lato UI
+            const tbody = document.getElementById('listingsTableBody');
+            const emptyState = document.getElementById('emptyState');
+            if (tbody) tbody.innerHTML = '';
+            if (emptyState) emptyState.style.display = 'block';
+            // Aggiorna contatori (se presenti)
+            // Nota: updateStats potrebbe non essere definita in questa pagina
+            // quindi evitiamo di chiamarla per prevenire errori runtime.
+            // Aggiorna badge conteggio gruppo
+            const countEl = document.getElementById('currentGroupCount');
+            if (countEl) countEl.textContent = '0';
+            console.log('Tutti i listing sono stati eliminati');
+        }
+
+        function showDraftModal(draft, mode) {
+            const isEditable = mode === 'edit';
+            
+            // Create modal overlay
+            const modalOverlay = document.createElement('div');
+            modalOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: var(--venus-space-lg);
+            `;
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: var(--venus-bg-card);
+                border-radius: var(--venus-radius-lg);
+                max-width: 1200px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: var(--venus-shadow-lg);
+                border: 1px solid var(--venus-border);
+            `;
+            
+            const modalTitle = isEditable ? 'Modifica Prodotto per eBay' : 'Dettagli Prodotto per eBay';
+            const product = draft.sourceProduct || {};
+            const image = draft.image || product.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+            const asin = draft.asin || product.asin || '';
+            const url = draft.url || product.url || '';
+            const specs = product.specifications || {};
+            const features = product.features || [];
+            const technicalDetails = product.technicalDetails || {};
+            const dimensions = product.dimensions || {};
+            const weight = product.weight || '';
+            // Descrizione pulita e immagini HQ derivate
+            const __rawDesc = (draft.descriptionRaw ?? draft.description ?? product.descriptionHtml ?? product.description ?? '');
+            const __needsCleaning = /<[^>]+>/i.test(__rawDesc);
+            const cleanDescription = __needsCleaning
+                ? extractCleanDescription(__rawDesc, product)
+                : (__rawDesc || extractCleanDescription('', product));
+            const hqImages = (function(){
+                try { return deriveHQImages(product) || []; } catch(e) { return []; }
+            })();
+            const hasHQGallery = Array.isArray(hqImages) && hqImages.length > 0;
+            const ebaySearchUrl = asin ? `https://www.ebay.it/sch/i.html?_nkw=${encodeURIComponent(asin)}` : '';
+            const AMAZON_PLACEHOLDER = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+            const stagedImages = Array.isArray(draft.imagesStaged) ? draft.imagesStaged : [];
+            const effectiveMainImage = draft.primaryImage || (stagedImages[0] || (hasHQGallery ? hqImages[0] : image));
+
+            // Costruisci tabella informazioni aggiuntive da Amazon (senza titolo/prezzo/descrizione)
+            function getFromDetails(keys){
+                for (const k of keys) {
+                    if (technicalDetails && technicalDetails[k]) return technicalDetails[k];
+                    if (specs && specs[k]) return specs[k];
+                }
+                return '';
+            }
+            const infoEntries = [];
+            if (asin) infoEntries.push(['ASIN', `<a href="${url || `https://www.amazon.it/dp/${asin}` }" target="_blank" rel="noopener">${asin}</a>`]);
+            if (url) infoEntries.push(['URL Amazon', `<a href="${url}" target="_blank" rel="noopener">${url}</a>`]);
+            if (product.brand) infoEntries.push(['Marca', product.brand]);
+            if (product.category) infoEntries.push(['Categoria', product.category]);
+            if (product.seller) infoEntries.push(['Venditore', product.seller]);
+            if (product.rating) infoEntries.push(['Valutazione', product.rating]);
+            const color = product.color || getFromDetails(['Colore','Color']);
+            if (color) infoEntries.push(['Colore', color]);
+            const model = product.model || getFromDetails(['Numero modello','Model Number','Numero modello articolo','Model']);
+            if (model) infoEntries.push(['Modello', model]);
+            const material = product.material || getFromDetails(['Materiale','Material']);
+            if (material) infoEntries.push(['Materiale', material]);
+            const ean = product.ean || getFromDetails(['EAN','EAN-13']);
+            if (ean) infoEntries.push(['EAN', ean]);
+            const upc = product.upc || getFromDetails(['UPC']);
+            if (upc) infoEntries.push(['UPC', upc]);
+            const mpn = product.mpn || getFromDetails(['MPN','Numero parte produttore']);
+            if (mpn) infoEntries.push(['MPN', mpn]);
+            const availability = product.availability || getFromDetails(['Disponibilità','Availability']);
+            if (availability) infoEntries.push(['Disponibilità', availability]);
+
+            const amazonInfoRows = infoEntries.map(([k,v]) => `
+                <tr>
+                    <td style="font-weight:600; color: var(--venus-text-secondary); padding:8px; border-bottom:1px solid var(--venus-border);">${k}</td>
+                    <td style="color: var(--venus-text-primary); padding:8px; border-bottom:1px solid var(--venus-border);">${v}</td>
+                </tr>
+            `).join('') || `
+                <tr><td colspan="2" style="padding:8px; color: var(--venus-text-muted);">Nessuna informazione aggiuntiva disponibile</td></tr>
+            `;
+            
+            modal.innerHTML = `
+                <div style="padding: var(--venus-space-2xl);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--venus-space-xl); border-bottom: 1px solid var(--venus-border); padding-bottom: var(--venus-space-lg);">
+                        <h2 style="margin: 0; color: var(--venus-text-primary); font-size: var(--venus-font-size-xl);">${modalTitle}</h2>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--venus-text-muted); padding: var(--venus-space-sm);">&times;</button>
+                    </div>
+                    
+                    <form id="draftForm">
+                        <!-- Main Product Info -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-2xl); margin-bottom: var(--venus-space-2xl);">
+                            <div>
+                                <img class="modal-main-image" src="${effectiveMainImage}" alt="${draft.title}" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: var(--venus-radius); box-shadow: var(--venus-shadow-md); border: 1px solid var(--venus-border);">
+                                <div style="margin-top: var(--venus-space-sm); display:flex; gap:8px; flex-wrap:wrap;">
+                                    <button type="button" class="venus-btn venus-btn-secondary venus-btn-small" id="openImageEditorBtn">Modifica immagine</button>
+                                    <button type="button" class="venus-btn venus-btn-secondary venus-btn-small" id="setPrimaryFromMainBtn">Imposta come primaria</button>
+                                </div>
+                                ${hasHQGallery ? `
+                                <div style="margin-top: var(--venus-space-md);">
+                                    <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: var(--venus-space-sm);">
+                                        <div style="color: var(--venus-text-secondary); font-size: var(--venus-font-size-sm);">Galleria Amazon <span style=\"color:var(--venus-text-muted);\">(clicca per aggiungere al limbo)</span></div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button type="button" class="venus-btn venus-btn-secondary venus-btn-small" id="importAllHqBtn">Importa tutte</button>
+                                        </div>
+                                    </div>
+                                    <div class="hq-thumbs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: var(--venus-space-sm);">
+                                        ${hqImages.map((img, idx) => `
+                                            <div class="hq-thumb-wrap" data-src="${img}" style="background: var(--venus-bg-gray); border: 1px solid var(--venus-border); border-radius: var(--venus-radius-sm); padding:4px;">
+                                                <img class="hq-thumb" src="${img}" alt="thumb-${idx}" data-src="${img}" style="width: 100%; height: 72px; object-fit: contain; cursor: pointer;"/>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                                <div style="margin-top: var(--venus-space-sm); display:flex; gap:8px; align-items:center;">
+                                    <input type="url" id="addImageUrlInput" placeholder="Incolla URL immagine Amazon" style="flex:1; padding:8px; border:1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-card); color: var(--venus-text-primary);"/>
+                                    <button type="button" class="venus-btn venus-btn-secondary venus-btn-small" id="addImageUrlBtn">Aggiungi da URL</button>
+                                </div>
+                                <div style="margin-top: var(--venus-space-md); background: var(--venus-bg-gray); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); padding: var(--venus-space-md);">
+                                    <div style="display:flex; align-items:center; justify-content: space-between; margin-bottom: var(--venus-space-sm);">
+                                        <div style="color: var(--venus-text-secondary); font-size: var(--venus-font-size-sm);">Immagini salvate (limbo)</div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button type="button" class="venus-btn venus-btn-secondary venus-btn-small" id="clearStagedBtn">Svuota limbo</button>
+                                        </div>
+                                    </div>
+                                    <div id="stagedGallery" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: var(--venus-space-sm);"></div>
+                                </div>
+                                ${asin ? `
+                                <div style="margin-top: var(--venus-space-md); text-align: center; display: flex; justify-content: center; gap: var(--venus-space-md);">
+                                    <a href="${ebaySearchUrl || '#'}" target="_blank" style="color: var(--venus-primary); text-decoration: none; font-weight: var(--venus-font-weight-medium);">Cerca ASIN su eBay</a>
+                                    <span style="color: var(--venus-text-muted);">|</span>
+                                    <a href="${url || `https://www.amazon.it/dp/${asin}` }" target="_blank" style="color: var(--venus-primary); text-decoration: none; font-weight: var(--venus-font-weight-medium);">Vedi su Amazon</a>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div>
+                                <!-- Titolo eBay -->
+                                <div style="margin-bottom: var(--venus-space-lg);">
+                                    <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Titolo eBay</label>
+                                    <input type="text" name="title" value="${draft.title || ''}" ${isEditable ? '' : 'readonly'} maxlength="80" style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                    <small style="color: var(--venus-text-muted); font-size: var(--venus-font-size-xs);">Max 80 caratteri per eBay</small>
+                                </div>
+                                
+                                <!-- Prezzo e Condizione -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-md); margin-bottom: var(--venus-space-lg);">
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Prezzo (€)</label>
+                                        <input type="number" name="price" value="${draft.price || ''}" ${isEditable ? '' : 'readonly'} step="0.01" style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Condizione</label>
+                                        <select name="condition" ${isEditable ? '' : 'disabled'} style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                            <option value="new" ${(draft.condition || 'new') === 'new' ? 'selected' : ''}>Nuovo</option>
+                                            <option value="used" ${draft.condition === 'used' ? 'selected' : ''}>Usato</option>
+                                            <option value="refurbished" ${draft.condition === 'refurbished' ? 'selected' : ''}>Ricondizionato</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Marca e Categoria -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-md); margin-bottom: var(--venus-space-lg);">
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Marca</label>
+                                        <input type="text" name="brand" value="${draft.brand || product.brand || ''}" ${isEditable ? '' : 'readonly'} style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Categoria eBay</label>
+                                        <input type="text" name="ebayCategory" value="${draft.ebayCategory || product.category || ''}" ${isEditable ? '' : 'readonly'} style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                    </div>
+                                </div>
+                                
+                                <!-- Durata e Quantità -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-md); margin-bottom: var(--venus-space-lg);">
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Durata Asta</label>
+                                        <select name="duration" ${isEditable ? '' : 'disabled'} style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                            <option value="7" ${(draft.duration || '7') === '7' ? 'selected' : ''}>7 giorni</option>
+                                            <option value="10" ${draft.duration === '10' ? 'selected' : ''}>10 giorni</option>
+                                            <option value="30" ${draft.duration === '30' ? 'selected' : ''}>30 giorni (Compralo Subito)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Quantità</label>
+                                        <input type="number" name="quantity" value="${draft.quantity || '1'}" ${isEditable ? '' : 'readonly'} min="1" style="width: 100%; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary);">
+                                    </div>
+                                </div>
+                                
+                                <!-- Info Amazon -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--venus-space-md); margin-bottom: var(--venus-space-lg);">
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Rating Amazon</label>
+                                        <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary);">
+                                            ${draft.rating || product.rating ? `⭐ ${draft.rating || product.rating}` : 'N/A'}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Venditore Amazon</label>
+                                        <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                            ${product.seller || 'Amazon'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Descrizione eBay -->
+                        <div style="margin-bottom: var(--venus-space-2xl);">
+                            <h3 style="margin: 0 0 var(--venus-space-lg) 0; color: var(--venus-text-primary);">Descrizione eBay</h3>
+                            <textarea name="description" ${isEditable ? '' : 'readonly'} placeholder="Inserisci una descrizione dettagliata del prodotto per eBay..." style="width: 100%; min-height: 150px; padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); resize: vertical; ${isEditable ? 'background: var(--venus-bg-card);' : 'background: var(--venus-bg-gray);'} color: var(--venus-text-primary); font-family: var(--venus-font-family);">${cleanDescription}</textarea>
+                            <small style="color: var(--venus-text-muted); font-size: var(--venus-font-size-xs);">Descrizione dettagliata per l'inserzione eBay</small>
+                        </div>
+                        
+                        <!-- Informazioni aggiuntive da Amazon -->
+                        <div style="margin-bottom: var(--venus-space-2xl);">
+                            <h3 style="margin: 0 0 var(--venus-space-lg) 0; color: var(--venus-text-primary);">Informazioni da Amazon</h3>
+                            <div style="border:1px solid var(--venus-border); border-radius: var(--venus-radius); overflow:hidden; background: var(--venus-bg-card);">
+                                <table style="width:100%; border-collapse:collapse; font-size: var(--venus-font-size-sm);">
+                                    <tbody>
+                                        ${amazonInfoRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <small style="color: var(--venus-text-muted); font-size: var(--venus-font-size-xs);">Questo blocco riassume i meta-dati estratti da Amazon (esclusi titolo, prezzo e descrizione).</small>
+                        </div>
+                        
+                        <!-- Peso e Dimensioni -->
+                        ${dimensions || weight ? `
+                        <div style="margin-bottom: var(--venus-space-2xl);">
+                            <h3 style="margin: 0 0 var(--venus-space-lg) 0; color: var(--venus-text-primary);">Peso e Dimensioni</h3>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--venus-space-md);">
+                                <div>
+                                    <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Peso</label>
+                                    <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                        ${weight || dimensions.weight || 'N/A'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Lunghezza</label>
+                                    <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                        ${dimensions.length || 'N/A'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Larghezza</label>
+                                    <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                        ${dimensions.width || 'N/A'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: var(--venus-font-weight-semibold); margin-bottom: var(--venus-space-sm); color: var(--venus-text-secondary);">Altezza</label>
+                                    <div style="padding: var(--venus-space-md); border: 1px solid var(--venus-border); border-radius: var(--venus-radius); background: var(--venus-bg-gray); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                        ${dimensions.height || 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>` : ''}
+                        
+                        <!-- Technical Details Grid -->
+                        ${Object.keys(specs).length > 0 || Object.keys(technicalDetails).length > 0 || features.length > 0 ? `
+                        <div style="margin-bottom: var(--venus-space-2xl);">
+                            <h3 style="margin: 0 0 var(--venus-space-lg) 0; color: var(--venus-text-primary);">Dettagli Tecnici</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--venus-space-lg);">
+                                ${Object.keys(specs).length > 0 ? `
+                                <div style="background: var(--venus-bg-gray); padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">Specifiche</h4>
+                                    ${Object.entries(specs).map(([key, value]) => `
+                                        <div style="display: flex; justify-content: space-between; padding: var(--venus-space-xs) 0; border-bottom: 1px solid var(--venus-border); font-size: var(--venus-font-size-sm);">
+                                            <span style="color: var(--venus-text-secondary); font-weight: var(--venus-font-weight-medium);">${key}:</span>
+                                            <span style="color: var(--venus-text-primary);">${value}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                                
+                                ${Object.keys(technicalDetails).length > 0 ? `
+                                <div style="background: var(--venus-bg-gray); padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">Dettagli Tecnici</h4>
+                                    ${Object.entries(technicalDetails).map(([key, value]) => `
+                                        <div style="display: flex; justify-content: space-between; padding: var(--venus-space-xs) 0; border-bottom: 1px solid var(--venus-border); font-size: var(--venus-font-size-sm);">
+                                            <span style="color: var(--venus-text-secondary); font-weight: var(--venus-font-weight-medium);">${key}:</span>
+                                            <span style="color: var(--venus-text-primary);">${value}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                                
+                                ${features.length > 0 ? `
+                                <div style="background: var(--venus-bg-gray); padding: var(--venus-space-lg); border-radius: var(--venus-radius); border: 1px solid var(--venus-border);">
+                                    <h4 style="margin: 0 0 var(--venus-space-md) 0; color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">Caratteristiche</h4>
+                                    <ul style="margin: 0; padding-left: var(--venus-space-lg); color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">
+                                        ${features.map(feature => `<li style="margin-bottom: var(--venus-space-xs);">${feature}</li>`).join('')}
+                                    </ul>
+                                </div>` : ''}
+                            </div>
+                        </div>` : ''}
+                        
+                        <!-- Action Buttons -->
+                        <div style="padding-top: var(--venus-space-lg); border-top: 1px solid var(--venus-border);">
+                            <div style="background: var(--venus-bg-gray); padding: var(--venus-space-lg); border-radius: var(--venus-radius); margin-bottom: var(--venus-space-lg);">
+                                <h4 style="margin: 0 0 var(--venus-space-sm) 0; color: var(--venus-text-primary); font-size: var(--venus-font-size-sm);">✅ Status Preparazione eBay</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--venus-space-sm); font-size: var(--venus-font-size-xs);">
+                                    <div style="color: ${draft.title ? 'var(--venus-success)' : 'var(--venus-text-muted)'};">
+                                        ${draft.title ? '✅' : '⏳'} Titolo: ${draft.title ? 'OK' : 'Mancante'}
+                                    </div>
+                                    <div style="color: ${draft.price ? 'var(--venus-success)' : 'var(--venus-text-muted)'};">
+                                        ${draft.price ? '✅' : '⏳'} Prezzo: ${draft.price ? 'OK' : 'Mancante'}
+                                    </div>
+                                    <div style="color: ${cleanDescription ? 'var(--venus-success)' : 'var(--venus-text-muted)'};">
+                                        ${cleanDescription ? '✅' : '⏳'} Descrizione: ${cleanDescription ? 'OK' : 'Mancante'}
+                                    </div>
+                                    <div style="color: ${((stagedImages && stagedImages.length>0) || hasHQGallery || effectiveMainImage !== AMAZON_PLACEHOLDER) ? 'var(--venus-success)' : 'var(--venus-text-muted)'};">
+                                        ${((stagedImages && stagedImages.length>0) || hasHQGallery || effectiveMainImage !== AMAZON_PLACEHOLDER) ? '✅' : '⏳'} Immagini: ${((stagedImages && stagedImages.length>0) || hasHQGallery || effectiveMainImage !== AMAZON_PLACEHOLDER) ? 'OK' : 'Mancante'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: var(--venus-space-md); justify-content: space-between; align-items: center;">
+                                <div style="font-size: var(--venus-font-size-sm); color: var(--venus-text-muted);">
+                                    💡 Tutti i campi sono ottimizzati per eBay
+                                </div>
+                                <div style="display: flex; gap: var(--venus-space-md);">
+                                    ${isEditable ? '<button type="submit" class="venus-btn venus-btn-primary">💾 Salva Modifiche</button>' : ''}
+                                    <button type="button" onclick="publishToEbay('${draft.id}')" class="venus-btn venus-btn-primary">🚀 Pubblica su eBay</button>
+                                    <button type="button" onclick="this.closest(\'.modal-overlay\').remove()" class="venus-btn">❌ Chiudi</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            modalOverlay.className = 'modal-overlay';
+            modalOverlay.appendChild(modal);
+            document.body.appendChild(modalOverlay);
+            
+            // Mini interazione galleria HQ: clic su thumb aggiunge al limbo e imposta anteprima; controlli import
+            try {
+                const mainImg = modal.querySelector('.modal-main-image');
+                const importAllBtn = modal.querySelector('#importAllHqBtn');
+                const addUrlBtn = modal.querySelector('#addImageUrlBtn');
+                const addUrlInput = modal.querySelector('#addImageUrlInput');
+                const draftId = draft.id;
+                const addToLimbo = (src, setAsPrimary=false) => {
+                    if (!src) return;
+                    let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const idx = drafts.findIndex(d => d.id === draftId);
+                    if (idx !== -1) {
+                        const setImgs = new Set(drafts[idx].imagesStaged || []); setImgs.add(src);
+                        drafts[idx].imagesStaged = Array.from(setImgs);
+                        if (setAsPrimary) drafts[idx].primaryImage = src;
+                        drafts[idx].updatedAt = new Date().toISOString();
+                        localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                        if (setAsPrimary && mainImg) mainImg.src = src;
+                        const stagedWrap = modal.querySelector('#stagedGallery');
+                        if (stagedWrap) {
+                            // trigger re-render of staged
+                            const evt = new Event('staged:refresh');
+                            stagedWrap.dispatchEvent(evt);
+                        }
+                        showToast('Immagine aggiunta al limbo', 'success');
+                    }
+                };
+                modal.querySelectorAll('.hq-thumb').forEach(thumb => {
+                    thumb.addEventListener('click', () => {
+                        const src = thumb.getAttribute('data-src');
+                        if (!src) return;
+                        addToLimbo(src, !draft.primaryImage);
+                        if (mainImg) mainImg.src = src;
+                    });
+                });
+                importAllBtn?.addEventListener('click', () => {
+                    const imgs = Array.from(modal.querySelectorAll('.hq-thumb')).map(t => t.getAttribute('data-src')).filter(Boolean);
+                    imgs.forEach((src, i) => addToLimbo(src, i===0 && !draft.primaryImage));
+                });
+                // Auto-import: se non ci sono immagini salvate e abbiamo una galleria HQ, importa tutto subito
+                try {
+                    const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const idx = drafts.findIndex(d => d.id === draftId);
+                    const hasStaged = idx !== -1 && Array.isArray(drafts[idx].imagesStaged) && drafts[idx].imagesStaged.length > 0;
+                    const thumbs = Array.from(modal.querySelectorAll('.hq-thumb')).map(t => t.getAttribute('data-src')).filter(Boolean);
+                    if (!hasStaged && thumbs.length) {
+                        thumbs.forEach((src, i) => addToLimbo(src, i===0));
+                    }
+                } catch {}
+                addUrlBtn?.addEventListener('click', () => {
+                    const val = (addUrlInput?.value || '').trim(); if (!val) return;
+                    try {
+                        // Applica heuristics per HQ
+                        const hq = val
+                            .replace(/\._SR\d+,_?\d+_\.jpg/i, '._SL1500_.jpg')
+                            .replace(/\._AC_SX\d+_\.jpg/i, '._SL1500_.jpg')
+                            .replace(/\._AC_.*?\.jpg/i, '._SL1500_.jpg');
+                        addToLimbo(hq, false);
+                        addUrlInput.value = '';
+                    } catch {}
+                });
+            } catch(e) {
+                console.debug('HQ gallery handler not attached:', e);
+            }
+            
+            // Limbo immagini: render e azioni
+            try {
+                const mainImg = modal.querySelector('.modal-main-image');
+                const stagedWrap = modal.querySelector('#stagedGallery');
+                const clearBtn = modal.querySelector('#clearStagedBtn');
+                const setPrimaryBtn = modal.querySelector('#setPrimaryFromMainBtn');
+
+                const renderStaged = () => {
+                    if (!stagedWrap) return;
+                    const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const idx = drafts.findIndex(d => d.id === draft.id);
+                    const imgs = (idx !== -1 && Array.isArray(drafts[idx].imagesStaged)) ? drafts[idx].imagesStaged : [];
+                    stagedWrap.innerHTML = imgs.map((src, i) => `
+                        <div class="staged-item" data-src="${src}" style="position:relative;">
+                            <button type="button" class="venus-btn venus-btn-secondary venus-btn-tiny remove-staged" data-src="${src}" style="position:absolute; top:6px; right:6px;">✖</button>
+                            <img src="${src}" alt="staged-${i}" style="width:100%; height:72px; object-fit:contain; border:1px solid var(--venus-border); border-radius: var(--venus-radius-sm); background: var(--venus-bg-card); cursor:pointer;"/>
+                        </div>
+                    `).join('');
+                    stagedWrap.querySelectorAll('.remove-staged').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            const targetSrc = btn.getAttribute('data-src');
+                            let _drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                            const _idx = _drafts.findIndex(d => d.id === draft.id);
+                            if (_idx !== -1) {
+                                _drafts[_idx].imagesStaged = (_drafts[_idx].imagesStaged || []).filter(s => s !== targetSrc);
+                                localStorage.setItem('shappa_drafts', JSON.stringify(_drafts));
+                                renderStaged();
+                            }
+                        });
+                    });
+                    stagedWrap.querySelectorAll('img').forEach(img => {
+                        img.addEventListener('click', () => { if (mainImg) mainImg.src = img.getAttribute('src'); });
+                    });
+                };
+                renderStaged();
+                // Consenti a importazioni esterne di chiedere un refresh
+                stagedWrap?.addEventListener('staged:refresh', renderStaged);
+
+                clearBtn?.addEventListener('click', () => {
+                    let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const idx = drafts.findIndex(d => d.id === draft.id);
+                    if (idx !== -1) {
+                        drafts[idx].imagesStaged = [];
+                        drafts[idx].updatedAt = new Date().toISOString();
+                        localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                        renderStaged();
+                    }
+                });
+
+                setPrimaryBtn?.addEventListener('click', () => {
+                    const src = mainImg?.src; if (!src) return;
+                    let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const idx = drafts.findIndex(d => d.id === draft.id);
+                    if (idx !== -1) {
+                        drafts[idx].primaryImage = src;
+                        const setImgs = new Set(drafts[idx].imagesStaged || []); setImgs.add(src);
+                        drafts[idx].imagesStaged = Array.from(setImgs);
+                        drafts[idx].updatedAt = new Date().toISOString();
+                        localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                        renderStaged();
+                        showToast('Immagine impostata come primaria', 'success');
+                    }
+                });
+            } catch(e) { console.debug('Staged images wiring failed', e); }
+
+            // Editor immagine per applicare logo e scaricare/aggiungere al limbo
+            try {
+                const openBtn = modal.querySelector('#openImageEditorBtn');
+                const mainImg = modal.querySelector('.modal-main-image');
+                if (openBtn && mainImg) {
+                    openBtn.addEventListener('click', () => {
+                        const src = mainImg.src;
+                        const overlay = document.createElement('div');
+                        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:10001; display:flex; align-items:center; justify-content:center; padding:24px;';
+                        const box = document.createElement('div');
+                        box.style.cssText = 'background:var(--venus-bg-card); border:1px solid var(--venus-border); border-radius:12px; width:min(1100px, 96vw); max-height:92vh; overflow:auto; padding:16px;';
+                        box.innerHTML = `
+                            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px; align-items:start;">
+                                <div>
+                                    <canvas id="imgEditCanvas" style="width:100%; max-height:70vh; background:#111; border-radius:8px;"></canvas>
+                                </div>
+                                <div>
+                                    <div style="margin-bottom:8px; font-weight:600; color:var(--venus-text-primary);">Logo</div>
+                                    <input type="file" id="logoInput" accept="image/*"/>
+                                    <div style="margin-top:12px; display:grid; gap:8px;">
+                                        <label>Posizione
+                                            <select id="logoPos" style="width:100%">
+                                                <option value="br">In basso a destra</option>
+                                                <option value="bl">In basso a sinistra</option>
+                                                <option value="tr">In alto a destra</option>
+                                                <option value="tl">In alto a sinistra</option>
+                                                <option value="c">Centro</option>
+                                            </select>
+                                        </label>
+                                        <label>Dimensione logo (% larghezza)
+                                            <input type="range" id="logoSize" min="5" max="50" value="18"/>
+                                        </label>
+                                        <label>Opacità
+                                            <input type="range" id="logoOpacity" min="10" max="100" value="90"/>
+                                        </label>
+                                        <label>Margine (px)
+                                            <input type="range" id="logoMargin" min="0" max="80" value="12"/>
+                                        </label>
+                                    </div>
+                                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;">
+                                        <button class="venus-btn venus-btn-primary" id="downloadBtn" type="button">Scarica immagine</button>
+                                        <button class="venus-btn venus-btn-secondary" id="addStagedBtn" type="button">Aggiungi al limbo</button>
+                                        <button class="venus-btn" id="setPrimaryBtn" type="button">Imposta come primaria</button>
+                                        <button class="venus-btn" id="closeEditorBtn" type="button">Chiudi</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        overlay.appendChild(box); document.body.appendChild(overlay);
+
+                        const canvas = box.querySelector('#imgEditCanvas');
+                        const ctx = canvas.getContext('2d');
+                        const baseImg = new Image(); baseImg.crossOrigin = 'anonymous'; baseImg.src = src;
+                        const logoImg = new Image(); let hasLogo=false; let logoFileName='logo';
+                        const state = { pos:'br', size:18, opacity:0.9, margin:12 };
+                        const sel = (q)=>box.querySelector(q);
+                        const logoPosEl = sel('#logoPos');
+                        const logoSizeEl = sel('#logoSize');
+                        const logoOpacityEl = sel('#logoOpacity');
+                        const logoMarginEl = sel('#logoMargin');
+                        const logoInputEl = sel('#logoInput');
+
+                        function fitCanvasToImage(img){
+                            const maxW = 1000, maxH = 900; let w=img.naturalWidth, h=img.naturalHeight;
+                            const scale=Math.min(maxW/w, maxH/h, 1);
+                            canvas.width = Math.round(w*scale); canvas.height = Math.round(h*scale);
+                        }
+                        function render(){
+                            ctx.clearRect(0,0,canvas.width,canvas.height);
+                            ctx.drawImage(baseImg, 0,0, canvas.width, canvas.height);
+                            if (hasLogo) {
+                                const lw = Math.round(canvas.width * (state.size/100));
+                                const scale = lw / logoImg.naturalWidth; const lh = Math.round(logoImg.naturalHeight * scale);
+                                let x=0, y=0, m=state.margin; switch(state.pos){
+                                    case 'br': x=canvas.width-lw-m; y=canvas.height-lh-m; break;
+                                    case 'bl': x=m; y=canvas.height-lh-m; break;
+                                    case 'tr': x=canvas.width-lw-m; y=m; break;
+                                    case 'tl': x=m; y=m; break;
+                                    case 'c': x=(canvas.width-lw)/2; y=(canvas.height-lh)/2; break;
+                                }
+                                ctx.save(); ctx.globalAlpha = state.opacity; ctx.drawImage(logoImg, x,y, lw, lh); ctx.restore();
+                            }
+                        }
+                        baseImg.onload = ()=>{ fitCanvasToImage(baseImg); render(); };
+                        logoInputEl.addEventListener('change', (e)=>{
+                            const file = e.target.files?.[0]; if (!file) return; logoFileName = file.name.replace(/\.[^.]+$/, '') || 'logo';
+                            const reader = new FileReader(); reader.onload = ()=>{ logoImg.src = reader.result; }; reader.readAsDataURL(file);
+                        });
+                        logoImg.onload = ()=>{ hasLogo=true; render(); };
+                        logoPosEl.oninput = ()=>{ state.pos = logoPosEl.value; render(); };
+                        logoSizeEl.oninput = ()=>{ state.size = +logoSizeEl.value; render(); };
+                        logoOpacityEl.oninput = ()=>{ state.opacity = (+logoOpacityEl.value)/100; render(); };
+                        logoMarginEl.oninput = ()=>{ state.margin = +logoMarginEl.value; render(); };
+
+                        function getOutputDataUrl(){ return canvas.toDataURL('image/png'); }
+                        function suggestName(){ return (asin ? `${asin}` : 'image') + '-wm.png'; }
+                        sel('#downloadBtn').addEventListener('click', ()=>{ const a=document.createElement('a'); a.href=getOutputDataUrl(); a.download=suggestName(); a.click(); });
+                        sel('#addStagedBtn').addEventListener('click', ()=>{
+                            const dataUrl = getOutputDataUrl();
+                            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                            const idx = drafts.findIndex(d => d.id === draft.id);
+                            if (idx !== -1) {
+                                const cur = new Set(drafts[idx].imagesStaged || []); cur.add(dataUrl);
+                                drafts[idx].imagesStaged = Array.from(cur);
+                                drafts[idx].updatedAt = new Date().toISOString();
+                                localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                                showToast('Immagine aggiunta al limbo', 'success');
+                            }
+                        });
+                        sel('#setPrimaryBtn').addEventListener('click', ()=>{
+                            const dataUrl = getOutputDataUrl(); if (mainImg) mainImg.src = dataUrl;
+                            let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                            const idx = drafts.findIndex(d => d.id === draft.id);
+                            if (idx !== -1) {
+                                drafts[idx].primaryImage = dataUrl;
+                                const setImgs = new Set(drafts[idx].imagesStaged || []); setImgs.add(dataUrl);
+                                drafts[idx].imagesStaged = Array.from(setImgs);
+                                drafts[idx].updatedAt = new Date().toISOString();
+                                localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                                showToast('Immagine impostata come primaria', 'success');
+                            }
+                        });
+                        sel('#closeEditorBtn').addEventListener('click', ()=> overlay.remove());
+                        document.body.appendChild(overlay);
+                    });
+                }
+            } catch(e) { console.debug('Image editor wiring failed', e); }
+            
+            // Handle form submission for edit mode
+            if (isEditable) {
+                modal.querySelector('#draftForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Update draft with new values
+                    const formData = new FormData(this);
+                    
+                    let drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                    const draftIndex = drafts.findIndex(d => d.id === draft.id);
+                    
+                    if (draftIndex !== -1) {
+                        drafts[draftIndex] = {
+                            ...drafts[draftIndex],
+                            title: formData.get('title'),
+                            price: formData.get('price'),
+                            brand: formData.get('brand'),
+                            description: (formData.get('description') || '').trim(),
+                            descriptionClean: (formData.get('description') || '').trim(),
+                            descriptionRaw: __rawDesc || drafts[draftIndex].descriptionRaw || '',
+                            condition: formData.get('condition'),
+                            ebayCategory: formData.get('ebayCategory'),
+                            duration: formData.get('duration'),
+                            quantity: formData.get('quantity'),
+                            shippingCost: formData.get('shippingCost'),
+                            handlingTime: formData.get('handlingTime'),
+                            shippingService: formData.get('shippingService'),
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        localStorage.setItem('shappa_drafts', JSON.stringify(drafts));
+                        loadListings(); // Reload the listings
+                        modalOverlay.remove();
+                        
+                        // Show success message with better styling
+                        const successMsg = document.createElement('div');
+                        successMsg.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: var(--venus-success);
+                            color: var(--venus-text-white);
+                            padding: var(--venus-space-md) var(--venus-space-lg);
+                            border-radius: var(--venus-radius);
+                            box-shadow: var(--venus-shadow-lg);
+                            z-index: 10001;
+                            font-weight: var(--venus-font-weight-medium);
+                        `;
+                        successMsg.textContent = '✅ Prodotto aggiornato con successo!';
+                        document.body.appendChild(successMsg);
+                        
+                        setTimeout(() => successMsg.remove(), 3000);
+                    }
+                });
+            }
+            
+            // Close on overlay click
+            modalOverlay.addEventListener('click', function(e) {
+                if (e.target === modalOverlay) {
+                    modalOverlay.remove();
+                }
+            });
+        }
+
+        // Additional listing functions
+        function showBulkActionsModal() {
+            console.log('Showing bulk actions modal');
+            // TODO: Implement bulk actions modal
+        }
+
+        function showListingEditModal(id) {
+            console.log('Editing listing:', id);
+            // TODO: Implement listing edit modal
+        }
+
+        function showListingViewModal(id) {
+            console.log('Viewing listing:', id);
+            // TODO: Implement listing view modal
+        }
+
+        async function endListingNow(id) {
+            try {
+                const response = await fetch(`/api/ebay/listings/${id}/end`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Listing ended:', id);
+                    loadListings();
+                } else {
+                    console.error('Failed to end listing:', data.error);
+                }
+            } catch (error) {
+                console.error('Error ending listing:', error);
+            }
+        }
+
+        async function relistItemNow(id) {
+            try {
+                const response = await fetch(`/api/ebay/listings/${id}/relist`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Item relisted:', id);
+                    loadListings();
+                } else {
+                    console.error('Failed to relist item:', data.error);
+                }
+            } catch (error) {
+                console.error('Error relisting item:', error);
+            }
+        }
+
+        async function publishToEbay(draftId) {
+            try {
+                // Get draft data
+                const drafts = JSON.parse(localStorage.getItem('shappa_drafts') || '[]');
+                const draft = drafts.find(d => d.id === draftId);
+                
+                if (!draft) {
+                    console.error('Draft not found:', draftId);
+                    return;
+                }
+
+                // Show loading state
+                console.log('Publishing to eBay:', draft.title);
+                
+                // Call eBay publish endpoint
+                const response = await fetch('/api/ebay/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: draft.title,
+                        description: draft.descriptionClean || draft.description,
+                        price: draft.price,
+                        image: draft.primaryImage || draft.image,
+                        images: draft.imagesStaged || [],
+                        brand: draft.brand,
+                        itemSpecifics: draft.itemSpecifics || {},
+                        sourceProduct: draft.sourceProduct
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Published to eBay:', data);
+                    
+                    // Promuovi immagini dal limbo a 'committed' (per audit)
+                    try {
+                        const committed = JSON.parse(localStorage.getItem('shappa_images_committed') || '{}');
+                        committed[draftId] = draft.imagesStaged || [];
+                        localStorage.setItem('shappa_images_committed', JSON.stringify(committed));
+                    } catch(_e) {}
+
+                    // Remove from drafts
+                    const updatedDrafts = drafts.filter(d => d.id !== draftId);
+                    localStorage.setItem('shappa_drafts', JSON.stringify(updatedDrafts));
+                    
+                    // Reload listings
+                    loadListings();
+                } else {
+                    console.error('Failed to publish:', data.error);
+                }
+            } catch (error) {
+                console.warn('Pubblicazione eBay non disponibile (server offline):', error.message);
+                alert('⚠️ Server non disponibile. La pubblicazione su eBay richiede il server attivo.');
+            }
+        }
+
+        // Search functionality
+        document.querySelector('.venus-search-input')?.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            console.log('Searching listings:', searchTerm);
+            
+            if (searchTerm === '') {
+                // Se la ricerca è vuota, ripristina il filtro corrente
+                const activeTab = document.querySelector('.group-tab.active');
+                const currentGroup = activeTab ? activeTab.getAttribute('data-group') : 'drafts';
+                applyFilter(currentGroup);
+                return;
+            }
+            
+            // Filtra basandosi sul testo di ricerca
+            CURRENT_PAGE = 1;
+            FILTERED_CACHE = ALL_LISTINGS_CACHE.filter(listing => {
+                const title = (listing.title || '').toLowerCase();
+                const description = (listing.description || '').toLowerCase();
+                const asin = (listing.asin || '').toLowerCase();
+                
+                return title.includes(searchTerm) || 
+                       description.includes(searchTerm) || 
+                       asin.includes(searchTerm);
+            });
+            
+            renderPage();
+        });
+
+        // Initialize on page load (già gestito sopra da loadListings)
+    </script>
+    <script>
+    // Helpers: estrazione descrizione pulita e immagini HQ
+    // Merge dati prodotto: unisce sourceProduct, productDetailsRich (ottenuto da "Ottieni informazioni") e i campi base del draft
+    function resolveProductData(draft){
+        const base = draft?.sourceProduct || {};
+        const rich = draft?.productDetailsRich || draft?.enrichedProduct || {};
+        const simple = draft?.product || {};
+        // Ordine di priorità: rich > base > simple
+        const merged = {
+            ...simple,
+            ...base,
+            ...rich,
+        };
+        // immagini: concat uniche preservando ordine (ricche davanti)
+        const imgs = [];
+        const pushUnique = (arr)=>{
+            if (!arr) return; for (const u of arr) { if (u && !imgs.includes(u)) imgs.push(u); }
+        };
+        pushUnique(rich?.images);
+        pushUnique(base?.images);
+        pushUnique(simple?.images);
+        if (imgs.length) merged.images = imgs;
+        // asin/url fallback
+        merged.asin = draft?.asin || rich?.asin || base?.asin || simple?.asin || merged.asin || '';
+        merged.url = draft?.url || rich?.url || base?.url || simple?.url || merged.url || '';
+        // dettagli tecnici/specs: mergia chiavi (rich override)
+        merged.technicalDetails = { ...(base?.technicalDetails||{}), ...(simple?.technicalDetails||{}), ...(rich?.technicalDetails||{}) };
+        merged.specifications = { ...(base?.specifications||{}), ...(simple?.specifications||{}), ...(rich?.specifications||{}) };
+        // features
+        merged.features = Array.from(new Set([...(rich?.features||[]), ...(base?.features||[]), ...(simple?.features||[])]));
+        // brand/category/seller/rating preferendo ricchi
+        merged.brand = rich.brand || base.brand || simple.brand || merged.brand;
+        merged.category = rich.category || base.category || simple.category || merged.category;
+        merged.seller = rich.seller || base.seller || simple.seller || merged.seller;
+        merged.rating = rich.rating || base.rating || simple.rating || merged.rating;
+        // dimensioni/peso
+        merged.dimensions = rich.dimensions || base.dimensions || simple.dimensions || merged.dimensions || {};
+        merged.weight = rich.weight || base.weight || simple.weight || merged.weight || '';
+        return merged;
+    }
+    function extractCleanDescription(rawHtml, product) {
+        try {
+            if (!rawHtml && product && Array.isArray(product.features) && product.features.length) {
+                return `Informazioni su questo articolo\n- ` + product.features.join('\n- ');
+            }
+            const doc = new DOMParser().parseFromString(rawHtml || '', 'text/html');
+            // Prova a trovare blocchi standard
+            const listItems = [...doc.querySelectorAll('ul li')].map(li => li.textContent.trim()).filter(Boolean);
+            if (listItems.length >= 3) {
+                return `Informazioni su questo articolo\n- ` + listItems.join('\n- ');
+            }
+            // Fallback: rimuovi tag e mantieni testo leggibile
+            let text = (doc.body ? doc.body.textContent : rawHtml || '').replace(/\s+/g, ' ').trim();
+            // Taglia eventuale prefisso tecnico
+            return text || '';
+        } catch (e) {
+            console.warn('extractCleanDescription failed:', e);
+            return rawHtml || '';
+        }
+    }
+
+    function deriveHQImages(product) {
+        const imgs = [];
+        if (product && Array.isArray(product.images) && product.images.length) {
+            for (const url of product.images) {
+                // Heuristics Amazon: sostituisci dimensioni per HQ quando possibile
+                let hq = url
+                    .replace(/\._SR\d+,_?\d+_\.jpg/i, '._SL1500_.jpg')
+                    .replace(/\._AC_SX\d+_\.jpg/i, '._SL1500_.jpg')
+                    .replace(/\._AC_.*?\.jpg/i, '._SL1500_.jpg');
+                // Se è già una immagine diretta m.media-amazon.com, tienila
+                if (/m\.media-amazon\.com\//.test(url)) hq = url;
+                imgs.push(hq);
+            }
+        }
+        return imgs;
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Diagnostica</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #00ff00;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .diagnostic {
+            background: #111;
+            border: 1px solid #00ff00;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .error { color: #ff0000; }
+        .success { color: #00ff00; }
+        .warning { color: #ffff00; }
+        .info { color: #00ffff; }
+        
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagnostic">
+        <h1>🔍 SHAPPA DIAGNOSTIC TOOL</h1>
+        <p>Sistema di diagnostica per debugging rapido</p>
+    </div>
+
+    <div class="diagnostic">
+        <h2>📊 SYSTEM STATUS</h2>
+        <div id="systemStatus">Caricamento...</div>
+    </div>
+
+    <div class="diagnostic">
+        <h2>🔧 ACTIONS</h2>
+        <button onclick="testRegistration()">Test Registrazione</button>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="clearAllData()">Clear All Data</button>
+        <button onclick="showConsole()">Console Info</button>
+        <button onclick="goToAdmin()">Go Admin</button>
+    </div>
+
+    <div class="diagnostic">
+        <h2>📝 LOG OUTPUT</h2>
+        <pre id="logOutput">Sistema pronto...\n</pre>
+    </div>
+
+    <script src="../utils/auth.js"></script>
+    <script>
+        const log = document.getElementById('logOutput');
+        const status = document.getElementById('systemStatus');
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            log.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function updateStatus() {
+            try {
+                if (typeof AuthManager === 'undefined') {
+                    status.innerHTML = '<span class="error">❌ AuthManager NON CARICATO</span>';
+                    return false;
+                }
+                
+                AuthManager.initDatabase();
+                const users = AuthManager.getUsers();
+                const currentUser = AuthManager.getCurrentUser();
+                
+                status.innerHTML = `
+                    <span class="success">✅ AuthManager: OK</span><br>
+                    <span class="info">👥 Utenti totali: ${users.length}</span><br>
+                    <span class="info">🔐 Utente corrente: ${currentUser ? currentUser.username : 'nessuno'}</span><br>
+                    <span class="info">💾 Storage: ${JSON.stringify(localStorage).length} bytes</span><br>
+                    <span class="info">🌐 Online: ${navigator.onLine ? 'SI' : 'NO'}</span><br>
+                    <span class="info">📍 URL: ${window.location.href}</span>
+                `;
+                
+                return true;
+            } catch (error) {
+                status.innerHTML = `<span class="error">❌ ERRORE: ${error.message}</span>`;
+                addLog(`ERRORE STATUS: ${error.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function testRegistration() {
+            addLog('🔄 Avvio test registrazione...', 'info');
+            
+            try {
+                if (!updateStatus()) {
+                    addLog('❌ Sistema non pronto per test registrazione', 'error');
+                    return;
+                }
+                
+                const testUsername = 'test_' + Date.now();
+                const testEmail = testUsername + '@example.com';
+                const testPassword = 'test123456';
+                
+                addLog(`📝 Tentativo registrazione: ${testUsername}`, 'info');
+                
+                const result = AuthManager.register(testUsername, testEmail, testPassword, testPassword);
+                
+                if (result && result.success) {
+                    addLog(`✅ REGISTRAZIONE RIUSCITA: ${result.user.username}`, 'success');
+                    updateStatus();
+                } else {
+                    addLog(`❌ REGISTRAZIONE FALLITA: ${result ? result.error : 'Risultato nullo'}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ ERRORE TEST REGISTRAZIONE: ${error.message}`, 'error');
+                console.error('Test registration error:', error);
+            }
+        }
+        
+        function testLogin() {
+            addLog('🔄 Avvio test login...', 'info');
+            
+            try {
+                const users = AuthManager.getUsers();
+                if (users.length === 0) {
+                    addLog('❌ Nessun utente disponibile per test login', 'error');
+                    return;
+                }
+                
+                const testUser = users[0];
+                addLog(`🔐 Tentativo login: ${testUser.username}`, 'info');
+                
+                const result = AuthManager.login(testUser.email, testUser.password);
+                
+                if (result && result.success) {
+                    addLog(`✅ LOGIN RIUSCITO: ${result.user.username}`, 'success');
+                    updateStatus();
+                } else {
+                    addLog(`❌ LOGIN FALLITO: ${result ? result.error : 'Risultato nullo'}`, 'error');
+                }
+            } catch (error) {
+                addLog(`❌ ERRORE TEST LOGIN: ${error.message}`, 'error');
+                console.error('Test login error:', error);
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('⚠️ CANCELLARE TUTTI I DATI?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                addLog('🗑️ TUTTI I DATI CANCELLATI', 'warning');
+                updateStatus();
+            }
+        }
+        
+        function showConsole() {
+            console.group('🔍 Shappa Diagnostic Info');
+            console.log('AuthManager:', typeof AuthManager);
+            console.log('Users:', AuthManager ? AuthManager.getUsers() : 'N/A');
+            console.log('Current User:', AuthManager ? AuthManager.getCurrentUser() : 'N/A');
+            console.log('LocalStorage:', localStorage);
+            console.log('URL:', window.location.href);
+            console.log('UserAgent:', navigator.userAgent);
+            console.groupEnd();
+            
+            addLog('📝 Info dettagliate nella console del browser (F12)', 'info');
+        }
+        
+        function goToAdmin() {
+            window.location.href = 'admin.html';
+        }
+        
+        // Auto-update status ogni 5 secondi
+        setInterval(updateStatus, 5000);
+        
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('🚀 Sistema di diagnostica avviato', 'success');
+            updateStatus();
+        });
+    </script>
+</body>
+</html>

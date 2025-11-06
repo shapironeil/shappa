@@ -1,0 +1,84 @@
+/* Stile Amazon-like per scheda prodotto */
+.amazon-card {
+  display: grid;
+  grid-template-columns: 420px 1fr 320px;
+  gap: 24px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+}
+.amazon-card .gallery {
+  border: 1px solid #ddd;
+  padding: 12px;
+  background: #fff;
+}
+.amazon-card .gallery .thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow: auto;
+}
+.amazon-card .gallery .thumbs img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+.amazon-card .gallery .main img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+.amazon-card .details h1 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+.amazon-card .details .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+}
+.amazon-card .details .badge {
+  background: #ffd814;
+  color: #111;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.amazon-card .buybox {
+  border: 1px solid #ddd;
+  padding: 12px;
+  background: #f7f7f7;
+}
+.amazon-card .price {
+  color: #B12704;
+  font-size: 28px;
+  font-weight: 500;
+}
+.amazon-card .actions button {
+  background: #ffd814;
+  border: 1px solid #fcd200;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.amazon-card .tabs {
+  margin-top: 16px;
+}
+.amazon-card .tabs .tab-buttons {
+  display: flex;
+  gap: 8px;
+}
+.amazon-card .tabs .tab-buttons button {
+  background: #eee;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.amazon-card .tabs .tab-content {
+  border: 1px solid #ddd;
+  padding: 12px;
+  background: #fff;
+}

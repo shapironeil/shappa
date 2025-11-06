@@ -1,0 +1,29 @@
+{
+  "name": "shappa",
+  "version": "0.1.0",
+  "description": "Applicazione web moderna - Progetto Shappa",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "echo 'Development server - da configurare'",
+    "build": "echo 'Build process - da configurare'",
+    "test": "echo 'Test suite - da configurare'",
+    "start": "echo 'Production start - da configurare'"
+  },
+  "keywords": [
+    "webapp",
+    "shappa",
+    "javascript",
+    "frontend"
+  ],
+  "author": "Marco",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "node-cron": "^4.2.1",
+    "playwright": "^1.56.0",
+    "selfsigned": "^3.0.1"
+  }
+}

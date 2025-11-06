@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motore Ricerca Prodotti - Shappa</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/theme-v2.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <link rel="stylesheet" href="../styles/settings.css">
+    <style>
+        .search-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .search-market-select {
+            font-size: 1.1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .search-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 1.1rem;
+        }
+        .search-btn {
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+        }
+        .product-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .product-info {
+            font-size: 0.98rem;
+            color: #444;
+        }
+        .product-details-popup {
+            position: fixed;
+            top: 60px;
+            right: 40px;
+            z-index: 10001;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 2rem 2.5rem;
+            min-width: 340px;
+            max-width: 420px;
+            border: 1px solid #e5e7eb;
+            display: none;
+        }
+        .details-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .details-tab {
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            background: #f3f4f6;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .details-tab.active {
+            background: #3b82f6;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <a href="dashboard.html" class="nav-logo">Shappa</a>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Home</a></li>
+                <li><a href="settings.html">Impostazioni</a></li>
+                <li><a href="ricerca.html" class="active">Ricerca Prodotti</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="container dashboard-container">
+        <div class="search-header card settings-card" style="margin-bottom:2rem;">
+            <select class="search-market-select" id="marketSelect">
+                <option value="amazon">Amazon</option>
+                <option value="ebay" disabled>eBay (prossimamente)</option>
+            </select>
+            <div class="search-bar">
+                <input type="text" class="search-input" id="searchInput" placeholder="Cerca prodotti su Amazon...">
+                <button class="search-btn" id="searchBtn">Cerca</button>
+            </div>
+        </div>
+        <div class="product-list" id="productList">
+            <!-- Risultati prodotti -->
+        </div>
+        <div class="product-details-popup card settings-card" id="productDetailsPopup" style="transition:opacity 0.2s;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="margin: 0; font-size: 1.3rem;">Dettagli Prodotto</h3>
+                <button id="closeProductDetails" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div class="details-tabs" id="detailsTabs">
+                <div class="details-tab active" data-tab="info">Info Base</div>
+                <div class="details-tab" data-tab="automation">Automazione</div>
+                <div class="details-tab" data-tab="manual">Modifica Manuale</div>
+            </div>
+            <div id="detailsContent">
+                <!-- Contenuto dettagli prodotto -->
+            </div>
+        </div>
+        <div id="searchLoader" style="display:none;text-align:center;margin-top:2rem;">
+            <span class="loader" style="display:inline-block;width:32px;height:32px;border:4px solid #3b82f6;border-radius:50%;border-top-color:transparent;animation:spin 1s linear infinite;"></span>
+            <div style="margin-top:0.5rem;color:#3b82f6;">Caricamento...</div>
+        </div>
+        <style>
+            @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+    </main>
+    <script>
+        // Mock API Amazon
+        async function searchAmazonProducts(query) {
+            // Simulazione: restituisce 5 prodotti finti
+            return [
+                { id: 'B001', title: 'Echo Dot (4ª generazione)', price: '49,99€', brand: 'Amazon', rating: 4.7, image: 'https://m.media-amazon.com/images/I/61u48FEsQbL._AC_SL1000_.jpg', details: 'Smart speaker con Alexa.' },
+                { id: 'B002', title: 'Kindle Paperwhite', price: '139,99€', brand: 'Amazon', rating: 4.8, image: 'https://m.media-amazon.com/images/I/61M1p5PpQPL._AC_SL1000_.jpg', details: 'E-reader con schermo da 6,8".' },
+                { id: 'B003', title: 'Fire TV Stick 4K', price: '59,99€', brand: 'Amazon', rating: 4.6, image: 'https://m.media-amazon.com/images/I/51TjXjYQKGL._AC_SL1000_.jpg', details: 'Streaming stick con Alexa.' },
+                { id: 'B004', title: 'Amazon Basics Power Bank', price: '19,99€', brand: 'Amazon Basics', rating: 4.5, image: 'https://m.media-amazon.com/images/I/71QKQ9mwV7L._AC_SL1500_.jpg', details: 'Batteria portatile 10000mAh.' },
+                { id: 'B005', title: 'Amazon Smart Plug', price: '24,99€', brand: 'Amazon', rating: 4.4, image: 'https://m.media-amazon.com/images/I/51b5YG6Y1rL._AC_SL1000_.jpg', details: 'Presa intelligente Wi-Fi.' }
+            ];
+        }
+        // UI logic
+        const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('searchInput');
+        const productList = document.getElementById('productList');
+        const productDetailsPopup = document.getElementById('productDetailsPopup');
+        const closeProductDetails = document.getElementById('closeProductDetails');
+        const detailsTabs = document.getElementById('detailsTabs');
+        const detailsContent = document.getElementById('detailsContent');
+        let currentProduct = null;
+        searchBtn.addEventListener('click', async () => {
+            const query = searchInput.value.trim();
+            if (!query) return;
+            productList.innerHTML = '';
+            document.getElementById('searchLoader').style.display = 'block';
+            setTimeout(async () => {
+                const products = await searchAmazonProducts(query);
+                document.getElementById('searchLoader').style.display = 'none';
+                if (!products.length) {
+                    productList.innerHTML = '<div style="text-align:center;color:#f59e42;">Nessun prodotto trovato.</div>';
+                    return;
+                }
+                productList.innerHTML = products.map(p => `
+                    <div class="product-card card" data-id="${p.id}">
+                        <img src="${p.image}" alt="${p.title}" style="width:100%;max-width:120px;border-radius:8px;margin-bottom:1rem;">
+                        <div class="product-title">${p.title}</div>
+                        <div class="product-info">${p.brand} &bull; ${p.price} &bull; ⭐ ${p.rating}</div>
+                    </div>
+                `).join('');
+                // Click su prodotto
+                document.querySelectorAll('.product-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const prodId = card.getAttribute('data-id');
+                        const prod = products.find(x => x.id === prodId);
+                        currentProduct = prod;
+                        showProductDetails(prod, 'info');
+                    });
+                });
+            }, 600);
+        });
+        function showProductDetails(prod, tab) {
+            productDetailsPopup.style.opacity = 0;
+            productDetailsPopup.style.display = 'block';
+            setTimeout(() => { productDetailsPopup.style.opacity = 1; }, 10);
+            renderDetailsTab(prod, tab);
+        }
+        closeProductDetails.addEventListener('click', () => {
+            productDetailsPopup.style.opacity = 0;
+            setTimeout(() => { productDetailsPopup.style.display = 'none'; }, 200);
+        });
+        detailsTabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('details-tab')) {
+                document.querySelectorAll('.details-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                renderDetailsTab(currentProduct, e.target.dataset.tab);
+            }
+        });
+        function renderDetailsTab(prod, tab) {
+            if (!prod) return;
+            if (tab === 'info') {
+                detailsContent.innerHTML = `
+                    <strong>Nome:</strong> ${prod.title}<br>
+                    <strong>Brand:</strong> ${prod.brand}<br>
+                    <strong>Prezzo:</strong> ${prod.price}<br>
+                    <strong>Rating:</strong> ${prod.rating}<br>
+                    <strong>Dettagli:</strong> ${prod.details}<br>
+                `;
+            } else if (tab === 'automation') {
+                detailsContent.innerHTML = `
+                    <strong>Automazione:</strong><br>
+                    <span style="color:#3b82f6;">Questo prodotto verrà gestito automaticamente da Shappa.<br>Puoi modificare le regole di automazione nelle impostazioni.</span>
+                `;
+            } else if (tab === 'manual') {
+                detailsContent.innerHTML = `
+                    <strong>Modifica manuale:</strong><br>
+                    <label>Prezzo personalizzato:</label>
+                    <input type="text" value="${prod.price}" style="width:120px;">
+                    <br><button class="search-btn" style="margin-top:1rem;">Salva Modifiche</button>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

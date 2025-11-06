@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Impostazioni</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <link rel="stylesheet" href="../styles/settings.css">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Logo link styles */
+        .nav-logo {
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+        
+        .nav-logo:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        /* User menu styles */
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 8px;
+            font-weight: 500;
+            height: 40px;
+            box-sizing: border-box;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .user-name {
+            color: var(--text-primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .user-name:hover {
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+        
+        .user-avatar {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+        
+        /* Hidden utility class */
+        .hidden {
+            display: none !important;
+        }
+
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 40px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Tab Navigation Styles */
+        .settings-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid rgba(79, 70, 229, 0.1);
+            overflow-x: auto;
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        /* Tab Content Styles */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Session List Styles */
+        .session-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .session-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(79, 70, 229, 0.05);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Logo Styles */
+        .connection-logo {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: white;
+            padding: 8px;
+        }
+
+        .connection-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .connection-logo.amazon {
+            background: linear-gradient(135deg, #FF9900 0%, #FFB84D 100%);
+        }
+
+        .connection-logo.ebay {
+            background: linear-gradient(135deg, #E53238 0%, #0064D2 50%, #F5AF02 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tab-btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .settings-tabs {
+                gap: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="nav-logo" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <h2>🚀 Shappa</h2>
+            </a>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <a href="products.html" class="nav-link">Prodotti</a>
+                <a href="listings.html" class="nav-link">Listing</a>
+                <a href="analytics.html" class="nav-link">Analytics</a>
+                <a href="settings.html" class="nav-link active">Impostazioni</a>
+            </div>
+            <div class="nav-user">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span class="user-name" id="userName">Caricamento...</span>
+                </div>
+                <button class="btn-logout" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <div class="settings-header">
+                <h1>⚙️ Impostazioni</h1>
+                <p>Configura le tue integrazioni e preferenze</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="configurazione">
+                    Configurazione
+                </button>
+                <button class="tab-btn" data-tab="preferenze">
+                    Preferenze
+                </button>
+                <button class="tab-btn" data-tab="sicurezza">
+                    Sicurezza
+                </button>
+                <button class="tab-btn" data-tab="account">
+                    Account
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content active" id="configurazione">
+                <div class="settings-grid">
+                    <!-- Automation Settings -->
+                    <section class="settings-section">
+                        <h2>Automazione</h2>
+                        
+                        <div class="settings-card">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Creazione Automatica Listing</h4>
+                                    <p>Crea automaticamente listing eBay quando trovi prodotti Amazon</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoListing">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Aggiornamento Prezzi Automatico</h4>
+                                    <p>Aggiorna i prezzi eBay in base alle variazioni Amazon</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoPricing">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Sincronizzazione Inventario</h4>
+                                    <p>Sincronizza automaticamente le quantità disponibili</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="autoInventory">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Preferenze Tab -->
+            <div class="tab-content" id="preferenze">
+                <div class="settings-grid">
+                    <!-- Notification Settings -->
+                    <section class="settings-section">
+                        <h2>Notifiche</h2>
+                        
+                        <div class="settings-card">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Email Notifiche</h4>
+                                    <p>Ricevi notifiche via email per eventi importanti</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="emailNotifications" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="notificationEmail">Email per notifiche</label>
+                                <input type="email" id="notificationEmail" placeholder="tua-email@example.com">
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Sicurezza Tab -->
+            <div class="tab-content" id="sicurezza">
+                <div class="settings-grid">
+                    <section class="settings-section">
+                        <h2>Sicurezza e Privacy</h2>
+                        
+                        <div class="settings-card">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Autenticazione a Due Fattori (2FA)</h4>
+                                    <p>Aggiungi un livello extra di sicurezza al tuo account</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="twoFactor">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Notifiche Accessi</h4>
+                                    <p>Ricevi una notifica quando accedi da un nuovo dispositivo</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="loginNotifications" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 2rem;">
+                                <h4>Sessioni Attive</h4>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Gestisci i dispositivi dove sei attualmente loggato</p>
+                                <div class="session-list">
+                                    <div class="session-item">
+                                        <div>
+                                            <strong>� Windows - Chrome</strong>
+                                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Ultimo accesso: Oggi alle 14:30</p>
+                                        </div>
+                                        <span class="status-badge" style="background: #10b981;">Attivo</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Account Tab -->
+            <div class="tab-content" id="account">
+                <div class="settings-grid">
+                    <!-- API Connections -->
+                    <section class="settings-section">
+                        <h2>Connessioni API</h2>
+                        
+                        <!-- Amazon Integration -->
+                        <div class="connection-card">
+                            <div class="connection-header">
+                                <div class="connection-logo amazon">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Amazon">
+                                </div>
+                                <div class="connection-info">
+                                    <h3>Amazon Seller Central</h3>
+                                    <p>Connetti il tuo account Amazon per importare prodotti</p>
+                                </div>
+                                <div class="connection-status" id="amazonStatus2">
+                                    <span class="status-badge disconnected">Non connesso</span>
+                                </div>
+                            </div>
+                            
+                            <div class="connection-actions" id="amazonActions2">
+                                <button class="btn-primary" id="amazonLoginBtn2">
+                                    Connetti Amazon
+                                </button>
+                                <button class="btn-secondary hidden" id="amazonDisconnectBtn2">
+                                    Disconnetti
+                                </button>
+                            </div>
+                            
+                            <div class="connection-details hidden" id="amazonDetails2">
+                                <div class="detail-row">
+                                    <span>Marketplace:</span>
+                                    <span id="amazonMarketplace2">-</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Seller ID:</span>
+                                    <span id="amazonSellerId2">-</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span>Ultima sincronizzazione:</span>
+                                    <span id="amazonLastSync2">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- eBay Integration -->
+                        <div class="connection-card">
+                            <div class="connection-header">
+                                <div class="connection-logo ebay">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/1b/EBay_logo.svg" alt="eBay">
+                                </div>
+                                <div class="connection-info">
+                                    <h3>eBay Seller Hub</h3>
+                                    <p>Connetti il tuo account eBay per creare listing automatici</p>
+                                </div>
+                                <div class="connection-status" id="ebayStatus2">
+                                    <span class="status-badge disconnected">Non connesso</span>
+                                </div>
+                                <button id="ebayInfoBtn" class="info-btn" title="Mostra dettagli account eBay" style="margin-left: 12px; background: none; border: none; cursor: pointer;">
+                                    <img src="https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/info-circle.svg" alt="Info" style="width: 24px; height: 24px; vertical-align: middle; filter: grayscale(0);">
+                                </button>
+                            </div>
+                            
+                            <div class="connection-actions" id="ebayActions2">
+                                <button class="btn-primary" id="ebayLoginBtn2">
+                                    Connetti eBay
+                                </button>
+                            </div>
+                            
+                            <div class="connection-details hidden" id="ebayDetails2">
+                                <div class="detail-row">
+                                    <span><strong>User ID:</strong></span>
+                                    <span id="ebayUserId2">-</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span><strong>Connesso il:</strong></span>
+                                    <span id="ebayConnectedDate2">-</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span><strong>Token scade tra:</strong></span>
+                                    <span id="ebayTokenExpiry2">-</span>
+                                </div>
+                                <div class="connection-actions" style="margin-top: 1rem;">
+                                    <button class="btn-secondary" id="ebayDisconnectBtn2">
+                                        Disconnetti Account
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Account Settings -->
+                    <section class="settings-section">
+                        <h2>Informazioni Account</h2>
+                        
+                        <div class="settings-card">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" placeholder="Il tuo username" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="displayName">Nome visualizzato</label>
+                                <input type="text" id="displayName" placeholder="Il tuo nome">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" placeholder="tua-email@example.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="currentPassword">Password attuale</label>
+                                <input type="password" id="currentPassword" placeholder="Inserisci password attuale">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newPassword">Nuova password</label>
+                                <input type="password" id="newPassword" placeholder="Inserisci nuova password">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="confirmPassword">Conferma nuova password</label>
+                                <input type="password" id="confirmPassword" placeholder="Conferma nuova password">
+                            </div>
+                            
+                            <div class="settings-actions">
+                                <button class="btn-primary">Salva Modifiche</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Danger Zone -->
+                    <section class="settings-section">
+                        <h2>Zona Pericolosa</h2>
+                        
+                        <div class="settings-card" style="border: 2px solid #ef4444;">
+                            <div class="form-group">
+                                <h4 style="color: #ef4444;">Elimina Account</h4>
+                                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                                    Questa azione è irreversibile. Tutti i tuoi dati, listing e configurazioni verranno eliminati permanentemente.
+                                </p>
+                                <button class="btn-danger">Elimina Account Permanentemente</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    <script src="../utils/ebay-oauth.js"></script>
+    <script src="../utils/settings.js"></script>
+    <!-- Popup info eBay -->
+    <div id="ebayInfoPopup" class="hidden" style="position: fixed; top: 60px; right: 40px; z-index: 10001; background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.18); padding: 2rem 2.5rem; min-width: 340px; max-width: 420px; border: 1px solid #e5e7eb;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 1.3rem;">Dettagli Account eBay</h3>
+            <button id="closeEbayInfoPopup" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div id="ebayInfoContent" style="font-size: 1rem; color: #222;">
+            <!-- Qui verranno inseriti i dettagli -->
+        </div>
+    </div>
+    <script>
+        // Gestione bottone info e popup dettagli eBay
+        document.addEventListener('DOMContentLoaded', function() {
+            const infoBtn = document.getElementById('ebayInfoBtn');
+            const popup = document.getElementById('ebayInfoPopup');
+            const closeBtn = document.getElementById('closeEbayInfoPopup');
+            const infoContent = document.getElementById('ebayInfoContent');
+            infoBtn?.addEventListener('click', function() {
+                // Prendi i dati dalla connessione eBay
+                const ebayData = window.SettingsManager?.connections?.ebay || {};
+                let html = '';
+                html += `<strong>Nickname:</strong> ${ebayData.username || '-'}<br>`;
+                if (ebayData.firstName || ebayData.lastName) {
+                    html += `<strong>Nome:</strong> ${ebayData.firstName || ''} ${ebayData.lastName || ''}<br>`;
+                }
+                if (ebayData.email) {
+                    html += `<strong>Email:</strong> ${ebayData.email}<br>`;
+                }
+                html += `<strong>User ID:</strong> ${ebayData.userId || '-'}<br>`;
+                html += `<strong>Account Type:</strong> ${ebayData.accountType || '-'}<br>`;
+                html += `<strong>Status:</strong> ${ebayData.status || '-'}<br>`;
+                if (ebayData.connectedDate) {
+                    html += `<strong>Connesso il:</strong> ${new Date(ebayData.connectedDate).toLocaleString('it-IT')}<br>`;
+                }
+                if (ebayData.tokenExpiry) {
+                    html += `<strong>Token scade il:</strong> ${new Date(ebayData.tokenExpiry).toLocaleString('it-IT')}<br>`;
+                }
+                if (ebayData.lastSync) {
+                    html += `<strong>Ultima sincronizzazione:</strong> ${ebayData.lastSync}<br>`;
+                }
+                // Mostra avviso sandbox se i dati sono null
+                if (!ebayData.firstName && !ebayData.lastName && !ebayData.username && !ebayData.email) {
+                    html += `<div style="margin-top:1rem;color:#f59e42;font-weight:500;">sandbox: dati limitati</div>`;
+                }
+                infoContent.innerHTML = html;
+                popup.classList.remove('hidden');
+            });
+            closeBtn?.addEventListener('click', function() {
+                popup.classList.add('hidden');
+            });
+            // Chiudi popup cliccando fuori
+            document.addEventListener('mousedown', function(e) {
+                if (!popup.classList.contains('hidden') && !popup.contains(e.target) && e.target !== infoBtn) {
+                    popup.classList.add('hidden');
+                }
+            });
+        });
+        // Initialize user info on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const authSystem = new ShappaAuth();
+            const currentUser = authSystem.getCurrentUser();
+            
+            if (!currentUser) {
+                // Redirect to homepage if not logged in
+                window.location.href = '../../index.html';
+                return;
+            }
+            
+            // Update user info in navbar
+            const userName = document.getElementById('userName');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (userName) {
+                userName.textContent = currentUser.username;
+            }
+            
+            if (userAvatar) {
+                userAvatar.textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+
+            // Populate username in account tab
+            const usernameInput = document.getElementById('username');
+            if (usernameInput) {
+                usernameInput.value = currentUser.username;
+            }
+            
+            // Initialize settings manager
+            if (typeof SettingsManager !== 'undefined') {
+                SettingsManager.init();
+                console.log('✅ Settings manager initialized');
+            } else {
+                console.error('❌ SettingsManager not found');
+            }
+            
+            // Setup logout button
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    authSystem.logout();
+                    window.location.href = '../../index.html';
+                });
+            }
+
+            // Tab switching functionality
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabName = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabName).classList.add('active');
+                });
+            });
+        });
+    </script>
+    
+    <!-- Navbar Universal - Click Handler -->
+    <script src="../utils/navbar-universal.js"></script>
+</body>
+</html>

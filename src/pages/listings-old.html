@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shappa - Listing</title>
+  <link rel="stylesheet" href="../styles/main.css">
+  <link rel="stylesheet" href="../styles/dashboard.css">
+  <style>
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .product-info {
+      padding: 1rem;
+    }
+
+    .product-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #e53e3e;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      color: #718096;
+    }
+
+    .product-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .loading, .no-results {
+      text-align: center;
+      padding: 3rem;
+      color: #718096;
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 2rem;
+      background: #fed7d7;
+      color: #c53030;
+      border-radius: 8px;
+      margin: 2rem auto;
+      max-width: 600px;
+    }
+
+    .marketplace-selector option {
+      background: #4a5568;
+      color: white;
+    }
+
+    .search-input::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    @media (max-width: 768px) {
+      .search-form {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .marketplace-selector, .search-input, .search-btn {
+        min-width: auto;
+        width: 100%;
+      }
+
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+
+    /* Modal popup styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 2% auto;
+      padding: 0;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .close {
+      color: #718096;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .close:hover {
+      color: #2d3748;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .product-detail-image {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 1.5rem;
+      float: left;
+    }
+
+    .detail-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 1rem;
+    }
+
+    .detail-price {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #e53e3e;
+      margin-bottom: 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #e2e8f0;
+      margin: 1.5rem 0;
+    }
+
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      color: #718096;
+      transition: all 0.3s ease;
+    }
+
+    .tab.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 1rem 0;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .automation-form, .manual-form {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group input, .form-group select {
+      padding: 0.75rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .btn-primary:hover {
+      background: #5a67d8;
+      border-color: #5a67d8;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #667eea;
+      border-color: #667eea;
+    }
+
+    .btn-secondary:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .product-detail-image {
+        float: none;
+        width: 100%;
+        height: 250px;
+        margin: 0 0 1rem 0;
+      }
+
+      .modal-content {
+        margin: 5% auto;
+        width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar identica alla dashboard -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="../../index.html" class="nav-logo" style="text-decoration: none; color: inherit; cursor: pointer;">
+        <h2>🚀 Shappa</h2>
+      </a>
+      <div class="nav-menu">
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="products.html" class="nav-link">Cerca Prodotti</a>
+        <a href="listings.html" class="nav-link active">Listing</a>
+        <a href="reports.html" class="nav-link">Report</a>
+        <a href="settings.html" class="nav-link">Impostazioni</a>
+      </div>
+      <div class="nav-user">
+        <a href="admin.html" class="admin-link" title="Admin Panel">🛠️ <span>Admin</span></a>
+        <a href="settings.html" class="user-info" style="text-decoration: none; color: inherit; cursor: pointer;">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <span class="user-name" id="userName">Caricamento...</span>
+        </a>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Layout Listing: sidebar sinistra + tabella destra -->
+  <main class="dashboard-main">
+    <div class="listings-container">
+      <!-- Sidebar / Cartelle -->
+      <aside class="sidebar">
+        <h3>Cartelle</h3>
+        <ul id="foldersList" class="folders-list">
+          <li>
+            <button class="folder-item active" data-folder="inbox">📥 Non listato</button>
+          </li>
+          <li>
+            <button class="folder-item" data-folder="ebay">🅴 eBay</button>
+          </li>
+        </ul>
+        <div class="import-section">
+          <button id="importFromAmazon" class="btn-import">Importa da Amazon</button>
+        </div>
+      </aside>
+
+      <!-- Tabella Listing -->
+      <section class="table-section">
+        <div class="table-header">
+          <h3>Prodotti</h3>
+          <div class="table-controls">
+            <input id="tableSearch" type="text" placeholder="Cerca..." class="table-search">
+            <button id="refreshListings" class="btn-refresh">Aggiorna prezzi</button>
+            <button id="startMonitoring" class="btn-monitor">Avvia monitoraggio</button>
+          </div>
+          <div class="bulk-actions" style="display:none;">
+            <button id="deleteSelected" class="btn-delete">Elimina selezionati</button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="selectAll" /></th>
+                <th data-sort="title">Titolo</th>
+                <th data-sort="listingPrice">Prezzo Listing</th>
+                <th data-sort="resellPrice">Prezzo Resell</th>
+                <th data-sort="profit">Profitto</th>
+                <th data-sort="sponsorPct">% Sponsor</th>
+                <th data-sort="shipping">Spedizione</th>
+                <th>Amazon</th>
+                <th>eBay</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody id="listingsTableBody">
+              <!-- righe generate da JS -->
+            </tbody>
+          </table>
+          <div class="pagination">
+            <label>Righe per pagina
+              <select id="rowsPerPage">
+                <option>5</option>
+                <option selected>10</option>
+                <option>20</option>
+              </select>
+            </label>
+            <button id="prevPage" class="btn-page">◀</button>
+            <span id="pageInfo" class="page-info">Pagina 1</span>
+            <button id="nextPage" class="btn-page">▶</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Stato base: IndexedDB per listings
+    const DB_NAME = 'shappa_db';
+    const DB_VERSION = 1;
+    const STORE_LISTINGS = 'listings';
+
+    function openDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_LISTINGS)) {
+            db.createObjectStore(STORE_LISTINGS, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveListing(item) {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_LISTINGS, 'readwrite');
+        const store = tx.objectStore(STORE_LISTINGS);
+        store.put(item);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function getAllListings() {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_LISTINGS, 'readonly');
+        const store = tx.objectStore(STORE_LISTINGS);
+        const req = store.getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function deleteListing(id) {
+      const db = await openDb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_LISTINGS, 'readwrite');
+        const store = tx.objectStore(STORE_LISTINGS);
+        store.delete(id);
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    // UI: render tabella
+    let tableState = { sortKey: null, sortDir: 'asc', page: 1, rowsPerPage: 10, lastRows: [] };
+
+    function applySort(rows) {
+      const { sortKey, sortDir } = tableState;
+      if (!sortKey) return rows;
+      const dir = sortDir === 'asc' ? 1 : -1;
+      return [...rows].sort((a,b) => {
+        const va = a[sortKey];
+        const vb = b[sortKey];
+        const na = typeof va === 'string' ? va.toLowerCase() : Number(va);
+        const nb = typeof vb === 'string' ? vb.toLowerCase() : Number(vb);
+        if (na < nb) return -1 * dir;
+        if (na > nb) return 1 * dir;
+        return 0;
+      });
+    }
+
+    function paginate(rows) {
+      const { page, rowsPerPage } = tableState;
+      const start = (page-1) * rowsPerPage;
+      return rows.slice(start, start + rowsPerPage);
+    }
+
+    function renderTableRows(rows) {
+      const tbody = document.getElementById('listingsTableBody');
+      tableState.lastRows = rows;
+      const sorted = applySort(rows);
+      const pageRows = paginate(sorted);
+      tbody.innerHTML = '';
+      pageRows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;"><input type="checkbox" class="row-checkbox" data-id="${row.id}" /></td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">${row.title || ''}</td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">
+            <input class="price-input listing-price" data-id="${row.id}" type="number" step="0.01" value="${row.listingPrice ?? ''}" style="width:110px; padding:0.25rem; border:1px solid #e5e7eb; border-radius:6px;" />
+            ${row.previousPrice !== undefined && row.previousPrice !== row.listingPrice ? `<span class="price-indicator ${row.listingPrice > row.previousPrice ? 'up' : 'down'}">${row.listingPrice > row.previousPrice ? '↑' : '↓'}</span>` : ''}
+          </td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">
+            <input class="price-input resell-price" data-id="${row.id}" type="number" step="0.01" value="${row.resellPrice ?? ''}" style="width:110px; padding:0.25rem; border:1px solid #e5e7eb; border-radius:6px;" />
+          </td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;" id="profit-${row.id}">${row.profit || '-'}</td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">${row.sponsorPct ?? '-'}</td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">${row.shipping || '-'}</td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;"><a href="${row.amazonUrl || '#'}" target="_blank">Amazon</a></td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;"><a href="${row.ebayUrl || '#'}" target="_blank">eBay</a></td>
+          <td style="padding:0.5rem; border-bottom:1px solid #f3f4f6;">
+            <button data-id="${row.id}" class="btn-list" style="background:#4f46e5;color:white;border:none;border-radius:6px;padding:0.3rem 0.5rem;cursor:pointer;">Lista</button>
+            <button data-id="${row.id}" class="btn-edit" style="background:#10b981;color:white;border:none;border-radius:6px;padding:0.3rem 0.5rem;cursor:pointer;">Modifica</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      const total = sorted.length;
+      const pages = Math.max(1, Math.ceil(total / tableState.rowsPerPage));
+      if (tableState.page > pages) tableState.page = pages;
+      document.getElementById('pageInfo').textContent = `Pagina ${tableState.page} / ${pages}`;
+    }
+
+    // Ricalcolo profitto quando cambiano i prezzi
+    document.addEventListener('input', async (e) => {
+      if (e.target.classList.contains('price-input')) {
+        const id = e.target.dataset.id;
+        const rows = await getAllListings();
+        const row = rows.find(r => r.id === id);
+        if (!row) return;
+        if (e.target.classList.contains('listing-price')) {
+          row.listingPrice = parseFloat(e.target.value) || 0;
+        } else if (e.target.classList.contains('resell-price')) {
+          row.resellPrice = parseFloat(e.target.value) || 0;
+        }
+        const ebayFeePct = Number(row.automation?.ebayFeePct ?? 5);
+        const ebayFixedFee = Number(row.automation?.ebayFixedFee ?? 0.35);
+        const sponsorPct = Number(row.automation?.sponsorPct ?? 0);
+        const fee = row.listingPrice * (ebayFeePct/100) + ebayFixedFee + row.listingPrice * (sponsorPct/100);
+        const profit = (row.resellPrice || row.listingPrice) - fee;
+        row.profit = isFinite(profit) ? profit.toFixed(2) : '-';
+        await saveListing(row);
+        const el = document.getElementById('profit-' + id);
+        if (el) el.textContent = row.profit;
+      }
+    });
+
+    // Import da Amazon: prende prodotti correnti dalla pagina products (se aperta) oppure da localStorage
+    document.getElementById('importFromAmazon').addEventListener('click', async () => {
+      try {
+        const cached = JSON.parse(localStorage.getItem('shappa_last_search') || '[]');
+        if (!Array.isArray(cached) || cached.length === 0) {
+          alert('Nessun prodotto da importare. Esegui una ricerca in "Cerca Prodotti".');
+          return;
+        }
+        for (const p of cached) {
+          const auto = p.raw?.automation || {};
+          const listingPrice = parseFloat(p.price_display) || 0;
+          const ebayFeePct = Number(auto.ebayFeePct ?? 5);
+          const ebayFixedFee = Number(auto.ebayFixedFee ?? 0.35);
+          const sponsorPct = Number(auto.promotedPct ?? 0);
+          const fee = listingPrice * (ebayFeePct/100) + ebayFixedFee + listingPrice * (sponsorPct/100);
+          const profit = (listingPrice - fee);
+          const item = {
+            id: p.id,
+            title: p.title,
+            listingPrice: listingPrice,
+            resellPrice: listingPrice,
+            profit: isFinite(profit) ? profit.toFixed(2) : '-',
+            sponsorPct,
+            shipping: p.delivery || '-',
+            amazonUrl: p.url || '#',
+            ebayUrl: '#',
+            source: 'amazon',
+            savedAt: new Date().toISOString(),
+            automation: {
+              ebayFeePct,
+              ebayFixedFee,
+              sponsorPct,
+              profitTargetPct: Number(auto.profitPct ?? 0)
+            }
+          };
+          await saveListing(item);
+        }
+        const rows = await getAllListings();
+        renderTableRows(rows);
+      } catch (e) {
+        console.error('Import error', e);
+        alert('Errore durante l\'import.');
+      }
+    });
+
+    // Carica iniziale
+    (async () => {
+      const rows = await getAllListings();
+      renderTableRows(rows);
+    })();
+
+    // Sorting handlers
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', async () => {
+        const key = th.getAttribute('data-sort');
+        if (tableState.sortKey === key) {
+          tableState.sortDir = tableState.sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          tableState.sortKey = key;
+          tableState.sortDir = 'asc';
+        }
+        renderTableRows(tableState.lastRows);
+      });
+    });
+
+    // Pagination handlers
+    document.getElementById('rowsPerPage').addEventListener('change', (e) => {
+      tableState.rowsPerPage = Number(e.target.value) || 10;
+      tableState.page = 1;
+      renderTableRows(tableState.lastRows);
+    });
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (tableState.page > 1) { tableState.page--; renderTableRows(tableState.lastRows); }
+    });
+    document.getElementById('nextPage').addEventListener('click', () => {
+      const total = applySort(tableState.lastRows).length;
+      const pages = Math.max(1, Math.ceil(total / tableState.rowsPerPage));
+      if (tableState.page < pages) { tableState.page++; renderTableRows(tableState.lastRows); }
+    });
+
+    // Ricerca nella tabella
+    document.getElementById('tableSearch').addEventListener('input', async (e) => {
+      const q = e.target.value.toLowerCase();
+      const rows = await getAllListings();
+      renderTableRows(rows.filter(r => (r.title || '').toLowerCase().includes(q)));
+    });
+
+    // Selezione multipla
+    function updateBulkActions() {
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      const bulk = document.querySelector('.bulk-actions');
+      bulk.style.display = checked.length > 0 ? 'block' : 'none';
+    }
+
+    document.getElementById('selectAll').addEventListener('change', (e) => {
+      const checked = e.target.checked;
+      document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkActions();
+    });
+
+    document.addEventListener('change', (e) => {
+      if (e.target.classList.contains('row-checkbox')) {
+        updateBulkActions();
+      }
+    });
+
+    document.getElementById('deleteSelected').addEventListener('click', async () => {
+      const checked = document.querySelectorAll('.row-checkbox:checked');
+      if (!confirm(`Eliminare ${checked.length} elementi selezionati?`)) return;
+      for (const cb of checked) {
+        const id = cb.dataset.id;
+        await deleteListing(id);
+      }
+      const rows = await getAllListings();
+      renderTableRows(rows);
+      updateBulkActions();
+    });
+
+    // Monitoraggio prezzi
+    let monitoringInterval = null;
+    document.getElementById('startMonitoring').addEventListener('click', () => {
+      if (monitoringInterval) {
+        clearInterval(monitoringInterval);
+        monitoringInterval = null;
+        document.getElementById('startMonitoring').textContent = 'Avvia monitoraggio';
+        alert('Monitoraggio fermato');
+      } else {
+        monitoringInterval = setInterval(async () => {
+          document.getElementById('refreshListings').click();
+        }, 5 * 60 * 1000); // ogni 5 minuti
+        document.getElementById('startMonitoring').textContent = 'Ferma monitoraggio';
+        alert('Monitoraggio avviato (aggiornamento ogni 5 minuti)');
+      }
+    });
+
+    // Switch cartelle
+    document.querySelectorAll('.folder-item').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('.folder-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const folder = btn.dataset.folder;
+        const rows = await getAllListings();
+        const filtered = rows.filter(r => folder === 'inbox' ? r.source === 'amazon' : r.source === 'ebay');
+        renderTableRows(filtered);
+      });
+    });
+
+    // Azioni Listing (placeholder)
+    document.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('btn-list')) {
+        const id = e.target.dataset.id;
+        try {
+          const rows = await getAllListings();
+          const row = rows.find(r => r.id === id);
+          if (!row) return alert('Prodotto non trovato');
+          const payload = { id: row.id, title: row.title, price: row.listingPrice, automation: row.automation };
+          const resp = await fetch('/api/ebay/list', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          const json = await resp.json();
+          if (json.success) {
+            row.source = 'ebay';
+            row.ebayUrl = `https://sandbox.ebay.com/itm/${json.listingId}`;
+            await saveListing(row);
+            renderTableRows(await getAllListings());
+          } else {
+            alert('Errore listing eBay: ' + (json.error || 'unknown'));
+          }
+        } catch (err) {
+          console.error('List error', err);
+          alert('Errore durante la creazione del listing eBay');
+        }
+      } else if (e.target.classList.contains('btn-edit')) {
+        alert('TODO: aprire modale di modifica per ' + e.target.dataset.id);
+      }
+    });
+
+    // Aggiorna prezzi da Amazon e ricalcola profitto
+    document.getElementById('refreshListings').addEventListener('click', async () => {
+      try {
+        const rows = await getAllListings();
+        const updated = [];
+        for (const row of rows) {
+          if (row.source === 'amazon' && row.id) {
+            const resp = await fetch(`/api/amazon/product/${encodeURIComponent(row.id)}?country=IT`, { cache: 'no-store' });
+            const json = await resp.json();
+            if (json.success && json.product) {
+              const p = json.product;
+              const newPrice = parseFloat(p.price_display) || row.listingPrice || 0;
+              row.previousPrice = row.listingPrice; // salva prezzo precedente
+              row.listingPrice = newPrice;
+              if (!row.resellPrice) row.resellPrice = newPrice;
+              // ricalcolo profitto
+              const ebayFeePct = Number(row.automation?.ebayFeePct ?? 5);
+              const ebayFixedFee = Number(row.automation?.ebayFixedFee ?? 0.35);
+              const sponsorPct = Number(row.automation?.sponsorPct ?? row.sponsorPct ?? 0);
+              const fee = row.listingPrice * (ebayFeePct/100) + ebayFixedFee + row.listingPrice * (sponsorPct/100);
+              const profit = (row.resellPrice || row.listingPrice) - fee;
+              row.profit = isFinite(profit) ? profit.toFixed(2) : '-';
+              await saveListing(row);
+              updated.push(row);
+            }
+          }
+        }
+        const finalRows = await getAllListings();
+        renderTableRows(finalRows);
+      } catch (err) {
+        console.error('Refresh error', err);
+        alert('Errore durante l\'aggiornamento dei prezzi');
+      }
+    });
+  </script>
+</body>
+</html>

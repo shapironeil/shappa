@@ -1,0 +1,53 @@
+{
+  "asin": "B0BTZ9N5G8",
+  "title": "Bristot Caffè Espresso Macinato 1kg - Caffè Per Moka Con Miscela Di Origini Dall'Africa, Dal Brasile E Dal Sud Est Asiatico. Caffè Espresso Con Carattere Forte E Gusto Deciso.",
+  "brand": "Visita lo Store di Bristot",
+  "price": "19,99€",
+  "originalPrice": "19,99€",
+  "rating": "4,3 su 5 stelle",
+  "reviewsCount": "283 voti",
+  "image": "https://m.media-amazon.com/images/I/61nflRIqzML.jpg",
+  "images": [
+    "https://m.media-amazon.com/images/I/51R9PRpZPcL.jpg",
+    "https://m.media-amazon.com/images/I/41bBKOd1MrL.jpg",
+    "https://m.media-amazon.com/images/I/41K7Oe9Gj3L.jpg",
+    "https://m.media-amazon.com/images/I/31nzENkGrOL.jpg",
+    "https://m.media-amazon.com/images/I/51nWNX5RwVL.jpg",
+    "https://m.media-amazon.com/images/I/51F5zVth+IL.jpg",
+    "https://m.media-amazon.com/images/I/415r8GiHijL.jpg",
+    "https://m.media-amazon.com/images/I/61nflRIqzML.jpg",
+    "https://images-eu.ssl-images-amazon.com/images/I/61nflRIqzML.jpg",
+    "https://images-eu.ssl-images-amazon.com/images/I/51WTNK7vZbL.jpg"
+  ],
+  "features": [
+    "DESCRIZIONE: il caffè Bristot Espresso, grazie anche alla tostatura media, offre un'esperienza gustativa decisa con un forte carattere. Risultato eccellente del nostro laboratorio di Belluno.",
+    "PROFILO SENSORIALE: il caffè Espresso Bristot ha un'intensità pari a 10/10 e le note che lo caratterizzano sono: cacao, spezie, cereali. Il metodo di estrazione che suggeriamo per ottenere il meglio da questo caffè è: macchina espresso ad uso domestico.",
+    "ETICA DEL LAVORO: \"Imparammo che la vita e la prosperità richiedono rispetto. E questa conoscenza diventò parte di noi ed è presente in tutto ciò che facciamo.\" Questo è ciò che recita il nostro manifesto ed è quello che ci impegniamo a fare ogni giorno. Cerchiamo e ci affidiamo solamente a fornitori che hanno rispetto del lavoro altrui.",
+    "PASSIONE E TERRITORIO: sono 2 elementi distintivi del nostro caffè. L' aria incontaminata delle Dolomiti, infatti, non va ad intaccare l'aroma, lasciandogli un gusto più vero e deciso, lo stesso che portiamo nelle vostre tazzine, con passione, da oltre cent'anni.",
+    "VIAGGIO VERSO L'ECCELLENZA: la nostra mission prevede la piena soddisfazione del cliente, per questo il nostro viaggio in questo percorso non prevede una meta finale, ma è un inseguimento continuo all'innovazione. Per portare un caffè che sia perfettamente in linea con il gusto che ricercano le persone.",
+    "STORIA Nel 1918, Domenico Bristot, un giovane bellunese con una grande sete di conoscenza, si recò a Vienna, dove rimase affascinato dall’atmosfera dei caffè viennesi. Scambi animati di nuove idee si svolgevano nell’aroma stuzzicante del caffè. Completamente incantato da ciò che stava imparando a Vienna, Domenico Bristot ebbe una visione. Tornò a Belluno, alle amate montagne, dove la sua determinazione, l’abilità e il coraggio di sognare si aggiunsero a quella visione, trasformandosi in realtà: nel 1919 nasce la Torrefazione Bristot. ORIGINE CONTROLLATA Ogni fase della nostra produzione di caffè è rigorosamente testata a partire dai chicchi nel loro paese di origine fino ai controlli settimanali delle nostre miscele da parte dei nostri esperti."
+  ],
+  "techDetails": {
+    "Dimensioni del collo": "‎20,9 x 17,2 x 12,4 cm; 1,14 kg",
+    "Unità": "‎1000.0 Grammi",
+    "Contatto produttore": "‎Via Tiziano Vecellio, 73 32100 Belluno (BL)",
+    "Marca": "‎Bristot",
+    "Forma dell’articolo": "‎Macinato",
+    "Produttore": "‎procaffè S.p.A.",
+    "Peso articolo": "‎1,14 Kilograms",
+    "Paese di origine": "‎Brasile",
+    "ASIN": "B0BTZ9N5G8",
+    "Media recensioni": "4,3             4,3 su 5 stelle          \n\n                          283 voti     \n                    \n                    var dpAcrHasRegisteredArcLinkClickAction;\n                    P.when('A', 'ready').execute(function(A) {\n                        if (dpAcrHasRegisteredArcLinkClickAction !== true) {\n                            dpAcrHasRegisteredArcLinkClickAction = true;\n                            A.declarative(\n                                'acrLink-click-metrics', 'click',\n                                { \"allowLinkDefault\": true },\n                                function (event) {\n                                    if (window.ue) {\n                                        ue.count(\"acrLinkClickCount\", (ue.count(\"acrLinkClickCount\") || 0) + 1);\n                                    }\n                                }\n                            );\n                        }\n                    });\n                \n                 \n            P.when('A', 'cf').execute(function(A) {\n                A.declarative('acrStarsLink-click-metrics', 'click', { \"allowLinkDefault\" : true },  function(event){\n                    if(window.ue) {\n                        ue.count(\"acrStarsLinkWithPopoverClickCount\", (ue.count(\"acrStarsLinkWithPopoverClickCount\") || 0) + 1);\n                    }\n                });\n            });\n        \n\n           \n       4,3 su 5 stelle",
+    "Posizione nella classifica Bestseller di Amazon": "n. 1.135 in Alimentari e cura della casa (Visualizza i Top 100 nella categoria Alimentari e cura della casa)  n. 17 in Caffè macinati",
+    "Disponibile su Amazon.it a partire dal": "6 febbraio 2023"
+  },
+  "categories": [
+    "Alimentari e cura della casa",
+    "Caffè, tè e bevande",
+    "Caffè",
+    "Caffè macinati"
+  ],
+  "url": "https://www.amazon.it/dp/B0BTZ9N5G8?th=1",
+  "savedAt": "2025-10-13T15:05:32.156Z",
+  "id": "B0BTZ9N5G8"
+}

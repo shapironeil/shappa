@@ -1,0 +1,52 @@
+{
+  "asin": "B0BWSFGQ49",
+  "title": "De'Longhi Perfetto Magnifica S ECAM11.112.B, Macchina da caffè Automatica per Espresso e Cappuccino, Chicchi macinati al momento, 4 Bevande One Touch, Montalatte classico, Spegnimento Automatico",
+  "brand": "Visita lo Store di De'Longhi",
+  "price": "299,99€",
+  "originalPrice": "299,99€",
+  "rating": "4,1 su 5 stelle",
+  "reviewsCount": "55.421 voti",
+  "image": "https://m.media-amazon.com/images/I/71Z3nll3v4L._AC_SX1000_.jpg",
+  "images": [
+    "https://images-na.ssl-images-amazon.com/images/G/01/x-locale/common/grey-pixel.gif",
+    "https://m.media-amazon.com/images/I/71Z3nll3v4L._AC_SX1000_.jpg",
+    "https://m.media-amazon.com/images/G/29/HomeCustomProduct/imageBlock-360-thumbnail-icon-small._CB610488641_FMpng_RI_.png",
+    "https://m.media-amazon.com/images/I/41B9Fy44njL._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/41eRlpQoOaL._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/51a76Exz4aL._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/5199AKuaRML._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/41IP-WRFpYL._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/41tsCMwSM0L._AC_US100_.jpg",
+    "https://m.media-amazon.com/images/I/51YzFJdHGXL.SS125_PKplay-button-mb-image-grid-small_.jpg"
+  ],
+  "features": [
+    "CAFFÈ PERSONALIZZATO: è possibile scegliere tra un caffè corto o lungo, o un aroma forte o leggero; Magnifica S può essere utilizzata con i chicchi o con la polvere di caffè. L’espresso come vuoi tu, dal chicco alla tazzina, con la sola pressione di un tasto",
+    "CAPPUCCINO SYSTEM: con il montalatte puoi miscelare manualmente vapore e latte per creare la densità ottimale della schiuma per la tua bevanda al latte preferita",
+    "MACINA CAFFÈ: macina i chicchi di caffè al momento per darti il piacere di un caffè come al bar; macinacaffè regolabile fino a 13 livelli di macinatura",
+    "SEMPLICE: la manopola permette di selezionare l'intensità dell'aroma, con i tasti scegli uno o due caffè, lungo o corto e attivi il cappuccinatore. Serbatoio removibile frontalmente con capacità da 1,8L con indicatore livello dell'acqua, capacità contenitore caffè in grani 250gr con coperchio salva aroma",
+    "FACILE PULIZIA: la griglia della vaschetta raccogli gocce può essere lavata in lavastoviglie per offrire una pulizia ottimale"
+  ],
+  "techDetails": {
+    "Marchio": "‎De'Longhi",
+    "Modello": "‎ECAM11.112.B",
+    "Colore": "‎Nera",
+    "Dimensioni prodotto": "‎43 x 23 x 34 cm; 9 kg",
+    "Voltaggio": "‎240",
+    "Spegnimento automatico": "‎Sì",
+    "Caratteristiche speciali": "‎Sistema Latte Manuale, Macinacaffè integrato, Spegnimento Automatico",
+    "Peso articolo": "‎9 Kilograms",
+    "ASIN": "B0BWSFGQ49",
+    "Media recensioni": "4,1             4,1 su 5 stelle          \n\n                          55.421 voti     \n                    \n                    var dpAcrHasRegisteredArcLinkClickAction;\n                    P.when('A', 'ready').execute(function(A) {\n                        if (dpAcrHasRegisteredArcLinkClickAction !== true) {\n                            dpAcrHasRegisteredArcLinkClickAction = true;\n                            A.declarative(\n                                'acrLink-click-metrics', 'click',\n                                { \"allowLinkDefault\": true },\n                                function (event) {\n                                    if (window.ue) {\n                                        ue.count(\"acrLinkClickCount\", (ue.count(\"acrLinkClickCount\") || 0) + 1);\n                                    }\n                                }\n                            );\n                        }\n                    });\n                \n                 \n            P.when('A', 'cf').execute(function(A) {\n                A.declarative('acrStarsLink-click-metrics', 'click', { \"allowLinkDefault\" : true },  function(event){\n                    if(window.ue) {\n                        ue.count(\"acrStarsLinkWithPopoverClickCount\", (ue.count(\"acrStarsLinkWithPopoverClickCount\") || 0) + 1);\n                    }\n                });\n            });\n        \n\n           \n       4,1 su 5 stelle",
+    "Posizione nella classifica Bestseller di Amazon": "n. 1.060 in Casa e cucina (Visualizza i Top 100 nella categoria Casa e cucina)  n. 2 in Macchine da caffè superautomatiche dal chicco alla tazza",
+    "Disponibile su Amazon.it a partire dal": "1 gennaio 2022"
+  },
+  "categories": [
+    "Casa e cucina",
+    "Tè e caffè",
+    "Macchine da caffè",
+    "Macchine da caffè superautomatiche"
+  ],
+  "url": "https://www.amazon.it/dp/B0BWSFGQ49?th=1",
+  "savedAt": "2025-10-13T14:27:07.172Z",
+  "id": "B0BWSFGQ49"
+}

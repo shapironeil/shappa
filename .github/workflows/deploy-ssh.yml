@@ -1,0 +1,33 @@
+name: Deploy to Server via SSH
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Sync files to server
+        run: |
+          rsync -av --delete --exclude='.git' --exclude='node_modules' ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
+        env:
+          RSYNC_RSH: 'ssh -o StrictHostKeyChecking=no'
+
+      - name: Remote post-deploy (optional)
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cd ${{ secrets.DEPLOY_PATH }} && if [ -f package.json ]; then npm ci --production || true; fi && if [ -f ./restart.sh ]; then ./restart.sh; fi"
+
+# Secrets required:
+# SSH_PRIVATE_KEY - private key for the deploy user (no passphrase or use ssh-agent)
+# DEPLOY_HOST - e.g. 1.2.3.4 or myserver.example.com
+# DEPLOY_USER - user on remote server
+# DEPLOY_PATH - target folder on remote server

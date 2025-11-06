@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            margin: 0 0 var(--venus-space-xs) 0;
+            font-weight: var(--venus-font-weight-normal);
+        }
+
+        .venus-page-subtitle {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            min-width: 300px;
+        }
+
+        .venus-search-icon {
+            color: var(--venus-text-muted);
+            font-size: var(--venus-font-size-sm);
+        }
+
+        .venus-search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-search-input::placeholder {
+            color: var(--venus-text-muted);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: var(--venus-space-2xl);
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Venus Widgets Grid */
+        .venus-widgets-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: auto auto auto;
+            gap: var(--venus-space-lg);
+            width: 100%;
+        }
+
+        .venus-widget {
+            background: #ffffff;
+            border: 1px dashed #e1e5e9;
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            transition: all var(--venus-transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .venus-widget:hover {
+            border-color: var(--venus-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .venus-widget-small {
+            grid-column: span 1;
+            min-height: 140px;
+        }
+
+        .venus-widget-large {
+            grid-column: span 2;
+            grid-row: span 2;
+            min-height: 300px;
+        }
+
+        .venus-widget-medium {
+            grid-column: span 1;
+            min-height: 200px;
+        }
+
+        .venus-widget-content {
+            text-align: center;
+            width: 100%;
+        }
+
+        .venus-widget-title {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-lg) 0;
+        }
+
+        .venus-widget-value {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            margin: 0;
+        }
+
+        .venus-widget-chart {
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-widget-placeholder {
+            padding: var(--venus-space-xl);
+            color: var(--venus-text-muted);
+            font-style: italic;
+        }
+
+        /* Venus Chart Cards */
+        .venus-charts-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--venus-space-xl);
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .venus-chart-card {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            box-shadow: var(--venus-shadow-sm);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-chart-card:hover {
+            box-shadow: var(--venus-shadow-md);
+            border-color: var(--venus-primary-light);
+        }
+
+        .venus-card-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-lg) 0;
+        }
+
+        .venus-chart-container {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-empty-state {
+            text-align: center;
+            padding: var(--venus-space-xl);
+        }
+
+        .venus-empty-icon {
+            font-size: var(--venus-font-size-4xl);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-empty-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-sm) 0;
+        }
+
+        .venus-empty-text {
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Venus Connections */
+        .venus-connections-status {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-lg);
+        }
+
+        .venus-connection-item {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-lg);
+            padding: var(--venus-space-lg);
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius);
+            border: 1px solid var(--venus-border);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-connection-item:hover {
+            border-color: var(--venus-primary-light);
+            background: var(--venus-bg-card);
+        }
+
+        .venus-connection-icon {
+            width: 50px;
+            height: 40px;
+            border-radius: var(--venus-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--venus-font-size-xs);
+            font-weight: var(--venus-font-weight-bold);
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-connection-details {
+            flex: 1;
+        }
+
+        .venus-connection-name {
+            font-size: var(--venus-font-size-base);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-xs) 0;
+        }
+
+        /* Venus Activity Section */
+        .venus-activity-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--venus-space-xl);
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .venus-activity-card, .venus-actions-card {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            box-shadow: var(--venus-shadow-sm);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-activity-card:hover, .venus-actions-card:hover {
+            box-shadow: var(--venus-shadow-md);
+            border-color: var(--venus-primary-light);
+        }
+
+        .venus-activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-lg);
+        }
+
+        .venus-activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--venus-space-lg);
+            padding: var(--venus-space-lg);
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius);
+            border: 1px solid var(--venus-border);
+            transition: all var(--venus-transition);
+        }
+
+        .venus-activity-item:hover {
+            border-color: var(--venus-primary-light);
+            background: var(--venus-bg-card);
+            transform: translateX(4px);
+        }
+
+        .venus-activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--venus-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--venus-font-size-sm);
+            flex-shrink: 0;
+        }
+
+        .venus-activity-icon.venus-success {
+            background: var(--venus-success-light);
+            color: var(--venus-success);
+        }
+
+        .venus-activity-icon.venus-info {
+            background: var(--venus-info-light);
+            color: var(--venus-info);
+        }
+
+        .venus-activity-icon.venus-warning {
+            background: var(--venus-warning-light);
+            color: var(--venus-warning);
+        }
+
+        .venus-activity-content {
+            flex: 1;
+        }
+
+        .venus-activity-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-xs) 0;
+        }
+
+        .venus-activity-subtitle {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-secondary);
+            display: block;
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-activity-time {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        /* Venus Actions Grid */
+        .venus-actions-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--venus-space-md);
+        }
+
+        .venus-action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-lg);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            color: var(--venus-text-primary);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            font-family: var(--venus-font-family);
+            text-align: left;
+        }
+
+        .venus-action-btn:hover {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border-color: var(--venus-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--venus-shadow-md);
+        }
+
+        .venus-action-icon {
+            font-size: var(--venus-font-size-lg);
+        }
+        
+
+
+        /* Venus Responsive */
+        @media (max-width: 768px) {
+            .venus-sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                transition: left var(--venus-transition);
+            }
+
+            .venus-sidebar.venus-open {
+                left: 0;
+            }
+
+            .venus-main-content {
+                width: 100%;
+            }
+
+            .venus-main-header {
+                padding: var(--venus-space-lg);
+            }
+
+            .venus-content-area {
+                padding: var(--venus-space-lg);
+            }
+
+            .venus-search-box {
+                min-width: 200px;
+            }
+
+            .venus-widgets-grid {
+                grid-template-columns: 1fr;
+                gap: var(--venus-space-md);
+            }
+
+            .venus-widget-small,
+            .venus-widget-medium,
+            .venus-widget-large {
+                grid-column: span 1;
+                grid-row: span 1;
+                min-height: 120px;
+            }
+
+            .venus-widget {
+                padding: var(--venus-space-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- Venus Dashboard Layout -->
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item venus-active">
+                    Dashboard
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item">
+                    Report
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            
+            <div class="venus-content-area">
+            <!-- Venus Widgets Grid -->
+            <div class="venus-widgets-grid">
+                <!-- Small Widgets Row -->
+                <div class="venus-widget venus-widget-small">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Small Widget #1</h3>
+                        <div class="venus-widget-value" id="totalProfits">€0.00</div>
+                    </div>
+                </div>
+                
+                <div class="venus-widget venus-widget-small">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Small Widget #2</h3>
+                        <div class="venus-widget-value" id="activeListings">0</div>
+                    </div>
+                </div>
+                
+                <div class="venus-widget venus-widget-small">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Small Widget #3</h3>
+                        <div class="venus-widget-value" id="totalSales">0</div>
+                    </div>
+                </div>
+                
+                <div class="venus-widget venus-widget-small">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Small Widget #4</h3>
+                        <div class="venus-widget-value" id="connectionsCount">0/2</div>
+                    </div>
+                </div>
+
+                <!-- Large Widget -->
+                <div class="venus-widget venus-widget-large">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Large Widget #1</h3>
+                        <div class="venus-widget-chart" id="salesChartContainer">
+                            <div class="venus-empty-state">
+                                <p>Nessun dato disponibile</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medium Widget -->
+                <div class="venus-widget venus-widget-medium">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Medium Widget #1</h3>
+                        <div class="venus-connections-status">
+                            <div class="venus-connection-item" id="amazonConnectionItem">
+                                <div class="venus-connection-icon amazon">AMZ</div>
+                                <div class="venus-connection-details">
+                                    <h4 class="venus-connection-name">Amazon</h4>
+                                    <span class="venus-badge venus-badge-danger">Non collegato</span>
+                                </div>
+                            </div>
+                            <div class="venus-connection-item" id="ebayConnectionItem">
+                                <div class="venus-connection-icon ebay">EBAY</div>
+                                <div class="venus-connection-details">
+                                    <h4 class="venus-connection-name">eBay</h4>
+                                    <span class="venus-badge venus-badge-danger">Non collegato</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medium Widgets Row 2 -->
+                <div class="venus-widget venus-widget-medium">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Medium Widget #2</h3>
+                        <div class="venus-widget-placeholder">
+                            <p>Content for Medium Widget #2</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="venus-widget venus-widget-medium">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Medium Widget #3</h3>
+                        <div class="venus-widget-placeholder">
+                            <p>Content for Medium Widget #3</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="venus-widget venus-widget-medium">
+                    <div class="venus-widget-content">
+                        <h3 class="venus-widget-title">Medium Widget #4</h3>
+                        <div class="venus-widget-placeholder">
+                            <p>Content for Medium Widget #4</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            </div>
+        </main>
+    </div>
+    
+    <!-- Load Auth System -->
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Dashboard Logic -->
+    <script>
+        console.log('🔄 Loading dashboard...');
+
+        // Initialize Auth System
+        let authSystem;
+        try {
+            authSystem = new ShappaAuth();
+            console.log('✅ Auth system loaded');
+        } catch (error) {
+            console.error('❌ Failed to load auth system:', error);
+            alert('Errore: impossibile inizializzare il sistema di autenticazione');
+        }
+
+        // Allow direct access without login check for testing
+        // if (!authSystem.isLoggedIn()) {
+        //     console.log('⚠️ User not logged in, redirecting...');
+        //     window.location.href = '../../index.html#login';
+        // }
+
+        // Get current user
+        const currentUser = authSystem.getCurrentUser();
+        console.log('👤 Current user:', currentUser);
+
+        // Update UI with user info
+        if (currentUser) {
+            // Update username display
+            const userNameElement = document.getElementById('userName');
+            const userAvatarElement = document.getElementById('userAvatar');
+            
+            if (userNameElement) {
+                userNameElement.textContent = currentUser.username;
+            }
+            
+            if (userAvatarElement) {
+                // Set avatar with first letter of username
+                userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
+            }
+
+            // Update stats with real data
+            updateDashboardStats(currentUser);
+            updateConnectionStatus(currentUser);
+        }
+
+        // Logout button functionality
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                console.log('🚪 Logout clicked');
+                
+                if (confirm('Sei sicuro di voler uscire e tornare alla home page?')) {
+                    console.log('✅ Logout confirmed');
+                    
+                    // Perform logout
+                    const result = authSystem.logout();
+                    
+                    if (result.success) {
+                        console.log('✅ Logout successful');
+                        
+                        // Show feedback
+                        this.textContent = '✅ Logout effettuato';
+                        this.style.background = '#10b981';
+                        
+                        // Redirect to home page after brief delay
+                        setTimeout(() => {
+                            window.location.href = '../../index.html';
+                        }, 500);
+                    } else {
+                        console.error('❌ Logout failed');
+                        alert('Errore durante il logout');
+                    }
+                }
+            });
+        }
+
+        // Update dashboard stats with user data
+        function updateDashboardStats(user) {
+            const profile = user.profile || {};
+            
+            // Total Profits
+            const totalProfitsElement = document.getElementById('totalProfits');
+            if (totalProfitsElement) {
+                const profits = profile.totalProfits || 0;
+                totalProfitsElement.textContent = `€${profits.toFixed(2)}`;
+            }
+            
+            const profitsChangeElement = document.getElementById('profitsChange');
+            if (profitsChangeElement) {
+                if (profile.totalProfits > 0) {
+                    profitsChangeElement.textContent = `+${((profile.totalProfits / 100) * 15).toFixed(2)}% questo mese`;
+                    profitsChangeElement.style.color = '#10b981';
+                } else {
+                    profitsChangeElement.textContent = 'Collega i tuoi account per vedere i dati';
+                }
+            }
+
+            // Active Listings
+            const activeListingsElement = document.getElementById('activeListings');
+            if (activeListingsElement) {
+                activeListingsElement.textContent = profile.totalListings || 0;
+            }
+            
+            const listingsChangeElement = document.getElementById('listingsChange');
+            if (listingsChangeElement) {
+                if (profile.totalListings > 0) {
+                    listingsChangeElement.textContent = `${profile.activeListings?.length || 0} attivi`;
+                } else {
+                    listingsChangeElement.textContent = 'Nessun listing attivo';
+                }
+            }
+
+            // Total Sales
+            const totalSalesElement = document.getElementById('totalSales');
+            if (totalSalesElement) {
+                totalSalesElement.textContent = profile.totalSales || 0;
+            }
+            
+            const salesChangeElement = document.getElementById('salesChange');
+            if (salesChangeElement) {
+                if (profile.totalSales > 0) {
+                    salesChangeElement.textContent = `Media: €${(profile.totalProfits / (profile.totalSales || 1)).toFixed(2)} per vendita`;
+                } else {
+                    salesChangeElement.textContent = 'Nessuna vendita registrata';
+                }
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(user) {
+            const profile = user.profile || {};
+            let connectedCount = 0;
+            
+            // Amazon connection
+            const amazonItem = document.getElementById('amazonConnectionItem');
+            if (amazonItem && profile.amazonConnected) {
+                const statusSpan = amazonItem.querySelector('.status');
+                if (statusSpan) {
+                    statusSpan.textContent = 'Collegato';
+                    statusSpan.classList.remove('disconnected');
+                    statusSpan.classList.add('connected');
+                    statusSpan.style.color = '#10b981';
+                }
+                connectedCount++;
+            }
+            
+            // eBay connection
+            const ebayItem = document.getElementById('ebayConnectionItem');
+            if (ebayItem && profile.ebayConnected) {
+                const statusSpan = ebayItem.querySelector('.status');
+                if (statusSpan) {
+                    statusSpan.textContent = 'Collegato';
+                    statusSpan.classList.remove('disconnected');
+                    statusSpan.classList.add('connected');
+                    statusSpan.style.color = '#10b981';
+                }
+                connectedCount++;
+            }
+            
+            // Update connections count
+            const connectionsCountElement = document.getElementById('connectionsCount');
+            if (connectionsCountElement) {
+                connectionsCountElement.textContent = `${connectedCount}/2`;
+            }
+            
+            const connectionsStatusElement = document.getElementById('connectionsStatus');
+            if (connectionsStatusElement) {
+                if (connectedCount === 2) {
+                    connectionsStatusElement.textContent = 'Tutti i servizi collegati ✅';
+                    connectionsStatusElement.style.color = '#10b981';
+                } else if (connectedCount === 1) {
+                    connectionsStatusElement.textContent = 'Collega il secondo servizio';
+                    connectionsStatusElement.style.color = '#f59e0b';
+                } else {
+                    connectionsStatusElement.textContent = 'Collega Amazon ed eBay';
+                }
+            }
+        }
+
+        console.log('✅ Dashboard ready');
+    </script>
+    
+    <!-- Navbar Universal - Click Handler -->
+    <script src="../utils/navbar-universal.js"></script>
+</body>
+</html>

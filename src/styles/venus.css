@@ -1,0 +1,625 @@
+/* ====================================================
+   🎨 VENUS DASHBOARD DESIGN SYSTEM - SHAPPA
+   Basato su Venus Dashboard Builder 2021 (Figma)
+   ==================================================== */
+
+:root {
+    /* === COLORI VENUS === */
+    --venus-primary: #5b6ee1;
+    --venus-primary-light: #7b8ce8;
+    --venus-primary-dark: #4c5dd4;
+    --venus-secondary: #7f8ae5;
+    --venus-accent: #f7b731;
+    --venus-success: #20bf6b;
+    --venus-danger: #eb3b5a;
+    --venus-warning: #fed330;
+    --venus-info: #3867d6;
+    
+    /* Gradients Venus */
+    --venus-gradient-primary: linear-gradient(135deg, #5b6ee1 0%, #7f8ae5 100%);
+    --venus-gradient-secondary: linear-gradient(135deg, #7f8ae5 0%, #5b6ee1 100%);
+    --venus-gradient-accent: linear-gradient(135deg, #f7b731 0%, #fed330 100%);
+    --venus-gradient-success: linear-gradient(135deg, #20bf6b 0%, #26d0ce 100%);
+    --venus-gradient-danger: linear-gradient(135deg, #eb3b5a 0%, #fa8231 100%);
+    
+    /* Text Colors Venus */
+    --venus-text-primary: #222b45;
+    --venus-text-secondary: #6e7ca0;
+    --venus-text-muted: #a0aec0;
+    --venus-text-white: #ffffff;
+    --venus-text-dark: #1a202c;
+    
+    /* Background Venus */
+    --venus-bg-main: #f7f9fc;
+    --venus-bg-card: #ffffff;
+    --venus-bg-sidebar: #222b45;
+    --venus-bg-hover: #f1f5f9;
+    --venus-bg-overlay: rgba(91, 110, 225, 0.08);
+    
+    /* Border & Shadows Venus */
+    --venus-border: #e6eaf3;
+    --venus-border-light: #f1f5f9;
+    --venus-radius-sm: 8px;
+    --venus-radius: 16px;
+    --venus-radius-lg: 24px;
+    --venus-shadow-sm: 0 1px 2px 0 rgba(91, 110, 225, 0.05);
+    --venus-shadow: 0 1px 3px 0 rgba(91, 110, 225, 0.1), 0 1px 2px 0 rgba(91, 110, 225, 0.06);
+    --venus-shadow-md: 0 4px 6px -1px rgba(91, 110, 225, 0.1), 0 2px 4px -1px rgba(91, 110, 225, 0.06);
+    --venus-shadow-lg: 0 10px 15px -3px rgba(91, 110, 225, 0.1), 0 4px 6px -2px rgba(91, 110, 225, 0.05);
+    --venus-shadow-xl: 0 20px 25px -5px rgba(91, 110, 225, 0.1), 0 10px 10px -5px rgba(91, 110, 225, 0.04);
+    
+    /* Typography Venus */
+    --venus-font-family: 'Inter', 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --venus-font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+    --venus-font-size-xs: 0.75rem;
+    --venus-font-size-sm: 0.875rem;
+    --venus-font-size-base: 1rem;
+    --venus-font-size-lg: 1.125rem;
+    --venus-font-size-xl: 1.25rem;
+    --venus-font-size-2xl: 1.5rem;
+    --venus-font-size-3xl: 2rem;
+    --venus-font-size-4xl: 2.5rem;
+    --venus-font-weight-light: 300;
+    --venus-font-weight-normal: 400;
+    --venus-font-weight-medium: 500;
+    --venus-font-weight-semibold: 600;
+    --venus-font-weight-bold: 700;
+    
+    /* Spacing Venus */
+    --venus-space-xs: 0.5rem;
+    --venus-space-sm: 0.75rem;
+    --venus-space-md: 1rem;
+    --venus-space-lg: 1.5rem;
+    --venus-space-xl: 2rem;
+    --venus-space-2xl: 3rem;
+    --venus-space-3xl: 4rem;
+    
+    /* Transitions Venus */
+    --venus-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --venus-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --venus-transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Z-Index Venus */
+    --venus-z-dropdown: 1000;
+    --venus-z-sticky: 1020;
+    --venus-z-modal: 1050;
+    --venus-z-tooltip: 1070;
+}
+
+/* === RESET E BASE VENUS === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--venus-font-family);
+    font-size: var(--venus-font-size-base);
+    font-weight: var(--venus-font-weight-normal);
+    line-height: 1.6;
+    color: var(--venus-text-primary);
+    background-color: var(--venus-bg-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* === LAYOUT VENUS === */
+.venus-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--venus-space-lg);
+}
+
+.venus-grid {
+    display: grid;
+    gap: var(--venus-space-lg);
+}
+
+.venus-flex {
+    display: flex;
+    align-items: center;
+    gap: var(--venus-space-md);
+}
+
+.venus-flex-col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--venus-space-md);
+}
+
+/* === SIDEBAR VENUS === */
+.venus-sidebar {
+    width: 280px;
+    min-height: 100vh;
+    background: var(--venus-bg-sidebar);
+    padding: var(--venus-space-xl) var(--venus-space-lg);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--venus-z-sticky);
+    box-shadow: var(--venus-shadow-lg);
+}
+
+.venus-sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--venus-space-sm);
+    margin-bottom: var(--venus-space-2xl);
+    color: var(--venus-text-white);
+    font-size: var(--venus-font-size-xl);
+    font-weight: var(--venus-font-weight-bold);
+}
+
+.venus-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--venus-space-xs);
+}
+
+.venus-sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: var(--venus-space-sm);
+    padding: var(--venus-space-sm) var(--venus-space-md);
+    border-radius: var(--venus-radius-sm);
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: var(--venus-font-weight-medium);
+    transition: all var(--venus-transition);
+}
+
+.venus-sidebar-item:hover,
+.venus-sidebar-item.active {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--venus-text-white);
+    transform: translateX(4px);
+}
+
+.venus-sidebar-item.active {
+    background: var(--venus-gradient-primary);
+    box-shadow: var(--venus-shadow-md);
+}
+
+/* === MAIN CONTENT VENUS === */
+.venus-main {
+    margin-left: 280px;
+    min-height: 100vh;
+    padding: var(--venus-space-xl);
+}
+
+.venus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--venus-space-2xl);
+    padding-bottom: var(--venus-space-lg);
+    border-bottom: 1px solid var(--venus-border);
+}
+
+.venus-header-title {
+    font-size: var(--venus-font-size-3xl);
+    font-weight: var(--venus-font-weight-bold);
+    color: var(--venus-text-primary);
+}
+
+.venus-header-actions {
+    display: flex;
+    gap: var(--venus-space-md);
+}
+
+/* === CARDS VENUS === */
+.venus-card {
+    background: var(--venus-bg-card);
+    border-radius: var(--venus-radius);
+    padding: var(--venus-space-xl);
+    box-shadow: var(--venus-shadow);
+    border: 1px solid var(--venus-border);
+    transition: all var(--venus-transition);
+}
+
+.venus-card:hover {
+    box-shadow: var(--venus-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.venus-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--venus-space-lg);
+}
+
+.venus-card-title {
+    font-size: var(--venus-font-size-lg);
+    font-weight: var(--venus-font-weight-semibold);
+    color: var(--venus-text-primary);
+}
+
+.venus-card-body {
+    color: var(--venus-text-secondary);
+    line-height: 1.6;
+}
+
+/* === STAT CARDS VENUS === */
+.venus-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--venus-space-xl);
+    margin-bottom: var(--venus-space-2xl);
+}
+
+.venus-stat-card {
+    background: var(--venus-bg-card);
+    border-radius: var(--venus-radius);
+    padding: var(--venus-space-xl);
+    box-shadow: var(--venus-shadow);
+    border: 1px solid var(--venus-border);
+    display: flex;
+    align-items: center;
+    gap: var(--venus-space-lg);
+    transition: all var(--venus-transition);
+}
+
+.venus-stat-card:hover {
+    box-shadow: var(--venus-shadow-lg);
+    transform: translateY(-2px);
+}
+
+.venus-stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--venus-font-size-2xl);
+    color: white;
+    box-shadow: var(--venus-shadow-md);
+}
+
+.venus-stat-content {
+    flex: 1;
+}
+
+.venus-stat-label {
+    font-size: var(--venus-font-size-sm);
+    color: var(--venus-text-secondary);
+    font-weight: var(--venus-font-weight-medium);
+    margin-bottom: 4px;
+}
+
+.venus-stat-value {
+    font-size: var(--venus-font-size-2xl);
+    font-weight: var(--venus-font-weight-bold);
+    color: var(--venus-text-primary);
+}
+
+.venus-stat-change {
+    font-size: var(--venus-font-size-xs);
+    font-weight: var(--venus-font-weight-medium);
+    margin-left: var(--venus-space-xs);
+}
+
+.venus-stat-change.positive {
+    color: var(--venus-success);
+}
+
+.venus-stat-change.negative {
+    color: var(--venus-danger);
+}
+
+/* === BUTTONS VENUS === */
+.venus-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--venus-space-xs);
+    padding: var(--venus-space-sm) var(--venus-space-lg);
+    border: none;
+    border-radius: var(--venus-radius-sm);
+    font-family: var(--venus-font-family);
+    font-size: var(--venus-font-size-base);
+    font-weight: var(--venus-font-weight-medium);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--venus-transition);
+    box-shadow: var(--venus-shadow-sm);
+}
+
+.venus-btn:focus {
+    outline: none;
+    box-shadow: var(--venus-shadow-md);
+}
+
+.venus-btn-primary {
+    background: var(--venus-gradient-primary);
+    color: var(--venus-text-white);
+}
+
+.venus-btn-primary:hover {
+    background: var(--venus-gradient-secondary);
+    transform: translateY(-1px);
+    box-shadow: var(--venus-shadow-md);
+}
+
+.venus-btn-secondary {
+    background: var(--venus-bg-card);
+    color: var(--venus-text-primary);
+    border: 1px solid var(--venus-border);
+}
+
+.venus-btn-secondary:hover {
+    background: var(--venus-bg-hover);
+    transform: translateY(-1px);
+}
+
+.venus-btn-success {
+    background: var(--venus-gradient-success);
+    color: var(--venus-text-white);
+}
+
+.venus-btn-danger {
+    background: var(--venus-gradient-danger);
+    color: var(--venus-text-white);
+}
+
+/* === FORMS VENUS === */
+.venus-form-group {
+    margin-bottom: var(--venus-space-lg);
+}
+
+.venus-label {
+    display: block;
+    margin-bottom: var(--venus-space-xs);
+    font-size: var(--venus-font-size-sm);
+    font-weight: var(--venus-font-weight-medium);
+    color: var(--venus-text-primary);
+}
+
+.venus-input,
+.venus-textarea,
+.venus-select {
+    width: 100%;
+    padding: var(--venus-space-sm) var(--venus-space-md);
+    border: 1px solid var(--venus-border);
+    border-radius: var(--venus-radius-sm);
+    font-family: var(--venus-font-family);
+    font-size: var(--venus-font-size-base);
+    color: var(--venus-text-primary);
+    background: var(--venus-bg-card);
+    transition: all var(--venus-transition);
+}
+
+.venus-input:focus,
+.venus-textarea:focus,
+.venus-select:focus {
+    outline: none;
+    border-color: var(--venus-primary);
+    box-shadow: 0 0 0 3px rgba(91, 110, 225, 0.1);
+}
+
+.venus-input::placeholder,
+.venus-textarea::placeholder {
+    color: var(--venus-text-muted);
+}
+
+/* === TABLES VENUS === */
+.venus-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--venus-bg-card);
+    border-radius: var(--venus-radius);
+    overflow: hidden;
+    box-shadow: var(--venus-shadow);
+}
+
+.venus-table th {
+    background: var(--venus-bg-hover);
+    padding: var(--venus-space-md) var(--venus-space-lg);
+    text-align: left;
+    font-weight: var(--venus-font-weight-semibold);
+    color: var(--venus-text-primary);
+    border-bottom: 1px solid var(--venus-border);
+}
+
+.venus-table td {
+    padding: var(--venus-space-md) var(--venus-space-lg);
+    border-bottom: 1px solid var(--venus-border-light);
+    color: var(--venus-text-secondary);
+}
+
+.venus-table tr:last-child td {
+    border-bottom: none;
+}
+
+.venus-table tr:hover {
+    background: var(--venus-bg-hover);
+}
+
+/* === BADGES VENUS === */
+.venus-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px var(--venus-space-sm);
+    border-radius: var(--venus-radius-lg);
+    font-size: var(--venus-font-size-xs);
+    font-weight: var(--venus-font-weight-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.venus-badge-success {
+    background: rgba(32, 191, 107, 0.1);
+    color: var(--venus-success);
+}
+
+.venus-badge-danger {
+    background: rgba(235, 59, 90, 0.1);
+    color: var(--venus-danger);
+}
+
+.venus-badge-warning {
+    background: rgba(254, 211, 48, 0.1);
+    color: var(--venus-warning);
+}
+
+.venus-badge-info {
+    background: rgba(56, 103, 214, 0.1);
+    color: var(--venus-info);
+}
+
+.venus-badge-primary {
+    background: rgba(91, 110, 225, 0.1);
+    color: var(--venus-primary);
+}
+
+/* === AVATAR VENUS === */
+.venus-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--venus-font-weight-semibold);
+    color: var(--venus-text-white);
+    background: var(--venus-gradient-primary);
+    box-shadow: var(--venus-shadow-sm);
+}
+
+.venus-avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: var(--venus-font-size-sm);
+}
+
+.venus-avatar-lg {
+    width: 56px;
+    height: 56px;
+    font-size: var(--venus-font-size-lg);
+}
+
+/* === RESPONSIVE VENUS === */
+@media (max-width: 768px) {
+    .venus-sidebar {
+        transform: translateX(-100%);
+        transition: transform var(--venus-transition);
+    }
+    
+    .venus-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .venus-main {
+        margin-left: 0;
+        padding: var(--venus-space-lg);
+    }
+    
+    .venus-stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--venus-space-lg);
+    }
+    
+    .venus-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--venus-space-md);
+    }
+    
+    .venus-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+/* === UTILITIES VENUS === */
+.venus-text-primary { color: var(--venus-text-primary); }
+.venus-text-secondary { color: var(--venus-text-secondary); }
+.venus-text-muted { color: var(--venus-text-muted); }
+.venus-text-white { color: var(--venus-text-white); }
+
+.venus-bg-primary { background: var(--venus-primary); }
+.venus-bg-secondary { background: var(--venus-secondary); }
+.venus-bg-success { background: var(--venus-success); }
+.venus-bg-danger { background: var(--venus-danger); }
+.venus-bg-warning { background: var(--venus-warning); }
+.venus-bg-info { background: var(--venus-info); }
+
+.venus-gradient-primary { background: var(--venus-gradient-primary); }
+.venus-gradient-secondary { background: var(--venus-gradient-secondary); }
+.venus-gradient-accent { background: var(--venus-gradient-accent); }
+.venus-gradient-success { background: var(--venus-gradient-success); }
+.venus-gradient-danger { background: var(--venus-gradient-danger); }
+
+.venus-rounded { border-radius: var(--venus-radius); }
+.venus-rounded-sm { border-radius: var(--venus-radius-sm); }
+.venus-rounded-lg { border-radius: var(--venus-radius-lg); }
+
+.venus-shadow { box-shadow: var(--venus-shadow); }
+.venus-shadow-md { box-shadow: var(--venus-shadow-md); }
+.venus-shadow-lg { box-shadow: var(--venus-shadow-lg); }
+
+.venus-mb-0 { margin-bottom: 0; }
+.venus-mb-xs { margin-bottom: var(--venus-space-xs); }
+.venus-mb-sm { margin-bottom: var(--venus-space-sm); }
+.venus-mb-md { margin-bottom: var(--venus-space-md); }
+.venus-mb-lg { margin-bottom: var(--venus-space-lg); }
+.venus-mb-xl { margin-bottom: var(--venus-space-xl); }
+.venus-mb-2xl { margin-bottom: var(--venus-space-2xl); }
+
+.venus-mt-0 { margin-top: 0; }
+.venus-mt-xs { margin-top: var(--venus-space-xs); }
+.venus-mt-sm { margin-top: var(--venus-space-sm); }
+.venus-mt-md { margin-top: var(--venus-space-md); }
+.venus-mt-lg { margin-top: var(--venus-space-lg); }
+.venus-mt-xl { margin-top: var(--venus-space-xl); }
+.venus-mt-2xl { margin-top: var(--venus-space-2xl); }
+
+.venus-p-0 { padding: 0; }
+.venus-p-xs { padding: var(--venus-space-xs); }
+.venus-p-sm { padding: var(--venus-space-sm); }
+.venus-p-md { padding: var(--venus-space-md); }
+.venus-p-lg { padding: var(--venus-space-lg); }
+.venus-p-xl { padding: var(--venus-space-xl); }
+.venus-p-2xl { padding: var(--venus-space-2xl); }
+
+.venus-w-full { width: 100%; }
+.venus-h-full { height: 100%; }
+
+.venus-flex { display: flex; }
+.venus-flex-col { display: flex; flex-direction: column; }
+.venus-items-center { align-items: center; }
+.venus-justify-center { justify-content: center; }
+.venus-justify-between { justify-content: space-between; }
+
+.venus-hidden { display: none; }
+.venus-visible { display: block; }
+
+/* === ANIMATIONS VENUS === */
+@keyframes venus-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes venus-fade-in-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes venus-slide-in-right {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.venus-animate-fade-in {
+    animation: venus-fade-in 0.5s ease-out;
+}
+
+.venus-animate-fade-in-up {
+    animation: venus-fade-in-up 0.6s ease-out;
+}
+
+.venus-animate-slide-in-right {
+    animation: venus-slide-in-right 0.4s ease-out;
+}

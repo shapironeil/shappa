@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impostazioni - Shappa Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            margin: 0 0 var(--venus-space-xs) 0;
+            font-weight: var(--venus-font-weight-normal);
+        }
+
+        .venus-page-subtitle {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-search-box {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            min-width: 300px;
+        }
+
+        .venus-search-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-search-input::placeholder {
+            color: var(--venus-text-muted);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: var(--venus-space-2xl);
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Settings Navigation */
+        .venus-settings-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--venus-space-lg);
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .venus-nav-card {
+            background: #ffffff;
+            border: 2px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-2xl);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .venus-nav-card:hover {
+            border-color: var(--venus-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .venus-nav-card.active {
+            border-color: var(--venus-primary);
+            background: var(--venus-primary-light);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .venus-nav-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--venus-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--venus-space-lg) auto;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .venus-nav-card:nth-child(1) .venus-nav-icon {
+            background: #6366f1;
+        }
+
+        .venus-nav-card:nth-child(2) .venus-nav-icon {
+            background: #8b5cf6;
+        }
+
+        .venus-nav-card:nth-child(3) .venus-nav-icon {
+            background: #06b6d4;
+        }
+
+        .venus-nav-card:nth-child(4) .venus-nav-icon {
+            background: #10b981;
+        }
+
+        .venus-nav-card.active .venus-nav-icon {
+            background: var(--venus-primary-dark);
+        }
+
+        .venus-nav-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-sm);
+        }
+
+        .venus-nav-description {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-muted);
+            line-height: 1.4;
+        }
+
+        /* Settings Content */
+        .venus-settings-content {
+            display: none;
+        }
+
+        .venus-settings-content.active {
+            display: block;
+        }
+
+        .venus-settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--venus-space-lg);
+            width: 100%;
+        }
+
+        .venus-widget {
+            background: #ffffff;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            transition: all var(--venus-transition);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .venus-widget:hover {
+            border-color: var(--venus-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .venus-widget-content {
+            width: 100%;
+            height: 100%;
+        }
+
+        .venus-widget-title {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-lg) 0;
+        }
+
+        /* Form Styles */
+        .venus-form-group {
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-form-label {
+            display: block;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-sm);
+        }
+
+        .venus-form-input,
+        .venus-form-select,
+        .venus-form-textarea {
+            width: 100%;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            font-size: var(--venus-font-size-base);
+            font-family: var(--venus-font-family);
+            transition: all var(--venus-transition);
+            background: var(--venus-bg-card);
+            box-sizing: border-box;
+        }
+
+        .venus-form-input:focus,
+        .venus-form-select:focus,
+        .venus-form-textarea:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px var(--venus-primary-light);
+        }
+
+        .venus-form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .venus-form-help {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+            margin-top: var(--venus-space-xs);
+        }
+
+        /* Switch/Toggle Styles */
+        .venus-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .venus-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .venus-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--venus-border);
+            transition: var(--venus-transition);
+            border-radius: 24px;
+        }
+
+        .venus-switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: var(--venus-transition);
+            border-radius: 50%;
+        }
+
+        input:checked + .venus-switch-slider {
+            background-color: var(--venus-primary);
+        }
+
+        input:checked + .venus-switch-slider:before {
+            transform: translateX(26px);
+        }
+
+        .venus-switch-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .venus-switch-label {
+            font-size: var(--venus-font-size-sm);
+            color: var(--venus-text-primary);
+        }
+
+        /* Button Styles */
+        .venus-btn {
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            background: var(--venus-bg-card);
+            color: var(--venus-text-primary);
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-btn:hover {
+            border-color: var(--venus-primary);
+            color: var(--venus-primary);
+            transform: translateY(-1px);
+        }
+
+        .venus-btn-primary {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-primary:hover {
+            background: var(--venus-primary-dark);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-danger {
+            background: var(--venus-danger);
+            border-color: var(--venus-danger);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-danger:hover {
+            background: var(--venus-danger-dark);
+            color: var(--venus-text-white);
+        }
+
+        .venus-btn-group {
+            display: flex;
+            gap: var(--venus-space-md);
+            margin-top: var(--venus-space-lg);
+        }
+
+        /* Integration Card Styles */
+        .venus-integration-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            margin-bottom: var(--venus-space-md);
+            background: var(--venus-bg-gray);
+        }
+
+        .venus-integration-info {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+        }
+
+        .venus-integration-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-primary);
+            border-radius: var(--venus-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-bold);
+        }
+
+        .venus-integration-name {
+            font-size: var(--venus-font-size-base);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-integration-status {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-status-connected {
+            color: var(--venus-success);
+        }
+
+        .venus-status-disconnected {
+            color: var(--venus-danger);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .venus-sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                transition: left var(--venus-transition);
+            }
+
+            .venus-sidebar.venus-open {
+                left: 0;
+            }
+
+            .venus-main-content {
+                width: 100%;
+            }
+
+            .venus-settings-nav {
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--venus-space-md);
+            }
+
+            .venus-nav-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .venus-nav-title {
+                font-size: var(--venus-font-size-base);
+            }
+
+            .venus-nav-description {
+                font-size: var(--venus-font-size-xs);
+            }
+
+            .venus-settings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .venus-settings-nav {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Venus Dashboard Layout -->
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item">
+                    Report
+                </a>
+                <a href="settings.html" class="venus-menu-item venus-active">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            
+            <div class="venus-content-area">
+                <!-- Settings Navigation -->
+                <div class="venus-settings-nav">
+                    <div class="venus-nav-card active" onclick="showSection('configurazione')">
+                        <div class="venus-nav-icon">⚙</div>
+                        <div class="venus-nav-title">Configurazione</div>
+                        <div class="venus-nav-description">Impostazioni generali e preferenze del sistema</div>
+                    </div>
+                    
+                    <div class="venus-nav-card" onclick="showSection('automazione')">
+                        <div class="venus-nav-icon">⚡</div>
+                        <div class="venus-nav-title">Automazione</div>
+                        <div class="venus-nav-description">Regole automatiche e workflow</div>
+                    </div>
+                    
+                    <div class="venus-nav-card" onclick="showSection('privacy')">
+                        <div class="venus-nav-icon">🔒</div>
+                        <div class="venus-nav-title">Privacy</div>
+                        <div class="venus-nav-description">Controlli privacy e sicurezza dati</div>
+                    </div>
+                    
+                    <div class="venus-nav-card" onclick="showSection('account')">
+                        <div class="venus-nav-icon">🔗</div>
+                        <div class="venus-nav-title">Account</div>
+                        <div class="venus-nav-description">Connessioni eBay e Amazon</div>
+                    </div>
+                </div>
+
+                <!-- Configurazione Section -->
+                <div id="configurazione-section" class="venus-settings-content active">
+                    <div class="venus-settings-grid">
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Preferenze Generali</h3>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Lingua</label>
+                                    <select class="venus-form-select" id="language">
+                                        <option value="it" selected>Italiano</option>
+                                        <option value="en">English</option>
+                                        <option value="fr">Français</option>
+                                        <option value="de">Deutsch</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Valuta Predefinita</label>
+                                    <select class="venus-form-select" id="currency">
+                                        <option value="EUR" selected>Euro (€)</option>
+                                        <option value="USD">Dollaro ($)</option>
+                                        <option value="GBP">Sterlina (£)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Fuso Orario</label>
+                                    <select class="venus-form-select" id="timezone">
+                                        <option value="Europe/Rome" selected>Europa/Roma</option>
+                                        <option value="Europe/London">Europa/Londra</option>
+                                        <option value="America/New_York">America/New York</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveGeneralSettings()">
+                                        Salva Impostazioni
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Notifiche</h3>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Notifiche Email</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="emailNotifications" checked>
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Notifiche Push</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="pushNotifications" checked>
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Notifiche Vendite</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="salesNotifications" checked>
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveNotificationSettings()">
+                                        Salva Notifiche
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automazione Section -->
+                <div id="automazione-section" class="venus-settings-content">
+                    <div class="venus-settings-grid">
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Regole di Prezzo</h3>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Aggiornamento Automatico Prezzi</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="autoPriceUpdate">
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Margine Minimo (%)</label>
+                                    <input type="number" class="venus-form-input" id="minMargin" placeholder="15" min="0" max="100">
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Frequenza Controllo</label>
+                                    <select class="venus-form-select" id="priceCheckFrequency">
+                                        <option value="hourly">Ogni ora</option>
+                                        <option value="daily" selected>Giornaliera</option>
+                                        <option value="weekly">Settimanale</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="savePricingRules()">
+                                        Salva Regole
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Gestione Inventario</h3>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Gestione Stock Automatica</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="autoStockManagement">
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Soglia Scorte Basse</label>
+                                    <input type="number" class="venus-form-input" id="lowStockThreshold" placeholder="5" min="0">
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Pausa Automatica se Esaurito</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="autoPauseOutOfStock" checked>
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveInventoryRules()">
+                                        Salva Regole
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy Section -->
+                <div id="privacy-section" class="venus-settings-content">
+                    <div class="venus-settings-grid">
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Controlli Privacy</h3>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Condividi Dati Analytics</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="shareAnalytics">
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Cookies Tracking</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="allowCookies" checked>
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Profilazione Comportamentale</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="behaviorProfiling">
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="savePrivacySettings()">
+                                        Salva Impostazioni
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Gestione Dati</h3>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Esporta Dati</label>
+                                    <button type="button" class="venus-btn" onclick="exportData()" style="width: 100%;">
+                                        Scarica i Miei Dati
+                                    </button>
+                                    <div class="venus-form-help">Scarica tutti i tuoi dati in formato JSON</div>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Cancellazione Dati</label>
+                                    <button type="button" class="venus-btn venus-btn-danger" onclick="requestDataDeletion()" style="width: 100%;">
+                                        Richiedi Cancellazione
+                                    </button>
+                                    <div class="venus-form-help">Richiedi la cancellazione di tutti i tuoi dati</div>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Retention Policy</label>
+                                    <select class="venus-form-select" id="dataRetention">
+                                        <option value="30">30 giorni</option>
+                                        <option value="90" selected>90 giorni</option>
+                                        <option value="365">1 anno</option>
+                                        <option value="-1">Indefinito</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Section -->
+                <div id="account-section" class="venus-settings-content">
+                    <div class="venus-settings-grid">
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Connessione eBay</h3>
+                                
+                                <div class="venus-integration-card">
+                                    <div class="venus-integration-info">
+                                        <div class="venus-integration-icon">eB</div>
+                                        <div>
+                                            <div class="venus-integration-name">eBay Sandbox</div>
+                                            <div class="venus-integration-status venus-status-disconnected">Non connesso</div>
+                                        </div>
+                                    </div>
+                                    <div id="ebay-actions">
+                                        <button class="venus-btn venus-btn-primary" onclick="configureEbay()">Connetti eBay</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="venus-form-group" style="margin-top: var(--venus-space-lg);">
+                                    <label class="venus-form-label">Stato Connessione</label>
+                                    <div id="ebay-status" style="padding: var(--venus-space-md); background: var(--venus-bg-gray); border-radius: var(--venus-radius);">
+                                        Non connesso ad eBay
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Connessione Amazon</h3>
+                                
+                                <div class="venus-integration-card">
+                                    <div class="venus-integration-info">
+                                        <div class="venus-integration-icon" style="background: #ff9900;">Am</div>
+                                        <div>
+                                            <div class="venus-integration-name">Amazon API</div>
+                                            <div class="venus-integration-status venus-status-connected">Connesso</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="venus-btn" onclick="testAmazonConnection()">Test Connessione</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="venus-form-group" style="margin-top: var(--venus-space-lg);">
+                                    <label class="venus-form-label">API Status</label>
+                                    <div id="amazon-status" style="padding: var(--venus-space-md); background: var(--venus-success-light); border-radius: var(--venus-radius); color: var(--venus-success);">
+                                        ✅ SerpApi Amazon Search attiva
+                                    </div>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Paese di Ricerca</label>
+                                    <select class="venus-form-select" id="amazonCountry">
+                                        <option value="IT" selected>Italia</option>
+                                        <option value="US">Stati Uniti</option>
+                                        <option value="DE">Germania</option>
+                                        <option value="FR">Francia</option>
+                                        <option value="ES">Spagna</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load Auth System -->
+    <script src="../core/apiClient.js"></script>
+    <script src="../core/eventBus.js"></script>
+    <script src="../core/store.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    
+    <script>
+        // Initialize Auth System
+        let authSystem;
+        try {
+            authSystem = new ShappaAuth();
+            console.log('✅ Auth system loaded');
+        } catch (error) {
+            console.error('❌ Failed to load auth system:', error);
+        }
+
+        // Allow direct access without login check for testing
+        // if (authSystem && !authSystem.isLoggedIn()) {
+        //     console.log('⚠️ User not logged in, redirecting...');
+        //     window.location.href = '../../index.html#login';
+        // }
+
+        // Update user info if logged in
+        if (authSystem && authSystem.isLoggedIn()) {
+            const currentUser = authSystem.getCurrentUser();
+            if (currentUser) {
+                const userNameElement = document.getElementById('userName');
+                const userAvatarElement = document.getElementById('userAvatar');
+                
+                if (userNameElement) {
+                    userNameElement.textContent = currentUser.username;
+                }
+                
+                if (userAvatarElement) {
+                    userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
+                }
+
+                // Update form fields
+                document.getElementById('fullName').value = currentUser.username;
+                document.getElementById('email').value = currentUser.email || 'andrei@shappa.com';
+                document.getElementById('username').value = currentUser.username;
+            }
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            if (authSystem) {
+                authSystem.logout();
+                window.location.href = '../../index.html';
+            }
+        });
+
+        // Settings functions
+        function saveGeneralSettings() {
+            const language = document.getElementById('language').value;
+            const currency = document.getElementById('currency').value;
+            const timezone = document.getElementById('timezone').value;
+            
+            // Save to localStorage (in production would save to backend)
+            localStorage.setItem('user_settings', JSON.stringify({
+                language,
+                currency,
+                timezone
+            }));
+            
+            console.log('General settings saved:', { language, currency, timezone });
+        }
+
+        function savePricingRules() {
+            const autoPriceUpdate = document.getElementById('autoPriceUpdate').checked;
+            const minMargin = document.getElementById('minMargin').value;
+            const priceCheckFrequency = document.getElementById('priceCheckFrequency').value;
+            
+            localStorage.setItem('pricing_rules', JSON.stringify({
+                autoPriceUpdate,
+                minMargin: parseFloat(minMargin) || 15,
+                priceCheckFrequency
+            }));
+            
+            console.log('Pricing rules saved');
+        }
+
+        function saveInventoryRules() {
+            const autoStockManagement = document.getElementById('autoStockManagement').checked;
+            const lowStockThreshold = document.getElementById('lowStockThreshold').value;
+            const autoPauseOutOfStock = document.getElementById('autoPauseOutOfStock').checked;
+            
+            localStorage.setItem('inventory_rules', JSON.stringify({
+                autoStockManagement,
+                lowStockThreshold: parseInt(lowStockThreshold) || 5,
+                autoPauseOutOfStock
+            }));
+            
+            console.log('Inventory rules saved');
+        }
+
+        function requestDataDeletion() {
+            console.log('Data deletion requested');
+            // In production would send request to backend
+        }
+
+        // Integration functions
+        async function configureEbay() {
+            console.log('Starting eBay OAuth flow...');
+            
+            try {
+                // Get auth URL from backend
+                const response = await fetch('/api/ebay/auth-url');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    console.error('Failed to get auth URL:', data.error);
+                    alert('Errore nella configurazione eBay: ' + data.error);
+                    return;
+                }
+                
+                // Open popup for OAuth
+                const popup = window.open(
+                    data.authUrl,
+                    'ebay-oauth',
+                    'width=600,height=700,scrollbars=yes,resizable=yes'
+                );
+                
+                // Listen for OAuth result
+                const messageHandler = (event) => {
+                    if (event.data && event.data.type === 'ebay-oauth-result') {
+                        window.removeEventListener('message', messageHandler);
+                        popup.close();
+                        
+                        if (event.data.success) {
+                            console.log('eBay OAuth successful!', event.data.tokenData);
+                            alert('eBay connesso con successo!');
+                            
+                            // Store tokens (in production, send to backend)
+                            localStorage.setItem('ebay_tokens', JSON.stringify(event.data.tokenData));
+                            
+                            // Update UI to show connected status
+                            updateEbayConnectionStatus(true);
+                        } else {
+                            console.error('eBay OAuth failed:', event.data.error);
+                            alert('Connessione eBay fallita: ' + (event.data.error || 'Unknown error'));
+                        }
+                    }
+                };
+                
+                window.addEventListener('message', messageHandler);
+                
+                // Check if popup was closed manually
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        window.removeEventListener('message', messageHandler);
+                        console.log('OAuth popup was closed');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error starting eBay OAuth:', error);
+                alert('Errore nella connessione eBay: ' + error.message);
+            }
+        }
+
+        function updateEbayConnectionStatus(connected) {
+            const statusElement = document.querySelector('#account-section .venus-integration-status');
+            const actionButtons = document.getElementById('ebay-actions');
+            const statusDiv = document.getElementById('ebay-status');
+            
+            if (connected) {
+                statusElement.textContent = 'Connesso';
+                statusElement.className = 'venus-integration-status venus-status-connected';
+                
+                actionButtons.innerHTML = `
+                    <button class="venus-btn" onclick="testEbayConnection()">Test Connessione</button>
+                    <button class="venus-btn venus-btn-danger" onclick="disconnectEbay()" style="margin-left: var(--venus-space-sm);">Disconnetti</button>
+                `;
+                
+                statusDiv.innerHTML = '✅ Connesso ad eBay Sandbox';
+                statusDiv.style.background = 'var(--venus-success-light)';
+                statusDiv.style.color = 'var(--venus-success)';
+            } else {
+                statusElement.textContent = 'Non connesso';
+                statusElement.className = 'venus-integration-status venus-status-disconnected';
+                
+                actionButtons.innerHTML = `
+                    <button class="venus-btn venus-btn-primary" onclick="configureEbay()">Connetti eBay</button>
+                `;
+                
+                statusDiv.innerHTML = '❌ Non connesso ad eBay';
+                statusDiv.style.background = 'var(--venus-bg-gray)';
+                statusDiv.style.color = 'var(--venus-text-muted)';
+            }
+        }
+
+        async function testEbayConnection() {
+            console.log('Testing eBay connection...');
+            
+            const tokens = JSON.parse(localStorage.getItem('ebay_tokens') || '{}');
+            
+            if (!tokens.access_token) {
+                alert('Nessun token eBay trovato. Connettiti prima.');
+                return;
+            }
+            
+            try {
+                // Test connection by getting user info
+                const response = await fetch('/api/ebay/user-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ access_token: tokens.access_token })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Connessione eBay OK! Utente: ' + (data.userData.username || 'eBay User'));
+                } else {
+                    alert('Test connessione fallito: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error testing eBay connection:', error);
+                alert('Errore nel test: ' + error.message);
+            }
+        }
+
+        function disconnectEbay() {
+            // Disconnect eBay immediately without confirmation
+            localStorage.removeItem('ebay_tokens');
+            updateEbayConnectionStatus(false);
+            console.log('eBay disconnected');
+        }
+
+        function testAmazonConnection() {
+            console.log('Testing Amazon connection...');
+            
+            // Test Amazon API connection
+            fetch('/api/amazon/search?q=test')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Connessione Amazon OK! API funzionante.');
+                    } else {
+                        alert('Test connessione Amazon fallito.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Amazon test error:', error);
+                    alert('Errore nel test Amazon: ' + error.message);
+                });
+        }
+
+        // Notification functions
+        function saveNotificationSettings() {
+            console.log('Saving notification settings...');
+            alert('Impostazioni notifiche salvate!');
+        }
+
+        // Privacy functions
+        function savePrivacySettings() {
+            console.log('Saving privacy settings...');
+            alert('Impostazioni privacy salvate!');
+        }
+
+        function exportData() {
+            console.log('Exporting user data...');
+            alert('Esportazione dati avviata. Riceverai un email con il link per il download.');
+        }
+
+        // Section navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.venus-settings-content');
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Remove active class from all nav cards
+            const navCards = document.querySelectorAll('.venus-nav-card');
+            navCards.forEach(card => card.classList.remove('active'));
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Add active class to clicked nav card
+            const clickedCard = event.target.closest('.venus-nav-card');
+            if (clickedCard) {
+                clickedCard.classList.add('active');
+            }
+            
+            console.log('Switched to section:', sectionName);
+        }
+
+        // Initialize eBay connection status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const tokens = JSON.parse(localStorage.getItem('ebay_tokens') || '{}');
+            const hasValidToken = tokens.access_token && tokens.access_token.length > 0;
+            updateEbayConnectionStatus(hasValidToken);
+        });
+
+        // Search functionality
+        document.querySelector('.venus-search-input')?.addEventListener('input', function() {
+            console.log('Searching settings:', this.value);
+            // TODO: Implement settings search
+        });
+    </script>
+</body>
+</html>

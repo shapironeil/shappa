@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test eBay OAuth - Shappa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .info-box code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 10px 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-success { color: #4ec9b0; }
+        .log-error { color: #f48771; }
+        .log-info { color: #9cdcfe; }
+        .log-warn { color: #dcdcaa; }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .status-ok { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-pending { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test eBay OAuth 2.0</h1>
+        <p class="subtitle">Testa l'integrazione OAuth con eBay Sandbox</p>
+
+        <div class="info-box">
+            <h3>📋 Configurazione Richiesta nel Portale eBay</h3>
+            <p>Vai su: <a href="https://developer.ebay.com/my/keys" target="_blank">https://developer.ebay.com/my/keys</a></p>
+            <p><strong>Redirect URI da configurare:</strong></p>
+            <code>http://localhost:3000/auth/ebay/callback</code>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <button onclick="testConnection()">🔌 Test Connessione Backend</button>
+            <button onclick="startOAuth()">🔐 Avvia OAuth eBay</button>
+            <button onclick="clearLog()">🗑️ Pulisci Log</button>
+        </div>
+
+        <div id="status"></div>
+
+        <div class="log" id="log">
+            <div class="log-entry log-info">📝 Console pronta. Clicca su un pulsante per iniziare...</div>
+        </div>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const statusEl = document.getElementById('status');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function setStatus(message, type = 'pending') {
+            statusEl.innerHTML = `<span class="status status-${type}">${message}</span>`;
+        }
+
+        async function testConnection() {
+            addLog('🔄 Testing backend connection...', 'info');
+            setStatus('Testing...', 'pending');
+            
+            try {
+                const response = await fetch('http://localhost:3000/health');
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    addLog('✅ Backend server is running!', 'success');
+                    addLog(`   Timestamp: ${data.timestamp}`, 'info');
+                    addLog(`   Environment: ${data.environment}`, 'info');
+                    setStatus('✅ Backend OK', 'ok');
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (error) {
+                addLog('❌ Backend connection failed: ' + error.message, 'error');
+                setStatus('❌ Backend Error', 'error');
+            }
+        }
+
+        async function startOAuth() {
+            addLog('🚀 Starting eBay OAuth flow...', 'info');
+            setStatus('Starting OAuth...', 'pending');
+            
+            try {
+                // 1. Get auth URL
+                addLog('📡 Requesting auth URL from backend...', 'info');
+                const response = await fetch('http://localhost:3000/api/ebay/auth-url');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error('Failed to get auth URL');
+                }
+                
+                addLog('✅ Auth URL received', 'success');
+                addLog(`   State: ${data.state}`, 'info');
+                addLog(`   URL: ${data.authUrl.substring(0, 80)}...`, 'info');
+                
+                // 2. Open popup
+                addLog('🪟 Opening OAuth popup...', 'info');
+                const width = 600;
+                const height = 700;
+                const left = window.screenX + (window.outerWidth - width) / 2;
+                const top = window.screenY + (window.outerHeight - height) / 2;
+                
+                const popup = window.open(
+                    data.authUrl,
+                    'eBay OAuth',
+                    `width=${width},height=${height},left=${left},top=${top},popup=yes`
+                );
+                
+                if (!popup) {
+                    throw new Error('Popup blocked! Enable popups for this site.');
+                }
+                
+                addLog('✅ Popup opened successfully', 'success');
+                setStatus('⏳ Waiting for authorization...', 'pending');
+                
+                // 3. Listen for messages
+                const messageHandler = (event) => {
+                    if (event.origin !== window.location.origin) {
+                        return;
+                    }
+                    
+                    const message = event.data;
+                    
+                    if (message.type === 'ebay-oauth-result') {
+                        window.removeEventListener('message', messageHandler);
+                        
+                        if (message.success) {
+                            addLog('🎉 OAuth completed successfully!', 'success');
+                            addLog(`   Access Token: ${message.tokenData.access_token.substring(0, 30)}...`, 'success');
+                            addLog(`   Expires in: ${message.tokenData.expires_in} seconds`, 'info');
+                            setStatus('✅ OAuth Successful!', 'ok');
+                        } else {
+                            addLog(`❌ OAuth failed: ${message.error}`, 'error');
+                            addLog(`   Description: ${message.errorDescription}`, 'error');
+                            setStatus('❌ OAuth Failed', 'error');
+                        }
+                    }
+                };
+                
+                window.addEventListener('message', messageHandler);
+                
+                // Check if popup closed
+                const checkClosed = setInterval(() => {
+                    if (popup.closed) {
+                        clearInterval(checkClosed);
+                        window.removeEventListener('message', messageHandler);
+                        addLog('⚠️  Popup closed', 'warn');
+                        setStatus('⚠️  Popup Closed', 'pending');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                addLog('❌ OAuth error: ' + error.message, 'error');
+                setStatus('❌ OAuth Error', 'error');
+            }
+        }
+
+        function clearLog() {
+            logEl.innerHTML = '<div class="log-entry log-info">📝 Log cleared.</div>';
+            statusEl.innerHTML = '';
+        }
+
+        // Test connection on load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 500);
+        });
+    </script>
+</body>
+</html>

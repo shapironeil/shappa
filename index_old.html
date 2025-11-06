@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Amazon → eBay Automation</title>
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <meta name="description" content="Automazione completa Amazon → eBay. Importa, ottimizza e vendi automaticamente con Shappa.">
+    <meta name="keywords" content="amazon, ebay, automation, dropshipping, arbitrage, vendita online">
+    <link rel="manifest" href="manifest.json">
+</head>
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+        
+        .btn-hero {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-hero {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-primary-hero:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary-hero {
+            background: white;
+            color: var(--primary-color);
+        }
+        
+        .btn-secondary-hero:hover {
+            background: var(--bg-secondary);
+            transform: translateY(-2px);
+        }
+        
+        .features-section {
+            padding: 4rem 2rem;
+            background: var(--bg-secondary);
+        }
+        
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stats-section {
+            background: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+        
+        .stat-item {
+            padding: 1rem;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">🚀 Shappa</h1>
+            <p class="hero-subtitle">Automazione Completa Amazon → eBay<br>Importa, Ottimizza e Vendi Automaticamente</p>
+            
+            <div class="cta-buttons">
+                <a href="src/pages/login.html" class="btn-hero btn-secondary-hero">
+                    🔑 Accedi
+                </a>
+                <a href="src/pages/register.html" class="btn-hero btn-primary-hero">
+                    📝 Registrati
+                </a>
+            </div>
+            
+            <!-- Admin Link (nascosto, accessibile con doppio click) -->
+            <div style="margin-top: 2rem; opacity: 0.3; cursor: pointer;" 
+                 ondblclick="window.location.href='src/pages/admin.html'" 
+                 title="Doppio click per Admin Panel">
+                🛠️ Admin
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">Ricerca Intelligente</h3>
+                <p class="feature-description">Analizza automaticamente il catalogo Amazon per trovare prodotti profittevoli con algoritmi avanzati.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Listing Automatico</h3>
+                <p class="feature-description">Crea listing eBay perfetti in secondi con titoli ottimizzati, descrizioni e prezzi competitivi.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">�</div>
+                <h3 class="feature-title">Analytics Avanzate</h3>
+                <p class="feature-description">Monitora profitti, trend di vendita e performance con dashboard interattive in tempo reale.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3 class="feature-title">Sincronizzazione</h3>
+                <p class="feature-description">Mantieni prezzi e inventario sempre aggiornati tra Amazon ed eBay automaticamente.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3 class="feature-title">Ottimizzazione Prezzi</h3>
+                <p class="feature-description">Algoritmi intelligenti per massimizzare i profitti mantenendo competitività di mercato.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Sicurezza Totale</h3>
+                <p class="feature-description">Connessioni sicure con API ufficiali Amazon e eBay. I tuoi dati sempre protetti.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <h2 style="margin-bottom: 2rem; color: var(--text-primary);">Risultati Comprovati</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number">10K+</span>
+                <span class="stat-label">Listing Creati</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">€2.4M+</span>
+                <span class="stat-label">Volume Vendite</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">95%</span>
+                <span class="stat-label">Automazione</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">24/7</span>
+                <span class="stat-label">Monitoraggio</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Access -->
+    <section style="padding: 3rem 2rem; text-align: center; background: var(--bg-secondary);">
+        <h2 style="margin-bottom: 2rem; color: var(--text-primary);">Accesso Rapido</h2>
+        <div class="container">
+            <div class="card" style="max-width: 600px; margin: 0 auto;">
+                <h3>🧪 Test dell'Applicazione</h3>
+                <p style="margin-bottom: 2rem;">Esplora tutte le funzionalità di Shappa:</p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <a href="src/pages/login.html" class="btn-primary" style="text-decoration: none;">Login</a>
+                    <a href="src/pages/register.html" class="btn-primary" style="text-decoration: none;">Registrazione</a>
+                    <a href="src/pages/dashboard.html" class="btn-primary" style="text-decoration: none;">Dashboard</a>
+                    <a href="src/pages/settings.html" class="btn-primary" style="text-decoration: none;">Impostazioni</a>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: var(--border-radius);">
+                    <strong>🔒 Sistema Reale:</strong><br>
+                    Registra il tuo account personale per collegare i tuoi veri account Amazon ed eBay
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <script src="src/js/shappa-config.js"></script>
+    <script src="src/js/shappa-theme-manager.js"></script>
+</body>
+</html>

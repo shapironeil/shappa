@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>eBay OAuth Callback</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; margin: 0; padding: 24px; background: #0f172a; color: #e2e8f0; }
+    .card { max-width: 560px; margin: 40px auto; background: #111827; border-radius: 12px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.35); }
+    h1 { font-size: 18px; margin: 0 0 12px; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    code { background: #0b1220; border: 1px solid #1f2937; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Completamento accesso eBay…</h1>
+    <p class="muted">Non chiudere questa finestra. Verifica in corso e ritorno all'app principale.</p>
+    <p class="muted">Se questa finestra resta aperta più di qualche secondo, puoi chiuderla manualmente.</p>
+    <p class="muted">Parametri ricevuti: <code id="params">(in raccolta…)</code></p>
+  </div>
+
+  <script>
+    (function () {
+      const targetOrigin = 'https://www.localhost:3000';
+      const params = new URLSearchParams(window.location.search);
+      const payload = {
+        source: 'ebay-oauth-callback',
+        code: params.get('code') || null,
+        state: params.get('state') || null,
+        error: params.get('error') || null,
+        error_description: params.get('error_description') || null,
+        timestamp: Date.now()
+      };
+
+      // UI debug
+      try {
+        document.getElementById('params').textContent = Array.from(params.entries())
+          .map(([k,v]) => `${k}=${v}`)
+          .join('&') || '(nessun parametro)';
+      } catch {}
+
+      function safePostMessage() {
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(payload, targetOrigin);
+          }
+        } catch (err) {
+          console.error('postMessage error:', err);
+        }
+      }
+
+      // Invia subito i dati al tab principale
+      safePostMessage();
+
+      // Ritenta un paio di volte in caso di race condition
+      setTimeout(safePostMessage, 100);
+      setTimeout(safePostMessage, 300);
+
+      // Chiudi il popup dopo breve attesa
+      setTimeout(function () {
+        try { window.close(); } catch {}
+      }, 400);
+    })();
+  </script>
+</body>
+</html>

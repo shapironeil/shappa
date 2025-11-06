@@ -1,0 +1,58 @@
+{
+  "asin": "B01G1RXVA6",
+  "title": "Pellini N.42 Tradizionale, Caffè Macinato per Moka dal Gusto Vigoroso e Intenso, Miscele Arabica e Robusta a Tostatura Decisa, 3 Confezioni da 250g",
+  "brand": "Visita lo Store di Pellini",
+  "price": "11,46€",
+  "originalPrice": "3,82€",
+  "rating": "4,5 su 5 stelle",
+  "reviewsCount": "3.209 voti",
+  "image": "https://m.media-amazon.com/images/I/61o5BTo66lL._AC_SX1000_PIbundle-3,TopRight,0,0_SH20_.jpg",
+  "images": [
+    "https://m.media-amazon.com/images/G/29/HomeCustomProduct/360_icon_73x73v2._CB485971303_SX38_SY50_CR,0,0,38,50_FMpng_RI_.png",
+    "https://m.media-amazon.com/images/I/41aChTKIHQL._AC_SR38,50_.jpg",
+    "https://m.media-amazon.com/images/I/41Csb6m9OnL._AC_SR38,50_.jpg",
+    "https://m.media-amazon.com/images/I/41jvpl0HkUL._AC_SR38,50_.jpg",
+    "https://m.media-amazon.com/images/I/41TROSLyL+L._AC_SR38,50_.jpg",
+    "https://m.media-amazon.com/images/I/61o5BTo66lL._AC_SX1000_PIbundle-3,TopRight,0,0_SH20_.jpg"
+  ],
+  "features": [
+    "PELLINI N.42 TRADIZIONALE: Caffè macinato per Moka, un Espresso vigoroso e di carattere in 3 confezioni da 250g ciascuna",
+    "COMPOSIZIONE: Miscela classica composta da una bilanciata armonia di qualità pregiate di Arabica e Robusta attentamente selezionate e tostate per ogni singola origine per sprigionare aromi e sapori",
+    "TOSTATURA: Tostatura decisa, intensità 8/9. Il caffè viene raffreddato naturalmente ad aria, fatto riposare in appositi silos prima di essere confezionato",
+    "NOTE AROMATICHE: Caffè dal vigoroso e di carattere, offre l’aroma e il carattere del tradizionale Espresso italiano con note di liquirizia e pane tostato fragrante. Miscela perfezionata per moka, pensata per trasformare un rito quotidiano in un Espresso da sogno",
+    "EROGAZIONE SUGGERITA: Ideale per la tipica colazione all'italiana",
+    "Caffè tostato e macinato per Espresso, miscele uniche ed esclusive composte da qualità pregiate di Arabica e Robusta selezionate direttamente nei luoghi d’origine. La tostatura specifica e calibrata per ogni singola origine ne esalta il profilo aromatico e ne bilancia il gusto. L’innovazione tecnologico-produttiva garantisce un caffè premium. La macinatura ne definisce la qualità finale e consente di personalizzare i tipi di prodotto adatti alla gamma di attrezzature utilizzate per preparare un caffè da sogno da gustare a casa come al bar.",
+    "Conservare in luogo fresco e asciutto",
+    "Ogni confezione contiene 3 pacchetti da 250g di caffè macinato per moka."
+  ],
+  "techDetails": {
+    "Dimensioni prodotto": "‎14,98 x 8,89 x 20 cm; 80 grammi",
+    "Nome del prodotto": "‎N. 42 Tradizionale",
+    "Additivi": "‎Senza ingredienti speciali",
+    "Peso": "‎750 Grammi",
+    "Volume": "‎1605 Millilitri",
+    "Unità": "‎3 unità",
+    "Istruzioni di conservazione": "‎conservare in un luogo fresco e asciutto",
+    "Contatto produttore": "‎Pellini Caffè S.p.A. Sede e stabilimento: Via 1° Maggio, 8 37012 - Bussolengo - Verona Italia",
+    "Marca": "‎Pellini",
+    "Forma dell’articolo": "‎Macinato",
+    "Caratteristica speciale": "‎Naturale",
+    "Contenuto di caffeina": "‎80 Milligrammi",
+    "Produttore": "‎Pellini Caffè",
+    "Peso articolo": "‎80 g",
+    "Paese di origine": "‎Italia",
+    "ASIN": "B01G1RXVA6",
+    "Media recensioni": "4,5             4,5 su 5 stelle          \n\n                          3.209 voti     \n                    \n                    var dpAcrHasRegisteredArcLinkClickAction;\n                    P.when('A', 'ready').execute(function(A) {\n                        if (dpAcrHasRegisteredArcLinkClickAction !== true) {\n                            dpAcrHasRegisteredArcLinkClickAction = true;\n                            A.declarative(\n                                'acrLink-click-metrics', 'click',\n                                { \"allowLinkDefault\": true },\n                                function (event) {\n                                    if (window.ue) {\n                                        ue.count(\"acrLinkClickCount\", (ue.count(\"acrLinkClickCount\") || 0) + 1);\n                                    }\n                                }\n                            );\n                        }\n                    });\n                \n                 \n            P.when('A', 'cf').execute(function(A) {\n                A.declarative('acrStarsLink-click-metrics', 'click', { \"allowLinkDefault\" : true },  function(event){\n                    if(window.ue) {\n                        ue.count(\"acrStarsLinkWithPopoverClickCount\", (ue.count(\"acrStarsLinkWithPopoverClickCount\") || 0) + 1);\n                    }\n                });\n            });\n        \n\n           \n       4,5 su 5 stelle",
+    "Posizione nella classifica Bestseller di Amazon": "n. 171 in Alimentari e cura della casa (Visualizza i Top 100 nella categoria Alimentari e cura della casa)  n. 5 in Caffè macinati",
+    "Disponibile su Amazon.it a partire dal": "22 maggio 2016"
+  },
+  "categories": [
+    "Alimentari e cura della casa",
+    "Caffè, tè e bevande",
+    "Caffè",
+    "Caffè macinati"
+  ],
+  "url": "https://www.amazon.it/dp/B01G1RXVA6?th=1",
+  "savedAt": "2025-10-13T13:39:26.182Z",
+  "id": "B01G1RXVA6"
+}

@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa Dashboard - Ricerca Prodotti</title>
+    <link rel="stylesheet" href="../styles/theme-v2.css">
+    <link rel="stylesheet" href="../styles/dashboard.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        /* Venus Products Page Styles */
+        body {
+            font-family: var(--venus-font-family);
+            background: var(--venus-bg-gray);
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .dashboard-main {
+            flex: 1;
+            padding: var(--venus-space-xl);
+            overflow-y: auto;
+        }
+
+        /* Venus Header */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--venus-space-2xl);
+            padding-bottom: var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .dashboard-title {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .dashboard-actions .btn {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border: none;
+            padding: var(--venus-space-sm) var(--venus-space-lg);
+            border-radius: var(--venus-radius);
+            font-weight: var(--venus-font-weight-medium);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .dashboard-actions .btn:hover {
+            background: var(--venus-primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--venus-shadow-md);
+        }
+
+        /* Venus Search Section */
+        .venus-search-section {
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .venus-search-container {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-2xl);
+            box-shadow: var(--venus-shadow-sm);
+        }
+
+        .venus-search-header {
+            text-align: center;
+            margin-bottom: var(--venus-space-2xl);
+        }
+
+        .venus-search-title {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-sm) 0;
+        }
+
+        .venus-search-subtitle {
+            font-size: var(--venus-font-size-base);
+            color: var(--venus-text-secondary);
+            margin: 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .venus-search-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-xl);
+        }
+
+        .venus-form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--venus-space-lg);
+            align-items: end;
+        }
+
+        .venus-form-group-main {
+            grid-column: 1 / -1;
+        }
+
+        .venus-form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-form-label {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-form-input,
+        .venus-form-select {
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            font-size: var(--venus-font-size-base);
+            font-family: var(--venus-font-family);
+            transition: all var(--venus-transition);
+            background: var(--venus-bg-card);
+        }
+
+        .venus-form-input:focus,
+        .venus-form-select:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px var(--venus-primary-light);
+        }
+
+        .venus-form-actions {
+            display: flex;
+            justify-content: center;
+            padding-top: var(--venus-space-lg);
+        }
+
+        .venus-btn-large {
+            padding: var(--venus-space-lg) var(--venus-space-2xl);
+            font-size: var(--venus-font-size-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-btn-icon {
+            opacity: 0.8;
+        }
+
+        /* Venus Main Content */
+        .venus-main-content {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            box-shadow: var(--venus-shadow-sm);
+        }
+
+        .venus-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--venus-space-xl);
+            padding-bottom: var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-results-count {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-loading, .venus-error-message, .venus-no-results {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            text-align: center;
+        }
+
+        .venus-loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--venus-space-lg);
+        }
+
+        .venus-loading-icon {
+            font-size: var(--venus-font-size-3xl);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .venus-empty-state {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .venus-empty-icon {
+            font-size: var(--venus-font-size-4xl);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-empty-state h3 {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-sm) 0;
+        }
+
+        .venus-empty-state p {
+            color: var(--venus-text-secondary);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .venus-products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: var(--venus-space-xl);
+        }
+
+        /* Venus Product Card */
+        .venus-product-card {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-lg);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-product-card:hover {
+            border-color: var(--venus-primary-light);
+            box-shadow: var(--venus-shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .venus-product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: var(--venus-radius-sm);
+            background: var(--venus-bg-gray);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-product-title {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            color: var(--venus-text-primary);
+            line-height: 1.4;
+            margin: 0 0 var(--venus-space-sm) 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .venus-product-price {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-primary);
+            margin: 0 0 var(--venus-space-sm) 0;
+        }
+
+        .venus-product-rating {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-xs);
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-layout {
+                flex-direction: column;
+            }
+            
+            .dashboard-main {
+                padding: var(--venus-space-lg);
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: var(--venus-space-lg);
+                align-items: flex-start;
+            }
+
+            .search-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-layout">
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-logo">
+                <span class="venus-logo-icon">🚀</span>
+                <span class="venus-logo-text">Shappa</span>
+            </div>
+            <nav class="venus-sidebar-nav">
+                <a href="dashboard.html" class="venus-sidebar-link">
+                    <span class="venus-sidebar-icon">🏠</span>
+                    Home
+                </a>
+                <a href="products.html" class="venus-sidebar-link venus-active">
+                    <span class="venus-sidebar-icon">🔍</span>
+                    Prodotti
+                </a>
+                <a href="listings.html" class="venus-sidebar-link">
+                    <span class="venus-sidebar-icon">📦</span>
+                    Listings
+                </a>
+                <a href="ricerca.html" class="venus-sidebar-link">
+                    <span class="venus-sidebar-icon">🎯</span>
+                    Ricerca
+                </a>
+                <a href="settings.html" class="venus-sidebar-link">
+                    <span class="venus-sidebar-icon">⚙️</span>
+                    Impostazioni
+                </a>
+            </nav>
+            <div class="venus-sidebar-footer">
+                <a href="admin.html" class="venus-sidebar-link venus-admin">
+                    <span class="venus-sidebar-icon">🛠️</span>
+                    Admin
+                </a>
+            </div>
+        </aside>
+        <main class="dashboard-main">
+            <header class="dashboard-header">
+                <h1 class="dashboard-title">Ricerca Prodotti</h1>
+                <div class="dashboard-actions">
+                    <button class="btn btn-primary">Nuova Ricerca</button>
+                </div>
+            </header>
+            <section class="venus-stats-grid">
+                <div class="venus-stat-card">
+                    <div class="venus-stat-icon venus-primary">🔍</div>
+                    <div class="venus-stat-content">
+                        <div class="venus-stat-title">Totale risultati</div>
+                        <div class="venus-stat-value" id="stat-total">0</div>
+                    </div>
+                </div>
+                <div class="venus-stat-card">
+                    <div class="venus-stat-icon venus-success">💰</div>
+                    <div class="venus-stat-content">
+                        <div class="venus-stat-title">Prezzo medio</div>
+                        <div class="venus-stat-value" id="stat-price">-</div>
+                    </div>
+                </div>
+                <div class="venus-stat-card">
+                    <div class="venus-stat-icon venus-warning">⭐</div>
+                    <div class="venus-stat-content">
+                        <div class="venus-stat-title">Rating medio</div>
+                        <div class="venus-stat-value" id="stat-rating">-</div>
+                    </div>
+                </div>
+            </section>
+            <section class="search-section">
+                <form id="search-form" class="search-form">
+                    <input type="text" id="search-input" class="search-input" placeholder="Cerca prodotto, brand o ASIN..." autocomplete="off" />
+                    <button type="submit" class="btn btn-primary">Cerca</button>
+                </form>
+            </section>
+            <section class="results-section">
+                <div id="results-grid" class="results-grid">
+                    <!-- Risultati prodotti -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="../js/products.js"></script>
+</body>
+</html>
+
+        .admin-link:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .nav-user {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .user-info {
+                padding: 0.5rem;
+            }
+
+            .user-name {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="../../index.html" class="nav-logo">
+                <h2>🚀 Shappa</h2>
+            </a>
+            <div class="nav-menu">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <a href="products.html" class="nav-link active">Cerca Prodotti</a>
+                <a href="listings.html" class="nav-link">Listing</a>
+                <a href="reports.html" class="nav-link">Report</a>
+                <a href="settings.html" class="nav-link">Impostazioni</a>
+            </div>
+            <div class="nav-user">
+                <a href="admin.html" class="admin-link" title="Admin Panel">
+                    🛠️ <span>Admin</span>
+                </a>
+                <a href="settings.html" class="user-info">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <span class="user-name" id="userName">Caricamento...</span>
+                </a>
+                <button class="btn-logout" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="venus-search-section">
+        <div class="venus-search-container">
+            <div class="venus-search-header">
+                <h1 class="venus-search-title">🔍 Motore di Ricerca Prodotti Multi-Marketplace</h1>
+                <p class="venus-search-subtitle">🚀 Trova i prodotti migliori da diversi marketplace per la tua strategia di vendita automatizzata</p>
+            </div>
+            
+            <form class="venus-search-form" onsubmit="searchProducts(event)">
+                <div class="venus-form-row">
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Marketplace</label>
+                        <select class="venus-form-select" id="marketplace" title="Seleziona marketplace">
+                            <option value="amazon">🛒 Amazon</option>
+                            <option value="alibaba" disabled>🏭 Alibaba (Coming Soon)</option>
+                            <option value="ebay" disabled>📦 eBay (Coming Soon)</option>
+                            <option value="walmart" disabled>🏪 Walmart (Coming Soon)</option>
+                            <option value="aliexpress" disabled>📱 AliExpress (Coming Soon)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="venus-form-group venus-form-group-main">
+                        <label class="venus-form-label">Prodotto da cercare</label>
+                        <input type="text" class="venus-form-input" id="searchQuery" placeholder="Inserisci il nome del prodotto da cercare..." required>
+                    </div>
+                </div>
+                
+                <div class="venus-form-row">
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Paese/Regione</label>
+                        <select class="venus-form-select" id="searchCountry" title="Paese/Regione">
+                            <option value="IT" selected>🇮🇹 Italia</option>
+                            <option value="US">🇺🇸 Stati Uniti</option>
+                            <option value="DE">🇩🇪 Germania</option>
+                            <option value="FR">🇫🇷 Francia</option>
+                            <option value="ES">🇪🇸 Spagna</option>
+                            <option value="UK">🇬🇧 Regno Unito</option>
+                        </select>
+                    </div>
+                    
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Categoria</label>
+                        <select class="venus-form-select" id="searchCategory" title="Categoria prodotto">
+                            <option value="">Tutte le categorie</option>
+                            <option value="electronics">📱 Elettronica</option>
+                            <option value="books">📚 Libri</option>
+                            <option value="home">🏠 Casa e Giardino</option>
+                            <option value="fashion">👕 Abbigliamento</option>
+                            <option value="sports">⚽ Sport e Tempo Libero</option>
+                            <option value="toys">🧸 Giochi e Giocattoli</option>
+                            <option value="automotive">🚗 Auto e Moto</option>
+                            <option value="health">💊 Salute e Bellezza</option>
+                        </select>
+                    </div>
+                    
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Prezzo minimo</label>
+                        <input type="number" class="venus-form-input" id="minPrice" placeholder="€0.00" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Prezzo massimo</label>
+                        <input type="number" class="venus-form-input" id="maxPrice" placeholder="€999.99" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="venus-form-group">
+                        <label class="venus-form-label">Ordina per</label>
+                        <select class="venus-form-select" id="sortBy" title="Ordina risultati">
+                            <option value="">Rilevanza</option>
+                            <option value="price_asc">💰 Prezzo crescente</option>
+                            <option value="price_desc">💰 Prezzo decrescente</option>
+                            <option value="rating_desc">⭐ Valutazione migliore</option>
+                            <option value="newest">🆕 Più recenti</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="venus-form-actions">
+                    <button type="submit" class="venus-btn venus-btn-primary venus-btn-large">
+                        <span class="venus-btn-icon">🔎</span>
+                        <span>Cerca Prodotti</span>
+                        <span class="venus-btn-icon">✨</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <main class="venus-main-content">
+        <div class="venus-results-header" id="resultsHeader" style="display: none;">
+            <div class="venus-results-count" id="resultsCount">0 prodotti trovati</div>
+            <div class="venus-badge venus-badge-info" id="dataSourceBadge">🌐 API Amazon (IT)</div>
+        </div>
+        <div class="venus-loading" id="loadingMessage" style="display: none;">
+            <div class="venus-loading-content">
+                <div class="venus-loading-icon">🔄</div>
+                <p>Ricerca in corso...</p>
+            </div>
+        </div>
+        <div class="venus-error-message" id="errorMessage" style="display: none;"></div>
+        <div class="venus-no-results" id="noResults" style="display: none;">
+            <div class="venus-empty-state">
+                <div class="venus-empty-icon">🚫</div>
+                <h3>Nessun risultato trovato</h3>
+                <p>Nessun prodotto trovato per la ricerca specificata. Prova con termini di ricerca diversi.</p>
+            </div>
+        </div>
+        <div class="venus-products-grid" id="productsGrid"></div>
+    </main>
+
+    <!-- Product Modal with tabs: Info/Modifica and Automazione -->
+    <div id="productModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:2000;">
+        <div style="background:white; border-radius:8px; max-width:1000px; width:calc(100% - 2rem); max-height:90vh; overflow:auto; padding:1rem; position:relative;">
+            <button id="modalCloseBtn" style="position:absolute; right:8px; top:8px; background:#eee; border-radius:6px; padding:0.25rem 0.5rem; border:0; cursor:pointer;">Chiudi </button>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                <div style="flex:0 0 340px;">
+                    <div style="border-radius:6px; overflow:hidden; background:#f7fafc; padding:0.5rem;">
+                        <img id="modalImage" src="/assets/no-image-280x200.png" alt="img" style="width:100%; height:320px; object-fit:contain; background:white; border-radius:6px;">
+                        <div id="modalGallery" style="display:flex; gap:0.5rem; margin-top:0.5rem; overflow-x:auto; padding-bottom:0.25rem;"></div>
+                    </div>
+                </div>
+                <div style="flex:1; min-width:320px;">
+                    <h2 id="modalTitle" style="margin-top:0; font-size:1.25rem;"></h2>
+                    <p id="modalPrice" style="font-size:1.25rem; font-weight:700; color:#2d3748; margin:0.25rem 0;"></p>
+                    <p id="modalBrand" style="color:#4a5568; margin:0.25rem 0;"></p>
+                    <p id="modalRating" style="margin:0.25rem 0;"></p>
+                    <p id="modalReviews" style="margin:0.25rem 0;"></p>
+                    <p id="modalOriginalPrice" style="margin:0.25rem 0;"></p>
+                    <div id="modalBadges" style="margin:0.25rem 0;"></div>
+                    <p id="modalOffers" style="margin:0.25rem 0;"></p>
+                    <p id="modalDelivery" style="margin:0.25rem 0;"></p>
+                    <p id="modalDetails" style="margin:0.25rem 0;"></p>
+
+                    <!-- Tabs -->
+                    <div style="margin-top:1rem;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button id="tabInfoBtn" class="tab-btn" style="flex:1;padding:0.5rem;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:600;">Info / Modifica</button>
+                            <button id="tabAutoBtn" class="tab-btn" style="flex:1;padding:0.5rem;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-weight:600;">Automazione</button>
+                        </div>
+                        <div id="tabInfo" style="margin-top:1rem;">
+                            <form id="productEditForm">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Titolo</label>
+                                <input id="editTitle" type="text" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Prezzo</label>
+                                <input id="editPrice" type="text" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Note / Descrizione</label>
+                                <textarea id="editDetails" rows="4" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;"></textarea>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <button type="button" id="saveProductBtn" style="background:#48bb78;color:white;padding:0.6rem 1rem;border-radius:6px;border:0;cursor:pointer;">Salva</button>
+                                    <button type="button" id="refreshPriceBtn" style="background:#4299e1;color:white;padding:0.6rem 1rem;border-radius:6px;border:0;cursor:pointer;">Aggiorna prezzo</button>
+                                    <button type="button" id="monitorProductBtn" style="background:#ed8936;color:white;padding:0.6rem 1rem;border-radius:6px;border:0;cursor:pointer;">📊 Monitora prodotto</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div id="tabAuto" style="display:none;margin-top:1rem;">
+                            <p style="margin-top:0;margin-bottom:0.5rem;color:#4a5568;">Questa scheda mostra le impostazioni di automazione relative al prodotto. Le impostazioni sono sincronizzate con <a href="../pages/settings.html#automation">Impostazioni → Automazione</a>.</p>
+                            <div style="background:#f7fafc;padding:0.75rem;border-radius:6px;border:1px solid #e2e8f0;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Percentuale Fee eBay (FVF)</label>
+                                <input id="autoEbayFeePct" type="number" min="0" max="100" step="0.1" value="12" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Fee fissa (€)</label>
+                                <input id="autoEbayFixedFee" type="number" min="0" step="0.01" value="0.35" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">% Sponsorizzazioni</label>
+                                <input id="autoPromotedPct" type="number" min="0" max="100" step="0.1" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Percentuale Profitto Target</label>
+                                <input id="autoProfitPct" type="number" min="0" max="100" step="0.1" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                <label style="display:block;font-weight:600;margin-bottom:0.25rem;">Azioni automatiche</label>
+                                <select id="autoActions" style="width:100%;padding:0.5rem;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:0.5rem;">
+                                    <option value="none">Nessuna</option>
+                                    <option value="adjust_price">Regola prezzo al raggiungimento target</option>
+                                    <option value="notify_price_drop">Notifica calo prezzo</option>
+                                    <option value="promote">Avvia sponsorizzazione</option>
+                                </select>
+                                <div style="background:#fffbe5;padding:0.5rem;border-radius:6px;margin-bottom:0.5rem;">
+                                    <b>Stima fee totale:</b> <span id="autoFeeEstimate">-</span><br>
+                                    <b>Profitto netto stimato:</b> <span id="autoNetProfit">-</span>
+                                </div>
+                                <div style="display:flex; gap:0.5rem;"><button id="openAutomationSettings" type="button" style="background:#f6ad55;color:white;padding:0.6rem 1rem;border-radius:6px;border:0;cursor:pointer;">Apri Impostazioni Automazione</button></div>
+                            </div>
+                            <p style="margin-top:0.75rem;color:#718096;font-size:0.95rem;">Suggerimento: imposta qui le fee eBay, la percentuale di sponsorizzazione e il profitto target. La stima viene aggiornata in tempo reale.</p>
+                        </div>
+                        <p style="margin-top:1rem;"><a id="modalLink" href="#" target="_blank" rel="noopener noreferrer" style="background:#667eea;color:white;padding:0.6rem 1rem;border-radius:8px;text-decoration:none;">Vai ad Amazon</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+
+    <script>
+        let currentProducts = [];
+        let currentProduct = null; // Prodotto attualmente visualizzato nella modale
+        async function searchProducts(event) {
+            event.preventDefault();
+            const query = document.getElementById('searchQuery').value.trim();
+            const marketplace = document.getElementById('marketplace').value;
+            const country = (document.getElementById('searchCountry')?.value || 'IT');
+            const category = (document.getElementById('searchCategory')?.value || '').trim();
+            const minPrice = document.getElementById('minPrice')?.value;
+            const maxPrice = document.getElementById('maxPrice')?.value;
+            const sortBy = document.getElementById('sortBy')?.value;
+            if (!query) return showError('Inserisci una parola chiave per la ricerca');
+            
+            // Verifica se il marketplace è supportato
+            if (marketplace !== 'amazon') {
+                return showError(`Il marketplace ${marketplace} non è ancora supportato. Attualmente disponibile solo Amazon.`);
+            }
+            
+            showLoading(); hideError(); hideNoResults();
+            
+            try {
+                const params = new URLSearchParams({ q: query, country: country });
+                if (category) params.append('category', category);
+                if (minPrice) params.append('min_price', String(minPrice));
+                if (maxPrice) params.append('max_price', String(maxPrice));
+                if (sortBy) params.append('sort', sortBy);
+                
+                const response = await fetch(`/api/amazon/search?${params.toString()}`, { cache: 'no-store' });
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+                    currentProducts = data.products; 
+                    displayProducts(data.products); 
+                    updateResultsHeader(data.products.length, marketplace, country);
+                    // Persisti ultimi risultati per import su Listing
+                    try { localStorage.setItem('shappa_last_search', JSON.stringify(currentProducts)); } catch {}
+                } else { 
+                    showNoResults('Nessun prodotto trovato con i filtri selezionati.'); 
+                    hideResultsHeader(); 
+                }
+            } catch (e) { 
+                console.error('Search error:', e);
+                showError('Errore durante la ricerca. Riprova tra qualche momento.'); 
+                hideResultsHeader(); 
+            }
+            hideLoading();
+        }
+
+    // ProductCard component (vanilla) - returns DOM element
+        function createProductCard(product) {
+            function normalizeImage(src) { if (!src) return '/assets/no-image-280x200.png'; const l = src.toString(); if (l.startsWith('http://')||l.startsWith('https://')) return l; if (/^[A-Za-z0-9].*\.(jpg|jpeg|png|webp)$/i.test(l)||l.includes('_AC_')) return 'https://m.media-amazon.com/images/I/'+l; return l; }
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.style.cursor = 'pointer';
+
+            const img = document.createElement('img');
+            img.className = 'product-image';
+            img.src = normalizeImage(product.image);
+            img.alt = product.title || 'Prodotto';
+            img.onerror = () => { img.onerror = null; img.src = '/assets/no-image-280x200.png'; };
+
+            const info = document.createElement('div');
+            info.className = 'product-info';
+            const title = document.createElement('h3'); title.className = 'product-title'; title.textContent = product.title || 'Prodotto';
+            const price = document.createElement('div'); price.className = 'product-price'; price.textContent = (product.price_display || product.price || '') + (product.currency ? ' ' + product.currency : '');
+            const details = document.createElement('div'); details.className = 'product-details';
+            const brand = document.createElement('span'); brand.className = 'product-brand'; brand.textContent = product.brand || '';
+            const rating = document.createElement('div'); rating.className = 'product-rating'; rating.textContent = '★ ' + (product.rating || 'N/A');
+            const asin = document.createElement('div'); asin.className = 'product-asin'; asin.style.fontSize='0.85rem'; asin.style.color='#718096'; asin.textContent = product.id ? 'ASIN: ' + product.id : '';
+
+            details.appendChild(brand); details.appendChild(rating);
+            info.appendChild(title); info.appendChild(price); info.appendChild(details); info.appendChild(asin);
+            card.appendChild(img); card.appendChild(info);
+
+            card.addEventListener('click', () => { ProductDetailModal.open(product.id); });
+            return card;
+        }
+
+        // Display products in grid
+        function displayProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+            products.forEach(product => {
+                const card = createProductCard(product);
+                grid.appendChild(card);
+            });
+        }
+
+    // ProductDetailModal singleton (vanilla) — reuses the existing modal DOM but provides API
+        const ProductDetailModal = (function(){
+            const modal = document.getElementById('productModal');
+            const mainImg = document.getElementById('modalImage');
+            const gallery = document.getElementById('modalGallery');
+            let currentAsin = null;
+
+            function updateModalWithProduct(p) {
+                if (mainImg) mainImg.src = p.image || '/assets/no-image-280x200.png';
+                const titleEl = document.getElementById('modalTitle');
+                if (titleEl) titleEl.textContent = p.title || '';
+                const priceEl = document.getElementById('modalPrice');
+                if (priceEl) priceEl.textContent = (p.price_display || '') + (p.currency ? ' ' + p.currency : '');
+                const brandEl = document.getElementById('modalBrand');
+                if (brandEl) brandEl.textContent = p.brand || '';
+                const ratingEl = document.getElementById('modalRating');
+                if (ratingEl) ratingEl.textContent = '★ ' + (p.rating || 'N/A');
+                const reviewsEl = document.getElementById('modalReviews');
+                if (reviewsEl) reviewsEl.textContent = (p.reviews_count ? `${p.reviews_count} recensioni` : '');
+                const originalPriceEl = document.getElementById('modalOriginalPrice');
+                if (originalPriceEl) originalPriceEl.textContent = (p.original_price ? `Prezzo originale: ${p.original_price}` : '');
+                const badgesEl = document.getElementById('modalBadges');
+                if (badgesEl) {
+                    badgesEl.innerHTML = '';
+                    const mkBadge = (txt)=>{ const b=document.createElement('span'); b.textContent=txt; b.style.background='#edf2f7'; b.style.color='#2d3748'; b.style.padding='0.25rem 0.5rem'; b.style.borderRadius='999px'; b.style.fontSize='0.8rem'; return b; };
+                    if (p.badges?.product_badge) badgesEl.appendChild(mkBadge(p.badges.product_badge));
+                    if (p.badges?.best_seller) badgesEl.appendChild(mkBadge('Best Seller'));
+                    if (p.badges?.amazon_choice) badgesEl.appendChild(mkBadge('Amazon Choice'));
+                    if (p.badges?.prime) badgesEl.appendChild(mkBadge('Prime'));
+                }
+                const offersEl = document.getElementById('modalOffers');
+                if (offersEl) offersEl.textContent = (p.offers?.num_offers ? `${p.offers.num_offers} offerte disponibili` : '');
+                const deliveryEl = document.getElementById('modalDelivery');
+                if (deliveryEl) deliveryEl.textContent = p.delivery || '';
+                const detailsEl = document.getElementById('modalDetails');
+                if (detailsEl) detailsEl.textContent = p.details || '';
+
+                // Gallery
+                if (gallery) {
+                    gallery.innerHTML = '';
+                    const imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+                    imgs.forEach(src => {
+                        const thumb = document.createElement('img');
+                        thumb.src = src; thumb.style.width='64px'; thumb.style.height='64px'; thumb.style.objectFit='cover'; thumb.style.borderRadius='6px'; thumb.style.cursor='pointer';
+                        thumb.addEventListener('click', () => { if (mainImg) mainImg.src = src; });
+                        thumb.addEventListener('error', ()=>thumb.style.display='none');
+                        gallery.appendChild(thumb);
+                    });
+                }
+
+                // Prefill automation fields
+                const editTitle = document.getElementById('editTitle');
+                if (editTitle) editTitle.value = p.title || '';
+                const editPrice = document.getElementById('editPrice');
+                if (editPrice) editPrice.value = p.price_display || '';
+                const editDetails = document.getElementById('editDetails');
+                if (editDetails) editDetails.value = p.details || '';
+                const autoPromotedPct = document.getElementById('autoPromotedPct');
+                if (autoPromotedPct) autoPromotedPct.value = (p.raw && p.raw.automation && p.raw.automation.promotedPct) || 0;
+                const autoProfitPct = document.getElementById('autoProfitPct');
+                if (autoProfitPct) autoProfitPct.value = (p.raw && p.raw.automation && p.raw.automation.profitPct) || 15;
+                const autoActions = document.getElementById('autoActions');
+                if (autoActions) autoActions.value = (p.raw && p.raw.automation && p.raw.automation.action) || 'none';
+            }
+
+            async function loadDetails(asin) {
+                currentAsin = asin;
+                currentProduct = currentProducts.find(p => p.asin === asin) || null; // Imposta il prodotto corrente
+                
+                // Prima mostra i dati dalla ricerca (sempre disponibili)
+                if (currentProduct) {
+                    updateModalWithProduct(currentProduct);
+                }
+                
+                // Poi prova a caricare dettagli aggiuntivi dall'API
+                try {
+                    const resp = await fetch(`/api/amazon/product/${encodeURIComponent(asin)}?country=IT`);
+                    const json = await resp.json();
+                    if (json.success && json.product) {
+                        const p = json.product;
+                        // Aggiorna con dati più dettagliati se disponibili
+                        updateModalWithProduct(p);
+                        currentProduct = p; // Aggiorna il prodotto corrente
+                    }
+                } catch (e) {
+                    console.log('Dettagli aggiuntivi non disponibili, usando dati di ricerca');
+                }
+            }
+                // show placeholder while loading
+                const titleEl = document.getElementById('modalTitle');
+                const priceEl = document.getElementById('modalPrice');
+                const brandEl = document.getElementById('modalBrand');
+                const detailsEl = document.getElementById('modalDetails');
+
+                if (titleEl) titleEl.textContent = 'Caricamento...';
+                if (priceEl) priceEl.textContent = '';
+                if (brandEl) brandEl.textContent = '';
+                if (detailsEl) detailsEl.textContent = '';
+                if (mainImg) mainImg.src = '/assets/no-image-280x200.png';
+
+                try {
+                    const resp = await fetch(`/api/amazon/product/${encodeURIComponent(asin)}?country=IT`);
+                    const json = await resp.json();
+                    if (json.success && json.product) {
+                        const p = json.product;
+                        if (mainImg) mainImg.src = p.image || '/assets/no-image-280x200.png';
+                        if (titleEl) titleEl.textContent = p.title || '';
+                        if (priceEl) priceEl.textContent = (p.price_display || '') + (p.currency ? ' ' + p.currency : '');
+                        if (brandEl) brandEl.textContent = p.brand || '';
+                        const ratingEl = document.getElementById('modalRating');
+                        if (ratingEl) ratingEl.textContent = '★ ' + (p.rating || 'N/A');
+                        const reviewsEl = document.getElementById('modalReviews');
+                        if (reviewsEl) reviewsEl.textContent = (p.reviews_count ? `${p.reviews_count} recensioni` : '');
+                        const originalPriceEl = document.getElementById('modalOriginalPrice');
+                        if (originalPriceEl) originalPriceEl.textContent = (p.original_price ? `Prezzo originale: ${p.original_price}` : '');
+                        const badgesEl = document.getElementById('modalBadges');
+                        if (badgesEl) {
+                            badgesEl.innerHTML = '';
+                            const mkBadge = (txt)=>{ const b=document.createElement('span'); b.textContent=txt; b.style.background='#edf2f7'; b.style.color='#2d3748'; b.style.padding='0.25rem 0.5rem'; b.style.borderRadius='999px'; b.style.fontSize='0.8rem'; return b; };
+                            if (p.badges?.product_badge) badgesEl.appendChild(mkBadge(p.badges.product_badge));
+                            if (p.badges?.amazon_choice) badgesEl.appendChild(mkBadge('Amazon Choice'));
+                            if (p.badges?.best_seller) badgesEl.appendChild(mkBadge('Best Seller'));
+                            if (p.badges?.prime) badgesEl.appendChild(mkBadge('Prime'));
+                            if (p.badges?.climate_pledge) badgesEl.appendChild(mkBadge('Climate Pledge'));
+                        }
+                        const offersEl = document.getElementById('modalOffers');
+                        if (offersEl) offersEl.textContent = (p.offers?.num_offers ? `Offerte: ${p.offers.num_offers}` : '') + (p.offers?.minimum_offer_price ? ` (min: ${p.offers.minimum_offer_price})` : '');
+                        const deliveryEl = document.getElementById('modalDelivery');
+                        if (deliveryEl) deliveryEl.textContent = p.delivery || '';
+                        if (detailsEl) detailsEl.textContent = p.details || '';
+                        const linkEl = document.getElementById('modalLink');
+                        if (linkEl) linkEl.href = p.url || '#';
+
+                        // gallery
+                        gallery.innerHTML = '';
+                        const imgs = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+                        imgs.forEach(src => {
+                            const thumb = document.createElement('img');
+                            thumb.src = src; thumb.style.width='64px'; thumb.style.height='64px'; thumb.style.objectFit='cover'; thumb.style.borderRadius='6px'; thumb.style.cursor='pointer';
+                            thumb.addEventListener('click', () => { mainImg.src = src; });
+                            thumb.addEventListener('error', ()=>thumb.style.display='none');
+                            gallery.appendChild(thumb);
+                        });
+
+                        // prefill automation fields
+                        document.getElementById('editTitle').value = p.title || '';
+                        document.getElementById('editPrice').value = p.price_display || '';
+                        document.getElementById('editDetails').value = p.details || '';
+                        document.getElementById('autoPromotedPct').value = (p.raw && p.raw.automation && p.raw.automation.promotedPct) || 0;
+                        document.getElementById('autoProfitPct').value = (p.raw && p.raw.automation && p.raw.automation.profitPct) || 15;
+                        document.getElementById('autoActions').value = (p.raw && p.raw.automation && p.raw.automation.action) || 'none';
+                    } else {
+                        const titleEl = document.getElementById('modalTitle');
+                        if (titleEl) titleEl.textContent = 'Dettagli non disponibili - API limitata';
+                        const priceEl = document.getElementById('modalPrice');
+                        if (priceEl) priceEl.textContent = '';
+                        const brandEl = document.getElementById('modalBrand');
+                        if (brandEl) brandEl.textContent = '';
+                        const detailsEl = document.getElementById('modalDetails');
+                        if (detailsEl) detailsEl.textContent = 'I dettagli completi del prodotto non sono disponibili al momento. L\'API potrebbe avere limitazioni per questo articolo.';
+                        if (mainImg) mainImg.src = '/assets/no-image-280x200.png';
+                    }
+                } catch (e) { 
+                    console.error('Errore caricamento prodotto:', e);
+                    const titleEl = document.getElementById('modalTitle');
+                    if (titleEl) titleEl.textContent = 'Errore caricamento';
+                    const priceEl = document.getElementById('modalPrice');
+                    if (priceEl) priceEl.textContent = '';
+                    const brandEl = document.getElementById('modalBrand');
+                    if (brandEl) brandEl.textContent = '';
+                    const detailsEl = document.getElementById('modalDetails');
+                    if (detailsEl) detailsEl.textContent = 'Si è verificato un errore durante il caricamento.';
+                    if (mainImg) mainImg.src = '/assets/no-image-280x200.png';
+                }
+            }
+
+            function open(asin) {
+                modal.style.display = 'flex';
+                loadDetails(asin);
+            }
+            function close() { modal.style.display = 'none'; currentAsin=null; }
+            return { open, close, loadDetails };
+        })();
+
+        // Wire modal close button
+        document.getElementById('modalCloseBtn')?.addEventListener('click', () => { ProductDetailModal.close(); });
+
+        // displayProducts: render an array of products using ProductCard
+        function displayProducts(products) {
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+            (products || []).forEach(p => {
+                try { grid.appendChild(createProductCard(p)); } catch (e) { console.warn('render product failed', e); }
+            });
+        }
+
+        function showTab(name) {
+            const info = document.getElementById('tabInfo');
+            const auto = document.getElementById('tabAuto');
+            const infoBtn = document.getElementById('tabInfoBtn');
+            const autoBtn = document.getElementById('tabAutoBtn');
+            if (name === 'auto') { info.style.display='none'; auto.style.display='block'; infoBtn.style.background='#fff'; autoBtn.style.background='#edf2ff'; }
+            else { info.style.display='block'; auto.style.display='none'; infoBtn.style.background='#edf2ff'; autoBtn.style.background='#fff'; }
+        }
+
+        async function saveProductEdits(productId) {
+            // Local-only save (placeholder) - in future persist to DB
+            const p = currentProducts.find(x=>x.id===productId);
+            if (!p) return showError('Prodotto non trovato per il salvataggio');
+            p.title = document.getElementById('editTitle').value;
+            p.price_display = document.getElementById('editPrice').value;
+            p.details = document.getElementById('editDetails').value;
+            // Save automation metadata into raw.automation for now
+            p.raw = p.raw || {};
+            p.raw.automation = {
+                ebayFeePct: Number(document.getElementById('autoEbayFeePct').value || 12),
+                ebayFixedFee: Number(document.getElementById('autoEbayFixedFee').value || 0.35),
+                promotedPct: Number(document.getElementById('autoPromotedPct').value || 0),
+                profitPct: Number(document.getElementById('autoProfitPct').value || 0),
+                action: document.getElementById('autoActions').value || 'none'
+            };
+            // Re-render products grid to reflect changes
+            displayProducts(currentProducts);
+            showToast('Modifiche salvate (localmente)');
+        }
+        // Monitora prodotto per tracking prezzi
+        async function monitorProduct(product) {
+            try {
+                const db = await openMonitoredProductsDB();
+                const monitoredProduct = {
+                    asin: product.asin,
+                    title: product.title,
+                    brand: product.brand,
+                    currentPrice: product.price,
+                    originalPrice: product.original_price,
+                    currency: product.currency,
+                    image: product.image,
+                    rating: product.rating,
+                    reviewsCount: product.reviews_count,
+                    badges: product.badges,
+                    lastUpdated: new Date().toISOString(),
+                    priceHistory: [{
+                        price: product.price,
+                        date: new Date().toISOString()
+                    }]
+                };
+                
+                await db.put('monitoredProducts', monitoredProduct);
+                showToast('✅ Prodotto aggiunto al monitoraggio!');
+                
+                // Aggiorna il pulsante
+                const monitorBtn = document.getElementById('monitorProductBtn');
+                if (monitorBtn) {
+                    monitorBtn.textContent = '📊 Già monitorato';
+                    monitorBtn.disabled = true;
+                    monitorBtn.style.background = '#a0aec0';
+                }
+            } catch (error) {
+                console.error('Errore monitoraggio prodotto:', error);
+                showToast('❌ Errore nell\'aggiungere al monitoraggio');
+            }
+        }
+
+        // IndexedDB per prodotti monitorati
+        async function openMonitoredProductsDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('ShappaMonitoredProducts', 1);
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('monitoredProducts')) {
+                        const store = db.createObjectStore('monitoredProducts', { keyPath: 'asin' });
+                        store.createIndex('lastUpdated', 'lastUpdated');
+                    }
+                };
+                
+        // Ottieni tutti i prodotti monitorati
+        async function getMonitoredProducts() {
+            try {
+                const db = await openMonitoredProductsDB();
+                const transaction = db.transaction(['monitoredProducts'], 'readonly');
+                const store = transaction.objectStore('monitoredProducts');
+                return new Promise((resolve, reject) => {
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            } catch (error) {
+                console.error('Errore recupero prodotti monitorati:', error);
+                return [];
+            }
+        }
+
+        // Calcolo fee e profitto netto live
+        function updateFeeEstimate() {
+            const price = parseFloat(document.getElementById('editPrice').value.replace(',','.')) || 0;
+            const feePct = parseFloat(document.getElementById('autoEbayFeePct').value) || 12;
+            const fixedFee = parseFloat(document.getElementById('autoEbayFixedFee').value) || 0.35;
+            const promotedPct = parseFloat(document.getElementById('autoPromotedPct').value) || 0;
+            const profitPct = parseFloat(document.getElementById('autoProfitPct').value) || 0;
+            const fee = price * (feePct/100) + fixedFee + price * (promotedPct/100);
+            const profit = price - fee;
+            const profitTarget = price * (profitPct/100);
+            document.getElementById('autoFeeEstimate').textContent = fee > 0 ? fee.toFixed(2) + ' €' : '-';
+            document.getElementById('autoNetProfit').textContent = profit > 0 ? profit.toFixed(2) + ' €' : '-';
+        }
+
+        // Event listeners per aggiornare la stima live
+        ["editPrice","autoEbayFeePct","autoEbayFixedFee","autoPromotedPct","autoProfitPct"].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', updateFeeEstimate);
+        });
+
+        // Event listener per monitorare prodotto
+        document.getElementById('monitorProductBtn')?.addEventListener('click', async () => {
+            if (!currentProduct) {
+                showToast('❌ Nessun prodotto selezionato');
+                return;
+            }
+            await monitorProduct(currentProduct);
+        });
+
+        // Aggiorna stima all'apertura modale
+        document.getElementById('productModal').addEventListener('click', function(e){
+            if(e.target.id==='tabAutoBtn'||e.target.id==='tabInfoBtn'||e.target.id==='editPrice'||e.target.id==='autoEbayFeePct'||e.target.id==='autoEbayFixedFee'||e.target.id==='autoPromotedPct'||e.target.id==='autoProfitPct') updateFeeEstimate();
+        });
+
+        async function refreshProductPrice(productId) {
+            try {
+                const resp = await fetch(`/api/amazon/product/${encodeURIComponent(productId)}?country=IT`);
+                const json = await resp.json();
+                if (json.success && json.product) {
+                    const pIndex = currentProducts.findIndex(x=>x.id===productId);
+                    if (pIndex > -1) currentProducts[pIndex] = json.product;
+                    // update modal fields
+                    document.getElementById('modalPrice').textContent = (json.product.price_display || '') + (json.product.currency ? ' ' + json.product.currency : '');
+                    document.getElementById('modalImage').src = json.product.image || '/assets/no-image-280x200.png';
+                    showToast('Prezzo aggiornato');
+                } else showError('Impossibile aggiornare il prezzo');
+            } catch (e) { showError('Errore durante l\'aggiornamento del prezzo'); }
+        }
+
+        function showToast(msg) {
+            const el = document.createElement('div');
+            el.textContent = msg; el.style.position='fixed'; el.style.bottom='16px'; el.style.right='16px'; el.style.background='#2d3748'; el.style.color='white'; el.style.padding='0.5rem 1rem'; el.style.borderRadius='6px'; el.style.zIndex=3000; document.body.appendChild(el);
+            setTimeout(()=>el.remove(),2500);
+        }
+
+        document.getElementById('tabInfoBtn').addEventListener('click', () => showTab('info'));
+        document.getElementById('tabAutoBtn').addEventListener('click', () => showTab('auto'));
+        document.getElementById('modalCloseBtn')?.addEventListener('click', () => { document.getElementById('productModal').style.display = 'none'; });
+
+        function showLoading(){document.getElementById('loadingMessage').style.display='block';document.getElementById('productsGrid').innerHTML='';}
+        function hideLoading(){document.getElementById('loadingMessage').style.display='none';}
+        function showError(m){const e=document.getElementById('errorMessage');e.textContent=m;e.style.display='block';}
+        function hideError(){document.getElementById('errorMessage').style.display='none';}
+        function showNoResults(m){const el=document.getElementById('noResults');el.innerHTML=`<p>🚫 ${m}</p>`;el.style.display='block';}
+        function hideNoResults(){document.getElementById('noResults').style.display='none';}
+        function updateResultsHeader(count, marketplace = 'amazon', country = 'IT') {
+            document.getElementById('resultsCount').textContent = `${count} prodotti trovati`;
+            
+            // Aggiorna badge dinamicamente
+            const badge = document.getElementById('dataSourceBadge');
+            const marketplaceName = {
+                'amazon': '🛒 Amazon',
+                'alibaba': '🏭 Alibaba', 
+                'ebay': '📦 eBay',
+                'walmart': '🏪 Walmart',
+                'aliexpress': '📱 AliExpress'
+            }[marketplace] || '🛒 Amazon';
+            
+            const countryFlag = {
+                'IT': '🇮🇹', 'US': '🇺🇸', 'DE': '🇩🇪', 
+                'FR': '🇫🇷', 'ES': '🇪🇸', 'UK': '🇬🇧'
+            }[country] || '🌐';
+            
+            badge.textContent = `${countryFlag} API ${marketplaceName} (${country})`;
+            document.getElementById('resultsHeader').style.display = 'flex';
+        }
+    </script>
+    <script src="../utils/navbar-universal.js"></script>
+</body>
+</html>
