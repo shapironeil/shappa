@@ -1023,6 +1023,7 @@
             font-size: 16px;
             margin: 0 0 10px 0;
             color: var(--venus-text-primary);
+        }
 
         .zoom-btn:hover {
             background: #e88900;
@@ -1816,7 +1817,7 @@
                 <div class="venus-user-profile">
                     <div class="venus-user-avatar" id="userAvatar">A</div>
                     <div class="venus-user-info">
-                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-name" id="userName">Utente</div>
                         <div class="venus-user-role">Admin</div>
                     </div>
                 </div>
@@ -1970,6 +1971,7 @@
     <script src="../core/eventBus.js"></script>
     <script src="../core/store.js"></script>
     <script src="../utils/auth-v2.js"></script>
+    <script>try{ if(!(window.AuthManager && window.AuthManager.isLoggedIn())){ window.location.replace('../../index.html#login'); } }catch{}</script>
     
     <script>
         // Funzione unificata per salvataggio bozza con dati ricchi + immagini HQ

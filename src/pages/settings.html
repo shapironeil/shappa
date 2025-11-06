@@ -613,7 +613,7 @@
                 <div class="venus-user-profile">
                     <div class="venus-user-avatar" id="userAvatar">A</div>
                     <div class="venus-user-info">
-                        <div class="venus-user-name" id="userName">Andrei</div>
+                        <div class="venus-user-name" id="userName">Utente</div>
                         <div class="venus-user-role">Admin</div>
                     </div>
                 </div>
@@ -956,6 +956,14 @@
     <script src="../core/eventBus.js"></script>
     <script src="../core/store.js"></script>
     <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Enforce login for protected page
+        try {
+            if (!(window.AuthManager && window.AuthManager.isLoggedIn())) {
+                window.location.replace('../../index.html#login');
+            }
+        } catch {}
+    </script>
     
     <script>
         // Initialize Auth System
@@ -993,7 +1001,7 @@
                 const emailEl = document.getElementById('email');
                 const usernameEl = document.getElementById('username');
                 if (fullNameEl) fullNameEl.value = currentUser.username;
-                if (emailEl) emailEl.value = currentUser.email || 'andrei@shappa.com';
+                if (emailEl) emailEl.value = currentUser.email || '';
                 if (usernameEl) usernameEl.value = currentUser.username;
             }
         }
