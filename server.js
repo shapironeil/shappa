@@ -137,7 +137,8 @@ app.get('/auth/ebay/callback', async (req, res) => {
 
         // Persist token to disk so the session remains connected across restarts
         try {
-            const tokensDir = path.join(__dirname, 'data', 'ebay');
+            const userId = (sessions.get(state) && sessions.get(state).userId) || 'default';
+            const tokensDir = path.join(__dirname, 'data', 'ebay', userId);
             await fsPromises.mkdir(tokensDir, { recursive: true });
             const tokenPath = path.join(tokensDir, 'tokens.json');
             const payload = {
@@ -147,7 +148,8 @@ app.get('/auth/ebay/callback', async (req, res) => {
                 access_token: tokenData.access_token,
                 refresh_token: tokenData.refresh_token,
                 token_type: tokenData.token_type,
-                scope: EBAY_CONFIG.scopes
+                scope: EBAY_CONFIG.scopes,
+                userId
             };
             await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
             console.log('eBay tokens persisted to', tokenPath);
@@ -178,12 +180,44 @@ app.get('/auth/ebay/callback', async (req, res) => {
 // Endpoint to check current eBay token status
 app.get('/api/ebay/status', async (req, res) => {
     try {
-        const tokenPath = path.join(__dirname, 'data', 'ebay', 'tokens.json');
+        const userId = req.query.userId || 'default';
+        const tokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
         if (!fs.existsSync(tokenPath)) return res.json({ connected: false });
-        const data = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+        let data = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
         const expiresAt = data.expiresAt ? new Date(data.expiresAt).getTime() : 0;
         const now = Date.now();
-        const secondsLeft = Math.max(0, Math.floor((expiresAt - now) / 1000));
+        let secondsLeft = Math.max(0, Math.floor((expiresAt - now) / 1000));
+
+        // Auto refresh if less than 10 minutes remaining and refresh_token available
+        if (secondsLeft < 600 && data.refresh_token) {
+            try {
+                const credentials = Buffer.from(EBAY_CONFIG.clientId + ':' + EBAY_CONFIG.clientSecret).toString('base64');
+                const resp = await axios.post(
+                    EBAY_CONFIG.tokenUrl,
+                    new URLSearchParams({
+                        grant_type: 'refresh_token',
+                        refresh_token: data.refresh_token,
+                        scope: EBAY_CONFIG.scopes
+                    }),
+                    { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
+                );
+                const tokenData = resp.data;
+                data = {
+                    obtainedAt: new Date().toISOString(),
+                    expiresIn: tokenData.expires_in,
+                    expiresAt: new Date(Date.now() + (tokenData.expires_in || 0) * 1000).toISOString(),
+                    access_token: tokenData.access_token,
+                    refresh_token: data.refresh_token,
+                    token_type: tokenData.token_type,
+                    scope: EBAY_CONFIG.scopes,
+                    userId
+                };
+                await fsPromises.writeFile(tokenPath, JSON.stringify(data, null, 2));
+                secondsLeft = Math.max(0, Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000));
+            } catch (e) {
+                console.warn('Auto-refresh token failed:', e.response?.data || e.message);
+            }
+        }
         return res.json({ connected: true, expiresAt: data.expiresAt, secondsLeft });
     } catch (e) {
         return res.status(500).json({ connected: false, error: e.message });
@@ -193,7 +227,8 @@ app.get('/api/ebay/status', async (req, res) => {
 // Refresh access token using saved refresh token
 app.post('/api/ebay/refresh', async (req, res) => {
     try {
-        const tokenPath = path.join(__dirname, 'data', 'ebay', 'tokens.json');
+        const userId = (req.body && req.body.userId) || req.query.userId || 'default';
+        const tokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
         if (!fs.existsSync(tokenPath)) return res.status(400).json({ success: false, error: 'No token stored' });
         const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
         const refreshToken = saved.refresh_token;
@@ -225,6 +260,69 @@ app.post('/api/ebay/refresh', async (req, res) => {
     } catch (e) {
         console.error('Refresh token failed:', e.response?.data || e.message);
         return res.status(500).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
+    }
+});
+
+// Get eBay profile using stored token per user
+app.get('/api/ebay/profile', async (req, res) => {
+    try {
+        const userId = req.query.userId || 'default';
+        const tokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
+        if (!fs.existsSync(tokenPath)) return res.status(401).json({ success: false, error: 'not_connected' });
+        let saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
+
+        async function fetchProfile(accessToken) {
+            const response = await axios.get(EBAY_CONFIG.apiUrl + '/commerce/identity/v1/user/', {
+                headers: { 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
+            });
+            return response.data;
+        }
+
+        try {
+            const data = await fetchProfile(saved.access_token);
+            return res.json({ success: true, user: data });
+        } catch (err) {
+            if (err.response && err.response.status === 401 && saved.refresh_token) {
+                // try refresh then retry
+                const credentials = Buffer.from(EBAY_CONFIG.clientId + ':' + EBAY_CONFIG.clientSecret).toString('base64');
+                const resp = await axios.post(
+                    EBAY_CONFIG.tokenUrl,
+                    new URLSearchParams({ grant_type: 'refresh_token', refresh_token: saved.refresh_token, scope: EBAY_CONFIG.scopes }),
+                    { headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Basic ' + credentials } }
+                );
+                const tokenData = resp.data;
+                saved = {
+                    obtainedAt: new Date().toISOString(),
+                    expiresIn: tokenData.expires_in,
+                    expiresAt: new Date(Date.now() + (tokenData.expires_in || 0) * 1000).toISOString(),
+                    access_token: tokenData.access_token,
+                    refresh_token: saved.refresh_token,
+                    token_type: tokenData.token_type,
+                    scope: EBAY_CONFIG.scopes,
+                    userId
+                };
+                await fsPromises.writeFile(tokenPath, JSON.stringify(saved, null, 2));
+                const data2 = await fetchProfile(saved.access_token);
+                return res.json({ success: true, user: data2, refreshed: true });
+            }
+            throw err;
+        }
+    } catch (e) {
+        console.error('profile error:', e.response?.data || e.message);
+        return res.status(500).json({ success: false, error: 'profile_failed', details: e.response?.data || e.message });
+    }
+});
+
+// Disconnect and remove stored tokens for user
+app.post('/api/ebay/disconnect', async (req, res) => {
+    try {
+        const userId = (req.body && req.body.userId) || req.query.userId || 'default';
+        const dir = path.join(__dirname, 'data', 'ebay', userId);
+        const tokenPath = path.join(dir, 'tokens.json');
+        if (fs.existsSync(tokenPath)) await fsPromises.unlink(tokenPath);
+        return res.json({ success: true });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 

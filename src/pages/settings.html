@@ -988,10 +988,13 @@
                     userAvatarElement.textContent = currentUser.username.charAt(0).toUpperCase();
                 }
 
-                // Update form fields
-                document.getElementById('fullName').value = currentUser.username;
-                document.getElementById('email').value = currentUser.email || 'andrei@shappa.com';
-                document.getElementById('username').value = currentUser.username;
+                // Update form fields (solo se presenti nel DOM)
+                const fullNameEl = document.getElementById('fullName');
+                const emailEl = document.getElementById('email');
+                const usernameEl = document.getElementById('username');
+                if (fullNameEl) fullNameEl.value = currentUser.username;
+                if (emailEl) emailEl.value = currentUser.email || 'andrei@shappa.com';
+                if (usernameEl) usernameEl.value = currentUser.username;
             }
         }
 
@@ -1053,12 +1056,14 @@
         }
 
         // Integration functions
-        async function configureEbay() {
+    async function configureEbay() {
             console.log('Starting eBay OAuth flow...');
             
             try {
                 // Get auth URL from backend
-                const response = await fetch('/api/ebay/auth-url');
+        const currentUser = authSystem?.getCurrentUser();
+        const userId = currentUser?.username || 'default';
+        const response = await fetch('/api/ebay/auth-url?userId=' + encodeURIComponent(userId));
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -1068,11 +1073,12 @@
                 }
                 
                 // Open popup for OAuth
-                const popup = window.open(
-                    data.authUrl,
-                    'ebay-oauth',
-                    'width=600,height=700,scrollbars=yes,resizable=yes'
-                );
+                let popup = window.open(data.authUrl, 'ebay-oauth', 'width=600,height=700,scrollbars=yes,resizable=yes');
+                // Se popup bloccato, apri nella stessa scheda
+                if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                    window.location.href = data.authUrl;
+                    return;
+                }
                 
                 // Listen for OAuth result
                 const messageHandler = (event) => {
@@ -1083,12 +1089,10 @@
                         if (event.data.success) {
                             console.log('eBay OAuth successful!', event.data.tokenData);
                             alert('eBay connesso con successo!');
-                            
-                            // Store tokens (in production, send to backend)
-                            localStorage.setItem('ebay_tokens', JSON.stringify(event.data.tokenData));
-                            
-                            // Update UI to show connected status
-                            updateEbayConnectionStatus(true);
+                            // Store tokens per-user client-side (opzionale, chiave isolata)
+                            try { localStorage.setItem('ebay_tokens_' + userId, JSON.stringify(event.data.tokenData)); } catch {}
+                            // Aggiorna UI e status server-side
+                            updateEbayStatusUI();
                         } else {
                             console.error('eBay OAuth failed:', event.data.error);
                             alert('Connessione eBay fallita: ' + (event.data.error || 'Unknown error'));
@@ -1113,7 +1117,7 @@
             }
         }
 
-        function updateEbayConnectionStatus(connected) {
+        async function updateEbayConnectionStatus(connected) {
             const statusElement = document.querySelector('#account-section .venus-integration-status');
             const actionButtons = document.getElementById('ebay-actions');
             const statusDiv = document.getElementById('ebay-status');
@@ -1122,14 +1126,29 @@
                 statusElement.textContent = 'Connesso';
                 statusElement.className = 'venus-integration-status venus-status-connected';
                 
-                actionButtons.innerHTML = `
-                    <button class="venus-btn" onclick="testEbayConnection()">Test Connessione</button>
-                    <button class="venus-btn venus-btn-danger" onclick="disconnectEbay()" style="margin-left: var(--venus-space-sm);">Disconnetti</button>
-                `;
+                // Nessun "Test connessione" quando connesso, solo Disconnetti
+                actionButtons.innerHTML = `<button class="venus-btn venus-btn-danger" onclick="disconnectEbay()">Disconnetti</button>`;
                 
-                statusDiv.innerHTML = '✅ Connesso ad eBay';
+                statusDiv.innerHTML = '⏳ Recupero informazioni account...';
                 statusDiv.style.background = 'var(--venus-success-light)';
                 statusDiv.style.color = 'var(--venus-success)';
+
+                // Recupera informazioni profilo dal backend (token per-utente)
+                try {
+                    const currentUser = authSystem?.getCurrentUser();
+                    const userId = currentUser?.username || 'default';
+                    const r = await fetch('/api/ebay/profile?userId=' + encodeURIComponent(userId));
+                    const j = await r.json();
+                    if (j.success) {
+                        const u = j.user || {};
+                        // Mostra info principali (username, userId, status)
+                        statusDiv.innerHTML = `✅ Connesso ad eBay<br><small>Utente: ${u.username || u.userId || 'n/d'}${u.email ? ' • ' + u.email : ''}</small>`;
+                    } else {
+                        statusDiv.innerHTML = '✅ Connesso ad eBay (impossibile recuperare profilo)';
+                    }
+                } catch (e) {
+                    statusDiv.innerHTML = '✅ Connesso ad eBay (profilo non disponibile)';
+                }
             } else {
                 statusElement.textContent = 'Non connesso';
                 statusElement.className = 'venus-integration-status venus-status-disconnected';
@@ -1144,42 +1163,26 @@
             }
         }
 
-        async function testEbayConnection() {
-            console.log('Testing eBay connection...');
-            
-            const tokens = JSON.parse(localStorage.getItem('ebay_tokens') || '{}');
-            
-            if (!tokens.access_token) {
-                alert('Nessun token eBay trovato. Connettiti prima.');
-                return;
-            }
-            
+        // Aggiorna stato da backend (per-utente)
+        async function updateEbayStatusUI() {
+            const currentUser = authSystem?.getCurrentUser();
+            const userId = currentUser?.username || 'default';
             try {
-                // Test connection by getting user info
-                const response = await fetch('/api/ebay/user-info', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ access_token: tokens.access_token })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert('Connessione eBay OK! Utente: ' + (data.userData.username || 'eBay User'));
-                } else {
-                    alert('Test connessione fallito: ' + (data.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error testing eBay connection:', error);
-                alert('Errore nel test: ' + error.message);
+                const r = await fetch('/api/ebay/status?userId=' + encodeURIComponent(userId));
+                const j = await r.json();
+                updateEbayConnectionStatus(!!j.connected);
+            } catch {
+                updateEbayConnectionStatus(false);
             }
         }
 
-        function disconnectEbay() {
-            // Disconnect eBay immediately without confirmation
-            localStorage.removeItem('ebay_tokens');
+        async function disconnectEbay() {
+            try {
+                const currentUser = authSystem?.getCurrentUser();
+                const userId = currentUser?.username || 'default';
+                await fetch('/api/ebay/disconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId }) });
+            } catch {}
+            try { const currentUser = authSystem?.getCurrentUser(); localStorage.removeItem('ebay_tokens_' + (currentUser?.username||'default')); } catch {}
             updateEbayConnectionStatus(false);
             console.log('eBay disconnected');
         }
@@ -1247,9 +1250,7 @@
 
         // Initialize eBay connection status on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const tokens = JSON.parse(localStorage.getItem('ebay_tokens') || '{}');
-            const hasValidToken = tokens.access_token && tokens.access_token.length > 0;
-            updateEbayConnectionStatus(hasValidToken);
+            updateEbayStatusUI();
         });
 
         // Search functionality
