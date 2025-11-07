@@ -3422,10 +3422,84 @@
         document.getElementById('releasingModal').remove();
         
         if (success) {
-            alert(`Monitor "${monitor.name}" attivato! 🔔`);
+            // Avvia monitor automaticamente
+            await startMonitor(monitor.id);
+            
+            alert(`Monitor "${monitor.name}" attivato! 🔔\nMonitoraggio in corso ogni ${monitor.interval} minuti.`);
             location.reload();
         } else {
             alert('❌ Errore durante il salvataggio');
+        }
+    }
+
+    /**
+     * Avvia un monitor
+     */
+    async function startMonitor(interestId) {
+        try {
+            const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+            if (!user) {
+                console.warn('User not authenticated');
+                return false;
+            }
+
+            // Carica webhook Discord se configurato
+            const discordWebhook = localStorage.getItem('discord_webhook_url');
+
+            const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    interestId: interestId,
+                    discordWebhook: discordWebhook
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log(`✅ Monitor ${interestId} avviato`);
+                return true;
+            } else {
+                console.error('❌ Errore avvio monitor:', result.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Errore avvio monitor:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Ferma un monitor
+     */
+    async function stopMonitor(interestId) {
+        try {
+            const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+            if (!user) {
+                console.warn('User not authenticated');
+                return false;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/api/monitors/stop/${interestId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user.id })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                console.log(`✅ Monitor ${interestId} fermato`);
+                return true;
+            } else {
+                console.error('❌ Errore stop monitor:', result.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Errore stop monitor:', error);
+            return false;
         }
     }
 

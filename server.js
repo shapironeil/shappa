@@ -10,6 +10,9 @@ const https = require('https');
 const fs = require('fs');
 const { promises: fsPromises } = require('fs');
 
+// Import Monitor System
+const monitorManager = require('./monitors/MonitorManager');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -1506,6 +1509,123 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
     }
 });
 
+// ============================================
+// MONITOR SYSTEM ENDPOINTS
+// ============================================
+
+/**
+ * POST /api/monitors/start
+ * Avvia un monitor per un interesse
+ */
+app.post('/api/monitors/start', async (req, res) => {
+    try {
+        const { userId, interestId, discordWebhook } = req.body;
+
+        if (!userId || !interestId) {
+            return res.status(400).json({ success: false, error: 'Missing userId or interestId' });
+        }
+
+        // Carica interesse dal database
+        const filePath = getUserInterestsPath(userId);
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, error: 'User interests not found' });
+        }
+
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        const interests = JSON.parse(data);
+        const interest = interests.find(i => i.id == interestId);
+
+        if (!interest) {
+            return res.status(404).json({ success: false, error: 'Interest not found' });
+        }
+
+        if (interest.type !== 'releasing') {
+            return res.status(400).json({ success: false, error: 'Only releasing monitors can be started' });
+        }
+
+        // Aggiungi webhook al config
+        interest.discordWebhook = discordWebhook;
+
+        // Avvia monitor
+        const result = await monitorManager.startMonitor(interest, userId);
+
+        if (result.success) {
+            // Aggiorna status a "monitoring"
+            interest.status = 'monitoring';
+            await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+        }
+
+        return res.json(result);
+    } catch (error) {
+        console.error('❌ Error starting monitor:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/monitors/stop/:interestId
+ * Ferma un monitor
+ */
+app.post('/api/monitors/stop/:interestId', async (req, res) => {
+    try {
+        const { interestId } = req.params;
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'Missing userId' });
+        }
+
+        const result = monitorManager.stopMonitor(parseInt(interestId));
+
+        if (result.success) {
+            // Aggiorna status nel database
+            const filePath = getUserInterestsPath(userId);
+            const data = await fsPromises.readFile(filePath, 'utf8');
+            const interests = JSON.parse(data);
+            const interest = interests.find(i => i.id == interestId);
+            
+            if (interest) {
+                interest.status = 'stopped';
+                await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+            }
+        }
+
+        return res.json(result);
+    } catch (error) {
+        console.error('❌ Error stopping monitor:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/monitors/stats
+ * Ottiene statistiche di tutti i monitor
+ */
+app.get('/api/monitors/stats', (req, res) => {
+    try {
+        const stats = monitorManager.getStats();
+        return res.json({ success: true, ...stats });
+    } catch (error) {
+        console.error('❌ Error getting monitor stats:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/monitors/user/:userId
+ * Ottiene monitor attivi di un utente
+ */
+app.get('/api/monitors/user/:userId', (req, res) => {
+    try {
+        const { userId } = req.params;
+        const monitors = monitorManager.getUserMonitors(userId);
+        return res.json({ success: true, monitors });
+    } catch (error) {
+        console.error('❌ Error getting user monitors:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
@@ -1553,6 +1673,15 @@ try {
         } catch (e) {
             console.log('Price monitor failed to start:', e.message);
         }
+        
+        // Carica monitor attivi al boot
+        monitorManager.loadAllMonitors().then(result => {
+            if (result.success) {
+                console.log(`🚀 Loaded ${result.loaded} active monitors`);
+            }
+        }).catch(err => {
+            console.error('❌ Failed to load monitors:', err.message);
+        });
     });
 } catch (err) {
     console.error('❌ HTTPS startup failed:', err.message);
