@@ -36,6 +36,8 @@ class MonitorManager {
             
             if (!discordWebhook) {
                 console.warn(`[Manager] ⚠️ Nessun webhook Discord configurato per monitor ${monitorId}`);
+                console.warn(`[Manager] 💡 Vai su Impostazioni → Discord Webhook per configurarlo`);
+                // NON bloccare l'avvio, ma notifica che non invierà notifiche
             } else {
                 console.log(`[Manager] ✅ Webhook Discord configurato per monitor ${monitorId}`);
             }
