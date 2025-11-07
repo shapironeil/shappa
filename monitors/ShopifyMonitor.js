@@ -21,6 +21,12 @@ class ShopifyMonitor {
         this.lastStatus = null;
         this.checksCount = 0;
         
+        // Notification tracking
+        this.hasNotifiedStart = false;
+        this.lastHeartbeat = null;
+        this.hasFoundVariants = false; // One-time notification per varianti trovate
+        this.heartbeatInterval = 2 * 60 * 60 * 1000; // 2 ore in ms
+        
         // Estrai handle dal URL
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
@@ -52,6 +58,12 @@ class ShopifyMonitor {
         
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
         this.isRunning = true;
+
+        // 🔔 NOTIFICA 1: Monitor Started
+        if (!this.hasNotifiedStart) {
+            await this.notifyMonitorStart();
+            this.hasNotifiedStart = true;
+        }
 
         // Primo check immediato
         await this.check();
@@ -101,9 +113,23 @@ class ShopifyMonitor {
 
             console.log(`[Shopify] Status: ${isAvailable ? '✅ DISPONIBILE' : '❌ NON DISPONIBILE'} (${availableVariants.length}/${product.variants.length} varianti)`);
 
+            // 🔔 NOTIFICA 4: Variants Detected (one-time quando trova varianti)
+            if (availableVariants.length > 0 && !this.hasFoundVariants) {
+                await this.notifyVariantsDetected(product, availableVariants);
+                this.hasFoundVariants = true;
+            }
+
+            // 🔔 NOTIFICA 2: Heartbeat ogni 2 ore
+            const now = Date.now();
+            if (!this.lastHeartbeat || (now - this.lastHeartbeat) >= this.heartbeatInterval) {
+                await this.notifyHeartbeat(isAvailable, availableVariants.length, product.variants.length);
+                this.lastHeartbeat = now;
+            }
+
             // Detect cambio stato
             if (this.lastStatus !== null && !this.lastStatus && isAvailable) {
                 console.log(`[Shopify] ⚡ CAMBIO STATO → DISPONIBILE!`);
+                // 🔔 NOTIFICA 3: Product Found
                 await this.notifyDiscord(product, availableVariants);
             }
 
@@ -189,6 +215,187 @@ class ShopifyMonitor {
             lastStatus: this.lastStatus,
             interval: this.interval
         };
+    }
+
+    /**
+     * 🔔 NOTIFICA 1: Monitor Started
+     */
+    async notifyMonitorStart() {
+        if (!this.discordWebhook) return;
+
+        try {
+            const embed = {
+                title: `🚀 Shopify Monitor Avviato`,
+                url: this.productUrl,
+                color: 0x3b82f6, // Blu
+                description: `Il monitoraggio per **${this.productName}** è iniziato!`,
+                fields: [
+                    {
+                        name: '🔗 URL Prodotto',
+                        value: this.productUrl,
+                        inline: false
+                    },
+                    {
+                        name: '🛍️ Product Handle',
+                        value: `\`${this.productHandle}\``,
+                        inline: true
+                    },
+                    {
+                        name: '⏱️ Intervallo Check',
+                        value: `${this.interval} minuto/i`,
+                        inline: true
+                    },
+                    {
+                        name: '⚡ API Endpoint',
+                        value: `${this.baseUrl}/products/${this.productHandle}.js`,
+                        inline: false
+                    },
+                    {
+                        name: '🎯 Modulo',
+                        value: 'Shopify Monitor (API JSON)',
+                        inline: true
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Shopify Monitor - Precisione 100%'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                content: `<@${this.userId}>`,
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] ✅ Notifica START inviata`);
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica START:`, error.message);
+        }
+    }
+
+    /**
+     * 🔔 NOTIFICA 2: Heartbeat ogni 2 ore
+     */
+    async notifyHeartbeat(isAvailable, availableCount, totalCount) {
+        if (!this.discordWebhook) return;
+
+        try {
+            const statusEmoji = isAvailable ? '✅' : '⏳';
+            const statusText = isAvailable ? 
+                `DISPONIBILE (${availableCount}/${totalCount} varianti)` : 
+                `Non ancora disponibile (0/${totalCount} varianti)`;
+            const colorCode = isAvailable ? 0x10b981 : 0x6b7280; // Verde o Grigio
+
+            const embed = {
+                title: `💓 Heartbeat - Shopify Monitor Attivo`,
+                url: this.productUrl,
+                color: colorCode,
+                description: `Status update per **${this.productName}**`,
+                fields: [
+                    {
+                        name: `${statusEmoji} Status Corrente`,
+                        value: statusText,
+                        inline: false
+                    },
+                    {
+                        name: '🔢 Check Effettuati',
+                        value: `${this.checksCount}`,
+                        inline: true
+                    },
+                    {
+                        name: '⏱️ Intervallo',
+                        value: `Ogni ${this.interval} min`,
+                        inline: true
+                    },
+                    {
+                        name: '🛍️ API Status',
+                        value: 'Shopify JSON - Online ✅',
+                        inline: true
+                    },
+                    {
+                        name: '🔗 Link',
+                        value: `[Vai al prodotto](${this.productUrl})`,
+                        inline: false
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Monitor attivo - prossimo heartbeat tra 2 ore'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] ✅ Notifica HEARTBEAT inviata`);
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica HEARTBEAT:`, error.message);
+        }
+    }
+
+    /**
+     * 🔔 NOTIFICA 4: Variants Detected (one-time)
+     */
+    async notifyVariantsDetected(product, availableVariants) {
+        if (!this.discordWebhook) return;
+
+        try {
+            const variantsList = availableVariants.map(v => {
+                const price = (v.price / 100).toFixed(2);
+                return `• **${v.title}** - $${price}`;
+            }).join('\n');
+
+            const embed = {
+                title: `🔍 Varianti Shopify Rilevate`,
+                url: this.productUrl,
+                color: 0xf59e0b, // Arancione
+                description: `Ho trovato le varianti disponibili per **${product.title}**`,
+                fields: [
+                    {
+                        name: '📦 Varianti Disponibili',
+                        value: `${availableVariants.length}/${product.variants.length}`,
+                        inline: true
+                    },
+                    {
+                        name: '💰 Prezzo Base',
+                        value: `$${(product.variants[0].price / 100).toFixed(2)}`,
+                        inline: true
+                    },
+                    {
+                        name: '🎨 Dettagli Varianti',
+                        value: variantsList,
+                        inline: false
+                    },
+                    {
+                        name: '📌 Info',
+                        value: 'Ti avviserò immediatamente se il numero di varianti cambia o se diventa disponibile!',
+                        inline: false
+                    },
+                    {
+                        name: '🔗 Link',
+                        value: `[Vai al prodotto](${this.productUrl})`,
+                        inline: false
+                    }
+                ],
+                thumbnail: {
+                    url: product.images[0]?.src || product.featured_image
+                },
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Notifica one-time - continuerò a monitorare'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                content: `<@${this.userId}>`,
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] ✅ Notifica VARIANTS DETECTED inviata`);
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica VARIANTS:`, error.message);
+        }
     }
 }
 
