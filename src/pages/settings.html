@@ -317,7 +317,8 @@
             transition: all var(--venus-transition);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
             height: auto;
-            max-height: 350px;
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         .venus-widget:hover {
@@ -332,33 +333,33 @@
         }
 
         .venus-widget-title {
-            font-size: var(--venus-font-size-lg);
+            font-size: 16px;
             font-weight: var(--venus-font-weight-semibold);
             color: var(--venus-text-primary);
-            margin: 0 0 var(--venus-space-lg) 0;
+            margin: 0 0 var(--venus-space-md) 0;
         }
 
         /* Form Styles */
         .venus-form-group {
-            margin-bottom: var(--venus-space-lg);
+            margin-bottom: var(--venus-space-md);
         }
 
         .venus-form-label {
             display: block;
-            font-size: var(--venus-font-size-sm);
+            font-size: 13px;
             font-weight: var(--venus-font-weight-semibold);
             color: var(--venus-text-primary);
-            margin-bottom: var(--venus-space-sm);
+            margin-bottom: 6px;
         }
 
         .venus-form-input,
         .venus-form-select,
         .venus-form-textarea {
             width: 100%;
-            padding: var(--venus-space-md) var(--venus-space-lg);
+            padding: 10px 12px;
             border: 1px solid var(--venus-border);
             border-radius: var(--venus-radius);
-            font-size: var(--venus-font-size-base);
+            font-size: 14px;
             font-family: var(--venus-font-family);
             transition: all var(--venus-transition);
             background: var(--venus-bg-card);
