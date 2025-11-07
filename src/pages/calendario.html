@@ -233,6 +233,14 @@
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 8px;
+            margin-top: 16px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .calendar-weekday {
@@ -241,6 +249,7 @@
             font-weight: 600;
             color: var(--venus-text-muted);
             padding: 8px;
+            grid-column: span 1;
         }
 
         .calendar-day {
@@ -254,26 +263,49 @@
             cursor: pointer;
             transition: all var(--venus-transition);
             position: relative;
+            min-height: 70px;
+            background: white;
         }
 
         .calendar-day:hover {
             background: var(--venus-bg-gray);
+            border-color: var(--venus-primary);
+            transform: translateY(-2px);
+            box-shadow: var(--venus-shadow-sm);
         }
 
         .calendar-day.today {
             background: var(--venus-primary);
             color: white;
             font-weight: 600;
+            border-color: var(--venus-primary);
         }
 
-        .calendar-day.has-events {
+        .calendar-day.selected {
+            background: var(--venus-primary-light);
             border-color: var(--venus-primary);
             border-width: 2px;
         }
 
+        .calendar-day.has-events {
+            border-color: var(--venus-success);
+            border-width: 2px;
+        }
+
+        .calendar-day.has-events::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            width: 6px;
+            height: 6px;
+            background: var(--venus-success);
+            border-radius: 50%;
+        }
+
         .calendar-day.other-month {
             color: var(--venus-text-muted);
-            opacity: 0.4;
+            opacity: 0.3;
+            pointer-events: none;
         }
 
         .calendar-day-number {
@@ -397,6 +429,140 @@
             margin-top: 4px;
         }
 
+        /* Event Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--venus-radius);
+            padding: var(--venus-space-xl);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--venus-shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--venus-text-muted);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all var(--venus-transition);
+        }
+
+        .modal-close:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .form-group {
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            font-size: 14px;
+            color: var(--venus-text-primary);
+            transition: all var(--venus-transition);
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: var(--venus-space-sm);
+            margin-top: var(--venus-space-lg);
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--venus-radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .btn-primary {
+            background: var(--venus-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+            border: 1px solid var(--venus-border);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
         @media (max-width: 1200px) {
             .calendar-container {
                 grid-template-columns: 1fr;
@@ -471,8 +637,7 @@
                             </div>
                         </div>
 
-                        <div class="calendar-grid">
-                            <!-- Weekday headers -->
+                        <div class="calendar-weekdays">
                             <div class="calendar-weekday">Lun</div>
                             <div class="calendar-weekday">Mar</div>
                             <div class="calendar-weekday">Mer</div>
@@ -480,10 +645,10 @@
                             <div class="calendar-weekday">Ven</div>
                             <div class="calendar-weekday">Sab</div>
                             <div class="calendar-weekday">Dom</div>
-
-                            <!-- Days will be generated by JavaScript -->
-                            <div id="calendarDays"></div>
                         </div>
+                        
+                        <!-- Days grid -->
+                        <div class="calendar-grid" id="calendarDays"></div>
                     </div>
 
                     <!-- Events Sidebar -->
@@ -566,6 +731,53 @@
         </main>
     </div>
 
+    <!-- Event Modal -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Nuovo Evento</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form id="eventForm" onsubmit="saveEvent(event)">
+                <div class="form-group">
+                    <label class="form-label" for="eventTitle">Titolo *</label>
+                    <input type="text" class="form-input" id="eventTitle" required placeholder="Es: Riunione con fornitore">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventDate">Data *</label>
+                    <input type="date" class="form-input" id="eventDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventTime">Ora</label>
+                    <input type="time" class="form-input" id="eventTime">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventType">Tipo *</label>
+                    <select class="form-select" id="eventType" required>
+                        <option value="vendita">Vendita</option>
+                        <option value="listing">Listing</option>
+                        <option value="scadenza">Scadenza</option>
+                        <option value="attivita">Attività</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventDescription">Descrizione</label>
+                    <textarea class="form-textarea" id="eventDescription" placeholder="Dettagli opzionali..."></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva Evento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../utils/auth-v2.js"></script>
     <script>
         // Auth Check
@@ -585,7 +797,13 @@
 
             // Generate calendar
             generateCalendar();
+            
+            // Load events
+            loadEvents();
         });
+
+        // Logout handler
+        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
         function handleLogout() {
             if (confirm('Sei sicuro di voler uscire?')) {
@@ -596,6 +814,50 @@
 
         let currentMonth = 10; // November (0-indexed)
         let currentYear = 2025;
+        let selectedDay = null;
+        let events = [];
+
+        // Load events from localStorage
+        function loadEvents() {
+            const savedEvents = localStorage.getItem('calendar_events');
+            if (savedEvents) {
+                events = JSON.parse(savedEvents);
+            } else {
+                // Sample events
+                events = [
+                    {
+                        id: 1,
+                        date: '2025-11-07',
+                        time: '14:30',
+                        title: 'Vendita Completata',
+                        description: 'iPhone 13 Pro - €850',
+                        type: 'vendita'
+                    },
+                    {
+                        id: 2,
+                        date: '2025-11-07',
+                        time: '16:00',
+                        title: 'Nuovo Listing',
+                        description: 'AirPods Pro 2',
+                        type: 'listing'
+                    },
+                    {
+                        id: 3,
+                        date: '2025-11-10',
+                        time: '09:00',
+                        title: 'Scadenza Listing',
+                        description: '3 listing in scadenza',
+                        type: 'scadenza'
+                    }
+                ];
+                saveEventsToStorage();
+            }
+        }
+
+        // Save events to localStorage
+        function saveEventsToStorage() {
+            localStorage.setItem('calendar_events', JSON.stringify(events));
+        }
 
         function generateCalendar() {
             const firstDay = new Date(currentYear, currentMonth, 1);
@@ -610,9 +872,6 @@
             const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
             const todayDate = today.getDate();
 
-            // Days with events (sample data)
-            const daysWithEvents = [7, 10, 12, 15, 20, 25, 30];
-
             let calendarHTML = '';
 
             // Previous month days
@@ -624,20 +883,22 @@
             // Current month days
             for (let i = 1; i <= lastDayDate; i++) {
                 const isToday = isCurrentMonth && i === todayDate;
-                const hasEvents = daysWithEvents.includes(i);
-                const classes = `calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}`;
+                const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const hasEvents = events.some(e => e.date === dateString);
+                const isSelected = selectedDay === i;
+                
+                const classes = `calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''} ${isSelected ? 'selected' : ''}`;
                 
                 calendarHTML += `
                     <div class="${classes}" onclick="selectDay(${i})">
                         <span class="calendar-day-number">${i}</span>
-                        ${hasEvents ? '<div class="calendar-day-indicator"></div>' : ''}
                     </div>
                 `;
             }
 
             // Next month days
             const totalCells = firstDayIndex + lastDayDate;
-            const remainingCells = 35 - totalCells; // 5 weeks * 7 days
+            const remainingCells = Math.ceil((totalCells) / 7) * 7 - totalCells;
             for (let i = 1; i <= remainingCells; i++) {
                 calendarHTML += `<div class="calendar-day other-month"><span class="calendar-day-number">${i}</span></div>`;
             }
@@ -650,12 +911,23 @@
             document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
         }
 
+        function selectDay(day) {
+            selectedDay = day;
+            generateCalendar();
+            
+            // Open modal to add event for selected day
+            const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            document.getElementById('eventDate').value = dateString;
+            openModal();
+        }
+
         function previousMonth() {
             currentMonth--;
             if (currentMonth < 0) {
                 currentMonth = 11;
                 currentYear--;
             }
+            selectedDay = null;
             generateCalendar();
         }
 
@@ -665,16 +937,62 @@
                 currentMonth = 0;
                 currentYear++;
             }
+            selectedDay = null;
             generateCalendar();
         }
 
-        function selectDay(day) {
-            alert(`Giorno selezionato: ${day} ${['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'][currentMonth]} ${currentYear}\n\nFunzionalità dettagli giorno in arrivo! 📅`);
+        function aggiungiEvento() {
+            openModal();
         }
 
-        function aggiungiEvento() {
-            alert('Funzionalità "Aggiungi Evento" in arrivo! 🚀\n\nPotrai pianificare:\n- Promemoria scadenze listing\n- Obiettivi giornalieri\n- Note personali\n- Task da completare');
+        function openModal() {
+            document.getElementById('eventModal').classList.add('active');
+            document.getElementById('eventForm').reset();
+            document.getElementById('modalTitle').textContent = 'Nuovo Evento';
         }
+
+        function closeModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            document.getElementById('eventForm').reset();
+            selectedDay = null;
+            generateCalendar();
+        }
+
+        function saveEvent(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('eventTitle').value;
+            const date = document.getElementById('eventDate').value;
+            const time = document.getElementById('eventTime').value;
+            const type = document.getElementById('eventType').value;
+            const description = document.getElementById('eventDescription').value;
+
+            const newEvent = {
+                id: Date.now(),
+                date,
+                time: time || '00:00',
+                title,
+                description,
+                type
+            };
+
+            events.push(newEvent);
+            saveEventsToStorage();
+            
+            closeModal();
+            generateCalendar();
+            
+            // Show success message
+            alert('Evento aggiunto con successo!');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('eventModal').addEventListener('click', (e) => {
+            if (e.target.id === 'eventModal') {
+                closeModal();
+            }
+        });
+    </script>
     </script>
 </body>
 </html>
