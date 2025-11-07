@@ -16,6 +16,10 @@ class ShopifyMonitor {
         this.userId = config.userId;
         this.discordWebhook = config.discordWebhook;
         
+        // Filtri intelligenti
+        this.productFilter = config.productFilter || ''; // es: "AIR JORDAN 1 LOW OG SP FRAGMENT"
+        this.variantFilter = config.variantFilter || ''; // es: "Size L, Black"
+        
         this.isRunning = false;
         this.intervalId = null;
         this.lastStatus = null;
@@ -30,6 +34,26 @@ class ShopifyMonitor {
         // Estrai handle dal URL
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
+        
+        // Prepara keywords di ricerca da productFilter
+        this.searchKeywords = this.extractKeywords(this.productFilter);
+        this.variantKeywords = this.extractKeywords(this.variantFilter);
+    }
+    
+    /**
+     * Estrae keywords intelligenti da stringa filtro
+     * "AIR JORDAN 1 LOW OG SP "FRAGMENT"" → ["air", "jordan", "low", "fragment"]
+     */
+    extractKeywords(filterString) {
+        if (!filterString) return [];
+        
+        return filterString
+            .toLowerCase()
+            .replace(/['"]/g, '') // Rimuove virgolette
+            .replace(/[^\w\s]/g, ' ') // Rimuove punteggiatura
+            .split(/\s+/) // Split su spazi
+            .filter(word => word.length > 1) // Minimo 2 caratteri
+            .filter(word => !['the', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'og', 'sp'].includes(word)); // Rimuove stopwords
     }
 
     /**
@@ -107,8 +131,38 @@ class ShopifyMonitor {
 
             const product = response.data;
 
+            // 🎯 FILTRO PRODOTTO - Match intelligente
+            if (this.searchKeywords.length > 0) {
+                const productTitle = product.title.toLowerCase();
+                const matchCount = this.searchKeywords.filter(keyword => 
+                    productTitle.includes(keyword)
+                ).length;
+                
+                const matchPercentage = (matchCount / this.searchKeywords.length) * 100;
+                
+                if (matchPercentage < 50) {
+                    console.log(`[Shopify] ⏭️ Prodotto non matcha filtro: "${product.title}" (${matchPercentage.toFixed(0)}% match)`);
+                    return;
+                }
+                
+                console.log(`[Shopify] ✅ Prodotto matcha filtro: "${product.title}" (${matchPercentage.toFixed(0)}% match)`);
+            }
+
             // Controlla varianti disponibili
-            const availableVariants = product.variants.filter(v => v.available);
+            let availableVariants = product.variants.filter(v => v.available);
+            
+            // 🎨 FILTRO VARIANTI - Match intelligente
+            if (this.variantKeywords.length > 0 && availableVariants.length > 0) {
+                availableVariants = availableVariants.filter(variant => {
+                    const variantTitle = variant.title.toLowerCase();
+                    return this.variantKeywords.some(keyword => variantTitle.includes(keyword));
+                });
+                
+                if (availableVariants.length === 0) {
+                    console.log(`[Shopify] ⏭️ Nessuna variante matcha filtro: "${this.variantFilter}"`);
+                }
+            }
+            
             const isAvailable = availableVariants.length > 0;
 
             console.log(`[Shopify] Status: ${isAvailable ? '✅ DISPONIBILE' : '❌ NON DISPONIBILE'} (${availableVariants.length}/${product.variants.length} varianti)`);
@@ -224,38 +278,60 @@ class ShopifyMonitor {
         if (!this.discordWebhook) return;
 
         try {
+            const fields = [
+                {
+                    name: '� URL Prodotto',
+                    value: this.productUrl,
+                    inline: false
+                },
+                {
+                    name: '🛍️ Product Handle',
+                    value: `\`${this.productHandle}\``,
+                    inline: true
+                },
+                {
+                    name: '⏱️ Intervallo Check',
+                    value: `${this.interval} minuto/i`,
+                    inline: true
+                }
+            ];
+            
+            // Aggiungi filtri se presenti
+            if (this.productFilter) {
+                fields.push({
+                    name: '� Filtro Prodotto',
+                    value: `\`${this.productFilter}\`\n(Match keywords: ${this.searchKeywords.join(', ')})`,
+                    inline: false
+                });
+            }
+            
+            if (this.variantFilter) {
+                fields.push({
+                    name: '🎨 Filtro Varianti',
+                    value: `\`${this.variantFilter}\`\n(Match keywords: ${this.variantKeywords.join(', ')})`,
+                    inline: false
+                });
+            }
+            
+            fields.push(
+                {
+                    name: '⚡ API Endpoint',
+                    value: `${this.baseUrl}/products/${this.productHandle}.js`,
+                    inline: false
+                },
+                {
+                    name: '🎯 Modulo',
+                    value: 'Shopify Monitor (API JSON)',
+                    inline: true
+                }
+            );
+
             const embed = {
                 title: `🚀 Shopify Monitor Avviato`,
                 url: this.productUrl,
                 color: 0x3b82f6, // Blu
                 description: `Il monitoraggio per **${this.productName}** è iniziato!`,
-                fields: [
-                    {
-                        name: '🔗 URL Prodotto',
-                        value: this.productUrl,
-                        inline: false
-                    },
-                    {
-                        name: '🛍️ Product Handle',
-                        value: `\`${this.productHandle}\``,
-                        inline: true
-                    },
-                    {
-                        name: '⏱️ Intervallo Check',
-                        value: `${this.interval} minuto/i`,
-                        inline: true
-                    },
-                    {
-                        name: '⚡ API Endpoint',
-                        value: `${this.baseUrl}/products/${this.productHandle}.js`,
-                        inline: false
-                    },
-                    {
-                        name: '🎯 Modulo',
-                        value: 'Shopify Monitor (API JSON)',
-                        inline: true
-                    }
-                ],
+                fields: fields,
                 timestamp: new Date().toISOString(),
                 footer: {
                     text: 'Shopify Monitor - Precisione 100%'
