@@ -3440,8 +3440,12 @@
     async function saveReleasing(e) {
         e.preventDefault();
         
+        console.log('🟢 saveReleasing() chiamata');
+        
         const module = document.getElementById('rlMonitorModule').value;
         const url = document.getElementById('rlProductUrl').value.trim();
+        
+        console.log('📝 Dati form:', { module, url });
         
         // Estrai nome prodotto dall'URL per display
         const urlParts = url.split('/').filter(p => p);
@@ -3474,9 +3478,12 @@
         
         const success = await addUserInterest(monitor);
         
+        console.log('✅ Monitor salvato, ID:', monitor.id);
+        
         document.getElementById('releasingModal').remove();
         
         if (success) {
+            console.log('🚀 Avvio monitor automatico...');
             // Avvia monitor automaticamente
             await startMonitor(monitor.id);
             
@@ -3492,10 +3499,12 @@
      * Avvia un monitor
      */
     async function startMonitor(interestId) {
+        console.log('🔵 startMonitor() chiamata con ID:', interestId);
+        
         try {
             const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
             if (!user) {
-                console.warn('User not authenticated');
+                console.error('❌ User not authenticated');
                 return false;
             }
 
@@ -3506,6 +3515,12 @@
             console.log('- userId:', user.id);
             console.log('- interestId:', interestId);
             console.log('- discordWebhook:', discordWebhook ? `${discordWebhook.substring(0, 50)}...` : 'NULL');
+            
+            if (!discordWebhook) {
+                console.warn('⚠️ WEBHOOK NON CONFIGURATO! Vai su Impostazioni → Discord Webhook');
+            }
+
+            console.log('📡 Invio richiesta a /api/monitors/start...');
 
             const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
                 method: 'POST',
@@ -3516,8 +3531,12 @@
                     discordWebhook: discordWebhook
                 })
             });
+            
+            console.log('📡 Risposta ricevuta, status:', response.status);
 
             const result = await response.json();
+            
+            console.log('📦 Risultato:', result);
             
             if (result.success) {
                 console.log(`✅ Monitor ${interestId} avviato`);
@@ -3527,7 +3546,7 @@
                 return false;
             }
         } catch (error) {
-            console.error('❌ Errore avvio monitor:', error);
+            console.error('❌ ERRORE CATCH startMonitor:', error);
             return false;
         }
     }
