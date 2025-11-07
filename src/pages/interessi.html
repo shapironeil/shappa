@@ -3501,6 +3501,11 @@
 
             // Carica webhook Discord se configurato
             const discordWebhook = localStorage.getItem('discord_webhook_url');
+            
+            console.log('🔍 DEBUG startMonitor:');
+            console.log('- userId:', user.id);
+            console.log('- interestId:', interestId);
+            console.log('- discordWebhook:', discordWebhook ? `${discordWebhook.substring(0, 50)}...` : 'NULL');
 
             const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
                 method: 'POST',

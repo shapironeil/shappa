@@ -1520,6 +1520,11 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 app.post('/api/monitors/start', async (req, res) => {
     try {
         const { userId, interestId, discordWebhook } = req.body;
+        
+        console.log('🔍 DEBUG /api/monitors/start:');
+        console.log('- userId:', userId);
+        console.log('- interestId:', interestId);
+        console.log('- discordWebhook:', discordWebhook ? `${discordWebhook.substring(0, 50)}...` : 'NULL/UNDEFINED');
 
         if (!userId || !interestId) {
             return res.status(400).json({ success: false, error: 'Missing userId or interestId' });
@@ -1548,7 +1553,8 @@ app.post('/api/monitors/start', async (req, res) => {
         interest.status = 'monitoring';
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`✅ Webhook salvato per interest ${interestId}: ${discordWebhook ? 'YES' : 'NO'}`);
+        console.log(`✅ Interest salvato con webhook: ${interest.discordWebhook ? 'YES' : 'NO'}`);
+        console.log(`✅ Webhook value: ${interest.discordWebhook ? interest.discordWebhook.substring(0, 50) + '...' : 'NULL/UNDEFINED'}`);
 
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
