@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Dieta & Salute</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 240px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-page-header {
+            padding: 24px 32px;
+            background: white;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Dieta Layout */
+        .dieta-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .dieta-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .add-meal-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-meal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Daily Stats */
+        .daily-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .stat-progress {
+            margin-top: 8px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stat-progress-fill {
+            height: 100%;
+            background: white;
+            transition: width 0.3s;
+        }
+
+        /* Meals List */
+        .meals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .meal-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+
+        .meal-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .meal-item.breakfast {
+            border-color: #f59e0b;
+        }
+
+        .meal-item.lunch {
+            border-color: #3b82f6;
+        }
+
+        .meal-item.dinner {
+            border-color: #8b5cf6;
+        }
+
+        .meal-item.snack {
+            border-color: #ec4899;
+        }
+
+        .meal-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .meal-item.breakfast .meal-icon {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+
+        .meal-item.lunch .meal-icon {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+
+        .meal-item.dinner .meal-icon {
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        }
+
+        .meal-item.snack .meal-icon {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+        }
+
+        .meal-details {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin: 0 0 4px 0;
+        }
+
+        .meal-time {
+            font-size: 13px;
+            color: var(--venus-text-muted);
+        }
+
+        .meal-calories {
+            font-size: 18px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        /* Macro Progress */
+        .macro-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .macro-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--venus-border);
+        }
+
+        .macro-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .macro-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .macro-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .macro-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .macro-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .macro-fill.protein {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .macro-fill.carbs {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .macro-fill.fats {
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+        }
+
+        /* Water Tracker */
+        .water-tracker {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            padding: 24px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 24px;
+        }
+
+        .water-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .water-glasses {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .water-glass {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .water-glass:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .water-glass.filled {
+            background: rgba(255,255,255,0.9);
+        }
+
+        .water-count {
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--venus-text-muted);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--venus-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 1200px) {
+            .dieta-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    Obiettivi
+                </a>
+                <a href="progetti.html" class="venus-menu-item">
+                    Progetti
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    I Miei Listing
+                </a>
+                <a href="sport.html" class="venus-menu-item">
+                    Sport
+                </a>
+                <a href="dieta.html" class="venus-menu-item venus-active">
+                    Dieta
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Utente</div>
+                        <div class="venus-user-role">Member</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-page-header">
+                <h1 class="venus-page-title">🥗 Dieta & Salute</h1>
+            </div>
+
+            <div class="venus-content-area">
+                <div class="dieta-container">
+                    <!-- Main Column -->
+                    <div>
+                        <!-- Daily Stats -->
+                        <div class="daily-stats">
+                            <div class="stat-card">
+                                <div class="stat-value" id="caloriesValue">1,450</div>
+                                <div class="stat-label">Calorie / 2,000</div>
+                                <div class="stat-progress">
+                                    <div class="stat-progress-fill" style="width: 72.5%;"></div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="proteinValue">85g</div>
+                                <div class="stat-label">Proteine / 120g</div>
+                                <div class="stat-progress">
+                                    <div class="stat-progress-fill" style="width: 70.8%;"></div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="carbsValue">180g</div>
+                                <div class="stat-label">Carboidrati / 250g</div>
+                                <div class="stat-progress">
+                                    <div class="stat-progress-fill" style="width: 72%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meals Today -->
+                        <div class="dieta-card">
+                            <div class="card-header">
+                                <h2 class="card-title">🍽️ Pasti di Oggi</h2>
+                                <button class="add-meal-btn" onclick="openModal()">+ Aggiungi Pasto</button>
+                            </div>
+
+                            <div class="meals-list" id="mealsList">
+                                <div class="meal-item breakfast">
+                                    <div class="meal-icon">🥐</div>
+                                    <div class="meal-details">
+                                        <h3 class="meal-name">Colazione</h3>
+                                        <p class="meal-time">08:00</p>
+                                    </div>
+                                    <div class="meal-calories">420 kcal</div>
+                                </div>
+
+                                <div class="meal-item lunch">
+                                    <div class="meal-icon">🍝</div>
+                                    <div class="meal-details">
+                                        <h3 class="meal-name">Pranzo</h3>
+                                        <p class="meal-time">13:00</p>
+                                    </div>
+                                    <div class="meal-calories">680 kcal</div>
+                                </div>
+
+                                <div class="meal-item snack">
+                                    <div class="meal-icon">🍎</div>
+                                    <div class="meal-details">
+                                        <h3 class="meal-name">Snack</h3>
+                                        <p class="meal-time">16:30</p>
+                                    </div>
+                                    <div class="meal-calories">150 kcal</div>
+                                </div>
+
+                                <div class="meal-item dinner">
+                                    <div class="meal-icon">🍗</div>
+                                    <div class="meal-details">
+                                        <h3 class="meal-name">Cena</h3>
+                                        <p class="meal-time">20:00</p>
+                                    </div>
+                                    <div class="meal-calories">200 kcal</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div>
+                        <!-- Water Tracker -->
+                        <div class="water-tracker">
+                            <h3 class="water-title">💧 Idratazione</h3>
+                            <div class="water-glasses" id="waterGlasses">
+                                <div class="water-glass filled" onclick="toggleWater(0)">💧</div>
+                                <div class="water-glass filled" onclick="toggleWater(1)">💧</div>
+                                <div class="water-glass filled" onclick="toggleWater(2)">💧</div>
+                                <div class="water-glass filled" onclick="toggleWater(3)">💧</div>
+                                <div class="water-glass filled" onclick="toggleWater(4)">💧</div>
+                                <div class="water-glass" onclick="toggleWater(5)">💧</div>
+                                <div class="water-glass" onclick="toggleWater(6)">💧</div>
+                                <div class="water-glass" onclick="toggleWater(7)">💧</div>
+                            </div>
+                            <div class="water-count">5 / 8 bicchieri (1.25L / 2L)</div>
+                        </div>
+
+                        <!-- Macro Progress -->
+                        <div class="dieta-card">
+                            <div class="card-header">
+                                <h2 class="card-title">📊 Macronutrienti</h2>
+                            </div>
+
+                            <div class="macro-progress">
+                                <div class="macro-item">
+                                    <div class="macro-header">
+                                        <span class="macro-name">Proteine</span>
+                                        <span class="macro-value">85g / 120g</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <div class="macro-fill protein" style="width: 70.8%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="macro-item">
+                                    <div class="macro-header">
+                                        <span class="macro-name">Carboidrati</span>
+                                        <span class="macro-value">180g / 250g</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <div class="macro-fill carbs" style="width: 72%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="macro-item">
+                                    <div class="macro-header">
+                                        <span class="macro-name">Grassi</span>
+                                        <span class="macro-value">45g / 70g</span>
+                                    </div>
+                                    <div class="macro-bar">
+                                        <div class="macro-fill fats" style="width: 64.3%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Meal Modal -->
+    <div class="modal-overlay" id="mealModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Aggiungi Pasto</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form id="mealForm" onsubmit="saveMeal(event)">
+                <div class="form-group">
+                    <label class="form-label" for="mealType">Tipo Pasto *</label>
+                    <select class="form-select" id="mealType" required>
+                        <option value="breakfast">Colazione</option>
+                        <option value="lunch">Pranzo</option>
+                        <option value="dinner">Cena</option>
+                        <option value="snack">Snack</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="mealName">Nome Pasto *</label>
+                    <input type="text" class="form-input" id="mealName" required placeholder="Es: Pasta al pomodoro">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="mealCalories">Calorie *</label>
+                    <input type="number" class="form-input" id="mealCalories" required min="1" placeholder="500">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="mealTime">Ora *</label>
+                    <input type="time" class="form-input" id="mealTime" required>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva Pasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Global variables
+        let meals = [];
+        let waterGlasses = [true, true, true, true, true, false, false, false];
+
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const userName = user.username || user.email || 'Utente';
+                document.getElementById('userName').textContent = userName;
+                const initial = userName[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+
+            // Setup logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Load meals
+            loadMeals();
+        });
+
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
+        }
+
+        function loadMeals() {
+            const saved = localStorage.getItem('dieta_meals');
+            if (saved) {
+                meals = JSON.parse(saved);
+            }
+        }
+
+        function saveMeals() {
+            localStorage.setItem('dieta_meals', JSON.stringify(meals));
+        }
+
+        function toggleWater(index) {
+            waterGlasses[index] = !waterGlasses[index];
+            const glasses = document.querySelectorAll('.water-glass');
+            glasses[index].classList.toggle('filled');
+            
+            const filled = waterGlasses.filter(g => g).length;
+            const liters = (filled * 0.25).toFixed(2);
+            document.querySelector('.water-count').textContent = `${filled} / 8 bicchieri (${liters}L / 2L)`;
+            
+            localStorage.setItem('dieta_water', JSON.stringify(waterGlasses));
+        }
+
+        function openModal() {
+            document.getElementById('mealModal').classList.add('active');
+            document.getElementById('mealForm').reset();
+        }
+
+        function closeModal() {
+            document.getElementById('mealModal').classList.remove('active');
+            document.getElementById('mealForm').reset();
+        }
+
+        function saveMeal(e) {
+            e.preventDefault();
+
+            const meal = {
+                id: Date.now(),
+                type: document.getElementById('mealType').value,
+                name: document.getElementById('mealName').value,
+                calories: parseInt(document.getElementById('mealCalories').value),
+                time: document.getElementById('mealTime').value,
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            meals.push(meal);
+            saveMeals();
+            closeModal();
+
+            alert('Pasto registrato! 🍽️');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('mealModal').addEventListener('click', (e) => {
+            if (e.target.id === 'mealModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
