@@ -1543,17 +1543,15 @@ app.post('/api/monitors/start', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Only releasing monitors can be started' });
         }
 
-        // Aggiungi webhook al config
+        // Aggiungi webhook al config E salva subito nel JSON
         interest.discordWebhook = discordWebhook;
+        interest.status = 'monitoring';
+        await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+        
+        console.log(`✅ Webhook salvato per interest ${interestId}: ${discordWebhook ? 'YES' : 'NO'}`);
 
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
-
-        if (result.success) {
-            // Aggiorna status a "monitoring"
-            interest.status = 'monitoring';
-            await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
-        }
 
         return res.json(result);
     } catch (error) {
