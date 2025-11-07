@@ -1370,20 +1370,6 @@ app.post('/api/ebay/listings/:id/relist', async (req, res) => {
     }
 });
 
-// Product details (by ASIN) - useful for price refresh on single product
-app.get('/api/amazon/product/:asin', async (req, res) => {
-    const asin = req.params.asin;
-    if (!asin) return res.status(400).json({ success: false, error: 'Missing asin' });
-    try {
-        // In futuro: scraping diretto per singolo prodotto
-        const product = await scrapeAmazonProduct({ asin, country: req.query.country || 'IT' });
-        return res.json({ success: true, product });
-    } catch (err) {
-        console.error('Product details error:', err && err.message ? err.message : err);
-        return res.status(502).json({ success: false, error: 'Failed to fetch product details', details: err.message });
-    }
-});
-
 // Admin: clear internal caches (protected by ADMIN_TOKEN env). Not exposed in production without token.
 app.post('/api/admin/clear-cache', (req, res) => {
     const token = req.headers['x-admin-token'] || req.body && req.body.token;

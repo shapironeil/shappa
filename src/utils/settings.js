@@ -347,7 +347,7 @@ const SettingsManager = {
         console.log('🔄 Refreshing eBay token...');
         
         try {
-            const response = await fetch('https://www.localhost:3000/api/ebay/refresh-token', {
+            const response = await fetch('/api/ebay/refresh', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
