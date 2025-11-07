@@ -3508,8 +3508,25 @@
                 return false;
             }
 
-            // Carica webhook Discord se configurato
-            const discordWebhook = localStorage.getItem('discord_webhook_url');
+            // Carica webhook Discord dal SERVER (fallback localStorage)
+            let discordWebhook = null;
+            
+            try {
+                const webhookResponse = await fetch(`${API_BASE_URL}/api/user/webhook/${user.id}`);
+                const webhookResult = await webhookResponse.json();
+                
+                if (webhookResult.success && webhookResult.webhookUrl) {
+                    discordWebhook = webhookResult.webhookUrl;
+                    console.log('✅ Webhook caricato dal server');
+                } else {
+                    // Fallback localStorage
+                    discordWebhook = localStorage.getItem('discord_webhook_url');
+                    console.log('⚠️ Webhook da localStorage (fallback)');
+                }
+            } catch (error) {
+                console.error('❌ Errore caricamento webhook, uso localStorage:', error);
+                discordWebhook = localStorage.getItem('discord_webhook_url');
+            }
             
             console.log('🔍 DEBUG startMonitor:');
             console.log('- userId:', user.id);

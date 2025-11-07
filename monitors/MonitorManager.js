@@ -31,13 +31,17 @@ class MonitorManager {
         }
 
         try {
-            // Usa webhook passato da interestData (salvato dal backend)
-            const discordWebhook = interestData.discordWebhook;
+            // Usa webhook passato da interestData, altrimenti carica dal server
+            let discordWebhook = interestData.discordWebhook;
+            
+            if (!discordWebhook) {
+                console.log(`[Manager] 🔄 Webhook non nell'interest, carico dal server...`);
+                discordWebhook = await this.loadUserWebhook(userId);
+            }
             
             if (!discordWebhook) {
                 console.warn(`[Manager] ⚠️ Nessun webhook Discord configurato per monitor ${monitorId}`);
                 console.warn(`[Manager] 💡 Vai su Impostazioni → Discord Webhook per configurarlo`);
-                // NON bloccare l'avvio, ma notifica che non invierà notifiche
             } else {
                 console.log(`[Manager] ✅ Webhook Discord configurato per monitor ${monitorId}`);
             }
@@ -168,10 +172,18 @@ class MonitorManager {
      */
     async loadUserWebhook(userId) {
         try {
-            // TODO: implementare storage webhook in database
-            // Per ora ritorna null, verrà gestito dal frontend
-            return null;
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            const webhookFile = path.join(__dirname, '..', 'data', 'webhooks', `webhook_${userId}.json`);
+            
+            const data = await fs.readFile(webhookFile, 'utf8');
+            const webhook = JSON.parse(data);
+            
+            console.log(`[Manager] ✅ Webhook caricato dal server per user ${userId}`);
+            return webhook.webhookUrl;
         } catch (error) {
+            console.log(`[Manager] ⚠️ Nessun webhook trovato per user ${userId}`);
             return null;
         }
     }

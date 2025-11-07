@@ -1630,6 +1630,64 @@ app.get('/api/monitors/user/:userId', (req, res) => {
     }
 });
 
+/**
+ * POST /api/user/webhook
+ * Salva webhook Discord per un utente
+ */
+app.post('/api/user/webhook', async (req, res) => {
+    try {
+        const { userId, webhookUrl } = req.body;
+
+        if (!userId || !webhookUrl) {
+            return res.status(400).json({ success: false, error: 'Missing userId or webhookUrl' });
+        }
+
+        // Salva webhook in file JSON separato
+        const webhookDir = path.join(__dirname, 'data', 'webhooks');
+        if (!fs.existsSync(webhookDir)) {
+            fs.mkdirSync(webhookDir, { recursive: true });
+        }
+
+        const webhookFile = path.join(webhookDir, `webhook_${userId}.json`);
+        await fsPromises.writeFile(webhookFile, JSON.stringify({ 
+            userId, 
+            webhookUrl,
+            updatedAt: new Date().toISOString() 
+        }, null, 2), 'utf8');
+
+        console.log(`✅ Webhook salvato per user ${userId}`);
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Error saving webhook:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/user/webhook/:userId
+ * Carica webhook Discord per un utente
+ */
+app.get('/api/user/webhook/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const webhookFile = path.join(__dirname, 'data', 'webhooks', `webhook_${userId}.json`);
+        
+        if (!fs.existsSync(webhookFile)) {
+            return res.json({ success: true, webhookUrl: null });
+        }
+
+        const data = await fsPromises.readFile(webhookFile, 'utf8');
+        const webhook = JSON.parse(data);
+
+        console.log(`✅ Webhook caricato per user ${userId}`);
+        return res.json({ success: true, webhookUrl: webhook.webhookUrl });
+    } catch (error) {
+        console.error('❌ Error loading webhook:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {

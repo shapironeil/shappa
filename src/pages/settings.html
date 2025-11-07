@@ -1298,13 +1298,40 @@
                 return;
             }
             
-            // Save to localStorage (in futuro su server)
-            localStorage.setItem('discord_webhook_url', webhookUrl);
-            
-            document.getElementById('discord-status-badge').textContent = 'Connesso';
-            document.getElementById('discord-status-badge').className = 'venus-integration-status venus-status-connected';
-            
-            alert('✅ Discord Webhook salvato con successo!');
+            try {
+                const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+                if (!user) {
+                    alert('⚠️ Devi essere loggato per salvare il webhook');
+                    return;
+                }
+
+                // Salva su SERVER
+                const response = await fetch(`${API_BASE_URL}/api/user/webhook`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        webhookUrl: webhookUrl
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Errore salvataggio');
+                }
+
+                // Salva anche in localStorage per retrocompatibilità
+                localStorage.setItem('discord_webhook_url', webhookUrl);
+                
+                document.getElementById('discord-status-badge').textContent = 'Connesso';
+                document.getElementById('discord-status-badge').className = 'venus-integration-status venus-status-connected';
+                
+                alert('✅ Discord Webhook salvato sul server!');
+            } catch (error) {
+                console.error('Errore salvataggio webhook:', error);
+                alert('❌ Errore: ' + error.message);
+            }
         }
         
         async function testDiscordWebhook() {
@@ -1342,15 +1369,36 @@
         }
         
         // Load Discord status on page load
-        function loadDiscordStatus() {
-            const webhookUrl = localStorage.getItem('discord_webhook_url');
-            const webhookInput = document.getElementById('discordWebhookUrl');
-            const statusBadge = document.getElementById('discord-status-badge');
-            
-            if (webhookUrl && webhookInput) {
-                webhookInput.value = webhookUrl;
-                statusBadge.textContent = 'Connesso';
-                statusBadge.className = 'venus-integration-status venus-status-connected';
+        async function loadDiscordStatus() {
+            try {
+                const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+                if (!user) {
+                    console.log('User not logged in, skipping webhook load');
+                    return;
+                }
+
+                // Carica webhook dal SERVER
+                const response = await fetch(`${API_BASE_URL}/api/user/webhook/${user.id}`);
+                const result = await response.json();
+
+                const webhookInput = document.getElementById('discordWebhookUrl');
+                const statusBadge = document.getElementById('discord-status-badge');
+
+                if (result.success && result.webhookUrl) {
+                    console.log('✅ Webhook caricato dal server');
+                    webhookInput.value = result.webhookUrl;
+                    statusBadge.textContent = 'Connesso';
+                    statusBadge.className = 'venus-integration-status venus-status-connected';
+                    
+                    // Salva anche in localStorage per retrocompatibilità
+                    localStorage.setItem('discord_webhook_url', result.webhookUrl);
+                } else {
+                    console.log('ℹ️ Nessun webhook configurato');
+                    statusBadge.textContent = 'Non connesso';
+                    statusBadge.className = 'venus-integration-status';
+                }
+            } catch (error) {
+                console.error('Errore caricamento webhook:', error);
             }
         }
 
