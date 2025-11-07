@@ -1382,6 +1382,130 @@ app.post('/api/admin/clear-cache', (req, res) => {
     }
 });
 
+// ============================================
+// INTERESTS API - User-specific product monitoring
+// ============================================
+
+const INTERESTS_DIR = path.join(__dirname, 'data', 'interests');
+
+// Ensure interests directory exists
+if (!fs.existsSync(INTERESTS_DIR)) {
+    fs.mkdirSync(INTERESTS_DIR, { recursive: true });
+    console.log('📁 Created interests directory');
+}
+
+// Get user interests file path
+function getUserInterestsPath(userId) {
+    return path.join(INTERESTS_DIR, `interests_${userId}.json`);
+}
+
+// GET - Retrieve user interests
+app.get('/api/interests/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        const filePath = getUserInterestsPath(userId);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.json({ success: true, interests: [] });
+        }
+
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        const interests = JSON.parse(data);
+        
+        return res.json({ success: true, interests });
+    } catch (error) {
+        console.error('❌ Error reading interests:', error);
+        return res.status(500).json({ success: false, error: 'Failed to read interests' });
+    }
+});
+
+// POST - Save user interests (full replacement)
+app.post('/api/interests/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { interests } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        if (!Array.isArray(interests)) {
+            return res.status(400).json({ success: false, error: 'interests must be an array' });
+        }
+
+        const filePath = getUserInterestsPath(userId);
+        await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+        
+        console.log(`💾 Saved ${interests.length} interests for user ${userId}`);
+        return res.json({ success: true, count: interests.length });
+    } catch (error) {
+        console.error('❌ Error saving interests:', error);
+        return res.status(500).json({ success: false, error: 'Failed to save interests' });
+    }
+});
+
+// POST - Add single interest
+app.post('/api/interests/:userId/add', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const interest = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        const filePath = getUserInterestsPath(userId);
+        let interests = [];
+
+        if (fs.existsSync(filePath)) {
+            const data = await fsPromises.readFile(filePath, 'utf8');
+            interests = JSON.parse(data);
+        }
+
+        interests.push(interest);
+        await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+        
+        console.log(`✅ Added interest "${interest.name}" for user ${userId}`);
+        return res.json({ success: true, interest, total: interests.length });
+    } catch (error) {
+        console.error('❌ Error adding interest:', error);
+        return res.status(500).json({ success: false, error: 'Failed to add interest' });
+    }
+});
+
+// DELETE - Remove interest by ID
+app.delete('/api/interests/:userId/:interestId', async (req, res) => {
+    try {
+        const { userId, interestId } = req.params;
+
+        if (!userId || !interestId) {
+            return res.status(400).json({ success: false, error: 'userId and interestId required' });
+        }
+
+        const filePath = getUserInterestsPath(userId);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ success: false, error: 'No interests found' });
+        }
+
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        const interests = JSON.parse(data);
+        const filtered = interests.filter(i => i.id != interestId);
+
+        await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
+        
+        console.log(`🗑️ Deleted interest ${interestId} for user ${userId}`);
+        return res.json({ success: true, remaining: filtered.length });
+    } catch (error) {
+        console.error('❌ Error deleting interest:', error);
+        return res.status(500).json({ success: false, error: 'Failed to delete interest' });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {

@@ -1545,7 +1545,7 @@
                                     </div>
                                 </div>
                                 <div class="listings-actions">
-                                    <button class="venus-btn-action venus-btn-primary" onclick="showAddInterestModal()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); padding: 12px 24px; font-weight: 600; transition: all 0.2s;">
+                                    <button class="venus-btn-action venus-btn-primary" onclick="showAddInterestModal()" style="background: white; color: #6366f1; border: 2px solid #6366f1; padding: 12px 24px; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);">
                                         ✨ Aggiungi Interesse
                                     </button>
                                 </div>
@@ -3375,7 +3375,7 @@
     // ============================================
     // SAVE FUNCTIONS
     // ============================================
-    function saveReleaseDate(e) {
+    async function saveReleaseDate(e) {
         e.preventDefault();
         
         const interest = {
@@ -3390,16 +3390,19 @@
             createdAt: new Date().toISOString()
         };
         
-        const interests = getUserInterests();
-        interests.push(interest);
-        saveUserInterests(interests);
+        const success = await addUserInterest(interest);
         
         document.getElementById('releaseDateModal').remove();
-        alert(`Release Date "${interest.name}" aggiunto! 📅`);
-        location.reload();
+        
+        if (success) {
+            alert(`Release Date "${interest.name}" aggiunto! 📅`);
+            location.reload();
+        } else {
+            alert('❌ Errore durante il salvataggio');
+        }
     }
 
-    function saveReleasing(e) {
+    async function saveReleasing(e) {
         e.preventDefault();
         
         const monitor = {
@@ -3416,20 +3419,23 @@
             createdAt: new Date().toISOString()
         };
         
-        const interests = getUserInterests();
-        interests.push(monitor);
-        saveUserInterests(interests);
+        const success = await addUserInterest(monitor);
         
         document.getElementById('releasingModal').remove();
-        alert(`Monitor "${monitor.name}" attivato! 🔔`);
-        location.reload();
+        
+        if (success) {
+            alert(`Monitor "${monitor.name}" attivato! 🔔`);
+            location.reload();
+        } else {
+            alert('❌ Errore durante il salvataggio');
+        }
     }
 
     // ============================================
     // LOAD RELEASE DATES WIDGET
     // ============================================
-    function loadReleaseDates() {
-        const interests = getUserInterests();
+    async function loadReleaseDates() {
+        const interests = await getUserInterests();
         const releases = interests.filter(i => i.type === 'release');
         
         const container = document.getElementById('releaseDatesContainer');
@@ -3486,32 +3492,129 @@
     }
 
     // ============================================
-    // USER-SPECIFIC STORAGE
+    // API CONFIGURATION
     // ============================================
-    function getUserStorageKey() {
+    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'https://localhost:3000'
+        : 'https://shapiro.ninja';
+
+    // ============================================
+    // USER-SPECIFIC STORAGE - SERVER API
+    // ============================================
+    async function getUserInterests() {
         const user = AuthManager.getCurrentUser();
         if (!user || !user.id) {
-            console.error('Utente non autenticato');
-            return 'my_interests'; // fallback per retrocompatibilità
+            console.error('❌ Utente non autenticato');
+            return [];
         }
-        return `interests_${user.id}`;
+
+        try {
+            const response = await fetch(`${API_BASE}/api/interests/${user.id}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`✅ Loaded ${data.interests.length} interests from server`);
+                return data.interests;
+            }
+            
+            console.error('❌ Failed to load interests:', data.error);
+            return [];
+        } catch (error) {
+            console.error('❌ Error loading interests:', error);
+            return [];
+        }
     }
 
-    function getUserInterests() {
-        const key = getUserStorageKey();
-        return JSON.parse(localStorage.getItem(key) || '[]');
+    async function saveUserInterests(interests) {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('❌ Utente non autenticato');
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/interests/${user.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ interests })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`💾 Saved ${data.count} interests to server`);
+                return true;
+            }
+            
+            console.error('❌ Failed to save interests:', data.error);
+            return false;
+        } catch (error) {
+            console.error('❌ Error saving interests:', error);
+            return false;
+        }
     }
 
-    function saveUserInterests(interests) {
-        const key = getUserStorageKey();
-        localStorage.setItem(key, JSON.stringify(interests));
+    async function addUserInterest(interest) {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('❌ Utente non autenticato');
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/interests/${user.id}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(interest)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`✅ Added interest: ${interest.name}`);
+                return true;
+            }
+            
+            console.error('❌ Failed to add interest:', data.error);
+            return false;
+        } catch (error) {
+            console.error('❌ Error adding interest:', error);
+            return false;
+        }
+    }
+
+    async function deleteUserInterest(interestId) {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('❌ Utente non autenticato');
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/interests/${user.id}/${interestId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(`🗑️ Deleted interest: ${interestId}`);
+                return true;
+            }
+            
+            console.error('❌ Failed to delete interest:', data.error);
+            return false;
+        } catch (error) {
+            console.error('❌ Error deleting interest:', error);
+            return false;
+        }
     }
 
     // ============================================
     // POPULATE TABLE WITH INTERESTS
     // ============================================
-    function loadInterestsTable() {
-        const interests = getUserInterests();
+    async function loadInterestsTable() {
+        const interests = await getUserInterests();
         const tbody = document.getElementById('listingsTableBody');
         const emptyState = document.getElementById('emptyState');
         
@@ -3581,15 +3684,17 @@
         }
     }
 
-    function deleteInterest(id) {
+    async function deleteInterest(id) {
         if (!confirm('Sei sicuro di voler eliminare questo interesse?')) return;
         
-        const interests = getUserInterests();
-        const updated = interests.filter(i => i.id != id);
-        saveUserInterests(updated);
+        const success = await deleteUserInterest(id);
         
-        loadInterestsTable();
-        loadReleaseDates();
+        if (success) {
+            await loadInterestsTable();
+            await loadReleaseDates();
+        } else {
+            alert('❌ Errore durante l\'eliminazione');
+        }
     }
 
     function editInterest(id) {
@@ -3598,9 +3703,9 @@
     }
 
     // Load release dates on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        loadInterestsTable();
-        loadReleaseDates();
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadInterestsTable();
+        await loadReleaseDates();
     });
     </script>
 </body>
