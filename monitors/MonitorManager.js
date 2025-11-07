@@ -31,8 +31,14 @@ class MonitorManager {
         }
 
         try {
-            // Carica webhook Discord dell'utente
-            const discordWebhook = await this.loadUserWebhook(userId);
+            // Usa webhook passato da interestData (salvato dal backend)
+            const discordWebhook = interestData.discordWebhook;
+            
+            if (!discordWebhook) {
+                console.warn(`[Manager] ⚠️ Nessun webhook Discord configurato per monitor ${monitorId}`);
+            } else {
+                console.log(`[Manager] ✅ Webhook Discord configurato per monitor ${monitorId}`);
+            }
 
             // Crea config per monitor
             const config = {
@@ -40,8 +46,14 @@ class MonitorManager {
                 name: interestData.name,
                 url: interestData.url,
                 interval: interestData.interval || 5,
+                module: interestData.module || 'universal',
                 userId: userId,
-                discordWebhook: discordWebhook
+                discordWebhook: discordWebhook,
+                // Aggiungi filtri Shopify se presenti
+                productFilter: interestData.productFilter || '',
+                variantFilter: interestData.variantFilter || '',
+                // Aggiungi target Universal se presente
+                target: interestData.target || ''
             };
 
             // Determina tipo monitor e crea istanza
