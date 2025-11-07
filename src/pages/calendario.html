@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario - Shappa Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-top-bar {
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+            padding: var(--venus-space-lg) var(--venus-space-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--venus-space-xl);
+        }
+
+        /* Calendar Styles */
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: var(--venus-space-xl);
+            height: 100%;
+        }
+
+        .calendar-main {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-md);
+            padding: var(--venus-space-xl);
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--venus-space-xl);
+        }
+
+        .calendar-month {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: var(--venus-space-sm);
+        }
+
+        .calendar-nav-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--venus-border);
+            background: white;
+            border-radius: var(--venus-radius-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            font-size: 18px;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--venus-text-muted);
+            padding: 8px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .calendar-day.today {
+            background: var(--venus-primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.has-events {
+            border-color: var(--venus-primary);
+            border-width: 2px;
+        }
+
+        .calendar-day.other-month {
+            color: var(--venus-text-muted);
+            opacity: 0.4;
+        }
+
+        .calendar-day-number {
+            font-size: 14px;
+        }
+
+        .calendar-day-indicator {
+            width: 4px;
+            height: 4px;
+            background: var(--venus-primary);
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+
+        .calendar-day.today .calendar-day-indicator {
+            background: white;
+        }
+
+        /* Events Sidebar */
+        .calendar-events {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-lg);
+        }
+
+        .events-section {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-md);
+            padding: var(--venus-space-lg);
+        }
+
+        .events-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .event-item {
+            padding: var(--venus-space-md);
+            border-left: 3px solid;
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius-sm);
+            margin-bottom: var(--venus-space-sm);
+        }
+
+        .event-item.vendita {
+            border-color: #10b981;
+        }
+
+        .event-item.listing {
+            border-color: #3b82f6;
+        }
+
+        .event-item.scadenza {
+            border-color: #ef4444;
+        }
+
+        .event-item.attivita {
+            border-color: #f59e0b;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: var(--venus-text-muted);
+            margin-bottom: 4px;
+        }
+
+        .event-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .event-description {
+            font-size: 12px;
+            color: var(--venus-text-muted);
+        }
+
+        .add-event-btn {
+            width: 100%;
+            padding: var(--venus-space-md);
+            background: var(--venus-primary);
+            border: none;
+            border-radius: var(--venus-radius-sm);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .add-event-btn:hover {
+            background: #2563eb;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--venus-space-md);
+            margin-top: var(--venus-space-md);
+        }
+
+        .quick-stat {
+            text-align: center;
+            padding: var(--venus-space-md);
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius-sm);
+        }
+
+        .quick-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-primary);
+        }
+
+        .quick-stat-label {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+            margin-top: 4px;
+        }
+
+        @media (max-width: 1200px) {
+            .calendar-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span style="font-size: 28px;">🛒</span>
+                    <span class="venus-logo-text">Shappa</span>
+                </div>
+            </div>
+
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📊</span>
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">🎯</span>
+                    Obiettivi
+                </a>
+                <a href="calendario.html" class="venus-menu-item venus-active">
+                    <span style="margin-right: 12px;">📅</span>
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">🔍</span>
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📦</span>
+                    I Miei Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📈</span>
+                    Reports
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">⚙️</span>
+                    Impostazioni
+                </a>
+            </nav>
+
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Utente</div>
+                        <div class="venus-user-role">Venditore</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" onclick="handleLogout()">
+                    <span>🚪</span>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-top-bar">
+                <h1 class="venus-page-title">📅 Calendario</h1>
+            </div>
+
+            <div class="venus-content-area">
+                <div class="calendar-container">
+                    <!-- Calendar Main -->
+                    <div class="calendar-main">
+                        <div class="calendar-header">
+                            <h2 class="calendar-month" id="currentMonth">Novembre 2025</h2>
+                            <div class="calendar-nav">
+                                <button class="calendar-nav-btn" onclick="previousMonth()">‹</button>
+                                <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
+                            </div>
+                        </div>
+
+                        <div class="calendar-grid">
+                            <!-- Weekday headers -->
+                            <div class="calendar-weekday">Lun</div>
+                            <div class="calendar-weekday">Mar</div>
+                            <div class="calendar-weekday">Mer</div>
+                            <div class="calendar-weekday">Gio</div>
+                            <div class="calendar-weekday">Ven</div>
+                            <div class="calendar-weekday">Sab</div>
+                            <div class="calendar-weekday">Dom</div>
+
+                            <!-- Days will be generated by JavaScript -->
+                            <div id="calendarDays"></div>
+                        </div>
+                    </div>
+
+                    <!-- Events Sidebar -->
+                    <div class="calendar-events">
+                        <!-- Today's Events -->
+                        <div class="events-section">
+                            <h3 class="events-section-title">📌 Oggi - 7 Novembre</h3>
+                            
+                            <div class="event-item vendita">
+                                <div class="event-time">14:30</div>
+                                <div class="event-title">Vendita Completata</div>
+                                <div class="event-description">iPhone 13 Pro - €850</div>
+                            </div>
+
+                            <div class="event-item listing">
+                                <div class="event-time">16:00</div>
+                                <div class="event-title">Nuovo Listing</div>
+                                <div class="event-description">AirPods Pro 2</div>
+                            </div>
+
+                            <div class="event-item attivita">
+                                <div class="event-time">18:00</div>
+                                <div class="event-title">Risposta Cliente</div>
+                                <div class="event-description">Richiesta info spedizione</div>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Events -->
+                        <div class="events-section">
+                            <h3 class="events-section-title">🔜 Prossimi Eventi</h3>
+                            
+                            <div class="event-item scadenza">
+                                <div class="event-time">10 Nov - 09:00</div>
+                                <div class="event-title">Scadenza Listing</div>
+                                <div class="event-description">3 listing in scadenza</div>
+                            </div>
+
+                            <div class="event-item attivita">
+                                <div class="event-time">12 Nov - 14:00</div>
+                                <div class="event-title">Inventario Check</div>
+                                <div class="event-description">Verifica stock prodotti</div>
+                            </div>
+
+                            <div class="event-item vendita">
+                                <div class="event-time">15 Nov - 10:00</div>
+                                <div class="event-title">Obiettivo Vendite</div>
+                                <div class="event-description">Review progresso mensile</div>
+                            </div>
+
+                            <button class="add-event-btn" onclick="aggiungiEvento()">
+                                + Aggiungi Evento
+                            </button>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="events-section">
+                            <h3 class="events-section-title">📊 Questo Mese</h3>
+                            <div class="quick-stats">
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value">34</div>
+                                    <div class="quick-stat-label">Vendite</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value">12</div>
+                                    <div class="quick-stat-label">Nuovi Listing</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value">€1,450</div>
+                                    <div class="quick-stat-label">Profitto</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value">98%</div>
+                                    <div class="quick-stat-label">Soddisfazione</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.username || 'Utente';
+                const initial = (user.username || 'U')[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+
+            // Generate calendar
+            generateCalendar();
+        });
+
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
+        }
+
+        let currentMonth = 10; // November (0-indexed)
+        let currentYear = 2025;
+
+        function generateCalendar() {
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const prevLastDay = new Date(currentYear, currentMonth, 0);
+            
+            const firstDayIndex = (firstDay.getDay() + 6) % 7; // Convert to Mon-Sun
+            const lastDayDate = lastDay.getDate();
+            const prevLastDayDate = prevLastDay.getDate();
+
+            const today = new Date();
+            const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+            const todayDate = today.getDate();
+
+            // Days with events (sample data)
+            const daysWithEvents = [7, 10, 12, 15, 20, 25, 30];
+
+            let calendarHTML = '';
+
+            // Previous month days
+            for (let i = firstDayIndex; i > 0; i--) {
+                const day = prevLastDayDate - i + 1;
+                calendarHTML += `<div class="calendar-day other-month"><span class="calendar-day-number">${day}</span></div>`;
+            }
+
+            // Current month days
+            for (let i = 1; i <= lastDayDate; i++) {
+                const isToday = isCurrentMonth && i === todayDate;
+                const hasEvents = daysWithEvents.includes(i);
+                const classes = `calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''}`;
+                
+                calendarHTML += `
+                    <div class="${classes}" onclick="selectDay(${i})">
+                        <span class="calendar-day-number">${i}</span>
+                        ${hasEvents ? '<div class="calendar-day-indicator"></div>' : ''}
+                    </div>
+                `;
+            }
+
+            // Next month days
+            const totalCells = firstDayIndex + lastDayDate;
+            const remainingCells = 35 - totalCells; // 5 weeks * 7 days
+            for (let i = 1; i <= remainingCells; i++) {
+                calendarHTML += `<div class="calendar-day other-month"><span class="calendar-day-number">${i}</span></div>`;
+            }
+
+            document.getElementById('calendarDays').innerHTML = calendarHTML;
+
+            // Update month name
+            const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                              'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        }
+
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar();
+        }
+
+        function selectDay(day) {
+            alert(`Giorno selezionato: ${day} ${['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'][currentMonth]} ${currentYear}\n\nFunzionalità dettagli giorno in arrivo! 📅`);
+        }
+
+        function aggiungiEvento() {
+            alert('Funzionalità "Aggiungi Evento" in arrivo! 🚀\n\nPotrai pianificare:\n- Promemoria scadenze listing\n- Obiettivi giornalieri\n- Note personali\n- Task da completare');
+        }
+    </script>
+</body>
+</html>

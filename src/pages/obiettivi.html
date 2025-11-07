@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obiettivi - Shappa Dashboard</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 280px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: var(--venus-space-xl) var(--venus-space-lg);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-sm);
+        }
+
+        .venus-logo-text {
+            font-size: var(--venus-font-size-lg);
+            font-weight: var(--venus-font-weight-normal);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: var(--venus-space-lg) 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: var(--venus-space-md) var(--venus-space-lg);
+            margin: 0 var(--venus-space-sm);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-medium);
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: var(--venus-space-lg);
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-lg);
+        }
+
+        .venus-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: var(--venus-font-weight-semibold);
+        }
+
+        .venus-user-info {
+            flex: 1;
+        }
+
+        .venus-user-name {
+            font-size: var(--venus-font-size-sm);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .venus-user-role {
+            font-size: var(--venus-font-size-xs);
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-md);
+            padding: var(--venus-space-sm) var(--venus-space-md);
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-sm);
+            color: var(--venus-text-secondary);
+            font-size: var(--venus-font-size-sm);
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-top-bar {
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+            padding: var(--venus-space-lg) var(--venus-space-xl);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-xl);
+            font-weight: var(--venus-font-weight-semibold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--venus-space-xl);
+        }
+
+        /* Obiettivi Styles */
+        .obiettivi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: var(--venus-space-lg);
+            margin-bottom: var(--venus-space-xl);
+        }
+
+        .obiettivo-card {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-md);
+            padding: var(--venus-space-lg);
+            transition: all var(--venus-transition);
+        }
+
+        .obiettivo-card:hover {
+            box-shadow: var(--venus-shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .obiettivo-header {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .obiettivo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--venus-radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .obiettivo-icon.vendite {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .obiettivo-icon.profitto {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .obiettivo-icon.listing {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .obiettivo-icon.prodotti {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .obiettivo-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .obiettivo-status.attivo {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .obiettivo-status.completato {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .obiettivo-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin: 0 0 var(--venus-space-xs) 0;
+        }
+
+        .obiettivo-description {
+            font-size: 14px;
+            color: var(--venus-text-muted);
+            margin-bottom: var(--venus-space-md);
+        }
+
+        .obiettivo-progress {
+            margin-top: var(--venus-space-md);
+        }
+
+        .obiettivo-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .obiettivo-progress-current {
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .obiettivo-progress-target {
+            color: var(--venus-text-muted);
+        }
+
+        .obiettivo-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--venus-bg-gray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .obiettivo-progress-fill {
+            height: 100%;
+            background: var(--venus-primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .obiettivo-deadline {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-xs);
+            font-size: 13px;
+            color: var(--venus-text-muted);
+            margin-top: var(--venus-space-md);
+        }
+
+        .add-obiettivo-btn {
+            position: fixed;
+            bottom: var(--venus-space-xl);
+            right: var(--venus-space-xl);
+            width: 56px;
+            height: 56px;
+            background: var(--venus-primary);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--venus-shadow-lg);
+            transition: all var(--venus-transition);
+            z-index: 100;
+        }
+
+        .add-obiettivo-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--venus-space-md);
+            margin-bottom: var(--venus-space-xl);
+        }
+
+        .stat-card {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-md);
+            padding: var(--venus-space-lg);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--venus-primary);
+            margin-bottom: var(--venus-space-xs);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--venus-text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span style="font-size: 28px;">🛒</span>
+                    <span class="venus-logo-text">Shappa</span>
+                </div>
+            </div>
+
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📊</span>
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item venus-active">
+                    <span style="margin-right: 12px;">🎯</span>
+                    Obiettivi
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📅</span>
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">🔍</span>
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📦</span>
+                    I Miei Listing
+                </a>
+                <a href="reports.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">📈</span>
+                    Reports
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    <span style="margin-right: 12px;">⚙️</span>
+                    Impostazioni
+                </a>
+            </nav>
+
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Utente</div>
+                        <div class="venus-user-role">Venditore</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" onclick="handleLogout()">
+                    <span>🚪</span>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-top-bar">
+                <h1 class="venus-page-title">🎯 Obiettivi</h1>
+            </div>
+
+            <div class="venus-content-area">
+                <!-- Stats Summary -->
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Obiettivi Attivi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Completati</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">67%</div>
+                        <div class="stat-label">Progresso Medio</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Giorni Rimasti</div>
+                    </div>
+                </div>
+
+                <!-- Obiettivi Grid -->
+                <div class="obiettivi-grid">
+                    <!-- Obiettivo 1: Vendite -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon vendite">💰</div>
+                            <span class="obiettivo-status attivo">● Attivo</span>
+                        </div>
+                        <h3 class="obiettivo-title">Raggiungere 50 Vendite</h3>
+                        <p class="obiettivo-description">Obiettivo mensile di vendite per crescita business</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">34 vendite</span>
+                                <span class="obiettivo-progress-target">/ 50</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 68%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>⏰</span>
+                            <span>Scadenza: 30 Novembre 2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Obiettivo 2: Profitto -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon profitto">💎</div>
+                            <span class="obiettivo-status attivo">● Attivo</span>
+                        </div>
+                        <h3 class="obiettivo-title">€2,000 di Profitto</h3>
+                        <p class="obiettivo-description">Target profitto netto mensile</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">€1,450</span>
+                                <span class="obiettivo-progress-target">/ €2,000</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 72.5%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>⏰</span>
+                            <span>Scadenza: 30 Novembre 2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Obiettivo 3: Listing Attivi -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon listing">📦</div>
+                            <span class="obiettivo-status attivo">● Attivo</span>
+                        </div>
+                        <h3 class="obiettivo-title">100 Listing Attivi</h3>
+                        <p class="obiettivo-description">Mantenere catalogo prodotti ampio</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">78 listing</span>
+                                <span class="obiettivo-progress-target">/ 100</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 78%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>⏰</span>
+                            <span>Scadenza: 15 Novembre 2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Obiettivo 4: Nuovi Prodotti -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon prodotti">🎁</div>
+                            <span class="obiettivo-status attivo">● Attivo</span>
+                        </div>
+                        <h3 class="obiettivo-title">20 Nuovi Prodotti</h3>
+                        <p class="obiettivo-description">Espandere catalogo con nuove categorie</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">12 prodotti</span>
+                                <span class="obiettivo-progress-target">/ 20</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 60%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>⏰</span>
+                            <span>Scadenza: 20 Novembre 2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Obiettivo 5: Rating eBay -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon vendite">⭐</div>
+                            <span class="obiettivo-status completato">✓ Completato</span>
+                        </div>
+                        <h3 class="obiettivo-title">Rating 4.8+ su eBay</h3>
+                        <p class="obiettivo-description">Mantenere alta qualità servizio clienti</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">4.9/5.0</span>
+                                <span class="obiettivo-progress-target">/ 4.8</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 100%; background: #10b981;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>✅</span>
+                            <span>Completato il 5 Novembre 2025</span>
+                        </div>
+                    </div>
+
+                    <!-- Obiettivo 6: Tempo Risposta -->
+                    <div class="obiettivo-card">
+                        <div class="obiettivo-header">
+                            <div class="obiettivo-icon profitto">⚡</div>
+                            <span class="obiettivo-status completato">✓ Completato</span>
+                        </div>
+                        <h3 class="obiettivo-title">Risposta Entro 24h</h3>
+                        <p class="obiettivo-description">Rispondere a tutti i messaggi clienti rapidamente</p>
+                        
+                        <div class="obiettivo-progress">
+                            <div class="obiettivo-progress-label">
+                                <span class="obiettivo-progress-current">100%</span>
+                                <span class="obiettivo-progress-target">/ 95%</span>
+                            </div>
+                            <div class="obiettivo-progress-bar">
+                                <div class="obiettivo-progress-fill" style="width: 100%; background: #10b981;"></div>
+                            </div>
+                        </div>
+
+                        <div class="obiettivo-deadline">
+                            <span>✅</span>
+                            <span>Completato il 1 Novembre 2025</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Obiettivo Button -->
+    <button class="add-obiettivo-btn" onclick="aggiungiObiettivo()" title="Aggiungi Obiettivo">+</button>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getUser();
+            if (user) {
+                document.getElementById('userName').textContent = user.username || 'Utente';
+                const initial = (user.username || 'U')[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+        });
+
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
+        }
+
+        function aggiungiObiettivo() {
+            alert('Funzionalità "Aggiungi Obiettivo" in arrivo! 🚀\n\nPotrai creare obiettivi personalizzati per il tuo business.');
+        }
+    </script>
+</body>
+</html>
