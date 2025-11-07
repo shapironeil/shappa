@@ -780,38 +780,7 @@
 
     <script src="../utils/auth-v2.js"></script>
     <script>
-        // Auth Check
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!AuthManager.isLoggedIn()) {
-                window.location.href = '/src/pages/login.html';
-                return;
-            }
-
-            // Load user info
-            const user = AuthManager.getUser();
-            if (user) {
-                document.getElementById('userName').textContent = user.username || 'Utente';
-                const initial = (user.username || 'U')[0].toUpperCase();
-                document.getElementById('userAvatar').textContent = initial;
-            }
-
-            // Generate calendar
-            generateCalendar();
-            
-            // Load events
-            loadEvents();
-        });
-
-        // Logout handler
-        document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-
-        function handleLogout() {
-            if (confirm('Sei sicuro di voler uscire?')) {
-                AuthManager.logout();
-                window.location.href = '/src/pages/login.html';
-            }
-        }
-
+        // Global variables
         let currentMonth = 10; // November (0-indexed)
         let currentYear = 2025;
         let selectedDay = null;
@@ -857,6 +826,40 @@
         // Save events to localStorage
         function saveEventsToStorage() {
             localStorage.setItem('calendar_events', JSON.stringify(events));
+        }
+
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const userName = user.username || user.email || 'Utente';
+                document.getElementById('userName').textContent = userName;
+                const initial = userName[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+
+            // Setup logout handler
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Load events and generate calendar
+            loadEvents();
+            generateCalendar();
+        });
+
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
         }
 
         function generateCalendar() {

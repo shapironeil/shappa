@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Sport & Fitness</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 240px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-page-header {
+            padding: 24px 32px;
+            background: white;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Sport Layout */
+        .sport-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            height: 100%;
+        }
+
+        .sport-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sport-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .add-workout-btn {
+            padding: 10px 20px;
+            background: var(--venus-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-workout-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        /* Weekly Calendar */
+        .weekly-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .week-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .week-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .week-nav-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .week-nav-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .day-cell {
+            background: white;
+            border: 2px solid var(--venus-border);
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-cell:hover {
+            border-color: var(--venus-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .day-cell.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .day-cell.has-workout {
+            border-color: #10b981;
+            border-width: 3px;
+            background: linear-gradient(to bottom, white 0%, #f0fdf4 100%);
+        }
+
+        .day-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .day-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .day-workout {
+            font-size: 11px;
+            margin-top: auto;
+            padding: 4px 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .day-cell.today .day-workout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Workouts List */
+        .workouts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .workout-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-left: 4px solid;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .workout-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .workout-item.cardio {
+            border-color: #ef4444;
+        }
+
+        .workout-item.strength {
+            border-color: #3b82f6;
+        }
+
+        .workout-item.yoga {
+            border-color: #8b5cf6;
+        }
+
+        .workout-item.running {
+            border-color: #f59e0b;
+        }
+
+        .workout-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .workout-item.cardio .workout-icon {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+
+        .workout-item.strength .workout-icon {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+
+        .workout-item.yoga .workout-icon {
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        }
+
+        .workout-item.running .workout-icon {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+
+        .workout-details {
+            flex: 1;
+        }
+
+        .workout-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin: 0 0 4px 0;
+        }
+
+        .workout-meta {
+            font-size: 13px;
+            color: var(--venus-text-muted);
+            margin: 0;
+        }
+
+        .workout-duration {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-primary);
+            align-self: center;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .progress-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--venus-border);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .progress-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--venus-primary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--venus-text-muted);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--venus-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--venus-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        @media (max-width: 1200px) {
+            .sport-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .weekly-calendar {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+            }
+
+            .day-cell {
+                padding: 8px 4px;
+                min-height: 80px;
+            }
+
+            .day-number {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    Obiettivi
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="listings.html" class="venus-menu-item">
+                    I Miei Listing
+                </a>
+                <a href="sport.html" class="venus-menu-item venus-active">
+                    Sport
+                </a>
+                <a href="dieta.html" class="venus-menu-item">
+                    Dieta
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Utente</div>
+                        <div class="venus-user-role">Member</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-page-header">
+                <h1 class="venus-page-title">💪 Sport & Fitness</h1>
+            </div>
+
+            <div class="venus-content-area">
+                <div class="sport-container">
+                    <!-- Main Column -->
+                    <div class="sport-main">
+                        <!-- Weekly Calendar -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">📅 Settimana Corrente</h2>
+                                <button class="add-workout-btn" onclick="openModal()">+ Aggiungi Allenamento</button>
+                            </div>
+
+                            <div class="week-nav">
+                                <span class="week-label" id="weekLabel">Settimana 1 - Nov 2025</span>
+                                <div class="week-nav-btns">
+                                    <button class="week-nav-btn" onclick="previousWeek()">← Prec</button>
+                                    <button class="week-nav-btn" onclick="nextWeek()">Succ →</button>
+                                </div>
+                            </div>
+
+                            <div class="weekly-calendar" id="weeklyCalendar"></div>
+                        </div>
+
+                        <!-- Recent Workouts -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">🏃 Allenamenti Recenti</h2>
+                            </div>
+
+                            <div class="workouts-list" id="workoutsList">
+                                <div class="workout-item cardio">
+                                    <div class="workout-icon">❤️</div>
+                                    <div class="workout-details">
+                                        <h3 class="workout-title">Cardio Intenso</h3>
+                                        <p class="workout-meta">Oggi • Mattina</p>
+                                    </div>
+                                    <div class="workout-duration">45 min</div>
+                                </div>
+
+                                <div class="workout-item strength">
+                                    <div class="workout-icon">💪</div>
+                                    <div class="workout-details">
+                                        <h3 class="workout-title">Pesi - Upper Body</h3>
+                                        <p class="workout-meta">Ieri • Pomeriggio</p>
+                                    </div>
+                                    <div class="workout-duration">60 min</div>
+                                </div>
+
+                                <div class="workout-item running">
+                                    <div class="workout-icon">🏃</div>
+                                    <div class="workout-details">
+                                        <h3 class="workout-title">Corsa Mattutina</h3>
+                                        <p class="workout-meta">3 giorni fa • Mattina</p>
+                                    </div>
+                                    <div class="workout-duration">30 min</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div>
+                        <!-- Stats -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">12</div>
+                                <div class="stat-label">Allenamenti/Mese</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">540</div>
+                                <div class="stat-label">Minuti Totali</div>
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">📈 I Tuoi Progressi</h2>
+                            </div>
+
+                            <div class="progress-section">
+                                <div class="progress-item">
+                                    <div class="progress-header">
+                                        <span class="progress-name">Obiettivo Settimanale</span>
+                                        <span class="progress-value">3/5</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 60%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="progress-item">
+                                    <div class="progress-header">
+                                        <span class="progress-name">Cardio questo Mese</span>
+                                        <span class="progress-value">180 min</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 75%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="progress-item">
+                                    <div class="progress-header">
+                                        <span class="progress-name">Forza questo Mese</span>
+                                        <span class="progress-value">200 min</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 80%;"></div>
+                                    </div>
+                                </div>
+
+                                <div class="progress-item">
+                                    <div class="progress-header">
+                                        <span class="progress-name">Streak Corrente</span>
+                                        <span class="progress-value">7 giorni 🔥</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Workout Modal -->
+    <div class="modal-overlay" id="workoutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Nuovo Allenamento</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+
+            <form id="workoutForm" onsubmit="saveWorkout(event)">
+                <div class="form-group">
+                    <label class="form-label" for="workoutType">Tipo Allenamento *</label>
+                    <select class="form-select" id="workoutType" required>
+                        <option value="cardio">Cardio</option>
+                        <option value="strength">Pesi/Forza</option>
+                        <option value="yoga">Yoga/Stretching</option>
+                        <option value="running">Corsa</option>
+                        <option value="cycling">Ciclismo</option>
+                        <option value="swimming">Nuoto</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="workoutDate">Data *</label>
+                    <input type="date" class="form-input" id="workoutDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="workoutDuration">Durata (minuti) *</label>
+                    <input type="number" class="form-input" id="workoutDuration" required min="1" placeholder="45">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="workoutNotes">Note (opzionale)</label>
+                    <input type="text" class="form-input" id="workoutNotes" placeholder="Es: Serie da 3x12">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva Allenamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Global variables
+        let currentWeek = 0;
+        let workouts = [];
+
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const userName = user.username || user.email || 'Utente';
+                document.getElementById('userName').textContent = userName;
+                const initial = userName[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+
+            // Setup logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Load workouts and generate calendar
+            loadWorkouts();
+            generateWeeklyCalendar();
+        });
+
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
+        }
+
+        function loadWorkouts() {
+            const saved = localStorage.getItem('sport_workouts');
+            if (saved) {
+                workouts = JSON.parse(saved);
+            } else {
+                workouts = [
+                    {
+                        id: 1,
+                        date: '2025-11-07',
+                        type: 'cardio',
+                        duration: 45,
+                        notes: 'HIIT session'
+                    },
+                    {
+                        id: 2,
+                        date: '2025-11-06',
+                        type: 'strength',
+                        duration: 60,
+                        notes: 'Upper body'
+                    }
+                ];
+                saveWorkouts();
+            }
+        }
+
+        function saveWorkouts() {
+            localStorage.setItem('sport_workouts', JSON.stringify(workouts));
+        }
+
+        function generateWeeklyCalendar() {
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeek * 7));
+
+            const weekDays = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+            let html = '';
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(startOfWeek.getDate() + i);
+                
+                const dayNum = day.getDate();
+                const dateStr = day.toISOString().split('T')[0];
+                const isToday = dateStr === today.toISOString().split('T')[0];
+                const dayWorkouts = workouts.filter(w => w.date === dateStr);
+                const hasWorkout = dayWorkouts.length > 0;
+
+                let classes = 'day-cell';
+                if (isToday) classes += ' today';
+                if (hasWorkout) classes += ' has-workout';
+
+                html += `
+                    <div class="${classes}" onclick="selectDay('${dateStr}')">
+                        <div class="day-name">${weekDays[i]}</div>
+                        <div class="day-number">${dayNum}</div>
+                        ${hasWorkout ? `<div class="day-workout">${dayWorkouts[0].duration}min</div>` : ''}
+                    </div>
+                `;
+            }
+
+            document.getElementById('weeklyCalendar').innerHTML = html;
+
+            // Update week label
+            const weekNum = Math.abs(currentWeek) + 1;
+            const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            document.getElementById('weekLabel').textContent = `Settimana ${weekNum} - ${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getFullYear()}`;
+        }
+
+        function previousWeek() {
+            currentWeek--;
+            generateWeeklyCalendar();
+        }
+
+        function nextWeek() {
+            currentWeek++;
+            generateWeeklyCalendar();
+        }
+
+        function selectDay(dateStr) {
+            document.getElementById('workoutDate').value = dateStr;
+            openModal();
+        }
+
+        function openModal() {
+            document.getElementById('workoutModal').classList.add('active');
+            document.getElementById('workoutForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('workoutDate').value = today;
+        }
+
+        function closeModal() {
+            document.getElementById('workoutModal').classList.remove('active');
+            document.getElementById('workoutForm').reset();
+        }
+
+        function saveWorkout(e) {
+            e.preventDefault();
+
+            const workout = {
+                id: Date.now(),
+                date: document.getElementById('workoutDate').value,
+                type: document.getElementById('workoutType').value,
+                duration: parseInt(document.getElementById('workoutDuration').value),
+                notes: document.getElementById('workoutNotes').value
+            };
+
+            workouts.push(workout);
+            saveWorkouts();
+            generateWeeklyCalendar();
+            closeModal();
+
+            alert('Allenamento registrato! 💪');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('workoutModal').addEventListener('click', (e) => {
+            if (e.target.id === 'workoutModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
