@@ -89,12 +89,14 @@ class ShopifyMonitor {
             this.hasNotifiedStart = true;
         }
 
-        // Primo check immediato
-        await this.check();
+        // Primo check immediato (con delay random 1-5 sec per sembrare umano)
+        const randomDelay = Math.floor(Math.random() * 4000) + 1000; // 1-5 secondi
+        setTimeout(() => this.check(), randomDelay);
 
-        // Polling ogni N minuti
+        // Polling ogni N minuti (+ random jitter per evitare pattern)
         this.intervalId = setInterval(() => {
-            this.check();
+            const jitter = Math.floor(Math.random() * 30000); // +0-30 secondi random
+            setTimeout(() => this.check(), jitter);
         }, this.interval * 60 * 1000);
     }
 
@@ -121,12 +123,30 @@ class ShopifyMonitor {
 
             // Fetch product JSON
             const productUrl = `${this.baseUrl}/products/${this.productHandle}.js`;
+            
+            // User agents realistici random
+            const userAgents = [
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15'
+            ];
+            const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
+            
             const response = await axios.get(productUrl, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Accept': 'application/json'
+                    'User-Agent': randomUA,
+                    'Accept': 'application/json, text/javascript, */*; q=0.01',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Referer': this.baseUrl + '/',
+                    'DNT': '1',
+                    'Connection': 'keep-alive',
+                    'Sec-Fetch-Dest': 'empty',
+                    'Sec-Fetch-Mode': 'cors',
+                    'Sec-Fetch-Site': 'same-origin'
                 },
-                timeout: 10000
+                timeout: 15000
             });
 
             const product = response.data;
