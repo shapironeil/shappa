@@ -304,7 +304,7 @@
 
         .venus-settings-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: var(--venus-space-lg);
             width: 100%;
         }
@@ -313,9 +313,11 @@
             background: #ffffff;
             border: 1px solid var(--venus-border);
             border-radius: var(--venus-radius);
-            padding: var(--venus-space-xl);
+            padding: var(--venus-space-md);
             transition: all var(--venus-transition);
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            height: auto;
+            max-height: 350px;
         }
 
         .venus-widget:hover {
@@ -932,37 +934,26 @@
                         
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Connessione Amazon</h3>
+                                <h3 class="venus-widget-title">Discord Webhook</h3>
                                 
                                 <div class="venus-integration-card">
                                     <div class="venus-integration-info">
-                                        <div class="venus-integration-icon" style="background: #ff9900;">Am</div>
+                                        <div class="venus-integration-icon" style="background: #5865F2;">Dc</div>
                                         <div>
-                                            <div class="venus-integration-name">Amazon API</div>
-                                            <div class="venus-integration-status venus-status-connected">Connesso</div>
+                                            <div class="venus-integration-name">Discord</div>
+                                            <div class="venus-integration-status" id="discord-status-badge">Non connesso</div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <button class="venus-btn" onclick="testAmazonConnection()">Test Connessione</button>
-                                    </div>
                                 </div>
                                 
-                                <div class="venus-form-group" style="margin-top: var(--venus-space-lg);">
-                                    <label class="venus-form-label">API Status</label>
-                                    <div id="amazon-status" style="padding: var(--venus-space-md); background: var(--venus-success-light); border-radius: var(--venus-radius); color: var(--venus-success);">
-                                        ✅ SerpApi Amazon Search attiva
-                                    </div>
+                                <div class="venus-form-group" style="margin-top: var(--venus-space-md);">
+                                    <label class="venus-form-label">Webhook URL</label>
+                                    <input type="text" class="venus-form-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
                                 </div>
                                 
-                                <div class="venus-form-group">
-                                    <label class="venus-form-label">Paese di Ricerca</label>
-                                    <select class="venus-form-select" id="amazonCountry">
-                                        <option value="IT" selected>Italia</option>
-                                        <option value="US">Stati Uniti</option>
-                                        <option value="DE">Germania</option>
-                                        <option value="FR">Francia</option>
-                                        <option value="ES">Spagna</option>
-                                    </select>
+                                <div class="venus-btn-group" style="display: flex; gap: 8px;">
+                                    <button class="venus-btn venus-btn-primary" onclick="saveDiscordWebhook()">Salva</button>
+                                    <button class="venus-btn" onclick="testDiscordWebhook()">Test</button>
                                 </div>
                             </div>
                         </div>
@@ -1292,6 +1283,76 @@
             alert('Esportazione dati avviata. Riceverai un email con il link per il download.');
         }
 
+        // Discord Webhook Functions
+        async function saveDiscordWebhook() {
+            const webhookUrl = document.getElementById('discordWebhookUrl').value.trim();
+            
+            if (!webhookUrl) {
+                alert('⚠️ Inserisci un Webhook URL valido');
+                return;
+            }
+            
+            if (!webhookUrl.startsWith('https://discord.com/api/webhooks/')) {
+                alert('⚠️ URL non valido. Deve iniziare con https://discord.com/api/webhooks/');
+                return;
+            }
+            
+            // Save to localStorage (in futuro su server)
+            localStorage.setItem('discord_webhook_url', webhookUrl);
+            
+            document.getElementById('discord-status-badge').textContent = 'Connesso';
+            document.getElementById('discord-status-badge').className = 'venus-integration-status venus-status-connected';
+            
+            alert('✅ Discord Webhook salvato con successo!');
+        }
+        
+        async function testDiscordWebhook() {
+            const webhookUrl = localStorage.getItem('discord_webhook_url');
+            
+            if (!webhookUrl) {
+                alert('⚠️ Configura prima il Webhook URL');
+                return;
+            }
+            
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: '🔔 Test Notifica da Shappa',
+                            description: 'Il webhook Discord è configurato correttamente!',
+                            color: 0x6366f1,
+                            timestamp: new Date().toISOString(),
+                            footer: { text: 'Shappa Notification System' }
+                        }]
+                    })
+                });
+                
+                if (response.ok || response.status === 204) {
+                    alert('✅ Test riuscito! Controlla il tuo canale Discord.');
+                } else {
+                    alert('❌ Test fallito. Verifica il Webhook URL.');
+                }
+            } catch (error) {
+                console.error('Discord webhook test error:', error);
+                alert('❌ Errore durante il test del webhook.');
+            }
+        }
+        
+        // Load Discord status on page load
+        function loadDiscordStatus() {
+            const webhookUrl = localStorage.getItem('discord_webhook_url');
+            const webhookInput = document.getElementById('discordWebhookUrl');
+            const statusBadge = document.getElementById('discord-status-badge');
+            
+            if (webhookUrl && webhookInput) {
+                webhookInput.value = webhookUrl;
+                statusBadge.textContent = 'Connesso';
+                statusBadge.className = 'venus-integration-status venus-status-connected';
+            }
+        }
+
         // Section navigation
         function showSection(sectionName) {
             // Hide all sections
@@ -1320,6 +1381,7 @@
         // Initialize eBay connection status on page load
         document.addEventListener('DOMContentLoaded', function() {
             updateEbayStatusUI();
+            loadDiscordStatus();
         });
 
         // Search functionality

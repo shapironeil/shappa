@@ -1567,7 +1567,7 @@
                                                 <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
                                             </th>
                                             <th style="min-width: 250px;">Prodotto</th>
-                                            <th style="width: 130px;">Tipo</th>
+                                            <th style="width: 130px;">Status</th>
                                             <th style="width: 150px;">Data</th>
                                             <th style="width: 200px;">Azioni</th>
                                         </tr>
@@ -1589,12 +1589,9 @@
                             </div>
                             
                             <!-- Empty state (hidden by default) -->
-                            <div class="venus-empty-state" id="emptyState" style="display: none;">
+                            <div class="venus-empty-state" id="emptyState" style="display: block;">
                                 <h4>Nessun monitor Releasing attivo</h4>
                                 <p>Crea un monitor per tracciare drop e restock in tempo reale</p>
-                                <button class="venus-btn-action venus-btn-primary" style="margin-top: var(--venus-space-lg); background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); padding: 14px 28px; font-weight: 600;" onclick="showAddInterestModal()">
-                                    ✨ Aggiungi Monitor
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -3485,7 +3482,7 @@
             const imageUrl = release.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="48" fill="%239ca3af"%3E📦%3C/text%3E%3C/svg%3E';
             
             return `
-                <div class="release-card" onclick="window.open('${release.url || '#'}', '_blank')">
+                <div class="release-card" onclick="showReleaseDetailsModal(${release.id})">
                     <div class="release-card-badge" style="background: ${badgeColor};">${badgeText}</div>
                     <img src="${imageUrl}" alt="${release.name}" class="release-card-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2248%22 fill=%22%239ca3af%22%3E📦%3C/text%3E%3C/svg%3E'">
                     <h4 class="release-card-title">${release.name}</h4>
@@ -3634,9 +3631,15 @@
         
         tbody.innerHTML = '';
         
-        // Show empty state if no releasing monitors
+        // Always show 6 rows (filled or empty)
+        const targetRows = 6;
+        
         if (interests.length === 0) {
             if (emptyState) emptyState.style.display = 'block';
+            // Show 6 empty white rows
+            for (let i = 0; i < targetRows; i++) {
+                tbody.innerHTML += '<tr class="empty-row"><td colspan="5" style="height: 60px; background: white; border-bottom: 1px solid #f3f4f6;"></td></tr>';
+            }
             return;
         }
         
@@ -3647,9 +3650,18 @@
             const row = document.createElement('tr');
             
             const dateText = interest.releaseDate ? new Date(interest.releaseDate).toLocaleDateString('it-IT') : '-';
-            const statusBadge = interest.status === 'active' ? 
-                '<span style="color: #10b981; font-weight: 600;">● Attivo</span>' : 
-                '<span style="color: #6b7280;">○ Inattivo</span>';
+            
+            // Status badge: monitoring (verde), not monitored (grigio), blocked (rosso)
+            let statusText = 'Not Monitored';
+            let statusColor = '#6b7280';
+            
+            if (interest.status === 'active' || interest.status === 'monitoring') {
+                statusText = 'Monitoring';
+                statusColor = '#10b981';
+            } else if (interest.status === 'blocked') {
+                statusText = 'Blocked';
+                statusColor = '#ef4444';
+            }
             
             row.innerHTML = `
                 <td style="width: 50px; text-align: center;">
@@ -3663,20 +3675,18 @@
                             </div>
                             ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 ${interest.url.substring(0, 40)}...</a>` : ''}
                             <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                Modulo: ${interest.module || 'Standard'} • Intervallo: ${interest.interval || 30}min
+                                ${interest.module || 'Standard'} • ${interest.interval || 30}min
                             </div>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <span style="display: inline-block; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                        🔔 Releasing
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: ${statusColor}15; color: ${statusColor}; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor};"></span>
+                        ${statusText}
                     </span>
                 </td>
-                <td>
-                    <div>${dateText}</div>
-                    <div style="font-size: 12px; margin-top: 4px;">${statusBadge}</div>
-                </td>
+                <td>${dateText}</td>
                 <td>
                     <div style="display: flex; gap: 8px;">
                         <button class="venus-btn venus-btn-secondary venus-btn-small" onclick="editInterest('${interest.id}')" title="Modifica">
@@ -3691,6 +3701,12 @@
             
             tbody.appendChild(row);
         });
+        
+        // Add empty white rows to reach 6 total
+        const emptyRowsNeeded = Math.max(0, targetRows - interests.length);
+        for (let i = 0; i < emptyRowsNeeded; i++) {
+            tbody.innerHTML += '<tr class="empty-row"><td colspan="5" style="height: 60px; background: white; border-bottom: 1px solid #f3f4f6;"></td></tr>';
+        }
     }
 
     async function deleteInterest(id) {
@@ -3709,6 +3725,95 @@
     function editInterest(id) {
         // TODO: Implement edit functionality
         alert('Modifica in sviluppo');
+    }
+
+    // Show Release Details Modal
+    async function showReleaseDetailsModal(releaseId) {
+        const interests = await getUserInterests();
+        const release = interests.find(i => i.id == releaseId && i.type === 'release');
+        
+        if (!release) return;
+        
+        const date = new Date(release.date);
+        const formattedDate = date.toLocaleDateString('it-IT', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+        
+        const imageUrl = release.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="48" fill="%239ca3af"%3E📦%3C/text%3E%3C/svg%3E';
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: modalFadeIn 0.2s ease-out;';
+        
+        overlay.innerHTML = `
+            <div class="modal-content-animated" style="background: white; border-radius: 16px; width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                <div style="padding: 24px; border-bottom: 1px solid #e5e7eb;">
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #1f2937;">📅 Dettagli Release</h2>
+                </div>
+                <div style="padding: 24px; max-height: 500px; overflow-y: auto;">
+                    <img src="${imageUrl}" alt="${release.name}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; margin-bottom: 20px;">
+                    
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">PRODOTTO</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #1f2937;">${release.name}</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">DATA E ORA</div>
+                        <div style="font-size: 16px; color: #1f2937;">📅 ${formattedDate}${release.time ? ' • 🕐 ' + release.time : ''}</div>
+                    </div>
+                    
+                    ${release.url ? `
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">LINK</div>
+                            <a href="${release.url}" target="_blank" style="font-size: 14px; color: #6366f1; text-decoration: none; word-break: break-all;">🔗 ${release.url}</a>
+                        </div>
+                    ` : ''}
+                    
+                    ${release.notes ? `
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px;">NOTE</div>
+                            <div style="font-size: 14px; color: #4b5563; line-height: 1.6;">${release.notes}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                <div style="padding: 20px 24px; border-top: 1px solid #e5e7eb; display: flex; gap: 12px; justify-content: flex-end;">
+                    <button onclick="this.closest('.modal-overlay').remove()" style="padding: 10px 20px; background: #f3f4f6; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                        Chiudi
+                    </button>
+                    ${release.url ? `
+                        <button onclick="window.open('${release.url}', '_blank')" style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            Apri Link
+                        </button>
+                    ` : ''}
+                    <button onclick="deleteReleaseFromModal(${releaseId})" style="padding: 10px 20px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                        🗑️ Elimina
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        overlay.onclick = (e) => {
+            if (e.target === overlay) overlay.remove();
+        };
+        
+        document.body.appendChild(overlay);
+    }
+    
+    async function deleteReleaseFromModal(releaseId) {
+        if (!confirm('Sei sicuro di voler eliminare questa release?')) return;
+        
+        const success = await deleteUserInterest(releaseId);
+        
+        if (success) {
+            document.querySelector('.modal-overlay')?.remove();
+            await loadReleaseDates();
+            await loadInterestsTable();
+        } else {
+            alert('❌ Errore durante l\'eliminazione');
+        }
     }
 
     // Update counter
