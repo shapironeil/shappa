@@ -1317,6 +1317,93 @@
             opacity: 1;
             visibility: visible;
         }
+
+        /* Release Dates Cards */
+        .release-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .release-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .release-card-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        }
+
+        .release-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .release-card-date {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6366f1;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .release-card-notes {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .release-card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(99, 102, 241, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Fixed table height - always 7 rows */
+        .venus-table-container {
+            max-height: none !important;
+            overflow-y: visible !important;
+        }
+
+        #listingsTableBody {
+            min-height: 420px; /* 7 rows * ~60px each */
+        }
+
+        #listingsTableBody tr {
+            height: 60px;
+        }
     </style>
 </head>
 <body>
@@ -1419,8 +1506,8 @@
                                     </div>
                                 </div>
                                 <div class="listings-actions">
-                                    <button class="venus-btn-action venus-btn-primary" onclick="showAddInterestModal()" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                                        + Aggiungi Interesse
+                                    <button class="venus-btn-action venus-btn-primary" onclick="showAddInterestModal()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); padding: 12px 24px; font-weight: 600; transition: all 0.2s;">
+                                        ✨ Aggiungi Interesse
                                     </button>
                                 </div>
                             </div>
@@ -1465,12 +1552,25 @@
                             <div class="venus-empty-state" id="emptyState" style="display: none;">
                                 <h4>Nessun interesse trovato</h4>
                                 <p>Inizia aggiungendo un prodotto da monitorare</p>
-                                <button class="venus-btn-action venus-btn-primary" style="margin-top: var(--venus-space-lg); background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);" onclick="showAddInterestModal()">
-                                    + Aggiungi Interesse
+                                <button class="venus-btn-action venus-btn-primary" style="margin-top: var(--venus-space-lg); background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); padding: 14px 28px; font-weight: 600;" onclick="showAddInterestModal()">
+                                    ✨ Aggiungi Interesse
                                 </button>
                             </div>
                         </div>
                         
+                        <!-- Release Dates Widget -->
+                        <div class="venus-widget" style="margin-top: 24px;">
+                            <div class="venus-widget-header" style="padding: 20px 24px; border-bottom: 1px solid var(--venus-border);">
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: var(--venus-text-primary);">📅 Prossime Release</h3>
+                            </div>
+                            <div class="release-dates-container" id="releaseDatesContainer" style="padding: 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; min-height: 200px;">
+                                <!-- Release date cards will be loaded here -->
+                                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--venus-text-muted);">
+                                    <div style="font-size: 48px; margin-bottom: 12px;">📦</div>
+                                    <p style="margin: 0;">Nessuna release date in programma</p>
+                                </div>
+                            </div>
+                        </div>
                         
                     </div>
                 </div>
@@ -2984,10 +3084,65 @@
     }
 
     // ============================================
-    // MODAL AGGIUNGI INTERESSE
+    // MODAL AGGIUNGI INTERESSE - SELEZIONE TIPO
     // ============================================
     function showAddInterestModal() {
         const overlay = document.createElement('div');
+        overlay.id = 'interestTypeModal';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #1f2937;">Aggiungi Interesse</h2>
+                    <button onclick="document.getElementById('interestTypeModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                        &times;
+                    </button>
+                </div>
+                
+                <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 15px;">Seleziona il tipo di monitoraggio che desideri:</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <button onclick="openReleaseDateModal()" style="padding: 32px 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); cursor: pointer; transition: all 0.3s; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📅</div>
+                        <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 8px 0; color: #0369a1;">Release Date</h3>
+                        <p style="font-size: 13px; color: #0c4a6e; margin: 0; line-height: 1.5;">Segnati un'uscita e ricevi notifica</p>
+                    </button>
+                    
+                    <button onclick="openReleasingModal()" style="padding: 32px 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); cursor: pointer; transition: all 0.3s; text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">🔔</div>
+                        <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 8px 0; color: #92400e;">Releasing</h3>
+                        <p style="font-size: 13px; color: #78350f; margin: 0; line-height: 1.5;">Monitor sito + notifiche real-time</p>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        overlay.onclick = (e) => {
+            if (e.target.id === 'interestTypeModal') overlay.remove();
+        };
+    }
+
+    // ============================================
+    // MODAL RELEASE DATE
+    // ============================================
+    function openReleaseDateModal() {
+        document.getElementById('interestTypeModal')?.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'releaseDateModal';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
@@ -3004,125 +3159,291 @@
         overlay.innerHTML = `
             <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                    <h2 style="font-size: 24px; font-weight: 700; margin: 0;">Aggiungi Interesse</h2>
-                    <button onclick="this.closest('div').parentElement.remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #999; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">📅</div>
+                        <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #0369a1;">Release Date</h2>
+                    </div>
+                    <button onclick="document.getElementById('releaseDateModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
                         &times;
                     </button>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-                    <button onclick="selectInterestType('release')" id="typeRelease" class="interest-type-btn" style="padding: 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;">
-                        <div style="font-size: 40px; margin-bottom: 12px;">📅</div>
-                        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">Release Date</h3>
-                        <p style="font-size: 13px; color: #6b7280; margin: 0;">Notifica per data di uscita</p>
-                    </button>
-                    
-                    <button onclick="selectInterestType('releasing')" id="typeReleasing" class="interest-type-btn" style="padding: 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;">
-                        <div style="font-size: 40px; margin-bottom: 12px;">🔔</div>
-                        <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">Releasing</h3>
-                        <p style="font-size: 13px; color: #6b7280; margin: 0;">Monitor attivo + notifiche</p>
-                    </button>
-                </div>
-                
-                <div id="interestForm" style="display: none;">
+                <form id="releaseDateForm" onsubmit="saveReleaseDate(event)">
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Nome Prodotto *</label>
-                        <input type="text" id="productName" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Nome Prodotto *</label>
+                        <input type="text" id="rdProductName" required style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: all 0.2s;">
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">URL Prodotto</label>
-                        <input type="url" id="productUrl" placeholder="https://..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">URL Prodotto</label>
+                        <input type="url" id="rdProductUrl" placeholder="https://..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Data Uscita *</label>
+                            <input type="date" id="rdProductDate" required style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Ora (opzionale)</label>
+                            <input type="time" id="rdProductTime" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        </div>
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Data *</label>
-                        <input type="date" id="productDate" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">URL Immagine (opzionale)</label>
+                        <input type="url" id="rdProductImage" placeholder="https://..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Verrà estratta automaticamente dall'URL se lasciato vuoto</p>
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px;">Note</label>
-                        <textarea id="productNotes" rows="3" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Note Personali</label>
+                        <textarea id="rdProductNotes" rows="3" placeholder="Es: Prezzo previsto, dove comprarlo, promemoria..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
                     </div>
                     
                     <div style="display: flex; gap: 12px; margin-top: 24px;">
-                        <button onclick="this.closest('div').parentElement.parentElement.remove()" style="flex: 1; padding: 14px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
+                        <button type="button" onclick="document.getElementById('releaseDateModal').remove()" style="flex: 1; padding: 14px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
                             Annulla
                         </button>
-                        <button onclick="saveInterest()" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;">
-                            Salva Interesse
+                        <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+                            Salva Release
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
         `;
         
         document.body.appendChild(overlay);
         overlay.onclick = (e) => {
-            if (e.target === overlay) overlay.remove();
+            if (e.target.id === 'releaseDateModal') overlay.remove();
+        };
+        
+        // Set today as default
+        document.getElementById('rdProductDate').value = new Date().toISOString().split('T')[0];
+    }
+
+    // ============================================
+    // MODAL RELEASING (MONITOR)
+    // ============================================
+    function openReleasingModal() {
+        document.getElementById('interestTypeModal')?.remove();
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'releasingModal';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            overflow-y: auto;
+        `;
+        
+        overlay.innerHTML = `
+            <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 650px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="font-size: 32px;">🔔</div>
+                        <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #92400e;">Releasing Monitor</h2>
+                    </div>
+                    <button onclick="document.getElementById('releasingModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                        &times;
+                    </button>
+                </div>
+                
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
+                    <p style="margin: 0; font-size: 13px; color: #78350f; line-height: 1.6;">
+                        <strong>Monitor attivo:</strong> seleziona il modulo di monitoraggio appropriato per il sito target. Il sistema controllerà automaticamente le variazioni e invierà notifiche real-time.
+                    </p>
+                </div>
+                
+                <form id="releasingForm" onsubmit="saveReleasing(event)">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Nome Prodotto/Release *</label>
+                        <input type="text" id="rlProductName" required style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">URL da Monitorare *</label>
+                        <input type="url" id="rlProductUrl" required placeholder="https://..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Modulo di Monitoring *</label>
+                        <select id="rlMonitorModule" required style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                            <option value="">Seleziona modulo...</option>
+                            <option value="standard">Standard (HTML parsing)</option>
+                            <option value="shopify">Shopify ATC Monitor</option>
+                            <option value="api">API Monitor</option>
+                            <option value="keywords">Keywords Monitor</option>
+                            <option value="cloudflare">Cloudflare Bypass</option>
+                            <option value="custom">Custom (da configurare)</option>
+                        </select>
+                        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Seleziona il modulo in base alla protezione del sito</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Selettore CSS / API Endpoint</label>
+                        <input type="text" id="rlMonitorTarget" placeholder="Es: .product-price o /api/products" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">Elemento da monitorare per i cambiamenti</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Intervallo Check (minuti)</label>
+                            <input type="number" id="rlCheckInterval" min="1" max="1440" value="5" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Data Rilascio</label>
+                            <input type="date" id="rlReleaseDate" style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #374151;">Note / Configurazione</label>
+                        <textarea id="rlProductNotes" rows="3" placeholder="Headers, cookies, configurazione speciale..." style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 24px;">
+                        <button type="button" onclick="document.getElementById('releasingModal').remove()" style="flex: 1; padding: 14px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            Annulla
+                        </button>
+                        <button type="submit" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                            Attiva Monitor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        overlay.onclick = (e) => {
+            if (e.target.id === 'releasingModal') overlay.remove();
         };
     }
 
-    let selectedType = null;
-
-    function selectInterestType(type) {
-        selectedType = type;
-        
-        // Update button styles
-        document.getElementById('typeRelease').style.cssText = type === 'release' 
-            ? 'padding: 24px; border: 2px solid #8b5cf6; border-radius: 12px; background: #f5f3ff; cursor: pointer; transition: all 0.2s; text-align: center;'
-            : 'padding: 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;';
-        
-        document.getElementById('typeReleasing').style.cssText = type === 'releasing'
-            ? 'padding: 24px; border: 2px solid #8b5cf6; border-radius: 12px; background: #f5f3ff; cursor: pointer; transition: all 0.2s; text-align: center;'
-            : 'padding: 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; text-align: center;';
-        
-        // Show form
-        document.getElementById('interestForm').style.display = 'block';
-        
-        // Set today's date as default
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('productDate').value = today;
-    }
-
-    function saveInterest() {
-        if (!selectedType) {
-            alert('Seleziona un tipo di interesse!');
-            return;
-        }
-        
-        const name = document.getElementById('productName').value.trim();
-        const url = document.getElementById('productUrl').value.trim();
-        const date = document.getElementById('productDate').value;
-        const notes = document.getElementById('productNotes').value.trim();
-        
-        if (!name || !date) {
-            alert('Nome e data sono obbligatori!');
-            return;
-        }
+    // ============================================
+    // SAVE FUNCTIONS
+    // ============================================
+    function saveReleaseDate(e) {
+        e.preventDefault();
         
         const interest = {
             id: Date.now(),
-            name,
-            url,
-            date,
-            notes,
-            type: selectedType,
+            type: 'release',
+            name: document.getElementById('rdProductName').value.trim(),
+            url: document.getElementById('rdProductUrl').value.trim(),
+            date: document.getElementById('rdProductDate').value,
+            time: document.getElementById('rdProductTime').value,
+            image: document.getElementById('rdProductImage').value.trim(),
+            notes: document.getElementById('rdProductNotes').value.trim(),
             createdAt: new Date().toISOString()
         };
         
-        // Save to localStorage
         const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
         interests.push(interest);
         localStorage.setItem('my_interests', JSON.stringify(interests));
         
-        // Close modal
-        document.querySelector('div[style*="position: fixed"]').remove();
-        
-        // Reload table (you'll need to implement this)
-        alert(`Interesse "${name}" aggiunto con successo! 🎉`);
+        document.getElementById('releaseDateModal').remove();
+        alert(`Release Date "${interest.name}" aggiunto! 📅`);
         location.reload();
     }
+
+    function saveReleasing(e) {
+        e.preventDefault();
+        
+        const monitor = {
+            id: Date.now(),
+            type: 'releasing',
+            name: document.getElementById('rlProductName').value.trim(),
+            url: document.getElementById('rlProductUrl').value.trim(),
+            module: document.getElementById('rlMonitorModule').value,
+            target: document.getElementById('rlMonitorTarget').value.trim(),
+            interval: parseInt(document.getElementById('rlCheckInterval').value),
+            releaseDate: document.getElementById('rlReleaseDate').value,
+            notes: document.getElementById('rlProductNotes').value.trim(),
+            status: 'active',
+            createdAt: new Date().toISOString()
+        };
+        
+        const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
+        interests.push(monitor);
+        localStorage.setItem('my_interests', JSON.stringify(interests));
+        
+        document.getElementById('releasingModal').remove();
+        alert(`Monitor "${monitor.name}" attivato! 🔔`);
+        location.reload();
+    }
+
+    // ============================================
+    // LOAD RELEASE DATES WIDGET
+    // ============================================
+    function loadReleaseDates() {
+        const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
+        const releases = interests.filter(i => i.type === 'release');
+        
+        const container = document.getElementById('releaseDatesContainer');
+        if (!container) return;
+        
+        if (releases.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--venus-text-muted);">
+                    <div style="font-size: 48px; margin-bottom: 12px;">📦</div>
+                    <p style="margin: 0;">Nessuna release date in programma</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Sort by date
+        releases.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        container.innerHTML = releases.map(release => {
+            const date = new Date(release.date);
+            const today = new Date();
+            const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+            
+            let badgeText = 'Oggi';
+            let badgeColor = '#ef4444';
+            if (daysUntil > 0) {
+                badgeText = `${daysUntil}g`;
+                badgeColor = daysUntil <= 7 ? '#f59e0b' : '#6366f1';
+            } else if (daysUntil < 0) {
+                badgeText = 'Passata';
+                badgeColor = '#9ca3af';
+            }
+            
+            const formattedDate = date.toLocaleDateString('it-IT', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+            
+            const imageUrl = release.image || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="48" fill="%239ca3af"%3E📦%3C/text%3E%3C/svg%3E';
+            
+            return `
+                <div class="release-card" onclick="window.open('${release.url || '#'}', '_blank')">
+                    <div class="release-card-badge" style="background: ${badgeColor};">${badgeText}</div>
+                    <img src="${imageUrl}" alt="${release.name}" class="release-card-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2248%22 fill=%22%239ca3af%22%3E📦%3C/text%3E%3C/svg%3E'">
+                    <h4 class="release-card-title">${release.name}</h4>
+                    <div class="release-card-date">
+                        📅 ${formattedDate}${release.time ? ' - ' + release.time : ''}
+                    </div>
+                    ${release.notes ? `<p class="release-card-notes">${release.notes}</p>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Load release dates on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadReleaseDates();
+    });
     </script>
 </body>
 </html>
