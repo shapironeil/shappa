@@ -4,10 +4,10 @@
   "description": "Applicazione web moderna - Progetto Shappa",
   "main": "src/index.js",
   "scripts": {
-    "dev": "echo 'Development server - da configurare'",
-    "build": "echo 'Build process - da configurare'",
-    "test": "echo 'Test suite - da configurare'",
-    "start": "echo 'Production start - da configurare'"
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'No build step required'",
+    "test": "echo 'Tests not configured yet'"
   },
   "keywords": [
     "webapp",
