@@ -8,6 +8,7 @@
  */
 
 const ShopifyMonitor = require('./ShopifyMonitor');
+const UniversalMonitor = require('./UniversalMonitor');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -45,12 +46,14 @@ class MonitorManager {
 
             // Determina tipo monitor e crea istanza
             let monitor;
-            const module = interestData.module || 'shopify';
+            const module = interestData.module || 'universal';
 
             if (module === 'shopify') {
                 monitor = new ShopifyMonitor(config);
+            } else if (module === 'universal') {
+                monitor = new UniversalMonitor(config);
             } else {
-                throw new Error(`Modulo ${module} non ancora implementato`);
+                throw new Error(`Modulo ${module} non supportato`);
             }
 
             // Avvia monitor

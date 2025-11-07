@@ -3268,17 +3268,17 @@
     // ============================================
     
     /**
-     * Toggle visibility del campo Target in base al modulo selezionato
+     * Toggle opzioni avanzate
      */
-    function toggleTargetField() {
+    function toggleAdvancedOptions() {
         const module = document.getElementById('rlMonitorModule').value;
-        const targetContainer = document.getElementById('targetFieldContainer');
+        const advancedOptions = document.getElementById('advancedOptions');
         
-        // Shopify non ha bisogno di selettore CSS (usa API JSON automatica)
-        if (module === 'shopify') {
-            targetContainer.style.display = 'none';
+        // Mostra opzioni avanzate solo per modulo universale
+        if (module === 'universal') {
+            advancedOptions.style.display = 'block';
         } else {
-            targetContainer.style.display = 'block';
+            advancedOptions.style.display = 'none';
         }
     }
     
@@ -3317,50 +3317,48 @@
                 
                 <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; border-radius: 8px; margin-bottom: 20px;">
                     <p style="margin: 0; font-size: 12px; color: #78350f; line-height: 1.5;">
-                        <strong>Monitor attivo:</strong> seleziona il modulo di monitoraggio appropriato per il sito target. Il sistema controllerà automaticamente le variazioni e invierà notifiche real-time.
+                        <strong>Monitor Intelligente:</strong> rileva quando un prodotto diventa disponibile (sparisce "SOON", "SOLD OUT", button diventa attivo). Notifica istantanea su Discord!
                     </p>
                 </div>
                 
                 <form id="releasingForm" onsubmit="saveReleasing(event)">
                     <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Nome Prodotto/Release *</label>
-                        <input type="text" id="rlProductName" required style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                    </div>
-                    
-                    <div style="margin-bottom: 16px;">
                         <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">URL da Monitorare *</label>
-                        <input type="url" id="rlProductUrl" required placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <input type="url" id="rlProductUrl" required placeholder="https://shop.travisscott.com/products/..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Incolla link del prodotto da monitorare</p>
                     </div>
                     
                     <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Modulo di Monitoring *</label>
-                        <select id="rlMonitorModule" required onchange="toggleTargetField()" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
-                            <option value="">Seleziona modulo...</option>
-                            <option value="shopify" selected>Shopify Monitor (Travis Scott, Nike SNKRS, etc.)</option>
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Keywords Blocco (opzionale)</label>
+                        <input type="text" id="rlProductName" placeholder='es: "SOON", "SOLD OUT", "COMING SOON"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Parole che indicano prodotto NON disponibile. Quando spariscono → notifica!</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Tipo Sito</label>
+                        <select id="rlMonitorModule" onchange="toggleAdvancedOptions()" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                            <option value="universal" selected>🌐 Universale (funziona su qualsiasi sito)</option>
+                            <option value="shopify">🛍️ Shopify (Travis Scott, Supreme, Nike)</option>
                         </select>
-                        <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Monitor automatico per store Shopify - rileva varianti disponibili</p>
                     </div>
                     
-                    <div id="targetFieldContainer" style="margin-bottom: 16px; display: none;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Selettore CSS / API Endpoint</label>
-                        <input type="text" id="rlMonitorTarget" placeholder="Es: .product-price o /api/products" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                        <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Elemento da monitorare per i cambiamenti</p>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                        <div>
-                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Intervallo Check (minuti)</label>
-                            <input type="number" id="rlCheckInterval" min="1" max="1440" value="5" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                        </div>
-                        <div>
-                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Data Rilascio</label>
-                            <input type="date" id="rlReleaseDate" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                    <div id="advancedOptions" style="display: none;">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Selettore CSS Avanzato</label>
+                            <input type="text" id="rlMonitorTarget" placeholder=".add-to-cart-button" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Solo per utenti avanzati - lascia vuoto per auto-detect</p>
                         </div>
                     </div>
                     
                     <div style="margin-bottom: 16px;">
-                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Note / Configurazione</label>
-                        <textarea id="rlProductNotes" rows="2" placeholder="Headers, cookies, configurazione speciale..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Intervallo Check</label>
+                        <select id="rlCheckInterval" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                            <option value="1">⚡ 1 minuto (ultra veloce - high drop)</option>
+                            <option value="3">🔥 3 minuti (veloce)</option>
+                            <option value="5" selected>⭐ 5 minuti (consigliato)</option>
+                            <option value="10">🕐 10 minuti (normale)</option>
+                            <option value="30">💤 30 minuti (lento)</option>
+                        </select>
                     </div>
                     
                     <div style="display: flex; gap: 12px; margin-top: 20px;">
@@ -3414,16 +3412,27 @@
     async function saveReleasing(e) {
         e.preventDefault();
         
+        // Keywords = campo nome (opzionale)
+        const keywords = document.getElementById('rlProductName').value.trim();
+        const url = document.getElementById('rlProductUrl').value.trim();
+        
+        // Estrai nome prodotto dall'URL per display
+        const urlParts = url.split('/').filter(p => p);
+        const displayName = urlParts[urlParts.length - 1]
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+        
         const monitor = {
             id: Date.now(),
             type: 'releasing',
-            name: document.getElementById('rlProductName').value.trim(),
-            url: document.getElementById('rlProductUrl').value.trim(),
+            name: keywords || 'SOON,SOLD OUT,COMING SOON', // Keywords default
+            url: url,
+            displayName: displayName, // Per UI
             module: document.getElementById('rlMonitorModule').value,
-            target: document.getElementById('rlMonitorTarget').value.trim(),
+            target: document.getElementById('rlMonitorTarget')?.value?.trim() || '',
             interval: parseInt(document.getElementById('rlCheckInterval').value),
-            releaseDate: document.getElementById('rlReleaseDate').value,
-            notes: document.getElementById('rlProductNotes').value.trim(),
             status: 'active',
             createdAt: new Date().toISOString()
         };
@@ -3436,7 +3445,8 @@
             // Avvia monitor automaticamente
             await startMonitor(monitor.id);
             
-            alert(`Monitor "${monitor.name}" attivato! 🔔\nMonitoraggio in corso ogni ${monitor.interval} minuti.`);
+            const moduleName = monitor.module === 'shopify' ? 'Shopify' : 'Universale';
+            alert(`✅ Monitor ${moduleName} attivato!\n\n🔍 Controlla ogni ${monitor.interval} min\n📱 Notifica Discord quando disponibile`);
             location.reload();
         } else {
             alert('❌ Errore durante il salvataggio');
@@ -3756,11 +3766,11 @@
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div>
                             <div style="font-weight: 600; color: var(--venus-text-primary); margin-bottom: 4px;">
-                                ${interest.name}
+                                ${interest.displayName || interest.name || 'Product Monitor'}
                             </div>
                             ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 ${interest.url.substring(0, 40)}...</a>` : ''}
                             <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                ${interest.module || 'Standard'} • ${interest.interval || 30}min
+                                ${interest.module === 'shopify' ? '🛍️ Shopify' : '🌐 Universal'} • Check ogni ${interest.interval || 5}min
                             </div>
                         </div>
                     </div>
