@@ -1391,14 +1391,15 @@
             letter-spacing: 0.5px;
         }
 
-        /* Fixed table height - always 6 rows */
+        /* Table adapts to content - no scroll */
         .venus-table-container {
-            max-height: 360px !important;
-            overflow-y: auto !important;
+            overflow: hidden !important;
+            max-height: none !important;
         }
 
-        #listingsTableBody {
-            min-height: 360px; /* 6 rows * 60px each */
+        .venus-table {
+            width: 100% !important;
+            table-layout: fixed;
         }
 
         #listingsTableBody tr {
@@ -1513,9 +1514,9 @@
                                         <button class="group-dropdown-btn" onclick="toggleGroupDropdown()">
                                             <span class="group-current">
                                                 <svg class="group-icon" id="currentGroupIcon" width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                                                 </svg>
-                                                <span id="currentGroupLabel">Bozze</span>
+                                                <span id="currentGroupLabel">🔔 Monitor Releasing</span>
                                                 <span class="count" id="currentGroupCount">0</span>
                                             </span>
                                             <svg class="dropdown-arrow" width="18" height="18" viewBox="0 0 12 12">
@@ -1589,10 +1590,10 @@
                             
                             <!-- Empty state (hidden by default) -->
                             <div class="venus-empty-state" id="emptyState" style="display: none;">
-                                <h4>Nessun interesse trovato</h4>
-                                <p>Inizia aggiungendo un prodotto da monitorare</p>
+                                <h4>Nessun monitor Releasing attivo</h4>
+                                <p>Crea un monitor per tracciare drop e restock in tempo reale</p>
                                 <button class="venus-btn-action venus-btn-primary" style="margin-top: var(--venus-space-lg); background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); padding: 14px 28px; font-weight: 600;" onclick="showAddInterestModal()">
-                                    ✨ Aggiungi Interesse
+                                    ✨ Aggiungi Monitor
                                 </button>
                             </div>
                         </div>
@@ -3622,7 +3623,10 @@
     // POPULATE TABLE WITH INTERESTS
     // ============================================
     async function loadInterestsTable() {
-        const interests = await getUserInterests();
+        const allInterests = await getUserInterests();
+        // FILTER: Show ONLY "releasing" type in table
+        const interests = allInterests.filter(i => i.type === 'releasing');
+        
         const tbody = document.getElementById('listingsTableBody');
         const emptyState = document.getElementById('emptyState');
         
@@ -3630,24 +3634,22 @@
         
         tbody.innerHTML = '';
         
-        // Show empty state if no interests
+        // Show empty state if no releasing monitors
         if (interests.length === 0) {
             if (emptyState) emptyState.style.display = 'block';
-            // Add 6 empty rows
-            for (let i = 0; i < 6; i++) {
-                tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
-            }
             return;
         }
         
         if (emptyState) emptyState.style.display = 'none';
         
-        // Add interest rows
+        // Add interest rows (only releasing)
         interests.forEach(interest => {
             const row = document.createElement('tr');
             
-            const typeText = interest.type === 'release' ? '📅 Release Date' : '🔔 Releasing';
-            const dateText = interest.date ? new Date(interest.date).toLocaleDateString('it-IT') : '-';
+            const dateText = interest.releaseDate ? new Date(interest.releaseDate).toLocaleDateString('it-IT') : '-';
+            const statusBadge = interest.status === 'active' ? 
+                '<span style="color: #10b981; font-weight: 600;">● Attivo</span>' : 
+                '<span style="color: #6b7280;">○ Inattivo</span>';
             
             row.innerHTML = `
                 <td style="width: 50px; text-align: center;">
@@ -3655,21 +3657,26 @@
                 </td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        ${interest.image ? `<img src="${interest.image}" alt="${interest.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
                         <div>
                             <div style="font-weight: 600; color: var(--venus-text-primary); margin-bottom: 4px;">
                                 ${interest.name}
                             </div>
-                            ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 Visita</a>` : ''}
+                            ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 ${interest.url.substring(0, 40)}...</a>` : ''}
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                                Modulo: ${interest.module || 'Standard'} • Intervallo: ${interest.interval || 30}min
+                            </div>
                         </div>
                     </div>
                 </td>
                 <td>
-                    <span style="display: inline-block; padding: 6px 12px; background: ${interest.type === 'release' ? '#dbeafe' : '#fef3c7'}; color: ${interest.type === 'release' ? '#1e40af' : '#92400e'}; border-radius: 6px; font-size: 13px; font-weight: 600;">
-                        ${typeText}
+                    <span style="display: inline-block; padding: 6px 12px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                        🔔 Releasing
                     </span>
                 </td>
-                <td>${dateText}</td>
+                <td>
+                    <div>${dateText}</div>
+                    <div style="font-size: 12px; margin-top: 4px;">${statusBadge}</div>
+                </td>
                 <td>
                     <div style="display: flex; gap: 8px;">
                         <button class="venus-btn venus-btn-secondary venus-btn-small" onclick="editInterest('${interest.id}')" title="Modifica">
@@ -3684,12 +3691,6 @@
             
             tbody.appendChild(row);
         });
-        
-        // Add empty rows to reach 6 total
-        const emptyRowsNeeded = Math.max(0, 6 - interests.length);
-        for (let i = 0; i < emptyRowsNeeded; i++) {
-            tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
-        }
     }
 
     async function deleteInterest(id) {
@@ -3710,10 +3711,23 @@
         alert('Modifica in sviluppo');
     }
 
+    // Update counter
+    async function updateCounters() {
+        const allInterests = await getUserInterests();
+        const releasing = allInterests.filter(i => i.type === 'releasing');
+        const releases = allInterests.filter(i => i.type === 'release');
+        
+        const counterEl = document.getElementById('currentGroupCount');
+        if (counterEl) {
+            counterEl.textContent = releasing.length;
+        }
+    }
+
     // Load release dates on page load
     document.addEventListener('DOMContentLoaded', async () => {
         await loadInterestsTable();
         await loadReleaseDates();
+        await updateCounters();
     });
     </script>
 </body>
