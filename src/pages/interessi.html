@@ -1391,14 +1391,14 @@
             letter-spacing: 0.5px;
         }
 
-        /* Fixed table height - always 7 rows */
+        /* Fixed table height - always 6 rows */
         .venus-table-container {
-            max-height: none !important;
-            overflow-y: visible !important;
+            max-height: 360px !important;
+            overflow-y: auto !important;
         }
 
         #listingsTableBody {
-            min-height: 420px; /* 7 rows * ~60px each */
+            min-height: 360px; /* 6 rows * 60px each */
         }
 
         #listingsTableBody tr {
@@ -3633,8 +3633,8 @@
         // Show empty state if no interests
         if (interests.length === 0) {
             if (emptyState) emptyState.style.display = 'block';
-            // Add 7 empty rows
-            for (let i = 0; i < 7; i++) {
+            // Add 6 empty rows
+            for (let i = 0; i < 6; i++) {
                 tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
             }
             return;
@@ -3685,8 +3685,8 @@
             tbody.appendChild(row);
         });
         
-        // Add empty rows to reach 7 total
-        const emptyRowsNeeded = Math.max(0, 7 - interests.length);
+        // Add empty rows to reach 6 total
+        const emptyRowsNeeded = Math.max(0, 6 - interests.length);
         for (let i = 0; i < emptyRowsNeeded; i++) {
             tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
         }
