@@ -10,16 +10,16 @@
   <style>
     body { font-family: var(--venus-font-family); background:#fafbfc; margin:0; height:100vh; overflow:hidden; }
     .venus-dashboard-layout { display:flex; height:100vh; }
-    .venus-sidebar { width:280px; background:var(--venus-bg-card); border-right:1px solid var(--venus-border); display:flex; flex-direction:column; }
-    .venus-sidebar-header { padding:var(--venus-space-xl) var(--venus-space-lg); border-bottom:1px solid var(--venus-border); }
-    .venus-logo-text { font-size:var(--venus-font-size-lg); font-weight:var(--venus-font-weight-semibold); }
-    .venus-sidebar-menu { flex:1; padding:var(--venus-space-lg) 0; overflow-y:auto; }
-    .venus-menu-item { display:flex; padding:var(--venus-space-md) var(--venus-space-lg); margin:0 var(--venus-space-sm); border-radius:var(--venus-radius-sm); color:var(--venus-text-secondary); text-decoration:none; font-size:var(--venus-font-size-sm); font-weight:var(--venus-font-weight-medium); transition:all var(--venus-transition); }
+    .venus-sidebar { width:240px; background:var(--venus-bg-card); border-right:1px solid var(--venus-border); display:flex; flex-direction:column; }
+    .venus-sidebar-header { padding:20px 16px; border-bottom:1px solid var(--venus-border); text-align:center; }
+    .venus-logo-text { font-size:20px; font-weight:700; letter-spacing:0.5px; }
+    .venus-sidebar-menu { flex:1; padding:8px 0; overflow-y:auto; }
+    .venus-menu-item { display:flex; padding:10px 16px; margin:2px 8px; border-radius:6px; color:var(--venus-text-secondary); text-decoration:none; font-size:14px; font-weight:500; transition:all var(--venus-transition); }
     .venus-menu-item:hover { background:var(--venus-bg-gray); color:var(--venus-text-primary); }
     .venus-menu-item.venus-active { background:var(--venus-primary); color:var(--venus-text-white); }
-    .venus-sidebar-footer { padding:var(--venus-space-lg); border-top:1px solid var(--venus-border); }
-    .venus-user-profile { display:flex; gap:var(--venus-space-md); align-items:center; margin-bottom:var(--venus-space-lg); }
-    .venus-user-avatar { width:40px; height:40px; background:var(--venus-gradient-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:var(--venus-font-weight-semibold); }
+    .venus-sidebar-footer { padding:12px; border-top:1px solid var(--venus-border); }
+    .venus-user-profile { display:flex; gap:10px; align-items:center; margin-bottom:10px; padding:8px; }
+    .venus-user-avatar { width:32px; height:32px; background:var(--venus-gradient-primary); border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:14px; }
     .venus-main-content { flex:1; display:flex; flex-direction:column; overflow:hidden; }
     .venus-content-area { flex:1; padding:var(--venus-space-2xl); overflow-y:auto; background:#f8f9fa; }
     .reports-header { margin:0 0 var(--venus-space-xl) 0; }
@@ -35,7 +35,7 @@
     .venus-btn:hover { box-shadow:0 2px 6px rgba(0,0,0,0.06); transform:translateY(-1px); }
     .venus-btn-primary { background:var(--venus-primary); color:#fff; border-color:var(--venus-primary); }
     .venus-btn-primary:hover { background:var(--venus-primary-dark); }
-    @media (max-width:768px){ .venus-sidebar{ position:fixed; left:-280px; z-index:1000; transition:left var(--venus-transition);} .venus-sidebar.venus-open{ left:0;} }
+    @media (max-width:768px){ .venus-sidebar{ position:fixed; left:-240px; z-index:1000; transition:left var(--venus-transition);} .venus-sidebar.venus-open{ left:0;} }
   </style>
 </head>
 <body>
@@ -44,31 +44,24 @@
       <div class="venus-sidebar-header"><span class="venus-logo-text">SHAPPA</span></div>
       <nav class="venus-sidebar-menu">
         <a href="dashboard.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">📊</span>
           Dashboard
         </a>
         <a href="obiettivi.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">🎯</span>
           Obiettivi
         </a>
         <a href="calendario.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">📅</span>
           Calendario
         </a>
         <a href="products.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">🔍</span>
           Cerca Prodotti
         </a>
         <a href="listings.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">📦</span>
           I Miei Listing
         </a>
         <a href="reports.html" class="venus-menu-item venus-active">
-          <span style="margin-right: 12px;">📈</span>
           Reports
         </a>
         <a href="settings.html" class="venus-menu-item">
-          <span style="margin-right: 12px;">⚙️</span>
           Impostazioni
         </a>
       </nav>

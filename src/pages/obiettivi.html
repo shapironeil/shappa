@@ -25,7 +25,7 @@
 
         /* Venus Sidebar */
         .venus-sidebar {
-            width: 280px;
+            width: 240px;
             background: var(--venus-bg-card);
             border-right: 1px solid var(--venus-border);
             display: flex;
@@ -35,38 +35,39 @@
         }
 
         .venus-sidebar-header {
-            padding: var(--venus-space-xl) var(--venus-space-lg);
+            padding: 20px 16px;
             border-bottom: 1px solid var(--venus-border);
         }
 
         .venus-logo {
             display: flex;
             align-items: center;
-            gap: var(--venus-space-sm);
+            justify-content: center;
         }
 
         .venus-logo-text {
-            font-size: var(--venus-font-size-lg);
-            font-weight: var(--venus-font-weight-normal);
+            font-size: 20px;
+            font-weight: 700;
             color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
         }
 
         .venus-sidebar-menu {
             flex: 1;
-            padding: var(--venus-space-lg) 0;
+            padding: 8px 0;
             overflow-y: auto;
         }
 
         .venus-menu-item {
             display: flex;
             align-items: center;
-            padding: var(--venus-space-md) var(--venus-space-lg);
-            margin: 0 var(--venus-space-sm);
-            border-radius: var(--venus-radius-sm);
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
             color: var(--venus-text-secondary);
             text-decoration: none;
-            font-size: var(--venus-font-size-sm);
-            font-weight: var(--venus-font-weight-medium);
+            font-size: 14px;
+            font-weight: 500;
             transition: all var(--venus-transition);
             cursor: pointer;
         }
@@ -82,42 +83,48 @@
         }
 
         .venus-sidebar-footer {
-            padding: var(--venus-space-lg);
+            padding: 12px;
             border-top: 1px solid var(--venus-border);
         }
 
         .venus-user-profile {
             display: flex;
             align-items: center;
-            gap: var(--venus-space-md);
-            margin-bottom: var(--venus-space-lg);
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
         }
 
         .venus-user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: var(--venus-gradient-primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--venus-text-white);
-            font-weight: var(--venus-font-weight-semibold);
+            font-weight: 600;
+            font-size: 14px;
         }
 
         .venus-user-info {
             flex: 1;
+            min-width: 0;
         }
 
         .venus-user-name {
-            font-size: var(--venus-font-size-sm);
-            font-weight: var(--venus-font-weight-semibold);
+            font-size: 13px;
+            font-weight: 600;
             color: var(--venus-text-primary);
-            margin-bottom: var(--venus-space-xs);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .venus-user-role {
-            font-size: var(--venus-font-size-xs);
+            font-size: 11px;
             color: var(--venus-text-muted);
         }
 
@@ -125,13 +132,15 @@
             width: 100%;
             display: flex;
             align-items: center;
-            gap: var(--venus-space-md);
-            padding: var(--venus-space-sm) var(--venus-space-md);
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
             background: transparent;
             border: 1px solid var(--venus-border);
-            border-radius: var(--venus-radius-sm);
+            border-radius: 6px;
             color: var(--venus-text-secondary);
-            font-size: var(--venus-font-size-sm);
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: all var(--venus-transition);
         }
@@ -360,38 +369,30 @@
         <aside class="venus-sidebar">
             <div class="venus-sidebar-header">
                 <div class="venus-logo">
-                    <span style="font-size: 28px;">🛒</span>
-                    <span class="venus-logo-text">Shappa</span>
+                    <span class="venus-logo-text">SHAPPA</span>
                 </div>
             </div>
 
             <nav class="venus-sidebar-menu">
                 <a href="dashboard.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">📊</span>
                     Dashboard
                 </a>
                 <a href="obiettivi.html" class="venus-menu-item venus-active">
-                    <span style="margin-right: 12px;">🎯</span>
                     Obiettivi
                 </a>
                 <a href="calendario.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">📅</span>
                     Calendario
                 </a>
                 <a href="products.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">🔍</span>
                     Cerca Prodotti
                 </a>
                 <a href="listings.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">📦</span>
                     I Miei Listing
                 </a>
                 <a href="reports.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">📈</span>
                     Reports
                 </a>
                 <a href="settings.html" class="venus-menu-item">
-                    <span style="margin-right: 12px;">⚙️</span>
                     Impostazioni
                 </a>
             </nav>
