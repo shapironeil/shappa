@@ -1404,6 +1404,45 @@
         #listingsTableBody tr {
             height: 60px;
         }
+
+        /* Empty table rows placeholder */
+        .empty-row {
+            height: 60px;
+            background: white;
+        }
+
+        .empty-row td {
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        /* Modal animations */
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-overlay {
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        .modal-content-animated {
+            animation: modalSlideIn 0.3s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -3089,6 +3128,7 @@
     function showAddInterestModal() {
         const overlay = document.createElement('div');
         overlay.id = 'interestTypeModal';
+        overlay.className = 'modal-overlay';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
@@ -3096,6 +3136,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -3103,7 +3144,7 @@
         `;
         
         overlay.innerHTML = `
-            <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #1f2937;">Aggiungi Interesse</h2>
                     <button onclick="document.getElementById('interestTypeModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
@@ -3143,6 +3184,7 @@
         
         const overlay = document.createElement('div');
         overlay.id = 'releaseDateModal';
+        overlay.className = 'modal-overlay';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
@@ -3150,6 +3192,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -3157,7 +3200,7 @@
         `;
         
         overlay.innerHTML = `
-            <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 600px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="font-size: 32px;">📅</div>
@@ -3230,6 +3273,7 @@
         
         const overlay = document.createElement('div');
         overlay.id = 'releasingModal';
+        overlay.className = 'modal-overlay';
         overlay.style.cssText = `
             position: fixed;
             top: 0;
@@ -3237,6 +3281,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -3245,7 +3290,7 @@
         `;
         
         overlay.innerHTML = `
-            <div style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 650px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: 20px 0;">
+            <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 650px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: 20px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div style="font-size: 32px;">🔔</div>
@@ -3345,9 +3390,9 @@
             createdAt: new Date().toISOString()
         };
         
-        const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
+        const interests = getUserInterests();
         interests.push(interest);
-        localStorage.setItem('my_interests', JSON.stringify(interests));
+        saveUserInterests(interests);
         
         document.getElementById('releaseDateModal').remove();
         alert(`Release Date "${interest.name}" aggiunto! 📅`);
@@ -3371,9 +3416,9 @@
             createdAt: new Date().toISOString()
         };
         
-        const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
+        const interests = getUserInterests();
         interests.push(monitor);
-        localStorage.setItem('my_interests', JSON.stringify(interests));
+        saveUserInterests(interests);
         
         document.getElementById('releasingModal').remove();
         alert(`Monitor "${monitor.name}" attivato! 🔔`);
@@ -3384,7 +3429,7 @@
     // LOAD RELEASE DATES WIDGET
     // ============================================
     function loadReleaseDates() {
-        const interests = JSON.parse(localStorage.getItem('my_interests') || '[]');
+        const interests = getUserInterests();
         const releases = interests.filter(i => i.type === 'release');
         
         const container = document.getElementById('releaseDatesContainer');
@@ -3440,8 +3485,121 @@
         }).join('');
     }
 
+    // ============================================
+    // USER-SPECIFIC STORAGE
+    // ============================================
+    function getUserStorageKey() {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('Utente non autenticato');
+            return 'my_interests'; // fallback per retrocompatibilità
+        }
+        return `interests_${user.id}`;
+    }
+
+    function getUserInterests() {
+        const key = getUserStorageKey();
+        return JSON.parse(localStorage.getItem(key) || '[]');
+    }
+
+    function saveUserInterests(interests) {
+        const key = getUserStorageKey();
+        localStorage.setItem(key, JSON.stringify(interests));
+    }
+
+    // ============================================
+    // POPULATE TABLE WITH INTERESTS
+    // ============================================
+    function loadInterestsTable() {
+        const interests = getUserInterests();
+        const tbody = document.getElementById('listingsTableBody');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        // Show empty state if no interests
+        if (interests.length === 0) {
+            if (emptyState) emptyState.style.display = 'block';
+            // Add 7 empty rows
+            for (let i = 0; i < 7; i++) {
+                tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
+            }
+            return;
+        }
+        
+        if (emptyState) emptyState.style.display = 'none';
+        
+        // Add interest rows
+        interests.forEach(interest => {
+            const row = document.createElement('tr');
+            
+            const typeText = interest.type === 'release' ? '📅 Release Date' : '🔔 Releasing';
+            const dateText = interest.date ? new Date(interest.date).toLocaleDateString('it-IT') : '-';
+            
+            row.innerHTML = `
+                <td style="width: 50px; text-align: center;">
+                    <input type="checkbox" style="cursor: pointer;">
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        ${interest.image ? `<img src="${interest.image}" alt="${interest.name}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;">` : ''}
+                        <div>
+                            <div style="font-weight: 600; color: var(--venus-text-primary); margin-bottom: 4px;">
+                                ${interest.name}
+                            </div>
+                            ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 Visita</a>` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span style="display: inline-block; padding: 6px 12px; background: ${interest.type === 'release' ? '#dbeafe' : '#fef3c7'}; color: ${interest.type === 'release' ? '#1e40af' : '#92400e'}; border-radius: 6px; font-size: 13px; font-weight: 600;">
+                        ${typeText}
+                    </span>
+                </td>
+                <td>${dateText}</td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="venus-btn venus-btn-secondary venus-btn-small" onclick="editInterest('${interest.id}')" title="Modifica">
+                            ✏️
+                        </button>
+                        <button class="venus-btn venus-btn-secondary venus-btn-small" onclick="deleteInterest('${interest.id}')" title="Elimina">
+                            🗑️
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+        
+        // Add empty rows to reach 7 total
+        const emptyRowsNeeded = Math.max(0, 7 - interests.length);
+        for (let i = 0; i < emptyRowsNeeded; i++) {
+            tbody.innerHTML += '<tr class="empty-row"><td colspan="5"></td></tr>';
+        }
+    }
+
+    function deleteInterest(id) {
+        if (!confirm('Sei sicuro di voler eliminare questo interesse?')) return;
+        
+        const interests = getUserInterests();
+        const updated = interests.filter(i => i.id != id);
+        saveUserInterests(updated);
+        
+        loadInterestsTable();
+        loadReleaseDates();
+    }
+
+    function editInterest(id) {
+        // TODO: Implement edit functionality
+        alert('Modifica in sviluppo');
+    }
+
     // Load release dates on page load
     document.addEventListener('DOMContentLoaded', () => {
+        loadInterestsTable();
         loadReleaseDates();
     });
     </script>
