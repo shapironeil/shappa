@@ -1,4 +1,4 @@
-# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay
+# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay# 🛒 Shappa - Automazione Listing Amazon → eBay
 
 
 
@@ -14,7 +14,7 @@
 
 
 
-🟢 **ONLINE E FUNZIONANTE**---**Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon****Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon**
+🟢 **ONLINE E FUNZIONANTE**---**Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon**
 
 
 
@@ -26,423 +26,868 @@
 
 - **Database**: MongoDB Atlas connesso
 
-- **Ultimo Deploy**: 7 Novembre 2025 - 15:00 UTC
+- **Ultimo Deploy**: 7 Novembre 2025 - 16:00 UTC
 
-- **Commit**: `87ad50a` - Production documentation + fixes
+- **Commit**: `ed7835d` - Added Obiettivi and Calendario pages
 
-- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**## 🌐 Server Production## 🌐 Server Production
+- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**---**Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon****Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon**
 
 
-
-### Quick Health Check
-
-```powershell
-
-# Test sito- **URL Live**: https://shapiro.ninja
-
-Invoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing
-
-- **Status**: 200 OK ✅
-
-# Status PM2 (da server)
-
-ssh root@207.154.218.16 "pm2 status"- **Server**: PM2 attivo su DigitalOcean- **URL**: https://shapiro.ninja- **URL**: https://shapiro.ninja
-
-
-
-# Logs real-time- **Database**: MongoDB Atlas connesso
-
-ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
-
-```- **Ultimo Deploy**: 7 Novembre 2025 - 14:30 UTC- **Hosting**: DigitalOcean Droplet (207.154.218.16)- **Hosting**: DigitalOcean Droplet (207.154.218.16)
-
-
-
----- **Commit**: `820de75` - Complete environment setup and production documentation
-
-
-
-## 🌐 Infrastruttura Production- **Database**: MongoDB Atlas (cluster condiviso dev/prod)- **Database**: MongoDB Atlas (cluster condiviso dev/prod)
-
-
-
-### Server### Quick Health Check
-
-- **Provider**: DigitalOcean Droplet
-
-- **IP**: 207.154.218.16```powershell- **Dominio**: shapiro.ninja (DNS puntato a droplet)- **Dominio**: shapiro.ninja (DNS puntato a droplet)
-
-- **OS**: Ubuntu 22.04 LTS
-
-- **Node.js**: v20.x# Test sito
-
-- **Process Manager**: PM2
-
-- **Reverse Proxy**: Nginx + Let's Encrypt SSLInvoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing- **Server**: Node.js + Express- **Server**: Node.js + Express
-
-
-
-### Database
-
-- **Provider**: MongoDB Atlas (Cloud)
-
-- **Cluster**: Shared (condiviso dev/prod)# Status PM2 (da server)- **Process Manager**: PM2- **Process Manager**: PM2
-
-- **Strategy**: Database unico per sviluppo e produzione
-
-  - Dev usa eBay Sandbox per testing sicurossh root@207.154.218.16 "pm2 status"
-
-  - Prod usa eBay Production per listing reali
-
-- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Reverse Proxy**: Nginx + Let's Encrypt SSL
-
-### Dominio
-
-- **Domain**: shapiro.ninja# Logs real-time
-
-- **DNS**: Puntato a 207.154.218.16
-
-- **SSL**: Let's Encrypt (auto-renew)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
-
-
-
----```
-
-
-
-## ✨ Funzionalità Core## ✨ Funzionalità Core## ✨ Funzionalità Core
-
-
-
-### 1. 🔍 Ricerca Prodotti Multi-Marketplace---
-
-- **Amazon**: Scraping real-time con Playwright proprietario (stealth mode)
-
-- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)
-
-- Filtri avanzati: paese, categoria, prezzo, ordinamento
-
-- Modal dettagli con galleria immagini HD## 🌐 Infrastruttura Production
-
-
-
-### 2. 📦 Gestione Listing### 1. 🔍 Ricerca Prodotti Multi-MarketplaceBackend e frontend usano uno scraper Playwright proprietario per ottenere i dati da Amazon senza servizi esterni.
-
-- Import prodotti con un click
-
-- Calcolo automatico margini e fee eBay### Server
-
-- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
-
-- Sincronizzazione multi-marketplace- **Provider**: DigitalOcean Droplet- **Amazon**: Scraping real-time con Playwright
-
-- Download automatico immagini prodotto
-
-- **IP**: 207.154.218.16
-
-### 3. 🔐 Autenticazione
-
-- Sistema login/registrazione completo- **OS**: Ubuntu 22.04 LTS- **eBay, Alibaba, Walmart, AliExpress**: In sviluppoFunzionalità principali:
-
-- OAuth eBay integrato (Sandbox + Production)
-
-- Token management con auto-refresh- **Node.js**: v20.x
-
-- Full scopes eBay per accesso completo API
-
-- **Process Manager**: PM2- Filtri avanzati: paese, categoria, prezzo, ordinamento- Scraping Playwright proprietario (server-side) — sostituisce OpenWebNinja e SerpApi
-
-### 4. 📊 Dashboard & Reports
-
-- Overview vendite e profitti- **Reverse Proxy**: Nginx + Let's Encrypt SSL
-
-- Storico transazioni
-
-- Analytics performance- Modal dettagli con galleria immagini HD- Caching in-memory opzionale per dettagli prodotto
-
-- Export dati CSV/Excel
-
-### Database
 
 ---
 
-- **Provider**: MongoDB Atlas (Cloud)- Modale dettaglio con galleria immagini e tabs (Info / Automazione)
 
-## 🚀 Setup Locale - Quick Start
 
-- **Cluster**: Shared (condiviso dev/prod)
+## 🌐 Infrastruttura Production- **URL Live**: https://shapiro.ninja
 
-### Prerequisiti
 
-- Node.js >= 18.x- **Strategy**: Database unico per sviluppo e produzione### 2. 📦 Gestione Listing- Dati prodotto completi e aggiornati
 
-- Git
+### Server- **Status**: 200 OK ✅
 
-- Account MongoDB Atlas  - Dev usa eBay Sandbox per testing sicuro
+- **Provider**: DigitalOcean Droplet
 
-- (Opzionale) eBay Sandbox credentials
+- **IP**: 207.154.218.16- **Server**: PM2 attivo su DigitalOcean## ✅ **DEPLOYMENT STATUS**
 
-  - Prod usa eBay Production per listing reali- Import prodotti con un click- Dockerfile e suggerimenti deploy
+- **OS**: Ubuntu 22.04 LTS
+
+- **Node.js**: v20.x- **Database**: MongoDB Atlas connesso
+
+- **Process Manager**: PM2
+
+- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Ultimo Deploy**: 7 Novembre 2025 - 15:00 UTC
+
+
+
+### Database- **Commit**: `87ad50a` - Production documentation + fixes
+
+- **Provider**: MongoDB Atlas (Cloud)
+
+- **Cluster**: Shared (condiviso dev/prod)- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**## 🌐 Server Production## 🌐 Server Production
+
+- **Strategy**: Database unico per sviluppo e produzione
+
+  - Dev usa eBay Sandbox per testing sicuro
+
+  - Prod usa eBay Production per listing reali
+
+### Quick Health Check
+
+### Dominio
+
+- **Domain**: shapiro.ninja```powershell
+
+- **DNS**: Puntato a 207.154.218.16
+
+- **SSL**: Let's Encrypt (auto-renew)# Test sito- **URL Live**: https://shapiro.ninja
+
+
+
+---Invoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing
+
+
+
+## ✨ Funzionalità Core- **Status**: 200 OK ✅
+
+
+
+### 1. 📊 Dashboard & Gestione# Status PM2 (da server)
+
+- **Dashboard Principale**: Overview vendite, profitti, statistiche
+
+- **🎯 Obiettivi**: Sistema di tracking obiettivi di business (vendite, profitti, listing)ssh root@207.154.218.16 "pm2 status"- **Server**: PM2 attivo su DigitalOcean- **URL**: https://shapiro.ninja- **URL**: https://shapiro.ninja
+
+- **📅 Calendario**: Pianificazione eventi, scadenze listing, promemoria
+
+- **📈 Reports**: Analytics dettagliati e export dati
+
+
+
+### 2. 🔍 Ricerca Prodotti Multi-Marketplace# Logs real-time- **Database**: MongoDB Atlas connesso
+
+- **Amazon**: Scraping real-time con Playwright proprietario (stealth mode)
+
+- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
+
+- Filtri avanzati: paese, categoria, prezzo, ordinamento
+
+- Modal dettagli con galleria immagini HD```- **Ultimo Deploy**: 7 Novembre 2025 - 14:30 UTC- **Hosting**: DigitalOcean Droplet (207.154.218.16)- **Hosting**: DigitalOcean Droplet (207.154.218.16)
+
+
+
+### 3. 📦 Gestione Listing
+
+- Import prodotti con un click
+
+- Calcolo automatico margini e fee eBay---- **Commit**: `820de75` - Complete environment setup and production documentation
+
+- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
+
+- Sincronizzazione multi-marketplace
+
+- Download automatico immagini prodotto
+
+## 🌐 Infrastruttura Production- **Database**: MongoDB Atlas (cluster condiviso dev/prod)- **Database**: MongoDB Atlas (cluster condiviso dev/prod)
+
+### 4. 🔐 Autenticazione
+
+- Sistema login/registrazione completo
+
+- OAuth eBay integrato (Sandbox + Production)
+
+- Token management con auto-refresh### Server### Quick Health Check
+
+- Full scopes eBay per accesso completo API
+
+- Pagine protette con middleware- **Provider**: DigitalOcean Droplet
+
+
+
+---- **IP**: 207.154.218.16```powershell- **Dominio**: shapiro.ninja (DNS puntato a droplet)- **Dominio**: shapiro.ninja (DNS puntato a droplet)
+
+
+
+## 🚀 Setup Locale - Quick Start- **OS**: Ubuntu 22.04 LTS
+
+
+
+### Prerequisiti- **Node.js**: v20.x# Test sito
+
+- Node.js >= 18.x
+
+- Git- **Process Manager**: PM2
+
+- Account MongoDB Atlas
+
+- (Opzionale) eBay Sandbox credentials- **Reverse Proxy**: Nginx + Let's Encrypt SSLInvoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing- **Server**: Node.js + Express- **Server**: Node.js + Express
+
+
 
 ### Installazione Rapida
 
 
 
-```powershell
+```powershell### Database
 
-# 1. Clona repository### Dominio- Calcolo automatico margini e fee eBay
+# 1. Clona repository
 
-git clone https://github.com/shapironeil/shappa.git
+git clone https://github.com/shapironeil/shappa.git- **Provider**: MongoDB Atlas (Cloud)
 
-cd shappa- **Domain**: shapiro.ninja
+cd shappa
+
+- **Cluster**: Shared (condiviso dev/prod)# Status PM2 (da server)- **Process Manager**: PM2- **Process Manager**: PM2
+
+# 2. Installa dipendenze
+
+npm install- **Strategy**: Database unico per sviluppo e produzione
 
 
 
-# 2. Installa dipendenze- **DNS**: Puntato a 207.154.218.16- Monitoraggio prezzi Amazon in tempo realeVariabili ambiente
+# 3. Configura ambiente  - Dev usa eBay Sandbox per testing sicurossh root@207.154.218.16 "pm2 status"
 
-npm install
+Copy-Item .env.example .env
 
-- **SSL**: Let's Encrypt (auto-renew)
+# Modifica .env con le tue credenziali  - Prod usa eBay Production per listing reali
 
-# 3. Configura ambiente
 
-Copy-Item .env.example .env- Sincronizzazione multi-marketplace- AMAZON_COUNTRY - default country (IT)
 
-# Modifica .env con le tue credenziali
+# 4. Avvia server di sviluppo- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Reverse Proxy**: Nginx + Let's Encrypt SSL
 
----
+npm run dev
 
-# 4. Avvia server di sviluppo
+```### Dominio
 
-npm run dev- PORT - server port (default 3000)
 
-```
 
-## ✨ Funzionalità Core
+Server disponibile su: `http://localhost:3000`- **Domain**: shapiro.ninja# Logs real-time
 
-Server disponibile su: `http://localhost:3000`
 
-### 3. 🔐 Autenticazione- AMAZON_CACHE_TTL - cache TTL in seconds (default 90)
 
-📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)
+📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)- **DNS**: Puntato a 207.154.218.16
 
-### 1. 🔍 Ricerca Prodotti Multi-Marketplace
 
----
 
-- **Amazon**: Scraping real-time con Playwright proprietario- Sistema login/registrazione completo
+---- **SSL**: Let's Encrypt (auto-renew)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
+
+
 
 ## 📁 Struttura Progetto
 
-- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)
 
-```
 
-shappa/- Filtri avanzati: paese, categoria, prezzo, ordinamento- OAuth eBay integrato (Sandbox + Production)eBay OAuth (important)
+```---```
+
+shappa/
 
 ├── server.js              # Express server principale (1,437 LOC)
 
-├── package.json           # Dipendenze e scripts- Modal dettagli con galleria immagini HD
+├── package.json           # Dipendenze e scripts
 
-├── .env.example           # Template variabili ambiente
+├── .env.example           # Template variabili ambiente## ✨ Funzionalità Core## ✨ Funzionalità Core## ✨ Funzionalità Core
 
-├── SETUP.md              # Guida setup completa- Token management con auto-refresh- eBay requires a secure (https) redirect URI for OAuth callbacks in many environments. For local development, use `https://localhost:3000/auth/ebay/callback` and ensure your local certificate is trusted (e.g., with mkcert). If you use `http://localhost:3000` eBay OAuth may fail during token exchange.
+├── SETUP.md              # Guida setup completa
 
 ├── lib/
 
-│   ├── scraper/          # Playwright scraper Amazon### 2. 📦 Gestione Listing
+│   ├── scraper/          # Playwright scraper Amazon
 
-│   │   ├── amazonScraper.js          # Scraper base
+│   │   ├── amazonScraper.js          # Scraper base### 1. 🔍 Ricerca Prodotti Multi-Marketplace---
 
-│   │   └── stealthAmazonScraper.js   # Scraper stealth (anti-detection)- Import prodotti con un click- Pagine protette con middleware
+│   │   └── stealthAmazonScraper.js   # Scraper stealth (anti-detection)
 
-│   ├── services/         # Business logic
+│   ├── services/         # Business logic- **Amazon**: Scraping real-time con Playwright proprietario (stealth mode)
 
-│   │   ├── priceMonitor.js           # Cron job monitoraggio prezzi- Calcolo automatico margini e fee eBay
+│   │   ├── priceMonitor.js           # Cron job monitoraggio prezzi
 
-│   │   ├── amazonService.js          # Service layer Amazon
+│   │   ├── amazonService.js          # Service layer Amazon- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)
 
-│   │   └── amazonSerpApiService.js   # Alternative con SerpApi- Monitoraggio prezzi Amazon in tempo realeLocal run
+│   │   └── amazonSerpApiService.js   # Alternative con SerpApi
 
-│   ├── openwebninjaClient.js  # Client API OpenWebNinja
+│   ├── openwebninjaClient.js  # Client API OpenWebNinja- Filtri avanzati: paese, categoria, prezzo, ordinamento
 
-│   └── serpapiClient.js       # Client API SerpApi- Sincronizzazione multi-marketplace
+│   └── serpapiClient.js       # Client API SerpApi
 
-├── src/
+├── src/- Modal dettagli con galleria immagini HD## 🌐 Infrastruttura Production
 
-│   ├── pages/            # Frontend HTML (dashboard, products, listings, reports)### 4. 📊 Dashboard & Reports1. Install dependencies: `npm install`
+│   ├── pages/            # Frontend HTML
+
+│   │   ├── dashboard.html     # Dashboard principale
+
+│   │   ├── obiettivi.html     # 🆕 Gestione obiettivi
+
+│   │   ├── calendario.html    # 🆕 Calendario eventi### 2. 📦 Gestione Listing### 1. 🔍 Ricerca Prodotti Multi-MarketplaceBackend e frontend usano uno scraper Playwright proprietario per ottenere i dati da Amazon senza servizi esterni.
+
+│   │   ├── products.html      # Ricerca prodotti
+
+│   │   ├── listings.html      # Gestione listing- Import prodotti con un click
+
+│   │   ├── reports.html       # Reports e analytics
+
+│   │   └── settings.html      # Impostazioni- Calcolo automatico margini e fee eBay### Server
 
 │   ├── utils/            # Utilities JS (auth, ebay-oauth, API client)
 
-│   └── styles/           # CSS### 3. 🔐 Autenticazione
+│   └── styles/           # CSS- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
 
 ├── public/               # Asset statici
 
-├── data/                 # Dati applicazione (prodotti salvati)- Sistema login/registrazione completo- Overview vendite e profitti2. Create a `.env` file with the variables above (do not commit the key)
+├── data/                 # Dati applicazione (prodotti salvati)- Sincronizzazione multi-marketplace- **Provider**: DigitalOcean Droplet- **Amazon**: Scraping real-time con Playwright
 
 ├── oauth/                # Token eBay persistenti
 
-└── docs/                 # Documentazione tecnica- OAuth eBay integrato (Sandbox + Production)
+└── docs/                 # Documentazione tecnica- Download automatico immagini prodotto
 
     ├── CODE_AUDIT.md     # Audit codebase completo
 
-    └── ...               # Altre guide- Token management con auto-refresh- Storico transazioni3. Start server: `node server.js`
+    └── AUDIT_SUMMARY.md  # Summary report- **IP**: 207.154.218.16
 
 ```
 
-- Pagine protette con middleware
+### 3. 🔐 Autenticazione
 
 ---
 
-- Analytics performance
+- Sistema login/registrazione completo- **OS**: Ubuntu 22.04 LTS- **eBay, Alibaba, Walmart, AliExpress**: In sviluppoFunzionalità principali:
 
 ## 🔑 Variabili d'Ambiente
 
-### 4. 📊 Dashboard & Reports
+- OAuth eBay integrato (Sandbox + Production)
 
 ### Essenziali (Richieste)
 
-```bash- Overview vendite e profitti- Export dati CSV/ExcelDocker
+```bash- Token management con auto-refresh- **Node.js**: v20.x
 
 # Server
 
-NODE_ENV=production- Storico transazioni
+NODE_ENV=production- Full scopes eBay per accesso completo API
 
 PORT=3000
 
-- Analytics performance1. Build: `docker build -t shappa .`
+- **Process Manager**: PM2- Filtri avanzati: paese, categoria, prezzo, ordinamento- Scraping Playwright proprietario (server-side) — sostituisce OpenWebNinja e SerpApi
 
 # Database
 
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/shappa- Export dati CSV/Excel
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/shappa### 4. 📊 Dashboard & Reports
 
 
 
-# eBay OAuth (Production)## 🚀 Quick Start - Sviluppo Locale2. Run: `docker run -p 3000:3000 shappa`
+# eBay OAuth (Production)- Overview vendite e profitti- **Reverse Proxy**: Nginx + Let's Encrypt SSL
 
 EBAY_CLIENT_ID=your_production_client_id
 
-EBAY_CLIENT_SECRET=your_production_client_secret---
+EBAY_CLIENT_SECRET=your_production_client_secret- Storico transazioni
 
 EBAY_REDIRECT_URI=https://shapiro.ninja/auth/ebay/callback
 
-```
+```- Analytics performance- Modal dettagli con galleria immagini HD- Caching in-memory opzionale per dettagli prodotto
 
 
 
-### Opzionali## 🚀 Setup Locale - Quick Start
+### Opzionali- Export dati CSV/Excel
 
 ```bash
 
-# eBay (avanzate)### PrerequisitiImportant
+# eBay (avanzate)### Database
 
 EBAY_DEV_ID=your_dev_id
 
-EBAY_RUNAME=your_ru_name### Prerequisiti
-
-EBAY_AUTH_URL=https://auth.ebay.com/oauth2/authorize
-
-EBAY_TOKEN_URL=https://api.ebay.com/identity/v1/oauth2/token- Node.js >= 18.x- Node.js >= 18.x- Il file `lib/scraper/amazonScraper.js` contiene la logica di scraping e mapping. Aggiornare la documentazione quando si modifica l’estrazione dati.
-
-EBAY_API_URL=https://api.ebay.com
-
-EBAY_SCOPES=https://api.ebay.com/oauth/api_scope...- Git
+EBAY_RUNAME=your_ru_name---
 
 EBAY_MARKETPLACE_ID=EBAY_IT
 
-- Account MongoDB Atlas- Git# 📋 Stato Aggiornato (09/10/2025 - ore 20:45)
+- **Provider**: MongoDB Atlas (Cloud)- Modale dettaglio con galleria immagini e tabs (Info / Automazione)
 
 # eBay Sandbox (development)
 
-EBAY_SANDBOX_CLIENT_ID=your_sandbox_id- (Opzionale) eBay Sandbox credentials
+EBAY_SANDBOX_CLIENT_ID=your_sandbox_id## 🚀 Setup Locale - Quick Start
 
 EBAY_SANDBOX_CLIENT_SECRET=your_sandbox_secret
 
-EBAY_SANDBOX_REDIRECT_URI=https://localhost:3000/auth/ebay/callback- Account MongoDB Atlas
+EBAY_SANDBOX_REDIRECT_URI=https://localhost:3000/auth/ebay/callback- **Cluster**: Shared (condiviso dev/prod)
 
 
 
-# Amazon Scraping### Installazione Rapida
+# Amazon Scraping### Prerequisiti
 
 USE_AMAZON_DEMO=1  # Usa dati demo per testing
 
-OPENWEBNINJA_API_KEY=your_api_key  # Opzionale- (Opzionale) Credenziali eBay Sandbox## 🚀 Nuove Funzionalità v2.0.1
+OPENWEBNINJA_API_KEY=your_api_key  # Opzionale- Node.js >= 18.x- **Strategy**: Database unico per sviluppo e produzione### 2. 📦 Gestione Listing- Dati prodotto completi e aggiornati
 
 SERPAPI_KEY=your_api_key  # Opzionale
 
-```powershell
+- Git
 
 # Development
 
-DISABLE_HTTPS=true  # Disabilita HTTPS locale# 1. Clona repository
+DISABLE_HTTPS=true  # Disabilita HTTPS locale- Account MongoDB Atlas  - Dev usa eBay Sandbox per testing sicuro
 
 DEV_PFX_PASSPHRASE=shappa-dev  # Passphrase cert SSL
 
-git clone https://github.com/shapironeil/shappa.git
+- (Opzionale) eBay Sandbox credentials
 
 # Admin
 
-ADMIN_TOKEN=your_secure_token  # Per endpoint /api/admin/*cd shappa### Installazione### 1. Navbar Universale - Click Nickname da Qualsiasi Pagina
+ADMIN_TOKEN=your_secure_token  # Per endpoint /api/admin/*  - Prod usa eBay Production per listing reali- Import prodotti con un click- Dockerfile e suggerimenti deploy
 
 ```
 
-
+### Installazione Rapida
 
 **Vedi**: [`.env.example`](./.env.example) per template completo
 
-# 2. Installa dipendenze- ✅ **Click Universale**: Ora il click su nickname/avatar funziona da **TUTTE le pagine** (Dashboard, Settings, Admin, ecc.)
+
 
 ---
 
-npm install
+```powershell
 
 ## 🌐 API Endpoints (36 totali)
 
-```powershell- ✅ **Smart Redirect**: 
+# 1. Clona repository### Dominio- Calcolo automatico margini e fee eBay
 
-### Health & Status
+### Health & Status (2)
 
-- `GET /health` - Health check semplice# 3. Configura ambiente
+- `GET /health` - Health check semplicegit clone https://github.com/shapironeil/shappa.git
 
 - `GET /api/health` - Health check API
 
-Copy-Item .env.example .env# Clona il repository  - Se sei in Settings → switcha direttamente alla tab Account
+cd shappa- **Domain**: shapiro.ninja
 
 ### eBay OAuth & Account (10)
 
-- `GET /api/ebay/auth-url` - URL autorizzazione# Modifica .env con le tue credenziali
+- `GET /api/ebay/auth-url` - URL autorizzazione
 
 - `GET /auth/ebay/callback` - Callback OAuth
 
-- `GET /api/ebay/status` - Status autenticazionegit clone https://github.com/shapironeil/shappa.git  - Se sei in altre pagine → redirect a Settings → Account
+- `GET /api/ebay/status` - Status autenticazione# 2. Installa dipendenze- **DNS**: Puntato a 207.154.218.16- Monitoraggio prezzi Amazon in tempo realeVariabili ambiente
 
 - `POST /api/ebay/refresh` - Refresh token
 
-- `GET /api/ebay/profile` - Profilo utente# 4. Avvia server di sviluppo
+- `GET /api/ebay/profile` - Profilo utentenpm install
 
 - `GET /api/ebay/account-info` - Info account
 
-- `GET /api/ebay/token-info` - Info tokennpm run devcd shappa- ✅ **Deep Linking**: Supporto per URL diretto `settings.html#account`
+- `GET /api/ebay/token-info` - Info token- **SSL**: Let's Encrypt (auto-renew)
 
 - `POST /api/ebay/disconnect` - Disconnetti
 
-- `POST /api/ebay/user-info` - User info via token```
+- `POST /api/ebay/user-info` - User info via token# 3. Configura ambiente
 
 - `POST /api/ebay/test-connection` - Test connessione
 
-- ✅ **Codice Centralizzato**: Nuovo file `src/utils/navbar-universal.js` per gestire tutto in modo DRY
+Copy-Item .env.example .env- Sincronizzazione multi-marketplace- AMAZON_COUNTRY - default country (IT)
 
 ### eBay Listings (7)
 
-- `POST /api/ebay/list` - Crea listing (mock)Server disponibile su: `http://localhost:3000`
+- `POST /api/ebay/list` - Crea listing (mock)# Modifica .env con le tue credenziali
 
 - `POST /api/ebay/create-listing` - Crea listing completo
 
-- `GET /api/ebay/listings` - Lista tutti# Installa dipendenze
+- `GET /api/ebay/listings` - Lista tutti---
 
 - `POST /api/ebay/sync-listings` - Sincronizza da eBay
 
-- `POST /api/ebay/publish` - Pubblica listing📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)
+- `POST /api/ebay/publish` - Pubblica listing# 4. Avvia server di sviluppo
+
+- `POST /api/ebay/listings/:id/end` - Termina
+
+- `POST /api/ebay/listings/:id/relist` - Ri-listanpm run dev- PORT - server port (default 3000)
+
+
+
+### Amazon Scraping (3)```
+
+- `GET /api/amazon/search` - Cerca prodotti
+
+- `GET /api/amazon/product/:asin` - Dettagli prodotto## ✨ Funzionalità Core
+
+- `GET /api/amazon/scrape` - Scraping Playwright
+
+Server disponibile su: `http://localhost:3000`
+
+### Gestione Prodotti (4)
+
+- `POST /api/products/save` - Salva prodotto### 3. 🔐 Autenticazione- AMAZON_CACHE_TTL - cache TTL in seconds (default 90)
+
+- `GET /api/products/saved` - Lista salvati
+
+- `DELETE /api/products/saved/:asin` - Elimina📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)
+
+- `POST /api/products/download-images` - Download immagini
+
+### 1. 🔍 Ricerca Prodotti Multi-Marketplace
+
+### Gestione Immagini (5)
+
+- `GET /api/products/:asin/images` - Info immagini---
+
+- `GET /api/images/status/:asin` - Status download
+
+- `POST /api/images/download` - Avvia download- **Amazon**: Scraping real-time con Playwright proprietario- Sistema login/registrazione completo
+
+- `GET /api/images/downloaded/:asin` - Lista scaricate
+
+- `GET /api/images/serve/:asin/:filename` - Serve immagine## 📁 Struttura Progetto
+
+
+
+### Price Monitoring (3)- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)
+
+- `POST /api/monitor/add` - Aggiungi monitor
+
+- `POST /api/monitor/remove` - Rimuovi monitor```
+
+- `GET /api/monitor/list` - Lista monitor
+
+shappa/- Filtri avanzati: paese, categoria, prezzo, ordinamento- OAuth eBay integrato (Sandbox + Production)eBay OAuth (important)
+
+### Admin (1)
+
+- `POST /api/admin/clear-cache` - Pulisci cache (protetto)├── server.js              # Express server principale (1,437 LOC)
+
+
+
+---├── package.json           # Dipendenze e scripts- Modal dettagli con galleria immagini HD
+
+
+
+## 🌍 Deploy in Produzione├── .env.example           # Template variabili ambiente
+
+
+
+### Architettura├── SETUP.md              # Guida setup completa- Token management con auto-refresh- eBay requires a secure (https) redirect URI for OAuth callbacks in many environments. For local development, use `https://localhost:3000/auth/ebay/callback` and ensure your local certificate is trusted (e.g., with mkcert). If you use `http://localhost:3000` eBay OAuth may fail during token exchange.
+
+
+
+```├── lib/
+
+Internet → DNS → Nginx (shapiro.ninja:443) → PM2 → Node.js App (port 3000)
+
+                                                          ↓│   ├── scraper/          # Playwright scraper Amazon### 2. 📦 Gestione Listing
+
+                                                    MongoDB Atlas
+
+```│   │   ├── amazonScraper.js          # Scraper base
+
+
+
+### Deploy Steps│   │   └── stealthAmazonScraper.js   # Scraper stealth (anti-detection)- Import prodotti con un click- Pagine protette con middleware
+
+
+
+1. **Commit e Push modifiche**:│   ├── services/         # Business logic
+
+```powershell
+
+git add .│   │   ├── priceMonitor.js           # Cron job monitoraggio prezzi- Calcolo automatico margini e fee eBay
+
+git commit -m "feat: descrizione modifiche"
+
+git push origin main│   │   ├── amazonService.js          # Service layer Amazon
+
+```
+
+│   │   └── amazonSerpApiService.js   # Alternative con SerpApi- Monitoraggio prezzi Amazon in tempo realeLocal run
+
+2. **SSH nel server**:
+
+```powershell│   ├── openwebninjaClient.js  # Client API OpenWebNinja
+
+ssh root@207.154.218.16
+
+```│   └── serpapiClient.js       # Client API SerpApi- Sincronizzazione multi-marketplace
+
+
+
+3. **Pull e deploy**:├── src/
+
+```bash
+
+cd /var/www/shappa│   ├── pages/            # Frontend HTML (dashboard, products, listings, reports)### 4. 📊 Dashboard & Reports1. Install dependencies: `npm install`
+
+git pull origin main
+
+npm ci --only=production│   ├── utils/            # Utilities JS (auth, ebay-oauth, API client)
+
+pm2 restart shappa
+
+pm2 save│   └── styles/           # CSS### 3. 🔐 Autenticazione
+
+```
+
+├── public/               # Asset statici
+
+4. **Verifica deployment**:
+
+```bash├── data/                 # Dati applicazione (prodotti salvati)- Sistema login/registrazione completo- Overview vendite e profitti2. Create a `.env` file with the variables above (do not commit the key)
+
+pm2 logs shappa --lines 50
+
+curl https://shapiro.ninja/api/health├── oauth/                # Token eBay persistenti
+
+```
+
+└── docs/                 # Documentazione tecnica- OAuth eBay integrato (Sandbox + Production)
+
+---
+
+    ├── CODE_AUDIT.md     # Audit codebase completo
+
+## 📊 Roadmap & Status
+
+    └── ...               # Altre guide- Token management con auto-refresh- Storico transazioni3. Start server: `node server.js`
+
+### ✅ Completato (v2.2.0)
+
+- [x] Sistema autenticazione (login/register)```
+
+- [x] Scraper Amazon proprietario (Playwright stealth)
+
+- [x] OAuth eBay (Sandbox + Production)- Pagine protette con middleware
+
+- [x] Gestione listing con calcolo margini
+
+- [x] Monitoraggio prezzi real-time (cron 30 min)---
+
+- [x] Deploy production su DigitalOcean
+
+- [x] Dashboard responsive- Analytics performance
+
+- [x] MongoDB Atlas integration
+
+- [x] PM2 process management## 🔑 Variabili d'Ambiente
+
+- [x] Nginx reverse proxy + SSL
+
+- [x] Download automatico immagini prodotto### 4. 📊 Dashboard & Reports
+
+- [x] Code audit completo e cleanup
+
+- [x] Documentazione completa### Essenziali (Richieste)
+
+- [x] **🆕 Pagina Obiettivi** - Tracking obiettivi business
+
+- [x] **🆕 Pagina Calendario** - Gestione eventi e scadenze```bash- Overview vendite e profitti- Export dati CSV/ExcelDocker
+
+
+
+### 🔄 In Progress# Server
+
+- [ ] Integrazione database MongoDB per obiettivi e calendario
+
+- [ ] API CRUD per obiettivi personalizzatiNODE_ENV=production- Storico transazioni
+
+- [ ] Notifiche scadenze e promemoria
+
+- [ ] Sincronizzazione calendario con listing eBayPORT=3000
+
+- [ ] Dashboard widgets per obiettivi
+
+- [ ] Export calendario (iCal, Google Calendar)- Analytics performance1. Build: `docker build -t shappa .`
+
+
+
+### 📈 Futuro# Database
+
+- [ ] AI-powered pricing suggestions
+
+- [ ] Multi-account management eBayMONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/shappa- Export dati CSV/Excel
+
+- [ ] Inventory sync cross-platform
+
+- [ ] Chrome extension per quick listing
+
+- [ ] Mobile app (React Native)
+
+- [ ] Notifiche email/push# eBay OAuth (Production)## 🚀 Quick Start - Sviluppo Locale2. Run: `docker run -p 3000:3000 shappa`
+
+- [ ] Supporto multi-lingua
+
+- [ ] API pubblica per integrazioniEBAY_CLIENT_ID=your_production_client_id
+
+- [ ] Dashboard analytics avanzata
+
+- [ ] Sistema di alerting automaticoEBAY_CLIENT_SECRET=your_production_client_secret---
+
+
+
+---EBAY_REDIRECT_URI=https://shapiro.ninja/auth/ebay/callback
+
+
+
+## 🔧 Tech Stack```
+
+
+
+**Backend**:
+
+- Node.js 20.x
+
+- Express.js 5.x### Opzionali## 🚀 Setup Locale - Quick Start
+
+- MongoDB Atlas (cloud database)
+
+- Playwright 1.56 (web scraping)```bash
+
+- node-cron 4.2 (scheduled tasks)
+
+- axios 1.12 (HTTP client)# eBay (avanzate)### PrerequisitiImportant
+
+
+
+**Frontend**:EBAY_DEV_ID=your_dev_id
+
+- HTML5 / CSS3 / Vanilla JavaScript
+
+- Responsive designEBAY_RUNAME=your_ru_name### Prerequisiti
+
+- Venus Design System
+
+- Font Awesome iconsEBAY_AUTH_URL=https://auth.ebay.com/oauth2/authorize
+
+- No frameworks (performance-first)
+
+EBAY_TOKEN_URL=https://api.ebay.com/identity/v1/oauth2/token- Node.js >= 18.x- Node.js >= 18.x- Il file `lib/scraper/amazonScraper.js` contiene la logica di scraping e mapping. Aggiornare la documentazione quando si modifica l’estrazione dati.
+
+**Infrastructure**:
+
+- DigitalOcean (hosting VPS)EBAY_API_URL=https://api.ebay.com
+
+- MongoDB Atlas (database cloud)
+
+- Nginx (reverse proxy)EBAY_SCOPES=https://api.ebay.com/oauth/api_scope...- Git
+
+- PM2 (process manager)
+
+- Let's Encrypt (SSL/TLS)EBAY_MARKETPLACE_ID=EBAY_IT
+
+- GitHub (version control + CI/CD)
+
+- Account MongoDB Atlas- Git# 📋 Stato Aggiornato (09/10/2025 - ore 20:45)
+
+**APIs & Services**:
+
+- eBay API (OAuth + Inventory + Sell APIs)# eBay Sandbox (development)
+
+- Amazon (Playwright scraping proprietario)
+
+- MongoDB Atlas CloudEBAY_SANDBOX_CLIENT_ID=your_sandbox_id- (Opzionale) eBay Sandbox credentials
+
+- (Optional) OpenWebNinja / SerpApi
+
+EBAY_SANDBOX_CLIENT_SECRET=your_sandbox_secret
+
+---
+
+EBAY_SANDBOX_REDIRECT_URI=https://localhost:3000/auth/ebay/callback- Account MongoDB Atlas
+
+## 📈 Metriche Progetto
+
+
+
+| Metrica | Valore |
+
+|---------|--------|# Amazon Scraping### Installazione Rapida
+
+| **Lines of Code (server.js)** | 1,437 |
+
+| **API Endpoints** | 36 |USE_AMAZON_DEMO=1  # Usa dati demo per testing
+
+| **Moduli lib/** | 8 files |
+
+| **Frontend pages** | 8 pages |OPENWEBNINJA_API_KEY=your_api_key  # Opzionale- (Opzionale) Credenziali eBay Sandbox## 🚀 Nuove Funzionalità v2.0.1
+
+| **Dependencies** | 7 packages |
+
+| **Variabili ENV** | 17 core + 11 optional |SERPAPI_KEY=your_api_key  # Opzionale
+
+| **Commit totali** | 105+ |
+
+| **Uptime produzione** | 99.9% |```powershell
+
+
+
+---# Development
+
+
+
+## 🎉 ChangelogDISABLE_HTTPS=true  # Disabilita HTTPS locale# 1. Clona repository
+
+
+
+### v2.2.0 (7 Novembre 2025)DEV_PFX_PASSPHRASE=shappa-dev  # Passphrase cert SSL
+
+- ✅ **Nuova pagina Obiettivi** (`obiettivi.html`)
+
+  - Sistema tracking obiettivi businessgit clone https://github.com/shapironeil/shappa.git
+
+  - Cards con progress bar
+
+  - Obiettivi vendite, profitti, listing# Admin
+
+  - Stats summary e scadenze
+
+- ✅ **Nuova pagina Calendario** (`calendario.html`)ADMIN_TOKEN=your_secure_token  # Per endpoint /api/admin/*cd shappa### Installazione### 1. Navbar Universale - Click Nickname da Qualsiasi Pagina
+
+  - Calendario interattivo mese corrente
+
+  - Eventi giornalieri categorizzati```
+
+  - Sidebar con eventi oggi e prossimi
+
+  - Quick stats mensili
+
+- ✅ Aggiornati menu sidebar di tutte le pagine
+
+- ✅ Integrazione auth check e user profile**Vedi**: [`.env.example`](./.env.example) per template completo
+
+
+
+### v2.1.0 (7 Novembre 2025)# 2. Installa dipendenze- ✅ **Click Universale**: Ora il click su nickname/avatar funziona da **TUTTE le pagine** (Dashboard, Settings, Admin, ecc.)
+
+- ✅ Code audit completo e cleanup
+
+- ✅ Rimosso endpoint duplicato `/api/amazon/product/:asin`---
+
+- ✅ Fixato URL hardcoded in `settings.js`
+
+- ✅ Rimossi file backup obsoletinpm install
+
+- ✅ Aggiornato `.env.example` con variabili corrette
+
+- ✅ Documentazione completa (`CODE_AUDIT.md`)## 🌐 API Endpoints (36 totali)
+
+- ✅ README completamente riscritto
+
+- ✅ Deploy production verificato e funzionante```powershell- ✅ **Smart Redirect**: 
+
+
+
+### v2.0.0 (6 Novembre 2025)### Health & Status
+
+- ✅ OAuth eBay full scopes implementation
+
+- ✅ Stealth Amazon scraper con anti-detection- `GET /health` - Health check semplice# 3. Configura ambiente
+
+- ✅ Price monitoring automatico (cron)
+
+- ✅ Download automatico immagini prodotto- `GET /api/health` - Health check API
+
+- ✅ Dashboard completa con reports
+
+Copy-Item .env.example .env# Clona il repository  - Se sei in Settings → switcha direttamente alla tab Account
+
+---
+
+### eBay OAuth & Account (10)
+
+## 📚 Documentazione
+
+- `GET /api/ebay/auth-url` - URL autorizzazione# Modifica .env con le tue credenziali
+
+- 📖 **Setup Completo**: [`SETUP.md`](./SETUP.md)
+
+- 🔍 **Code Audit**: [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)- `GET /auth/ebay/callback` - Callback OAuth
+
+- 📋 **Audit Summary**: [`docs/AUDIT_SUMMARY.md`](./docs/AUDIT_SUMMARY.md)
+
+- 🔐 **OAuth eBay**: `docs/EBAY_OAUTH_SETUP.md`- `GET /api/ebay/status` - Status autenticazionegit clone https://github.com/shapironeil/shappa.git  - Se sei in altre pagine → redirect a Settings → Account
+
+- 🚀 **Deployment**: `DEPLOYMENT_ROADMAP.md`
+
+- `POST /api/ebay/refresh` - Refresh token
+
+---
+
+- `GET /api/ebay/profile` - Profilo utente# 4. Avvia server di sviluppo
+
+## 📄 License
+
+- `GET /api/ebay/account-info` - Info account
+
+**Proprietario** - Tutti i diritti riservati  
+
+Copyright © 2025 Marco (@shapironeil)- `GET /api/ebay/token-info` - Info tokennpm run devcd shappa- ✅ **Deep Linking**: Supporto per URL diretto `settings.html#account`
+
+
+
+---- `POST /api/ebay/disconnect` - Disconnetti
+
+
+
+## 📞 Contatti & Support- `POST /api/ebay/user-info` - User info via token```
+
+
+
+**Maintainer**: Marco  - `POST /api/ebay/test-connection` - Test connessione
+
+**GitHub**: [@shapironeil](https://github.com/shapironeil)  
+
+**Repository**: [shapironeil/shappa](https://github.com/shapironeil/shappa)  - ✅ **Codice Centralizzato**: Nuovo file `src/utils/navbar-universal.js` per gestire tutto in modo DRY
+
+**Website**: https://shapiro.ninja
+
+### eBay Listings (7)
+
+### Supporto
+
+- 🐛 **Bug Reports**: Apri issue su GitHub- `POST /api/ebay/list` - Crea listing (mock)Server disponibile su: `http://localhost:3000`
+
+- 💡 **Feature Requests**: Discussioni GitHub
+
+- 📧 **Email**: Disponibile su richiesta- `POST /api/ebay/create-listing` - Crea listing completo
+
+
+
+---- `GET /api/ebay/listings` - Lista tutti# Installa dipendenze
+
+
+
+**Ultimo aggiornamento**: 7 Novembre 2025, 16:00 UTC  - `POST /api/ebay/sync-listings` - Sincronizza da eBay
+
+**Versione**: 2.2.0  
+
+**Status**: 🟢 Production Online - New Pages Added (Obiettivi + Calendario)- `POST /api/ebay/publish` - Pubblica listing📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)
+
 
 - `POST /api/ebay/listings/:id/end` - Termina
 
