@@ -3438,6 +3438,8 @@
         const interests = await getUserInterests();
         const releases = interests.filter(i => i.type === 'release');
         
+        console.log('📦 Loading release dates widget:', releases);
+        
         const container = document.getElementById('releaseDatesContainer');
         if (!container) return;
         
@@ -3454,9 +3456,13 @@
         // Sort by date
         releases.sort((a, b) => new Date(a.date) - new Date(b.date));
         
+        console.log('✅ Rendering', releases.length, 'release cards');
+        
         container.innerHTML = releases.map(release => {
             const date = new Date(release.date);
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            date.setHours(0, 0, 0, 0);
             const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
             
             let badgeText = 'Oggi';
@@ -3470,8 +3476,8 @@
             }
             
             const formattedDate = date.toLocaleDateString('it-IT', { 
-                day: 'numeric', 
-                month: 'long', 
+                day: '2-digit', 
+                month: '2-digit', 
                 year: 'numeric' 
             });
             
@@ -3483,12 +3489,14 @@
                     <img src="${imageUrl}" alt="${release.name}" class="release-card-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23f3f4f6%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2248%22 fill=%22%239ca3af%22%3E📦%3C/text%3E%3C/svg%3E'">
                     <h4 class="release-card-title">${release.name}</h4>
                     <div class="release-card-date">
-                        📅 ${formattedDate}${release.time ? ' - ' + release.time : ''}
+                        📅 ${formattedDate}${release.time ? ' • ' + release.time : ''}
                     </div>
                     ${release.notes ? `<p class="release-card-notes">${release.notes}</p>` : ''}
                 </div>
             `;
         }).join('');
+        
+        console.log('✅ Release dates widget updated');
     }
 
     // ============================================
