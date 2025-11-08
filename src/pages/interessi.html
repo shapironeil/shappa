@@ -3808,18 +3808,21 @@
             
             const dateText = interest.releaseDate ? new Date(interest.releaseDate).toLocaleDateString('it-IT') : '-';
             
-            // Status badge con statusMessage visibile
+            // Status badge con 4 stati: starting, monitoring, product found, stopped
             let statusText = interest.statusMessage || 'Not Monitored';
-            let statusColor = '#6b7280';
+            let statusColor = '#6b7280'; // Grigio default
             
-            if (interest.status === 'active' || interest.status === 'monitoring') {
-                statusColor = '#10b981';
+            if (interest.status === 'starting') {
+                statusColor = '#3b82f6'; // Blu
+            } else if (interest.status === 'monitoring') {
+                statusColor = '#10b981'; // Verde
+            } else if (interest.status === 'product found') {
+                statusColor = '#f59e0b'; // Arancione
             } else if (interest.status === 'stopped') {
-                statusText = interest.statusMessage || 'Stopped';
-                statusColor = '#ef4444';
+                statusColor = '#ef4444'; // Rosso
             } else if (interest.status === 'blocked') {
                 statusText = 'Blocked';
-                statusColor = '#ef4444';
+                statusColor = '#ef4444'; // Rosso
             }
             
             row.innerHTML = `

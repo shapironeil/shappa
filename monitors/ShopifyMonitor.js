@@ -142,6 +142,10 @@ class ShopifyMonitor {
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
         console.log(`[Shopify] ⏰ Check intensivi: OGNI MEZZ'ORA per 5 minuti (X:00-X:05, X:30-X:35)`);
         console.log(`[Shopify] 💤 Check normali: ogni 5 minuti negli altri orari`);
+        
+        // Status: STARTING
+        await this.updateMonitorStatus('🚀 Starting...', 'starting');
+        
         this.isRunning = true;
 
         // Primo check immediato (invierà notifica iniziale)
@@ -195,8 +199,7 @@ class ShopifyMonitor {
             }
         }
         
-        // Notifica Discord di STOP
-        await this.notifyMonitorStopped();
+        // NON inviare notifica Discord di STOP (già vedi status nella UI)
         
         // Chiudi browser se aperto
         if (this.browser) {
@@ -623,12 +626,18 @@ class ShopifyMonitor {
         // 🎯 PRIMO CHECK: Inizializza status update
         if (!this.initialNotificationSent) {
             console.log(`[Shopify] 📢 Monitor avviato per: ${this.productFilter || 'tutti i prodotti'}`);
-            await this.updateMonitorStatus('🔍 Ricerca prodotti ONLINE...', 'monitoring');
+            await this.updateMonitorStatus('🔍 Monitoring...', 'monitoring');
             this.initialNotificationSent = true;
         }
 
         if (productsToNotify.length > 0) {
             console.log(`[Shopify] 📢 ${productsToNotify.length} prodotti da notificare`);
+            
+            // Status: PRODUCT FOUND
+            const onlineCount = productsToNotify.filter(p => p.status === 'ONLINE').length;
+            if (onlineCount > 0) {
+                await this.updateMonitorStatus(`🎯 ${onlineCount} product${onlineCount > 1 ? 's' : ''} found!`, 'product found');
+            }
             
             // 🛒 ESTRAI VARIANTI da API se non già presenti
             for (const product of productsToNotify) {
@@ -692,14 +701,14 @@ class ShopifyMonitor {
             const onlineProductsSent = productsToNotify.filter(p => p.status === 'ONLINE' && p.variants && p.variants.length > 0);
             if (onlineProductsSent.length > 0) {
                 console.log(`[Shopify] 🛑 STOP MONITOR: ${onlineProductsSent.length} prodotti ONLINE inviati. ELIMINO TASK.`);
-                await this.updateMonitorStatus(`🛑 Stopped - ${onlineProductsSent.length} prodotti inviati`, 'stopped');
+                await this.updateMonitorStatus(`🛑 Stopped`, 'stopped');
                 await this.stop(true); // true = elimina task automaticamente
                 return;
             }
             
         } else if (this.checksCount > 1) {
             console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
-            await this.updateMonitorStatus(`⏳ Monitoraggio... Prossimo check tra ${this.interval}min`, 'monitoring');
+            await this.updateMonitorStatus(`🔍 Monitoring...`, 'monitoring');
         }
     }
 
@@ -778,7 +787,7 @@ class ShopifyMonitor {
             const productUrl = `${this.baseUrl}/products/${product.handle}`;
 
             // 🛒 USA VARIANTI GIÀ ESTRATTE e genera link direct-to-cart
-            let variantsField = { name: '🔗 Link Prodotto', value: `[Visualizza pagina](${productUrl})`, inline: false };
+            let variantsField = null;
             
             if (product.variants && product.variants.length > 0) {
                 // Ha varianti estratte con PREZZO!
@@ -790,25 +799,17 @@ class ShopifyMonitor {
                 }).join('\n');
                 
                 variantsField = {
-                    name: `👟 Taglie Disponibili (${product.variants.length})`,
-                    value: variantLinks || `[Visualizza pagina prodotto](${productUrl})`,
-                    inline: false
-                };
-            } else if (product.status === 'ONLINE') {
-                // Prodotto ONLINE ma nessuna variante estratta (fallback)
-                variantsField = {
-                    name: '🛒 Acquista',
-                    value: `[Aggiungi al carrello](${productUrl})`,
+                    name: `👟 Taglie (${product.variants.length})`,
+                    value: variantLinks,
                     inline: false
                 };
             }
             
             const embed = {
+                title: product.title,
                 url: productUrl,
                 color: 0x10b981,
-                fields: [
-                    variantsField
-                ],
+                fields: variantsField ? [variantsField] : [],
                 image: {
                     url: product.images && product.images[0] ? product.images[0].src : null
                 },
@@ -816,7 +817,6 @@ class ShopifyMonitor {
             };
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}>`,
                 embeds: [embed]
             });
 
