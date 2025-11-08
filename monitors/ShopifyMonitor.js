@@ -35,9 +35,9 @@ class ShopifyMonitor {
         // Filtro prodotto opzionale (es: "AIR JORDAN 1")
         this.productFilter = config.productFilter || config.name || '';
         
-        // Tracking notifiche heartbeat (ogni 2 ore)
+        // Tracking notifiche heartbeat (ogni 1.5 ore)
         this.lastHeartbeatTime = null;
-        this.heartbeatInterval = 2 * 60 * 60 * 1000; // 2 ore in ms
+        this.heartbeatInterval = 90 * 60 * 1000; // 1.5 ore in ms (90 minuti)
         
         // Flag per notifica iniziale
         this.initialNotificationSent = false;
@@ -261,12 +261,39 @@ class ShopifyMonitor {
                     title = el.textContent.trim();
                 }
                 
+                // 🆕 ESTRAI IMMAGINE
+                let imageUrl = null;
+                if (img) {
+                    // Prova src, data-src, srcset
+                    imageUrl = img.src || img.getAttribute('data-src') || null;
+                    if (!imageUrl && img.srcset) {
+                        const srcsetMatch = img.srcset.match(/https?:\/\/[^\s]+/);
+                        if (srcsetMatch) imageUrl = srcsetMatch[0];
+                    }
+                }
+                
+                // 🆕 RILEVA STATUS dal testo (SOON, SOLD OUT, ecc)
+                let status = 'ONLINE'; // Default
+                const parentText = el.closest('.product-item, .product-card, .grid-item, .product')?.textContent?.toLowerCase() || '';
+                const linkText = el.textContent.toLowerCase();
+                const combinedText = parentText + ' ' + linkText;
+                
+                if (combinedText.includes('soon') || combinedText.includes('coming soon')) {
+                    status = 'SOON';
+                } else if (combinedText.includes('sold out') || combinedText.includes('soldout') || combinedText.includes('unavailable')) {
+                    status = 'SOLD OUT';
+                } else if (combinedText.includes('in stock') || combinedText.includes('available') || combinedText.includes('buy now')) {
+                    status = 'ONLINE';
+                }
+                
                 // Crea oggetto prodotto simile a Shopify API
                 productsMap.set(handle, {
                     id: handle, // Usa handle come ID
                     handle: handle,
                     title: title || handle,
-                    url: href
+                    url: href,
+                    image: imageUrl,
+                    status: status
                 });
             });
             
@@ -474,6 +501,7 @@ class ShopifyMonitor {
 
     /**
      * 📢 NOTIFICA 1: Monitor avviato correttamente con lista prodotti trovati
+     * 🆕 Mostra foto e status per ogni prodotto
      */
     async notifyMonitorStarted(allProducts, filteredProducts) {
         if (!this.discordWebhook) {
@@ -484,15 +512,11 @@ class ShopifyMonitor {
         console.log(`[Shopify] 📢 Preparazione embed Discord per ${filteredProducts.length} prodotti...`);
 
         try {
-            // Lista primi 10 prodotti (per evitare messaggi troppo lunghi)
-            const productsList = filteredProducts.slice(0, 10).map((p, idx) => 
-                `${idx + 1}. **${p.title}**`
-            ).join('\n');
-
-            const moreProducts = filteredProducts.length > 10 ? 
-                `\n... e altri ${filteredProducts.length - 10} prodotti` : '';
-
-            const embed = {
+            // 🆕 CREA EMBEDS MULTIPLI - uno per ogni prodotto (max 5 per non spam)
+            const embeds = [];
+            
+            // Embed principale con riepilogo
+            const mainEmbed = {
                 title: '✅ MONITOR AVVIATO CON SUCCESSO',
                 description: `Monitor Shopify attivo su **${this.baseUrl}**`,
                 color: 0x10b981, // Verde
@@ -503,21 +527,16 @@ class ShopifyMonitor {
                         inline: false
                     },
                     {
-                        name: '📊 Prodotti Totali Trovati',
-                        value: `${allProducts.length} prodotti`,
+                        name: '📊 Prodotti Totali',
+                        value: `${allProducts.length} prodotti trovati`,
                         inline: true
                     },
                     {
-                        name: '🎯 Prodotti Matchano Filtro',
+                        name: '🎯 Filtro Keywords',
                         value: this.productFilter ? 
-                            `${filteredProducts.length} prodotti (keyword: "${this.productFilter}")` :
-                            `${filteredProducts.length} prodotti (nessun filtro)`,
-                        inline: false
-                    },
-                    {
-                        name: '📦 Prodotti Tracciati',
-                        value: productsList + moreProducts || 'Nessuno',
-                        inline: false
+                            `"${this.productFilter}" → ${filteredProducts.length} prodotti` :
+                            `Nessun filtro → ${filteredProducts.length} prodotti`,
+                        inline: true
                     },
                     {
                         name: '⏱️ Intervallo Check',
@@ -525,24 +544,71 @@ class ShopifyMonitor {
                         inline: true
                     },
                     {
-                        name: '🔔 Notifiche',
-                        value: 'Riceverai notifiche per nuovi prodotti!',
+                        name: '� Heartbeat',
+                        value: 'Ogni 1.5 ore (verifica monitor attivo)',
                         inline: true
                     }
                 ],
                 timestamp: new Date().toISOString(),
                 footer: {
-                    text: 'Shappa Shopify Monitor'
+                    text: `Shappa Monitor • Check #${this.checksCount}`
                 }
             };
+            embeds.push(mainEmbed);
 
-            console.log(`[Shopify] 🌐 Invio richiesta a Discord webhook...`);
+            // 🆕 Aggiungi embeds per ogni prodotto (max 5)
+            const topProducts = filteredProducts.slice(0, 5);
+            for (const product of topProducts) {
+                // Emoji status
+                let statusEmoji = '🟢';
+                let statusColor = 0x10b981; // Verde default
+                if (product.status === 'SOON') {
+                    statusEmoji = '🔜';
+                    statusColor = 0xf59e0b; // Arancione
+                } else if (product.status === 'SOLD OUT') {
+                    statusEmoji = '🔴';
+                    statusColor = 0xef4444; // Rosso
+                }
+
+                const productEmbed = {
+                    title: `${statusEmoji} ${product.title}`,
+                    url: product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`,
+                    color: statusColor,
+                    fields: [
+                        {
+                            name: '📊 Status',
+                            value: `**${product.status}**`,
+                            inline: true
+                        },
+                        {
+                            name: '🔗 Handle',
+                            value: product.handle,
+                            inline: true
+                        }
+                    ],
+                    thumbnail: product.image ? { url: product.image } : null,
+                    timestamp: new Date().toISOString()
+                };
+                embeds.push(productEmbed);
+            }
+
+            // Messaggio se ci sono più prodotti
+            if (filteredProducts.length > 5) {
+                const remainingEmbed = {
+                    description: `... e altri **${filteredProducts.length - 5} prodotti** monitorati`,
+                    color: 0x6366f1
+                };
+                embeds.push(remainingEmbed);
+            }
+
+            console.log(`[Shopify] 🌐 Invio richiesta a Discord webhook con ${embeds.length} embeds...`);
+
             await axios.post(this.discordWebhook, {
-                content: `🚀 **MONITOR INIZIALIZZATO**`,
-                embeds: [embed]
+                content: `<@${this.userId}> 🚀 **Monitor avviato!**`,
+                embeds: embeds
             });
 
-            console.log(`[Shopify] ✅ Notifica START inviata con successo a Discord!`);
+            console.log(`[Shopify] ✅ Notifica START inviata con successo (${embeds.length} embeds)`);
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore notifica start:`, error.message);
@@ -553,22 +619,26 @@ class ShopifyMonitor {
     }
 
     /**
-     * 💓 NOTIFICA 2: Heartbeat ogni 2 ore (monitor funziona ancora)
+     * � NOTIFICA 2: Heartbeat ogni 1.5 ore (monitor funziona ancora)
+     * 🆕 NON all'inizio, solo dopo 1.5 ore
      */
     async checkAndSendHeartbeat() {
         if (!this.discordWebhook) return;
 
         const now = Date.now();
         
-        // Invia solo se sono passate 2 ore dall'ultimo heartbeat
-        if (this.lastHeartbeatTime && (now - this.lastHeartbeatTime < this.heartbeatInterval)) {
+        // 🆕 Cambiato da 2 ore a 1.5 ore (90 minuti)
+        const heartbeatInterval = 90 * 60 * 1000; // 1.5 ore in ms
+        
+        // Invia solo se sono passate 1.5 ore dall'ultimo heartbeat
+        if (this.lastHeartbeatTime && (now - this.lastHeartbeatTime < heartbeatInterval)) {
             return; // Non è ancora ora
         }
 
         try {
             this.lastHeartbeatTime = now;
 
-            const uptime = Math.floor((now - (this.lastHeartbeatTime - this.heartbeatInterval)) / 60000); // minuti
+            const uptime = Math.floor((now - (this.lastHeartbeatTime - heartbeatInterval)) / 60000); // minuti
             
             const embed = {
                 title: '💓 MONITOR ATTIVO',
