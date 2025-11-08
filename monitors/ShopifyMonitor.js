@@ -35,9 +35,9 @@ class ShopifyMonitor {
         // Filtro prodotto opzionale (es: "AIR JORDAN 1")
         this.productFilter = config.productFilter || config.name || '';
         
-        // Tracking notifiche heartbeat (ogni 1.5 ore)
+        // Tracking notifiche heartbeat (ogni 2 ore)
         this.lastHeartbeatTime = null;
-        this.heartbeatInterval = 90 * 60 * 1000; // 1.5 ore in ms (90 minuti)
+        this.heartbeatInterval = 120 * 60 * 1000; // 2 ore in ms (120 minuti)
         
         // Flag per notifica iniziale
         this.initialNotificationSent = false;
@@ -45,6 +45,11 @@ class ShopifyMonitor {
         // Estrai handle dal URL
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
+        
+        // 🎯 DROP HOURS - Orari emblematici per check intensivi
+        this.dropHours = config.dropHours || [6, 10, 12, 14, 18, 20, 22]; // Default: 6 AM, 10 AM, 12 PM, 2 PM, 6 PM, 8 PM, 10 PM
+        this.intensiveCheckDuration = 45; // Minuti di check intensivi dopo drop hour
+        this.intensiveCheckInterval = 30; // Secondi tra check intensivi
     }
 
     /**
@@ -67,21 +72,66 @@ class ShopifyMonitor {
     }
 
     /**
-     * Avvia monitor
+     * Determina intervallo check in base all'orario
+     * Ritorna intervallo in millisecondi
+     */
+    getCurrentCheckInterval() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // Controlla se siamo in una "drop hour window" (es: 6:00-6:45)
+        for (const dropHour of this.dropHours) {
+            const minutesSinceDropHour = (currentHour - dropHour) * 60 + currentMinute;
+            
+            // Se siamo tra dropHour e dropHour + intensiveCheckDuration minuti
+            if (minutesSinceDropHour >= 0 && minutesSinceDropHour < this.intensiveCheckDuration) {
+                // Check INTENSIVO ogni 30 secondi
+                return this.intensiveCheckInterval * 1000;
+            }
+        }
+        
+        // Check NORMALE ogni N minuti
+        return this.interval * 60 * 1000;
+    }
+
+    /**
+     * Avvia monitor con timing intelligente
      */
     async start() {
         if (this.isRunning) return;
         
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
+        console.log(`[Shopify] ⏰ Drop hours configurate: ${this.dropHours.join(', ')}:00`);
         this.isRunning = true;
 
         // Primo check immediato (invierà notifica iniziale)
         await this.check();
 
-        // Polling ogni N minuti
-        this.intervalId = setInterval(() => {
-            this.check();
-        }, this.interval * 60 * 1000);
+        // Sistema di check DINAMICO
+        const dynamicCheck = async () => {
+            if (!this.isRunning) return;
+            
+            const interval = this.getCurrentCheckInterval();
+            const isIntensive = interval === this.intensiveCheckInterval * 1000;
+            
+            if (isIntensive && !this.lastIntensiveLog) {
+                console.log(`[Shopify] 🔥 MODALITÀ INTENSIVA ATTIVATA - Check ogni ${this.intensiveCheckInterval}s`);
+                this.lastIntensiveLog = true;
+            } else if (!isIntensive && this.lastIntensiveLog) {
+                console.log(`[Shopify] 💤 Modalità normale - Check ogni ${this.interval} min`);
+                this.lastIntensiveLog = false;
+            }
+            
+            await this.check();
+            
+            // Schedule prossimo check con intervallo dinamico
+            this.intervalId = setTimeout(dynamicCheck, interval);
+        };
+        
+        // Avvia ciclo
+        const firstInterval = this.getCurrentCheckInterval();
+        this.intervalId = setTimeout(dynamicCheck, firstInterval);
     }
 
     /**
@@ -401,16 +451,19 @@ class ShopifyMonitor {
         }
 
         try {
-            // Prepara info varianti
-            const variantsList = variants.map(v => {
+            // 🛒 GENERA LINK DIRECT-TO-CART per ogni variante
+            const variantLinks = variants.map(v => {
                 const price = (v.price / 100).toFixed(2);
-                return `• **${v.title}** - $${price}${v.inventory_quantity ? ` (${v.inventory_quantity} in stock)` : ''}`;
+                const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
+                const stockInfo = v.inventory_quantity ? ` (${v.inventory_quantity} disponibili)` : '';
+                return `🛒 [**${v.title}** - $${price}${stockInfo}](${cartUrl})`;
             }).join('\n');
 
             const embed = {
                 title: `🚨 ${product.title} DISPONIBILE!`,
                 url: this.productUrl,
                 color: 0x10b981,
+                description: `**CLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO** 👇`,
                 fields: [
                     {
                         name: '💰 Prezzo',
@@ -423,13 +476,8 @@ class ShopifyMonitor {
                         inline: true
                     },
                     {
-                        name: '🎨 Dettagli Varianti',
-                        value: variantsList || 'N/A',
-                        inline: false
-                    },
-                    {
-                        name: '🔗 Link Diretto',
-                        value: `[Acquista ora](${this.productUrl})`,
+                        name: '🛒 Link Direct-to-Cart',
+                        value: variantLinks || 'N/A',
                         inline: false
                     }
                 ],
@@ -438,19 +486,18 @@ class ShopifyMonitor {
                 },
                 timestamp: new Date().toISOString(),
                 footer: {
-                    text: 'Shappa Shopify Monitor'
+                    text: '🚀 Shappa Shopify Monitor - Click size to add to cart!'
                 }
             };
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> **ALERT SHOPIFY!**`,
+                content: `<@${this.userId}> **🔥 DROP ALERT!**`,
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] ✅ Notifica Discord inviata`);
-
+            console.log(`[Shopify] ✅ Notifica Discord inviata con ${variants.length} link direct-to-cart`);
         } catch (error) {
-            console.error(`[Shopify] ❌ Errore Discord:`, error.message);
+            console.error(`[Shopify] ❌ Errore invio notifica Discord:`, error.message);
         }
     }
 
@@ -470,38 +517,61 @@ class ShopifyMonitor {
             // Verifica se matcha keywords
             const matchesKeywords = this.productFilter && this.productFilter.trim() ? 
                 product.title.toLowerCase().includes(this.productFilter.toLowerCase()) : 
-                true; // Se no filtro, sempre match
+                true;
 
             const keywordStatus = this.productFilter ? 
                 (matchesKeywords ? 
-                    `✅ **MATCHA KEYWORDS**: "${this.productFilter}"` : 
-                    `❌ Non matcha keywords: "${this.productFilter}"`) :
-                `ℹ️ Nessun filtro keywords impostato`;
+                    `MATCHA KEYWORDS: "${this.productFilter}"` : 
+                    `Non matcha keywords: "${this.productFilter}"`) :
+                `Nessun filtro keywords impostato`;
+
+            // ESTRAI VARIANTI E GENERA LINK DIRECT-TO-CART
+            let variantsField = { name: 'Link Prodotto', value: `[Visualizza pagina](${productUrl})`, inline: false };
+            
+            try {
+                // Carica dati completi prodotto per avere varianti
+                const response = await axios.get(`${productUrl}.js`);
+                const fullProduct = response.data;
+                
+                if (fullProduct.variants && fullProduct.variants.length > 0) {
+                    const availableVariants = fullProduct.variants.filter(v => v.available);
+                    
+                    if (availableVariants.length > 0) {
+                        const variantLinks = availableVariants.map(v => {
+                            const price = (v.price / 100).toFixed(2);
+                            const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
+                            const stockInfo = v.inventory_quantity > 0 ? ` (${v.inventory_quantity} disponibili)` : '';
+                            return `[**${v.title}** - $${price}${stockInfo}](${cartUrl})`;
+                        }).join('\n');
+                        
+                        variantsField = {
+                            name: 'Link Direct-to-Cart - CLICCA TAGLIA',
+                            value: variantLinks,
+                            inline: false
+                        };
+                    } else {
+                        variantsField.value = 'Tutte le varianti sold out - [Vedi prodotto](${productUrl})';
+                    }
+                }
+            } catch (err) {
+                console.error(`[Shopify] Errore fetch varianti:`, err.message);
+            }
 
             const embed = {
-                title: `🆕 NUOVO PRODOTTO TROVATO!`,
+                title: `NUOVO PRODOTTO TROVATO!`,
                 url: productUrl,
-                color: matchesKeywords ? 0x10b981 : 0xf59e0b, // Verde se matcha, arancione altrimenti
-                description: `**${product.title}**`,
+                color: matchesKeywords ? 0x10b981 : 0xf59e0b,
+                description: `**${product.title}**\n\nCLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO`,
                 fields: [
                     {
-                        name: '🎯 Verifica Keywords',
+                        name: 'Verifica Keywords',
                         value: keywordStatus,
                         inline: false
                     },
+                    variantsField,
                     {
-                        name: '🌐 URL Prodotto',
-                        value: product.url.startsWith('http') ? product.url : productUrl,
-                        inline: false
-                    },
-                    {
-                        name: '🔗 Link Diretto',
-                        value: `[🛒 ACQUISTA ORA](${productUrl})`,
-                        inline: false
-                    },
-                    {
-                        name: '� Stato Monitor',
-                        value: '🛑 **Monitor stoppato automaticamente** (prodotto trovato!)',
+                        name: 'Stato Monitor',
+                        value: 'Monitor stoppato automaticamente (prodotto trovato!)',
                         inline: false
                     }
                 ],
@@ -510,23 +580,23 @@ class ShopifyMonitor {
                 },
                 timestamp: new Date().toISOString(),
                 footer: {
-                    text: `Shappa Monitor • Prodotto #${this.checksCount}`
+                    text: `Shappa Monitor - Click size to add to cart!`
                 }
             };
 
             await axios.post(this.discordWebhook, {
                 content: matchesKeywords ? 
-                    `<@${this.userId}> 🎉🎉🎉 **PRODOTTO TROVATO CON KEYWORDS!** 🎉🎉🎉` :
-                    `<@${this.userId}> � **Nuovo prodotto rilevato**`,
+                    `<@${this.userId}> DROP ALERT! PRODOTTO CON KEYWORDS!` :
+                    `<@${this.userId}> Nuovo prodotto rilevato`,
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] ✅ Notifica NUOVO PRODOTTO inviata: ${product.title} (matcha: ${matchesKeywords})`);
+            console.log(`[Shopify] Notifica NUOVO PRODOTTO inviata: ${product.title} (matcha: ${matchesKeywords})`);
 
         } catch (error) {
-            console.error(`[Shopify] ❌ Errore notifica nuovo prodotto:`, error.message);
+            console.error(`[Shopify] Errore notifica nuovo prodotto:`, error.message);
             if (error.response) {
-                console.error(`[Shopify] ❌ Discord response:`, error.response.status, error.response.data);
+                console.error(`[Shopify] Discord response:`, error.response.status, error.response.data);
             }
         }
     }
