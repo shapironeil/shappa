@@ -318,7 +318,12 @@ class ShopifyMonitor {
      * STRATEGIA NUOVA: Naviga pagina HTML reale, NON API JSON (Cloudflare blocca API)
      */
     async checkAllProducts(page) {
-        // 🔧 FIX: Se productUrl è homepage, usa quella; altrimenti prova /collections/all
+        // � STATUS: Passa a Monitoring SUBITO (mentre cerca prodotti)
+        if (this.checksCount >= 1) {
+            await this.updateMonitorStatus('🔍 Monitoring...', 'monitoring');
+        }
+        
+        // �🔧 FIX: Se productUrl è homepage, usa quella; altrimenti prova /collections/all
         let targetUrl = this.productUrl;
         
         // Se URL finisce con /, è homepage diretta
@@ -782,8 +787,18 @@ class ShopifyMonitor {
                 };
             }
             
-            // 🖼️ Determina URL immagine (priorità: images array, poi image singolo)
-            const imageUrl = product.images && product.images[0] ? product.images[0].src : (product.image || null);
+            // 🖼️ Determina URL immagine (gestisci vari formati)
+            let imageUrl = null;
+            
+            if (product.images && product.images.length > 0) {
+                const firstImage = product.images[0];
+                // Formato: { src: "url" } oppure stringa diretta
+                imageUrl = typeof firstImage === 'string' ? firstImage : (firstImage.src || firstImage);
+            } else if (product.image) {
+                imageUrl = product.image;
+            }
+            
+            console.log(`[Shopify] 🖼️ URL immagine per ${product.title}: ${imageUrl ? imageUrl.substring(0, 80) : 'NESSUNA'}`);
             
             const embed = {
                 title: product.title,
@@ -794,8 +809,11 @@ class ShopifyMonitor {
             };
             
             // ✅ Aggiungi immagine SOLO se URL valido (Discord non accetta null)
-            if (imageUrl && imageUrl.startsWith('http')) {
+            if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('http')) {
                 embed.image = { url: imageUrl };
+                console.log(`[Shopify] ✅ Immagine aggiunta all'embed Discord`);
+            } else {
+                console.log(`[Shopify] ⚠️ Nessuna immagine valida da aggiungere`);
             }
 
             await axios.post(this.discordWebhook, {
