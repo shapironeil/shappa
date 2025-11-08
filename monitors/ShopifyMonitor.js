@@ -455,52 +455,63 @@ class ShopifyMonitor {
 
         console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina (cliccabili + non cliccabili)`);
 
-        // 🔍 VERIFICA STATUS + ESTRAI VARIANTI usando Shopify API (.js endpoint)
+        // 🔍 VERIFICA STATUS + ESTRAI VARIANTI navigando pagina prodotto
         for (const product of products) {
             if (product.status === 'UNKNOWN' && product.url) {
-                console.log(`[Shopify] 🔍 API check per: ${product.title}`);
+                console.log(`[Shopify] 🔍 Check per: ${product.title}`);
                 try {
-                    // Estrai handle dall'URL (es. /products/jacket-name → jacket-name)
-                    const handle = product.url.replace('/products/', '').split('?')[0];
-                    const apiUrl = `${this.baseUrl}/products/${handle}.js`;
+                    const productPage = await this.browser.newPage();
+                    const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
                     
-                    // Fetch JSON da Shopify API usando axios (bypass Cloudflare)
-                    const response = await axios.get(apiUrl, {
-                        headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                            'Accept': 'application/json'
-                        },
-                        timeout: 10000
+                    await productPage.goto(fullUrl, { 
+                        waitUntil: 'domcontentloaded', 
+                        timeout: 15000 
                     });
                     
-                    const productData = response.data;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Estrai JSON dal tag <script> della pagina
+                    const productData = await productPage.evaluate(() => {
+                        // Cerca script con JSON prodotto
+                        const script = document.querySelector('script.js-product-json, script[type="application/json"][data-product-json]');
+                        if (script) {
+                            try {
+                                return JSON.parse(script.textContent);
+                            } catch (e) {
+                                console.error('Parse error:', e);
+                            }
+                        }
+                        return null;
+                    });
+                    
+                    await productPage.close();
                     
                     if (productData && productData.variants) {
-                        // ✅ ESTRAI VARIANTI CON DISPONIBILITÀ dal JSON
+                        // ✅ ESTRAI VARIANTI CON DISPONIBILITÀ
                         const variants = productData.variants.map(v => ({
                             id: v.id.toString(),
-                            title: (v.title || v.option1 || 'Default').toUpperCase(),
-                            price: v.price || 0, // Prezzo in centesimi
+                            title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
+                            price: v.price || 0,
                             available: v.available || false
                         }));
                         
                         product.variants = variants;
                         
-                        // Determina status: ONLINE se almeno UNA variante disponibile
+                        // ONLINE se almeno UNA variante disponibile
                         const hasAvailable = variants.some(v => v.available);
                         product.status = hasAvailable ? 'ONLINE' : 'SOON';
                         
                         const availableCount = variants.filter(v => v.available).length;
-                        console.log(`[Shopify] ✅ ${product.title} → ${product.status} (${availableCount}/${variants.length} taglie disponibili)`);
+                        console.log(`[Shopify] ✅ ${product.title} → ${product.status} (${availableCount}/${variants.length} disponibili)`);
                     } else {
                         product.status = 'SOON';
                         product.variants = [];
-                        console.log(`[Shopify] ⚠️ ${product.title} → Nessun dato API`);
+                        console.log(`[Shopify] ⚠️ ${product.title} → Nessun JSON trovato`);
                     }
                     
                 } catch (error) {
-                    console.error(`[Shopify] ⚠️ Errore API ${product.title}: ${error.message}`);
-                    product.status = 'SOON'; // Fallback
+                    console.error(`[Shopify] ⚠️ Errore ${product.title}: ${error.message}`);
+                    product.status = 'SOON';
                     product.variants = [];
                 }
             }
@@ -599,33 +610,42 @@ class ShopifyMonitor {
                     console.log(`[Shopify] 🔍 Estraggo varianti API per: ${product.title}`);
                     
                     try {
-                        const handle = product.url.replace('/products/', '').split('?')[0];
-                        const apiUrl = `${this.baseUrl}/products/${handle}.js`;
+                        const productPage = await this.browser.newPage();
+                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
                         
-                        // Usa axios invece di Puppeteer
-                        const response = await axios.get(apiUrl, {
-                            headers: {
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                'Accept': 'application/json'
-                            },
-                            timeout: 10000
+                        await productPage.goto(fullUrl, { 
+                            waitUntil: 'domcontentloaded', 
+                            timeout: 15000 
                         });
                         
-                        const productData = response.data;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // Estrai JSON dal tag <script>
+                        const productData = await productPage.evaluate(() => {
+                            const script = document.querySelector('script.js-product-json, script[type="application/json"][data-product-json]');
+                            if (script) {
+                                try {
+                                    return JSON.parse(script.textContent);
+                                } catch (e) { return null; }
+                            }
+                            return null;
+                        });
+                        
+                        await productPage.close();
                         
                         if (productData && productData.variants) {
                             product.variants = productData.variants.map(v => ({
                                 id: v.id.toString(),
-                                title: (v.title || v.option1 || 'Default').toUpperCase(),
+                                title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
                                 price: v.price || 0,
                                 available: v.available || false
                             }));
                             
-                            console.log(`[Shopify] ✅ API: ${product.variants.length} varianti estratte per ${product.title}`);
+                            console.log(`[Shopify] ✅ ${product.variants.length} varianti estratte per ${product.title}`);
                         }
                         
                     } catch (err) {
-                        console.error(`[Shopify] ❌ Errore API varianti: ${err.message}`);
+                        console.error(`[Shopify] ❌ Errore varianti: ${err.message}`);
                         product.variants = [];
                     }
                 }
@@ -926,24 +946,33 @@ class ShopifyMonitor {
                 if (product.status === 'ONLINE' && product.url) {
                     // USA API .js per estrarre varianti (più veloce e affidabile)
                     try {
-                        const handle = product.url.replace('/products/', '').split('?')[0];
-                        const apiUrl = `${this.baseUrl}/products/${handle}.js`;
+                        const productPage = await this.browser.newPage();
+                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
                         
-                        // Usa axios invece di Puppeteer
-                        const response = await axios.get(apiUrl, {
-                            headers: {
-                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                                'Accept': 'application/json'
-                            },
-                            timeout: 10000
+                        await productPage.goto(fullUrl, { 
+                            waitUntil: 'domcontentloaded', 
+                            timeout: 10000 
                         });
                         
-                        const productData = response.data;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // Estrai JSON dal tag <script>
+                        const productData = await productPage.evaluate(() => {
+                            const script = document.querySelector('script.js-product-json, script[type="application/json"][data-product-json]');
+                            if (script) {
+                                try {
+                                    return JSON.parse(script.textContent);
+                                } catch (e) { return null; }
+                            }
+                            return null;
+                        });
+                        
+                        await productPage.close();
                         
                         if (productData && productData.variants) {
                             const variants = productData.variants.map(v => ({
                                 id: v.id.toString(),
-                                title: (v.title || v.option1 || 'Default').toUpperCase(),
+                                title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
                                 price: v.price || 0,
                                 available: v.available || false
                             }));
