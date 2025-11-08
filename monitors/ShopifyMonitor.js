@@ -472,26 +472,36 @@ class ShopifyMonitor {
                     
                     // Controlla se prodotto è ONLINE (ha bottone Add to Cart)
                     const isOnline = await checkPage.evaluate(() => {
-                        // Cerca bottoni Add to Cart, form carrello, ecc.
+                        // 1. Cerca bottoni Add to Cart ABILITATI (non disabled)
                         const addToCartButton = document.querySelector(
-                            'button[name="add"], button[type="submit"]:not([disabled]), ' +
-                            'input[type="submit"][name="add"], ' +
-                            '.add-to-cart, [class*="add-to-cart"]'
+                            'button[name="add"]:not([disabled]), ' +
+                            'button[type="submit"]:not([disabled]), ' +
+                            'input[type="submit"][name="add"]:not([disabled]), ' +
+                            '.add-to-cart:not([disabled]), ' +
+                            '[class*="add-to-cart"]:not([disabled])'
                         );
                         
+                        // 2. Cerca form carrello (Shopify standard)
                         const cartForm = document.querySelector('form[action*="/cart"]');
                         
-                        // Cerca anche testo "Add to Cart" nei bottoni
-                        const buttons = document.querySelectorAll('button, input[type="submit"], .btn, [class*="button"]');
-                        let hasAddText = false;
-                        buttons.forEach(btn => {
+                        // 3. Cerca bottoni con testo "Add to Cart" ABILITATI
+                        const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], .btn, [class*="button"]'));
+                        const enabledAddToCartButton = buttons.find(btn => {
                             const text = btn.textContent.toLowerCase();
-                            if (text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|order\s*now|shop\s*now/)) {
-                                hasAddText = true;
-                            }
+                            const isDisabled = btn.disabled || btn.hasAttribute('disabled');
+                            const hasAddToCartText = text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|shop\s*now/);
+                            const hasSoonText = text.match(/coming\s*soon|notify\s*me|sold\s*out|unavailable/);
+                            
+                            // Deve avere testo "Add to Cart" E NON essere disabilitato E NON avere testo "Soon"
+                            return hasAddToCartText && !isDisabled && !hasSoonText;
                         });
                         
-                        return !!(addToCartButton || cartForm || hasAddText);
+                        // 4. Verifica che NON ci siano messaggi "Coming Soon" o "Sold Out"
+                        const pageText = document.body.textContent.toLowerCase();
+                        const hasSoonMessage = pageText.includes('coming soon') || pageText.includes('notify me when available');
+                        
+                        // ONLINE solo se: Ha bottone abilitato O form carrello E NON ha messaggi "Soon"
+                        return (addToCartButton || cartForm || enabledAddToCartButton) && !hasSoonMessage;
                     });
                     
                     await checkPage.close();
@@ -694,18 +704,15 @@ class ShopifyMonitor {
                 // Invia notifica con varianti
                 const notificationSuccess = await this.notifyNewProduct(product);
                 
-                // 🎯 AUTO-STOP: Se notifica completa inviata con successo, ferma monitor
+                // ✅ NO AUTO-STOP: Monitor continua anche quando trova ONLINE
+                // User stoppa manualmente dalla UI quando non serve più
                 if (notificationSuccess && product.status === 'ONLINE' && product.variants && product.variants.length > 0) {
-                    console.log(`[Shopify] 🎯 MISSIONE COMPIUTA! Notifica completa inviata con:`);
+                    console.log(`[Shopify] ✅ Notifica ONLINE inviata con:`);
                     console.log(`[Shopify]    ✅ Foto: ${product.image ? 'SI' : 'NO'}`);
                     console.log(`[Shopify]    ✅ Titolo: ${product.title}`);
                     console.log(`[Shopify]    ✅ Status: ${product.status}`);
                     console.log(`[Shopify]    ✅ Taglie: ${product.variants.length} link direct-to-cart`);
-                    console.log(`[Shopify] 🛑 STOP AUTOMATICO + ELIMINAZIONE TASK`);
-                    
-                    // Ferma il monitor + Elimina task dalla tabella
-                    await this.stop(true); // deleteInterest = true
-                    return; // Esci dal loop
+                    console.log(`[Shopify] � Monitor continua (user stoppa manualmente)`);
                 }
                 
                 // Delay tra notifiche
