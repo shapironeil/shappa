@@ -272,18 +272,50 @@ class ShopifyMonitor {
                     }
                 }
                 
-                // 🆕 RILEVA STATUS dal testo (SOON, SOLD OUT, ecc)
-                let status = 'ONLINE'; // Default
-                const parentText = el.closest('.product-item, .product-card, .grid-item, .product')?.textContent?.toLowerCase() || '';
-                const linkText = el.textContent.toLowerCase();
-                const combinedText = parentText + ' ' + linkText;
+                // 🆕 RILEVA STATUS INTELLIGENTE - Cerca in TUTTO il DOM del prodotto
+                let status = null; // Inizialmente null, deve trovarlo
                 
-                if (combinedText.includes('soon') || combinedText.includes('coming soon')) {
-                    status = 'SOON';
-                } else if (combinedText.includes('sold out') || combinedText.includes('soldout') || combinedText.includes('unavailable')) {
+                // 1. Cerca nel parent container del prodotto
+                const productContainer = el.closest('.product-item, .product-card, .grid-item, .product, .grid__item, article, .product-wrap');
+                
+                // 2. Raccoglie TUTTO il testo del container
+                const allText = productContainer ? productContainer.textContent.toLowerCase() : el.textContent.toLowerCase();
+                
+                // 3. Cerca nei badge/button specifici (più affidabile)
+                const badges = productContainer?.querySelectorAll('.badge, .product-badge, .tag, .label, button, .button, .btn, .product-status, .availability') || [];
+                let badgeText = '';
+                badges.forEach(badge => {
+                    badgeText += ' ' + badge.textContent.toLowerCase();
+                });
+                
+                // 4. Combina tutto il testo disponibile
+                const fullText = allText + ' ' + badgeText;
+                
+                // 5. Determina status con PRIORITÀ (più specifico prima)
+                // SOLD OUT = massima priorità
+                if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available/i)) {
                     status = 'SOLD OUT';
-                } else if (combinedText.includes('in stock') || combinedText.includes('available') || combinedText.includes('buy now')) {
+                }
+                // SOON = seconda priorità  
+                else if (fullText.match(/soon|coming\s*soon|pre\s*order|preorder|notify\s*me|not\s*yet|upcoming/i)) {
+                    status = 'SOON';
+                }
+                // ONLINE = terza priorità (deve avere indicatori chiari)
+                else if (fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|in\s*stock|available\s*now|purchase|order\s*now/i)) {
                     status = 'ONLINE';
+                }
+                // Se non trova NULLA di chiaro, cerca nel form (presence = disponibile)
+                else {
+                    const hasForm = productContainer?.querySelector('form[action*="cart"]');
+                    const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], [data-action*="add"]');
+                    
+                    if (hasForm || hasAddButton) {
+                        status = 'ONLINE'; // Ha form carrello = disponibile
+                    } else {
+                        // Ultimo fallback: se proprio non trova nulla, analizza URL
+                        console.log(`[Shopify] ⚠️ Status ambiguo per "${title}", defaulting a SOON`);
+                        status = 'SOON';
+                    }
                 }
                 
                 // Crea oggetto prodotto simile a Shopify API
@@ -627,11 +659,19 @@ class ShopifyMonitor {
 
         const now = Date.now();
         
-        // 🆕 Cambiato da 2 ore a 1.5 ore (90 minuti)
-        const heartbeatInterval = 90 * 60 * 1000; // 1.5 ore in ms
+        // 🆕 Cambiato da 1.5 ore a 2 ore (120 minuti)
+        const heartbeatInterval = 120 * 60 * 1000; // 2 ore in ms
         
-        // Invia solo se sono passate 1.5 ore dall'ultimo heartbeat
-        if (this.lastHeartbeatTime && (now - this.lastHeartbeatTime < heartbeatInterval)) {
+        // ⚠️ IMPORTANTE: NON inviare al primo avvio (lastHeartbeatTime = null)
+        if (!this.lastHeartbeatTime) {
+            // Prima volta: inizializza ma NON inviare
+            this.lastHeartbeatTime = now;
+            console.log(`[Shopify] ⏰ Heartbeat inizializzato, prossima notifica tra 2 ore`);
+            return;
+        }
+        
+        // Invia solo se sono passate 2 ore
+        if (now - this.lastHeartbeatTime < heartbeatInterval) {
             return; // Non è ancora ora
         }
 
