@@ -15,6 +15,7 @@ puppeteer.use(StealthPlugin());
 class ShopifyMonitor {
     constructor(config) {
         this.config = config;
+        this.monitorId = config.id;
         this.productUrl = config.url;
         this.productName = config.name;
         this.interval = config.interval || 5;
@@ -96,6 +97,40 @@ class ShopifyMonitor {
         
         // Check NORMALE ogni 5 minuti
         return this.interval * 60 * 1000;
+    }
+
+    /**
+     * Aggiorna status visibile nella UI
+     */
+    async updateMonitorStatus(statusMessage, statusType = 'monitoring') {
+        try {
+            const fs = require('fs').promises;
+            const path = require('path');
+            
+            // Leggi file interest dell'utente
+            const interestFile = path.join(__dirname, '..', 'data', 'interests', `interests_${this.userId}.json`);
+            
+            try {
+                const data = await fs.readFile(interestFile, 'utf8');
+                const interests = JSON.parse(data);
+                
+                // Trova l'interest corrente
+                const interest = interests.find(i => i.id === this.monitorId);
+                if (interest) {
+                    interest.status = statusType;
+                    interest.statusMessage = statusMessage;
+                    interest.lastUpdate = new Date().toISOString();
+                    
+                    // Salva file aggiornato
+                    await fs.writeFile(interestFile, JSON.stringify(interests, null, 2));
+                    console.log(`[Shopify] 📝 Status aggiornato: ${statusMessage}`);
+                }
+            } catch (err) {
+                // File non esiste ancora, normale per nuovo monitor
+            }
+        } catch (error) {
+            console.error(`[Shopify] ⚠️ Errore aggiornamento status:`, error.message);
+        }
     }
 
     /**
@@ -558,6 +593,7 @@ class ShopifyMonitor {
         if (!this.initialNotificationSent) {
             // 1️⃣ Invia notifica "Monitor avviato"
             console.log(`[Shopify] 📢 Monitor avviato per: ${this.productFilter || 'tutti i prodotti'}`);
+            await this.updateMonitorStatus('🔍 Ricerca prodotti ONLINE...', 'monitoring');
             await this.notifyMonitorStartedSimple();
             this.initialNotificationSent = true;
             
@@ -566,6 +602,7 @@ class ShopifyMonitor {
             
             if (onlineProducts.length > 0) {
                 console.log(`[Shopify] 🎯 TROVATI ${onlineProducts.length} prodotti ONLINE!`);
+                await this.updateMonitorStatus(`✅ ${onlineProducts.length} prodotti ONLINE trovati!`, 'active');
                 
                 // Invia webhook per ogni prodotto
                 for (const product of onlineProducts) {
@@ -574,12 +611,14 @@ class ShopifyMonitor {
                 }
                 
                 console.log(`[Shopify] ✅ Prodotti inviati. CHIUDO MONITOR + ELIMINO TASK.`);
+                await this.updateMonitorStatus('🛑 Prodotti inviati - Monitor completato', 'completed');
                 await this.stop(true); // true = elimina task
                 return;
             }
             
             // 3️⃣ Nessun prodotto ONLINE → Continua monitoraggio
             console.log(`[Shopify] ⏳ Nessun prodotto ONLINE. Continuo a monitorare...`);
+            await this.updateMonitorStatus(`⏳ Nessun prodotto ONLINE - Prossimo check tra ${this.interval}min`, 'monitoring');
             for (const product of filteredProducts) {
                 this.seenProductIds.add(product.id);
                 this.productStates.set(product.id, product.status);
@@ -672,25 +711,26 @@ class ShopifyMonitor {
                 // Invia notifica con varianti
                 const notificationSuccess = await this.notifyNewProduct(product);
                 
-                // ✅ NO AUTO-STOP: Monitor continua anche quando trova ONLINE
-                // User stoppa manualmente dalla UI quando non serve più
                 if (notificationSuccess && product.status === 'ONLINE' && product.variants && product.variants.length > 0) {
-                    console.log(`[Shopify] ✅ Notifica ONLINE inviata con:`);
-                    console.log(`[Shopify]    ✅ Foto: ${product.image ? 'SI' : 'NO'}`);
-                    console.log(`[Shopify]    ✅ Titolo: ${product.title}`);
-                    console.log(`[Shopify]    ✅ Status: ${product.status}`);
-                    console.log(`[Shopify]    ✅ Taglie: ${product.variants.length} link direct-to-cart`);
-                    console.log(`[Shopify]  STOP MONITOR + ELIMINA TASK`);
-                    await this.stop(true);
-                    return;
+                    console.log(`[Shopify] ✅ Notifica ONLINE inviata: ${product.title} (${product.variants.length} taglie)`);
                 }
                 
                 // Delay tra notifiche
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
+            // 🎯 DOPO AVER INVIATO TUTTE LE NOTIFICHE → ELIMINA TASK
+            const onlineProductsSent = productsToNotify.filter(p => p.status === 'ONLINE' && p.variants && p.variants.length > 0);
+            if (onlineProductsSent.length > 0) {
+                console.log(`[Shopify] 🛑 STOP MONITOR: ${onlineProductsSent.length} prodotti ONLINE inviati. ELIMINO TASK.`);
+                await this.updateMonitorStatus(`✅ ${onlineProductsSent.length} prodotti ONLINE inviati!`, 'completed');
+                await this.stop(true); // true = elimina task automaticamente
+                return;
+            }
+            
         } else if (this.checksCount > 1) {
             console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
+            await this.updateMonitorStatus(`⏳ Monitoraggio... Prossimo check tra ${this.interval}min`, 'monitoring');
         }
     }
 
