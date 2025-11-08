@@ -786,32 +786,33 @@ class ShopifyMonitor {
                 return;
             }
             
-        } else {
-            // Nessun prodotto da notificare - mostra countdown accurato
-            if (this.checksCount >= 1 && this.nextCheckInterval) {
-                // ✅ Abilita modalità intensiva dopo il primo check completo
-                if (!this.firstCheckCompleted) {
-                    this.firstCheckCompleted = true;
-                    this.allowIntensiveMode = true;
-                    console.log(`[Shopify] ✅ Primo check completato - modalità intensiva ora disponibile`);
-                }
-                
-                const secondsUntilNext = Math.ceil(this.nextCheckInterval / 1000);
-                
-                // Formatta tempo in modo leggibile per i log
-                let timeText = '';
-                if (secondsUntilNext >= 60) {
-                    const minutes = Math.floor(secondsUntilNext / 60);
-                    const seconds = secondsUntilNext % 60;
-                    timeText = seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes} min`;
-                } else {
-                    timeText = `${secondsUntilNext}s`;
-                }
-                
-                console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${timeText}...`);
-                // USA il nextCheckInterval passato come parametro (già calcolato PRIMA del check)
-                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
+            // Se ci sono prodotti ma NESSUNO è ONLINE (es. tutti SOON), mostra countdown
+            console.log(`[Shopify] ℹ️ Prodotti trovati ma nessuno ONLINE - continuo monitoring`);
+        }
+        
+        // ⏳ SEMPRE mostra countdown dopo ogni check (se non abbiamo stoppato)
+        if (this.checksCount >= 1 && this.nextCheckInterval) {
+            // ✅ Abilita modalità intensiva dopo il primo check completo
+            if (!this.firstCheckCompleted) {
+                this.firstCheckCompleted = true;
+                this.allowIntensiveMode = true;
+                console.log(`[Shopify] ✅ Primo check completato - modalità intensiva ora disponibile`);
             }
+            
+            const secondsUntilNext = Math.ceil(this.nextCheckInterval / 1000);
+            
+            // Formatta tempo in modo leggibile per i log
+            let timeText = '';
+            if (secondsUntilNext >= 60) {
+                const minutes = Math.floor(secondsUntilNext / 60);
+                const seconds = secondsUntilNext % 60;
+                timeText = seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes} min`;
+            } else {
+                timeText = `${secondsUntilNext}s`;
+            }
+            
+            console.log(`[Shopify] ⏳ Nessun nuovo prodotto ONLINE. Prossimo check tra ${timeText}...`);
+            await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
         }
     }
 
