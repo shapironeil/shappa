@@ -632,7 +632,7 @@ class ShopifyMonitor {
                                     
                                     // Il JSON contiene array variants con id, option1, available
                                     if (productData.variants && Array.isArray(productData.variants)) {
-                                        // ✅ ESTRAI TUTTE LE VARIANTI (anche se available=false per SOON)
+                                        // ✅ ESTRAI TUTTE LE VARIANTI con PREZZO (anche se available=false per SOON)
                                         productData.variants.forEach(variant => {
                                             const title = variant.public_title || variant.option1 || 
                                                          variant.options?.join(' - ') || 'Default';
@@ -640,6 +640,7 @@ class ShopifyMonitor {
                                             variantsData.push({
                                                 id: variant.id.toString(),
                                                 title: title.toUpperCase(),
+                                                price: variant.price || 0, // Prezzo in centesimi
                                                 available: variant.available // Info disponibilità
                                             });
                                         });
@@ -817,11 +818,12 @@ class ShopifyMonitor {
             let variantsField = { name: '🔗 Link Prodotto', value: `[Visualizza pagina](${productUrl})`, inline: false };
             
             if (product.variants && product.variants.length > 0) {
-                // Ha varianti estratte!
+                // Ha varianti estratte con PREZZO!
                 const variantLinks = product.variants.map(v => {
                     const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
-                    return `🛒 [**${v.title}**](${cartUrl})`;
-                }).join(' • ');
+                    const price = v.price ? ` - $${(v.price / 100).toFixed(2)}` : '';
+                    return `🛒 [**${v.title}**${price}](${cartUrl})`;
+                }).join('\n');
                 
                 variantsField = {
                     name: `👟 Taglie Disponibili (${product.variants.length})`,
@@ -1018,7 +1020,7 @@ class ShopifyMonitor {
                                     const productData = JSON.parse(productJsonScript.textContent);
                                     
                                     if (productData.variants && Array.isArray(productData.variants)) {
-                                        // ✅ ESTRAI TUTTE LE VARIANTI (anche se available=false per SOON products)
+                                        // ✅ ESTRAI TUTTE LE VARIANTI con PREZZO (anche se available=false per SOON products)
                                         productData.variants.forEach(variant => {
                                             const title = variant.public_title || variant.option1 || 
                                                          variant.options?.join(' - ') || 'Default';
@@ -1026,6 +1028,7 @@ class ShopifyMonitor {
                                             variantsData.push({
                                                 id: variant.id.toString(),
                                                 title: title.toUpperCase(),
+                                                price: variant.price || 0, // Prezzo in centesimi
                                                 available: variant.available // Mantieni info disponibilità
                                             });
                                         });
@@ -1066,12 +1069,13 @@ class ShopifyMonitor {
                         
                         await productPage.close();
                         
-                        // Crea link direct-to-cart
+                        // Crea link direct-to-cart con PREZZO
                         if (variants.length > 0) {
                             variantsText = variants.map(v => {
                                 const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
-                                return `[${v.title}](${cartUrl})`;
-                            }).join(' • ');
+                                const price = v.price ? ` - $${(v.price / 100).toFixed(2)}` : '';
+                                return `🛒 [**${v.title}**${price}](${cartUrl})`;
+                            }).join('\n');
                         }
                         
                         console.log(`[Shopify] ✅ Estratte ${variants.length} varianti per ${product.title}`);
