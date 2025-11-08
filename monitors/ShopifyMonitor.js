@@ -91,15 +91,21 @@ class ShopifyMonitor {
         const now = new Date();
         const currentMinute = now.getMinutes();
         
-        // Calcola inizio finestra intensiva (multiplo di this.interval)
-        const windowStart = Math.floor(currentMinute / this.interval) * this.interval;
-        const isIntensiveWindow = (currentMinute >= windowStart && currentMinute < (windowStart + this.intensiveCheckDuration));
+        // 🎯 FINESTRE INTENSIVE FISSE (3 per ora):
+        // - 0-4 minuti (inizio ora)
+        // - 30-34 minuti (metà ora)
+        // - 45-47 minuti (un quarto prima della fine)
+        const isIntensiveWindow = 
+            (currentMinute >= 0 && currentMinute < 4) ||
+            (currentMinute >= 30 && currentMinute < 34) ||
+            (currentMinute >= 45 && currentMinute < 48);
         
         // ✅ Se siamo in una finestra intensiva E il primo check è stato completato, attiva modalità intensiva
         if (isIntensiveWindow && this.firstCheckCompleted) {
             if (!this.allowIntensiveMode) {
                 this.allowIntensiveMode = true;
-                console.log(`[Shopify] 🔥 Finestra intensiva raggiunta - attivo modalità intensiva per ${this.intensiveCheckDuration} min`);
+                const windowName = currentMinute < 4 ? '0-4' : (currentMinute < 34 ? '30-34' : '45-47');
+                console.log(`[Shopify] 🔥 Finestra intensiva ${windowName} raggiunta - attivo check rapidi`);
             }
             // Check INTENSIVO ogni 25-30s random
             const randomSeconds = Math.floor(Math.random() * 6) + 25; // 25-30s
@@ -112,9 +118,8 @@ class ShopifyMonitor {
             console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle`);
         }
         
-        // Check IDLE: attendi fino alla prossima finestra intensiva
-        const minutesUntilNextWindow = this.interval - (currentMinute % this.interval);
-        return minutesUntilNextWindow * 60 * 1000;
+        // Check IDLE: usa l'intervallo configurato dall'utente (default 5 min)
+        return this.idleCheckInterval * 60 * 1000;
     }
 
     /**
@@ -170,8 +175,8 @@ class ShopifyMonitor {
         if (this.isRunning) return;
         
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
-        console.log(`[Shopify] ⏰ Finestre intensive: Ogni ${this.interval} min per ${this.intensiveCheckDuration} min (check ogni 25-30s random)`);
-        console.log(`[Shopify] 💤 Check idle: Ogni ${this.idleCheckInterval} min tra le finestre`);
+        console.log(`[Shopify] ⏰ Finestre intensive fisse: 0-4, 30-34, 45-47 minuti (check ogni 25-30s random)`);
+        console.log(`[Shopify] 💤 Check idle: Ogni ${this.idleCheckInterval} min fuori dalle finestre`);
         
         // Status: STARTING
         await this.updateMonitorStatus('🚀 Starting...', 'starting');
