@@ -346,19 +346,28 @@ class ShopifyMonitor {
                 const badgeText = badge ? badge.textContent.toLowerCase() : '';
                 const fullText = allText + ' ' + badgeText;
                 
-                // Determina status con PRIORITÀ
-                const hasCartIndicators = fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|in\s*stock|available\s*now|purchase|order\s*now|add\s*to\s*basket|shop|quick\s*add/i);
+                // Determina status con PRIORITÀ - VERIFICA REALE ACQUISTABILITÀ
+                
+                // 1️⃣ CONTROLLO ACQUISTO REALE: form carrello O bottone add to cart
                 const hasForm = productContainer?.querySelector('form[action*="cart"], form[action*="/cart"]');
                 const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], button[type="submit"], [data-action*="add"], .add-to-cart, [class*="add-to-cart"]');
+                const hasCartText = fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|purchase|order\s*now|add\s*to\s*basket|quick\s*add/i);
                 
-                if (hasCartIndicators || hasForm || hasAddButton) {
+                // ✅ ONLINE = Solo se ha VERI elementi di acquisto (form/button/testo carrello)
+                if (hasForm || hasAddButton || hasCartText) {
                     status = 'ONLINE';
-                } else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
+                }
+                // ❌ SOLD OUT = Esplicito sold out/unavailable
+                else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
                     status = 'SOLD OUT';
-                } else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
+                }
+                // ⏳ SOON = Esplicito coming soon/notify me/pre-order
+                else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
                     status = 'SOON';
-                } else {
-                    status = 'ONLINE'; // Default per prodotti con link
+                }
+                // 🔍 FALLBACK = Ha link ma nessun indicatore chiaro → Probabilmente SOON
+                else {
+                    status = 'SOON'; // Se ha link ma non ha form/button acquisto = ancora coming soon
                 }
                 
                 productsMap.set(handle, {
@@ -407,13 +416,25 @@ class ShopifyMonitor {
                     imageUrl = img.src || img.getAttribute('data-src') || null;
                 }
                 
-                // Rileva STATUS (prodotti senza link sono sempre SOON o COMING SOON)
+                // Rileva STATUS - VERIFICA ACQUISTABILITÀ REALE
                 const allText = container.textContent.toLowerCase();
                 let status = 'SOON'; // Default per prodotti non cliccabili
                 
-                if (allText.match(/sold\s*out|soldout|esaurito/i)) {
+                // Cerca indicatori di acquisto VERI (form/button/testo carrello)
+                const hasForm = container.querySelector('form[action*="cart"], form[action*="/cart"]');
+                const hasAddButton = container.querySelector('button[name="add"], input[name="add"], button[type="submit"], [data-action*="add"], .add-to-cart, [class*="add-to-cart"]');
+                const hasCartText = allText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|purchase|order\s*now/i);
+                
+                // ✅ ONLINE = Solo se ha form/button/testo carrello
+                if (hasForm || hasAddButton || hasCartText) {
+                    status = 'ONLINE';
+                }
+                // ❌ SOLD OUT = Esplicito
+                else if (allText.match(/sold\s*out|soldout|esaurito/i)) {
                     status = 'SOLD OUT';
-                } else if (allText.match(/\bsoon\b|coming\s*soon|notify|pre\s*order|upcoming/i)) {
+                }
+                // ⏳ SOON = Esplicito o default (nessun indicatore acquisto)
+                else if (allText.match(/\bsoon\b|coming\s*soon|notify|pre\s*order|upcoming/i)) {
                     status = 'SOON';
                 }
                 
