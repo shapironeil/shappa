@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Admin Server Panel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .admin-header {
+            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            border-bottom: 2px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .header-content {
+            max-width: 1800px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-title p {
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .admin-main {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
+        }
+
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: #cbd5e1;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.85rem;
+        }
+
+        /* Section Cards */
+        .section {
+            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* User Cards Grid */
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, #334155 0%, #312e81 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-card:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(139, 92, 246, 0.2);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .user-info h3 {
+            font-size: 1.5rem;
+            color: #a78bfa;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-id {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .user-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .user-stat {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .user-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* JSON Viewer */
+        .json-viewer {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.875rem;
+            background: #0d1117;
+            border: 2px solid #21262d;
+            border-radius: 12px;
+            padding: 2rem;
+            overflow-x: auto;
+            color: #c9d1d9;
+            line-height: 1.8;
+            max-height: 600px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .json-key { color: #79c0ff; font-weight: 600; }
+        .json-string { color: #a5d6ff; }
+        .json-number { color: #ffa657; font-weight: 700; }
+        .json-boolean { color: #ff7b72; font-weight: 700; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: #94a3b8;
+            font-size: 1.2rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            border-radius: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            display: none;
+            z-index: 1000;
+        }
+
+        .status-indicator.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-main {
+                padding: 1rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Status Indicator -->
+    <div id="statusIndicator" class="status-indicator"></div>
+
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>🖥️ Server Admin Panel</h1>
+                <p>Visualizzazione LIVE dei dati server • Filesystem & Monitors</p>
+            </div>
+            
+            <div class="header-actions">
+                <a href="../../index.html" class="btn btn-primary">
+                    🏠 Home
+                </a>
+                <button class="btn btn-success" onclick="loadServerData()">
+                    🔄 Ricarica Dati
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">👥</span>
+                    <span class="stat-value" id="totalUsers">-</span>
+                </div>
+                <div class="stat-label">Utenti Registrati</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">⭐</span>
+                    <span class="stat-value" id="totalInterests">-</span>
+                </div>
+                <div class="stat-label">File Interests</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🔗</span>
+                    <span class="stat-value" id="totalWebhooks">-</span>
+                </div>
+                <div class="stat-label">File Webhooks</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🤖</span>
+                    <span class="stat-value" id="activeMonitors">-</span>
+                </div>
+                <div class="stat-label">Monitor Attivi</div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="section">
+            <h2 class="section-title">👥 Utenti Server (Filesystem)</h2>
+            <div id="usersContainer" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Caricamento dati server...</p>
+            </div>
+        </div>
+
+        <!-- Raw Data Section -->
+        <div class="section">
+            <h2 class="section-title">🗄️ Database Completo (JSON)</h2>
+            <div class="json-viewer" id="rawData">
+                Caricamento...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let serverData = null;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServerData();
+        });
+
+        async function loadServerData() {
+            try {
+                showStatus('🔄 Caricamento dati server...', '#f59e0b');
+                
+                const response = await fetch('https://shapiro.ninja/api/admin/server-data');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                serverData = await response.json();
+                
+                if (!serverData.success) {
+                    throw new Error(serverData.error || 'Errore sconosciuto');
+                }
+                
+                // Update UI
+                updateStats();
+                renderUsers();
+                renderRawData();
+                
+                showStatus('✅ Dati caricati con successo!', '#10b981');
+                
+            } catch (error) {
+                console.error('❌ Error loading server data:', error);
+                showStatus('❌ Errore: ' + error.message, '#ef4444');
+                
+                document.getElementById('usersContainer').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #ef4444;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                        <strong>Errore caricamento dati</strong>
+                        <p style="margin-top: 1rem; color: #94a3b8;">${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadServerData()" style="margin-top: 2rem;">
+                            🔄 Riprova
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function updateStats() {
+            if (!serverData || !serverData.counts) return;
+            
+            const counts = serverData.counts;
+            
+            document.getElementById('totalUsers').textContent = counts.totalUsers || 0;
+            document.getElementById('totalInterests').textContent = counts.totalInterests || 0;
+            document.getElementById('totalWebhooks').textContent = counts.totalWebhooks || 0;
+            document.getElementById('activeMonitors').textContent = counts.activeMonitors || 0;
+        }
+
+        function renderUsers() {
+            if (!serverData || !serverData.data) return;
+            
+            const users = serverData.data.users;
+            const interests = serverData.data.interests;
+            const webhooks = serverData.data.webhooks;
+            
+            const container = document.getElementById('usersContainer');
+            
+            if (Object.keys(users).length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #94a3b8;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+                        <strong>Nessun utente trovato</strong>
+                        <p style="margin-top: 0.5rem;">Il server non ha utenti registrati</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '<div class="users-grid">' + 
+                Object.entries(users).map(([filename, userData]) => {
+                    const userId = filename.replace('.json', '');
+                    const interestsFile = `interests_${userId}.json`;
+                    const webhooksFile = `webhooks_${userId}.json`;
+                    
+                    const userInterests = interests[interestsFile] || [];
+                    const userWebhooks = webhooks[webhooksFile] || [];
+                    
+                    const interestsCount = Array.isArray(userInterests) ? userInterests.length : 0;
+                    const webhooksCount = Array.isArray(userWebhooks) ? userWebhooks.length : 1;
+                    
+                    return `
+                        <div class="user-card">
+                            <div class="user-header">
+                                <div class="user-info">
+                                    <h3>${userData.username || 'Unknown'}</h3>
+                                    <span class="user-id">${userId}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="user-stats">
+                                <div class="user-stat">
+                                    <div class="user-stat-value">${interestsCount}</div>
+                                    <div class="user-stat-label">Interests</div>
+                                </div>
+                                <div class="user-stat">
+                                    <div class="user-stat-value">${webhooksCount}</div>
+                                    <div class="user-stat-label">Webhooks</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem;">
+                                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem;">
+                                    📧 ${userData.email || 'N/A'}
+                                </div>
+                                <div style="font-size: 0.75rem; color: #64748b;">
+                                    📅 Registrato: ${userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                                </div>
+                            </div>
+                            
+                            <div class="user-actions">
+                                <button class="btn-small btn-view" onclick="viewUserDetails('${userId}')">
+                                    👁️ Dettagli
+                                </button>
+                                <button class="btn-small btn-delete" onclick="deleteUser('${userId}')">
+                                    🗑️ Elimina
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('') +
+            '</div>';
+        }
+
+        function renderRawData() {
+            if (!serverData) return;
+            
+            const formatted = JSON.stringify(serverData, null, 2);
+            const highlighted = syntaxHighlight(formatted);
+            
+            document.getElementById('rawData').innerHTML = highlighted;
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function viewUserDetails(userId) {
+            if (!serverData || !serverData.data) return;
+            
+            const userData = serverData.data.users[`${userId}.json`];
+            const interests = serverData.data.interests[`interests_${userId}.json`] || [];
+            const webhooks = serverData.data.webhooks[`webhooks_${userId}.json`] || [];
+            
+            const details = {
+                userId,
+                userData,
+                interests,
+                webhooks
+            };
+            
+            const detailsWindow = window.open('', '_blank', 'width=1000,height=800');
+            detailsWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Shappa Admin - ${userId}</title>
+                    <style>
+                        body {
+                            font-family: 'JetBrains Mono', monospace;
+                            background: #0d1117;
+                            color: #c9d1d9;
+                            padding: 2rem;
+                            line-height: 1.6;
+                        }
+                        h1 { color: #58a6ff; margin-bottom: 2rem; }
+                        pre {
+                            background: #161b22;
+                            padding: 1.5rem;
+                            border-radius: 8px;
+                            overflow: auto;
+                            border: 1px solid #30363d;
+                        }
+                        .json-key { color: #79c0ff; }
+                        .json-string { color: #a5d6ff; }
+                        .json-number { color: #ffa657; }
+                        .json-boolean { color: #ff7b72; }
+                        button {
+                            margin-top: 2rem;
+                            padding: 0.75rem 1.5rem;
+                            background: #21262d;
+                            color: #c9d1d9;
+                            border: 1px solid #30363d;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-family: inherit;
+                            font-weight: 600;
+                        }
+                        button:hover {
+                            background: #30363d;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>👤 Dettagli Utente: ${userId}</h1>
+                    <pre>${syntaxHighlight(JSON.stringify(details, null, 2))}</pre>
+                    <button onclick="window.close()">✖️ Chiudi</button>
+                </body>
+                </html>
+            `);
+        }
+
+        async function deleteUser(userId) {
+            if (!confirm(`⚠️ ATTENZIONE!\n\nEliminare completamente l'utente "${userId}"?\n\nVerranno eliminati:\n- File user\n- File interests\n- File webhooks\n- Monitor attivi\n\nQuesta azione è IRREVERSIBILE!`)) {
+                return;
+            }
+            
+            if (!confirm(`🚨 CONFERMA FINALE\n\nSei ASSOLUTAMENTE SICURO di voler eliminare "${userId}"?`)) {
+                return;
+            }
+            
+            try {
+                showStatus('🗑️ Eliminazione in corso...', '#f59e0b');
+                
+                const response = await fetch(`https://shapiro.ninja/api/admin/user/${userId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus(`✅ Utente ${userId} eliminato!`, '#10b981');
+                    
+                    // Ricarica dati dopo 2 secondi
+                    setTimeout(() => {
+                        loadServerData();
+                    }, 2000);
+                } else {
+                    throw new Error(result.error || 'Errore eliminazione');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error deleting user:', error);
+                showStatus('❌ Errore: ' + error.message, '#ef4444');
+            }
+        }
+
+        function showStatus(message, color) {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.style.background = color;
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
