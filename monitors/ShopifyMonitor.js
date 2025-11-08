@@ -32,6 +32,9 @@ class ShopifyMonitor {
         // Traccia prodotti visti (per rilevare NUOVI prodotti)
         this.seenProductIds = new Set();
         
+        // 🆕 TRACKING STATUS: salva status precedente di ogni prodotto (product.id → status)
+        this.productStates = new Map();
+        
         // Filtro prodotto opzionale (es: "AIR JORDAN 1")
         this.productFilter = config.productFilter || config.name || '';
         
@@ -418,21 +421,42 @@ class ShopifyMonitor {
             return; // Esci, prossimo check rileverà nuovi prodotti
         }
 
-        // Rileva NUOVI prodotti (dai check successivi)
-        const newProducts = [];
+        // Rileva NUOVI prodotti o CAMBIAMENTI DI STATUS
+        const productsToNotify = [];
+        
         for (const product of filteredProducts) {
-            if (!this.seenProductIds.has(product.id)) {
-                // NUOVO PRODOTTO!
-                newProducts.push(product);
-                this.seenProductIds.add(product.id);
+            const productId = product.id;
+            const currentStatus = product.status;
+            const previousStatus = this.productStates.get(productId);
+            
+            // CASO 1: Prodotto mai visto prima → NUOVO
+            if (!this.seenProductIds.has(productId)) {
+                console.log(`[Shopify] 🆕 NUOVO PRODOTTO: ${product.title} (${currentStatus})`);
+                productsToNotify.push({ ...product, changeType: 'NEW' });
+                this.seenProductIds.add(productId);
+                this.productStates.set(productId, currentStatus);
+            }
+            // CASO 2: Prodotto già visto, MA status cambiato
+            else if (previousStatus && previousStatus !== currentStatus) {
+                console.log(`[Shopify] 🔄 CAMBIO STATUS: ${product.title} [${previousStatus} → ${currentStatus}]`);
+                productsToNotify.push({ ...product, changeType: 'STATUS_CHANGE', previousStatus });
+                this.productStates.set(productId, currentStatus);
+            }
+            // CASO 3: Prodotto visto, status uguale → NESSUNA NOTIFICA
+            else if (previousStatus === currentStatus) {
+                // Nessuna azione, già notificato
+            }
+            // CASO 4: Prodotto visto ma non ha status precedente (primo check dopo init)
+            else {
+                this.productStates.set(productId, currentStatus);
             }
         }
 
-        if (newProducts.length > 0) {
-            console.log(`[Shopify] 🆕 RILEVATI ${newProducts.length} NUOVI PRODOTTI!`);
+        if (productsToNotify.length > 0) {
+            console.log(`[Shopify] 📢 ${productsToNotify.length} prodotti da notificare`);
             
             // 🛒 PER OGNI PRODOTTO ONLINE: Estrai varianti navigando nella pagina
-            for (const product of newProducts) {
+            for (const product of productsToNotify) {
                 // Se status è ONLINE, vai nella pagina prodotto ed estrai varianti
                 if (product.status === 'ONLINE') {
                     console.log(`[Shopify] 🔍 Estraggo varianti per: ${product.title}`);
@@ -452,23 +476,53 @@ class ShopifyMonitor {
                         const variants = await productPage.evaluate(() => {
                             const variantsData = [];
                             
-                            // Cerca select per taglie/varianti
-                            const selects = document.querySelectorAll('select[name*="id"], select.product-form__input, select[data-index="option1"]');
+                            // PRIMA: Cerca script JSON con prodotto Shopify (es. Travis Scott)
+                            const productJsonScript = document.querySelector('script.js-product-json, script[type="application/json"]');
                             
-                            selects.forEach(select => {
-                                const options = select.querySelectorAll('option');
-                                options.forEach(opt => {
-                                    if (opt.value && opt.value !== '' && !opt.disabled) {
-                                        variantsData.push({
-                                            id: opt.value,
-                                            title: opt.textContent.trim(),
-                                            available: true
+                            if (productJsonScript) {
+                                try {
+                                    const productData = JSON.parse(productJsonScript.textContent);
+                                    
+                                    // Il JSON contiene array variants con id, option1, available
+                                    if (productData.variants && Array.isArray(productData.variants)) {
+                                        productData.variants.forEach(variant => {
+                                            if (variant.available) {
+                                                // Costruisci titolo da options o public_title
+                                                const title = variant.public_title || variant.option1 || 
+                                                             variant.options?.join(' - ') || 'Default';
+                                                
+                                                variantsData.push({
+                                                    id: variant.id.toString(),
+                                                    title: title.toUpperCase(),
+                                                    available: true
+                                                });
+                                            }
                                         });
                                     }
-                                });
-                            });
+                                } catch (err) {
+                                    console.error('[Shopify] Errore parsing JSON prodotto:', err);
+                                }
+                            }
                             
-                            // Se non trova select, cerca bottoni varianti
+                            // FALLBACK: Cerca select per taglie/varianti (temi standard)
+                            if (variantsData.length === 0) {
+                                const selects = document.querySelectorAll('select[name*="id"], select.product-form__input, select[data-index="option1"]');
+                                
+                                selects.forEach(select => {
+                                    const options = select.querySelectorAll('option');
+                                    options.forEach(opt => {
+                                        if (opt.value && opt.value !== '' && !opt.disabled) {
+                                            variantsData.push({
+                                                id: opt.value,
+                                                title: opt.textContent.trim(),
+                                                available: true
+                                            });
+                                        }
+                                    });
+                                });
+                            }
+                            
+                            // FALLBACK 2: Cerca bottoni varianti
                             if (variantsData.length === 0) {
                                 const variantButtons = document.querySelectorAll('[data-variant-id], .variant-input:not([disabled]), input[name="id"]:not([disabled])');
                                 variantButtons.forEach(btn => {
@@ -509,9 +563,8 @@ class ShopifyMonitor {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            // 🔴 IMPORTANTE: STOPPA IL MONITOR dopo aver trovato prodotti!
-            console.log(`[Shopify] 🛑 Prodotti trovati! Stoppo monitor automaticamente...`);
-            await this.stop();
+            // ✅ CONTINUA IL MONITORAGGIO (user controlla quando fermare)
+            console.log(`[Shopify] ✅ Monitor continua. User stoppa manualmente quando serve.`);
             
         } else if (this.checksCount > 1) {
             // Solo dopo il primo check (primo check inizializza seenProductIds)
@@ -627,11 +680,31 @@ class ShopifyMonitor {
                 };
             }
 
+            // 🆕 Determina tipo di notifica (NUOVO vs CAMBIO STATUS)
+            let notificationType = '🆕 NUOVO PRODOTTO TROVATO!';
+            let notificationColor = 0x10b981; // Verde
+            let changeDescription = '';
+            
+            if (product.changeType === 'STATUS_CHANGE') {
+                notificationType = `🔄 CAMBIO STATUS: ${product.previousStatus} → ${product.status}`;
+                
+                if (product.status === 'ONLINE' && product.previousStatus === 'SOON') {
+                    notificationColor = 0x10b981; // Verde brillante (SOON → ONLINE)
+                    changeDescription = `\n\n⚠️ **PRODOTTO ORA DISPONIBILE!** Era: ${product.previousStatus}`;
+                } else if (product.status === 'SOLD OUT') {
+                    notificationColor = 0xef4444; // Rosso (SOLD OUT)
+                    changeDescription = `\n\n❌ Prodotto esaurito. Era: ${product.previousStatus}`;
+                } else {
+                    notificationColor = 0xf59e0b; // Arancione (altro cambio)
+                    changeDescription = `\n\n🔄 Status cambiato da ${product.previousStatus}`;
+                }
+            }
+            
             const embed = {
-                title: `NUOVO PRODOTTO TROVATO!`,
+                title: notificationType,
                 url: productUrl,
-                color: matchesKeywords ? 0x10b981 : 0xf59e0b,
-                description: `**${product.title}**\n\nCLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO`,
+                color: matchesKeywords ? notificationColor : 0xf59e0b,
+                description: `**${product.title}**${changeDescription}\n\nCLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO`,
                 fields: [
                     {
                         name: 'Verifica Keywords',
@@ -640,8 +713,8 @@ class ShopifyMonitor {
                     },
                     variantsField,
                     {
-                        name: 'Stato Monitor',
-                        value: 'Monitor stoppato automaticamente (prodotto trovato!)',
+                        name: '📊 Stato Monitor',
+                        value: '✅ Monitor continua (user controlla stop)',
                         inline: false
                     }
                 ],
@@ -656,8 +729,8 @@ class ShopifyMonitor {
 
             await axios.post(this.discordWebhook, {
                 content: matchesKeywords ? 
-                    `<@${this.userId}> DROP ALERT! PRODOTTO CON KEYWORDS!` :
-                    `<@${this.userId}> Nuovo prodotto rilevato`,
+                    `<@${this.userId}> ${product.changeType === 'STATUS_CHANGE' ? '🔄 STATUS CHANGE!' : '🔥 DROP ALERT!'} PRODOTTO CON KEYWORDS!` :
+                    `<@${this.userId}> ${product.changeType === 'STATUS_CHANGE' ? 'Status cambiato' : 'Nuovo prodotto rilevato'}`,
                 embeds: [embed]
             });
 
@@ -759,21 +832,48 @@ class ShopifyMonitor {
                         const variants = await productPage.evaluate(() => {
                             const variantsData = [];
                             
-                            // Cerca select taglie
-                            const selects = document.querySelectorAll('select[name*="id"], select.product-form__input');
-                            selects.forEach(select => {
-                                const options = select.querySelectorAll('option');
-                                options.forEach(opt => {
-                                    if (opt.value && opt.value !== '' && !opt.disabled) {
-                                        variantsData.push({
-                                            id: opt.value,
-                                            title: opt.textContent.trim()
+                            // PRIMA: Cerca script JSON Shopify (Travis Scott)
+                            const productJsonScript = document.querySelector('script.js-product-json, script[type="application/json"]');
+                            
+                            if (productJsonScript) {
+                                try {
+                                    const productData = JSON.parse(productJsonScript.textContent);
+                                    
+                                    if (productData.variants && Array.isArray(productData.variants)) {
+                                        productData.variants.forEach(variant => {
+                                            if (variant.available) {
+                                                const title = variant.public_title || variant.option1 || 
+                                                             variant.options?.join(' - ') || 'Default';
+                                                
+                                                variantsData.push({
+                                                    id: variant.id.toString(),
+                                                    title: title.toUpperCase()
+                                                });
+                                            }
                                         });
                                     }
-                                });
-                            });
+                                } catch (err) {
+                                    console.error('[Shopify] Errore parsing JSON:', err);
+                                }
+                            }
                             
-                            // Fallback: cerca bottoni varianti
+                            // FALLBACK: Cerca select taglie (temi standard)
+                            if (variantsData.length === 0) {
+                                const selects = document.querySelectorAll('select[name*="id"], select.product-form__input');
+                                selects.forEach(select => {
+                                    const options = select.querySelectorAll('option');
+                                    options.forEach(opt => {
+                                        if (opt.value && opt.value !== '' && !opt.disabled) {
+                                            variantsData.push({
+                                                id: opt.value,
+                                                title: opt.textContent.trim()
+                                            });
+                                        }
+                                    });
+                                });
+                            }
+                            
+                            // FALLBACK 2: Cerca bottoni varianti
                             if (variantsData.length === 0) {
                                 const buttons = document.querySelectorAll('[data-variant-id], input[name="id"]:not([disabled])');
                                 buttons.forEach(btn => {
