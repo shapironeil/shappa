@@ -46,10 +46,9 @@ class ShopifyMonitor {
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
         
-        // 🎯 DROP HOURS - Orari emblematici per check intensivi
-        this.dropHours = config.dropHours || [6, 10, 12, 14, 18, 20, 22]; // Default: 6 AM, 10 AM, 12 PM, 2 PM, 6 PM, 8 PM, 10 PM
-        this.intensiveCheckDuration = 45; // Minuti di check intensivi dopo drop hour
-        this.intensiveCheckInterval = 30; // Secondi tra check intensivi
+        // ⏰ TIMING DROPS - Check intensivi OGNI MEZZ'ORA
+        this.intensiveCheckDuration = 5; // Minuti di check intensivi (5 min dopo ogni mezz'ora)
+        this.intensiveCheckInterval = 25; // Secondi tra check intensivi (25-30s)
     }
 
     /**
@@ -73,25 +72,26 @@ class ShopifyMonitor {
 
     /**
      * Determina intervallo check in base all'orario
+     * LOGICA: Check intensivi per 5 min OGNI MEZZ'ORA (X:00, X:30)
      * Ritorna intervallo in millisecondi
      */
     getCurrentCheckInterval() {
         const now = new Date();
-        const currentHour = now.getHours();
         const currentMinute = now.getMinutes();
         
-        // Controlla se siamo in una "drop hour window" (es: 6:00-6:45)
-        for (const dropHour of this.dropHours) {
-            const minutesSinceDropHour = (currentHour - dropHour) * 60 + currentMinute;
-            
-            // Se siamo tra dropHour e dropHour + intensiveCheckDuration minuti
-            if (minutesSinceDropHour >= 0 && minutesSinceDropHour < this.intensiveCheckDuration) {
-                // Check INTENSIVO ogni 30 secondi
-                return this.intensiveCheckInterval * 1000;
-            }
+        // Controlla se siamo in finestra intensiva:
+        // - Primi 5 minuti dell'ora (00:00-00:05, 01:00-01:05, etc)
+        // - Primi 5 minuti dopo la mezz'ora (00:30-00:35, 01:30-01:35, etc)
+        const isIntensiveWindow = 
+            (currentMinute >= 0 && currentMinute < this.intensiveCheckDuration) ||
+            (currentMinute >= 30 && currentMinute < (30 + this.intensiveCheckDuration));
+        
+        if (isIntensiveWindow) {
+            // Check INTENSIVO ogni 25 secondi
+            return this.intensiveCheckInterval * 1000;
         }
         
-        // Check NORMALE ogni N minuti
+        // Check NORMALE ogni 5 minuti
         return this.interval * 60 * 1000;
     }
 
@@ -102,7 +102,8 @@ class ShopifyMonitor {
         if (this.isRunning) return;
         
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
-        console.log(`[Shopify] ⏰ Drop hours configurate: ${this.dropHours.join(', ')}:00`);
+        console.log(`[Shopify] ⏰ Check intensivi: OGNI MEZZ'ORA per 5 minuti (X:00-X:05, X:30-X:35)`);
+        console.log(`[Shopify] 💤 Check normali: ogni 5 minuti negli altri orari`);
         this.isRunning = true;
 
         // Primo check immediato (invierà notifica iniziale)
