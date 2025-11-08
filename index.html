@@ -383,14 +383,11 @@
         .modal {
             background: var(--venus-bg-card);
             border-radius: var(--venus-radius-lg);
-            padding: var(--venus-space-3xl) var(--venus-space-3xl) var(--venus-space-xl);
-            max-width: 800px;
-            width: 96%;
-            max-height: 90vh;
-            overflow: hidden;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            gap: var(--venus-space-lg);
+            padding: var(--venus-space-2xl) var(--venus-space-xl);
+            max-width: 600px;
+            width: 95%;
+            max-height: 85vh;
+            overflow-y: auto;
             box-shadow: var(--venus-shadow-xl);
             border: 1px solid var(--venus-border);
             transform: scale(0.8);
@@ -404,19 +401,19 @@
 
         .modal-header {
             text-align: center;
-            margin-bottom: var(--venus-space-2xl);
+            margin-bottom: var(--venus-space-lg);
         }
 
         .modal-header h2 {
-            font-size: var(--venus-font-size-2xl);
+            font-size: var(--venus-font-size-xl);
             color: var(--venus-text-primary);
-            margin-bottom: var(--venus-space-sm);
+            margin-bottom: var(--venus-space-xs);
             font-weight: var(--venus-font-weight-bold);
         }
 
         .modal-header p {
             color: var(--venus-text-secondary);
-            font-size: var(--venus-font-size-base);
+            font-size: var(--venus-font-size-sm);
         }
         /* Two-column layout for register form on wider screens */
         @media (min-width: 720px) {
@@ -429,16 +426,17 @@
 
         .modal-close {
             position: absolute;
-            top: var(--venus-space-lg);
-            right: var(--venus-space-lg);
+            top: var(--venus-space-md);
+            right: var(--venus-space-md);
             background: none;
             border: none;
-            font-size: var(--venus-font-size-xl);
+            font-size: var(--venus-font-size-lg);
             cursor: pointer;
             color: var(--venus-text-muted);
             transition: color var(--venus-transition);
             border-radius: var(--venus-radius-sm);
             padding: var(--venus-space-xs);
+            z-index: 10;
         }
 
         .modal-close:hover {
@@ -447,43 +445,26 @@
         }
 
         .form-group {
-            margin-bottom: var(--venus-space-lg);
+            margin-bottom: var(--venus-space-md);
         }
 
         .form-group label {
             display: block;
             color: var(--venus-text-primary);
             font-weight: var(--venus-font-weight-semibold);
-            margin-bottom: var(--venus-space-sm);
+            margin-bottom: var(--venus-space-xs);
             font-size: var(--venus-font-size-sm);
         }
 
         .form-group input {
             width: 100%;
-            padding: var(--venus-space-md) var(--venus-space-lg);
+            padding: var(--venus-space-sm) var(--venus-space-md);
             border: 2px solid var(--venus-border);
             border-radius: var(--venus-radius);
-            font-size: var(--venus-font-size-base);
+            font-size: var(--venus-font-size-sm);
             transition: all var(--venus-transition);
             font-family: var(--venus-font-family);
             background: var(--venus-bg-card);
-        }
-
-        /* Modal content area scrollable */
-        .modal form {
-            overflow-y: auto;
-            padding-right: var(--venus-space-xs);
-        }
-
-        /* Sticky action footer in modal */
-        .modal .modal-actions {
-            position: sticky;
-            bottom: 0;
-            background: linear-gradient(to top, var(--venus-bg-card) 65%, rgba(255,255,255,0));
-            padding-top: var(--venus-space-sm);
-            display: flex;
-            flex-direction: column;
-            gap: var(--venus-space-md);
         }
 
         .form-group input:focus {
