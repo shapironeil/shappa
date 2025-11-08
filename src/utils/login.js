@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.textContent = 'Accedendo...';
         
         try {
-            const result = AuthManager.login(emailOrUsername, password);
+            const result = await AuthManager.login(emailOrUsername, password);
             
             if (result.success) {
                 showSuccess(`Bentornato ${result.user.username}!`);

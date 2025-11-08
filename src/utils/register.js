@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     meta.content = 'no-cache, no-store, must-revalidate';
     document.getElementsByTagName('head')[0].appendChild(meta);
     
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Ottieni i dati del form
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             console.log('✅ AuthManager OK, eseguendo registrazione...');
-            const result = AuthManager.register(username, email, password, confirmPassword);
+            const result = await AuthManager.register(username, email, password, confirmPassword);
             console.log('📊 Risultato registrazione:', result);
             
             if (result && result.success) {

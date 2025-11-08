@@ -1065,8 +1065,8 @@
             // Simulate delay
             await new Promise(resolve => setTimeout(resolve, 800));
 
-            // Attempt login
-            const result = authSystem.login(email, password, remember);
+            // Attempt login (NOW ASYNC!)
+            const result = await authSystem.login(email, password, remember);
 
             if (result.success) {
                 successDiv.textContent = `✅ Benvenuto ${result.user.username}!`;
@@ -1229,16 +1229,16 @@
             // Simulate delay
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Attempt registration
-            const result = authSystem.register(username, email, password, confirmPassword);
+            // Attempt registration (NOW ASYNC!)
+            const result = await authSystem.register(username, email, password, confirmPassword);
 
             if (result.success) {
                 successDiv.textContent = `✅ Account creato! Benvenuto ${result.user.username}!`;
                 successDiv.classList.add('show');
                 registerBtn.textContent = '✅ Account Creato!';
 
-                // Auto-login: salva la sessione
-                authSystem.login(email, password, false);
+                // Auto-login: salva la sessione (NOW ASYNC!)
+                await authSystem.login(email, password, false);
 
                 // Chiudi la modale e aggiorna la navbar
                 setTimeout(() => {
