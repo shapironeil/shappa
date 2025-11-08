@@ -91,20 +91,25 @@ class ShopifyMonitor {
         const now = new Date();
         const currentMinute = now.getMinutes();
         
-        // 🚫 Se non è ancora permessa la modalità intensiva, usa sempre IDLE
-        if (!this.allowIntensiveMode) {
-            console.log(`[Shopify] 💤 Modalità intensiva disabilitata - uso idle (${this.idleCheckInterval} min)`);
-            return this.idleCheckInterval * 60 * 1000;
-        }
-        
         // Calcola inizio finestra intensiva (multiplo di this.interval)
         const windowStart = Math.floor(currentMinute / this.interval) * this.interval;
         const isIntensiveWindow = (currentMinute >= windowStart && currentMinute < (windowStart + this.intensiveCheckDuration));
         
-        if (isIntensiveWindow) {
+        // ✅ Se siamo in una finestra intensiva E il primo check è stato completato, attiva modalità intensiva
+        if (isIntensiveWindow && this.firstCheckCompleted) {
+            if (!this.allowIntensiveMode) {
+                this.allowIntensiveMode = true;
+                console.log(`[Shopify] 🔥 Finestra intensiva raggiunta - attivo modalità intensiva per ${this.intensiveCheckDuration} min`);
+            }
             // Check INTENSIVO ogni 25-30s random
             const randomSeconds = Math.floor(Math.random() * 6) + 25; // 25-30s
             return randomSeconds * 1000;
+        }
+        
+        // Fuori dalla finestra intensiva - disattiva modalità intensiva e usa IDLE
+        if (this.allowIntensiveMode && !isIntensiveWindow) {
+            this.allowIntensiveMode = false;
+            console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle`);
         }
         
         // Check IDLE: attendi fino alla prossima finestra intensiva
@@ -795,11 +800,11 @@ class ShopifyMonitor {
         console.log(`[Shopify] 🔍 Debug countdown: checksCount=${this.checksCount}, nextCheckInterval=${this.nextCheckInterval}`);
         
         if (this.checksCount >= 1 && this.nextCheckInterval) {
-            // ✅ Abilita modalità intensiva dopo il primo check completo
+            // ✅ Abilita modalità intensiva solo DOPO il primo check E solo se saremo in una finestra valida
             if (!this.firstCheckCompleted) {
                 this.firstCheckCompleted = true;
-                this.allowIntensiveMode = true;
-                console.log(`[Shopify] ✅ Primo check completato - modalità intensiva ora disponibile`);
+                // NON abilitare allowIntensiveMode qui - lascia che si attivi solo nelle finestre orarie
+                console.log(`[Shopify] ✅ Primo check completato - modalità intensiva si attiverà alle finestre orarie configurate`);
             }
             
             const secondsUntilNext = Math.ceil(this.nextCheckInterval / 1000);
