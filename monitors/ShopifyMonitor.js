@@ -173,8 +173,9 @@ class ShopifyMonitor {
         
         this.isRunning = true;
 
-        // Primo check immediato (invierà notifica iniziale)
-        await this.check();
+        // Primo check immediato - calcola intervallo per countdown accurato
+        const initialInterval = this.getCurrentCheckInterval();
+        await this.check(initialInterval);
 
         // Sistema di check DINAMICO
         const dynamicCheck = async () => {
