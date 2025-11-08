@@ -560,6 +560,15 @@ class ShopifyMonitor {
                         
                         product.variants = variants;
                         
+                        // 🖼️ ESTRAI IMMAGINI (priorità: images array, poi featured_image, poi image già presente)
+                        if (productData.images && productData.images.length > 0) {
+                            product.images = productData.images;
+                        } else if (productData.featured_image) {
+                            product.images = [{ src: productData.featured_image }];
+                        } else if (product.image) {
+                            product.images = [{ src: product.image }];
+                        }
+                        
                         // ONLINE se almeno UNA variante disponibile
                         const hasAvailable = variants.some(v => v.available);
                         product.status = hasAvailable ? 'ONLINE' : 'SOON';
@@ -748,7 +757,7 @@ class ShopifyMonitor {
                 color: 0x10b981,
                 fields: variantsField ? [variantsField] : [],
                 image: {
-                    url: product.images && product.images[0] ? product.images[0].src : null
+                    url: product.images && product.images[0] ? product.images[0].src : (product.image || null)
                 },
                 timestamp: new Date().toISOString()
             };
