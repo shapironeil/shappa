@@ -1391,6 +1391,7 @@ app.post('/api/admin/clear-cache', (req, res) => {
 
 const INTERESTS_DIR = path.join(__dirname, 'data', 'interests');
 const WEBHOOKS_DIR = path.join(__dirname, 'data', 'webhooks');
+const USERS_DIR = path.join(__dirname, 'data', 'users');
 
 // Ensure directories exist
 if (!fs.existsSync(INTERESTS_DIR)) {
@@ -1401,6 +1402,11 @@ if (!fs.existsSync(INTERESTS_DIR)) {
 if (!fs.existsSync(WEBHOOKS_DIR)) {
     fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
     console.log('📁 Created webhooks directory');
+}
+
+if (!fs.existsSync(USERS_DIR)) {
+    fs.mkdirSync(USERS_DIR, { recursive: true });
+    console.log('📁 Created users directory');
 }
 
 // Get user interests file path
@@ -1577,6 +1583,222 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         return res.status(500).json({ success: false, error: 'Failed to save webhook' });
     }
 });
+
+// ============================================
+// AUTHENTICATION ENDPOINTS (SERVER-SIDE)
+// ============================================
+
+const USERS_DB_FILE = path.join(USERS_DIR, 'users_db.json');
+
+// Initialize users database
+function initUsersDatabase() {
+    if (!fs.existsSync(USERS_DB_FILE)) {
+        const defaultData = {
+            version: '1.0',
+            users: [],
+            created: new Date().toISOString(),
+            lastModified: new Date().toISOString()
+        };
+        fs.writeFileSync(USERS_DB_FILE, JSON.stringify(defaultData, null, 2), 'utf8');
+        console.log('🗄️ Users database initialized');
+    }
+}
+
+// Get all users from database
+function getUsers() {
+    try {
+        if (!fs.existsSync(USERS_DB_FILE)) {
+            initUsersDatabase();
+        }
+        const data = fs.readFileSync(USERS_DB_FILE, 'utf8');
+        const db = JSON.parse(data);
+        return db.users || [];
+    } catch (error) {
+        console.error('❌ Error reading users database:', error);
+        return [];
+    }
+}
+
+// Save users to database
+function saveUsers(users) {
+    try {
+        const db = {
+            version: '1.0',
+            users: users,
+            lastModified: new Date().toISOString()
+        };
+        fs.writeFileSync(USERS_DB_FILE, JSON.stringify(db, null, 2), 'utf8');
+        return true;
+    } catch (error) {
+        console.error('❌ Error saving users database:', error);
+        return false;
+    }
+}
+
+// Generate user ID
+function generateUserId() {
+    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// POST /api/auth/register - Register new user
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+
+        // Validation
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, error: 'All fields are required' });
+        }
+
+        if (username.length < 3 || username.length > 20) {
+            return res.status(400).json({ success: false, error: 'Username must be between 3 and 20 characters' });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ success: false, error: 'Invalid email format' });
+        }
+
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+        }
+
+        // Check if user exists
+        const users = getUsers();
+        const existingUser = users.find(u => 
+            u.email.toLowerCase() === email.toLowerCase() || 
+            u.username.toLowerCase() === username.toLowerCase()
+        );
+
+        if (existingUser) {
+            return res.status(409).json({ success: false, error: 'Email or username already exists' });
+        }
+
+        // Create new user
+        const newUser = {
+            id: generateUserId(),
+            username: username.trim(),
+            email: email.trim().toLowerCase(),
+            password: password, // ⚠️ In produzione: hash con bcrypt!
+            createdAt: new Date().toISOString(),
+            lastLogin: null,
+            profile: {
+                avatar: null,
+                bio: null,
+                settings: {}
+            }
+        };
+
+        users.push(newUser);
+        saveUsers(users);
+
+        console.log(`✅ Registered new user: ${username}`);
+
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = newUser;
+        return res.json({ success: true, user: userWithoutPassword });
+
+    } catch (error) {
+        console.error('❌ Error during registration:', error);
+        return res.status(500).json({ success: false, error: 'Registration failed' });
+    }
+});
+
+// POST /api/auth/login - User login
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { emailOrUsername, password } = req.body;
+
+        if (!emailOrUsername || !password) {
+            return res.status(400).json({ success: false, error: 'Email/username and password required' });
+        }
+
+        const users = getUsers();
+        const user = users.find(u => 
+            (u.email.toLowerCase() === emailOrUsername.toLowerCase() || 
+             u.username.toLowerCase() === emailOrUsername.toLowerCase()) &&
+            u.password === password
+        );
+
+        if (!user) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        // Update last login
+        user.lastLogin = new Date().toISOString();
+        saveUsers(users);
+
+        console.log(`✅ User logged in: ${user.username}`);
+
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        return res.json({ success: true, user: userWithoutPassword });
+
+    } catch (error) {
+        console.error('❌ Error during login:', error);
+        return res.status(500).json({ success: false, error: 'Login failed' });
+    }
+});
+
+// GET /api/auth/user/:userId - Get user by ID
+app.get('/api/auth/user/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const users = getUsers();
+        const user = users.find(u => u.id === userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = user;
+        return res.json({ success: true, user: userWithoutPassword });
+
+    } catch (error) {
+        console.error('❌ Error fetching user:', error);
+        return res.status(500).json({ success: false, error: 'Failed to fetch user' });
+    }
+});
+
+// PUT /api/auth/user/:userId - Update user profile
+app.put('/api/auth/user/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const updates = req.body;
+
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.id === userId);
+
+        if (userIndex === -1) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+
+        // Update user data (merge with existing)
+        users[userIndex] = {
+            ...users[userIndex],
+            ...updates,
+            id: userId, // Prevent ID change
+            password: users[userIndex].password // Prevent password change via this endpoint
+        };
+
+        saveUsers(users);
+
+        console.log(`✅ Updated user profile: ${userId}`);
+
+        // Return user without password
+        const { password: _, ...userWithoutPassword } = users[userIndex];
+        return res.json({ success: true, user: userWithoutPassword });
+
+    } catch (error) {
+        console.error('❌ Error updating user:', error);
+        return res.status(500).json({ success: false, error: 'Failed to update user' });
+    }
+});
+
+// Initialize database on startup
+initUsersDatabase();
 
 // ============================================
 // MONITOR SYSTEM ENDPOINTS

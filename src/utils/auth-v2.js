@@ -192,36 +192,40 @@ class ShappaAuth {
     // 📝 REGISTRAZIONE
     // ==========================================
 
-    register(username, email, password, confirmPassword) {
+    async register(username, email, password, confirmPassword) {
         try {
             console.log('🔄 Starting registration process...');
 
-            // Validazioni input
+            // Validazioni input locali
             const validation = this.validateRegistrationInput(username, email, password, confirmPassword);
             if (!validation.valid) {
                 return { success: false, error: validation.error };
             }
 
-            // Verifica unicità
-            const users = this.getUsers();
-            if (this.userExists(users, email, username)) {
-                return { success: false, error: 'Email o username già in uso' };
+            // 🌐 CHIAMA API SERVER per registrazione
+            const response = await fetch('https://shapiro.ninja/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: username.trim(), 
+                    email: email.trim().toLowerCase(), 
+                    password 
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                console.error('❌ Registration failed:', data.error);
+                return { success: false, error: data.error || 'Registrazione fallita' };
             }
 
-            // Crea nuovo utente
-            const newUser = this.createUser(username.trim(), email.trim().toLowerCase(), password);
-            console.log('👤 Created new user:', newUser.username);
-
-            // Salva utente
-            users.push(newUser);
-            this.saveUsers(users);
-
-            console.log('✅ Registration successful for:', username);
-            return { success: true, user: newUser };
+            console.log('✅ Registration successful:', data.user.username);
+            return { success: true, user: data.user };
 
         } catch (error) {
             console.error('❌ Registration error:', error);
-            return { success: false, error: 'Errore interno durante la registrazione' };
+            return { success: false, error: 'Errore di connessione al server' };
         }
     }
 
@@ -286,7 +290,7 @@ class ShappaAuth {
     // 🔐 LOGIN
     // ==========================================
 
-    login(emailOrUsername, password) {
+    async login(emailOrUsername, password) {
         try {
             console.log('🔄 Starting login process...');
 
@@ -294,27 +298,33 @@ class ShappaAuth {
                 return { success: false, error: 'Email/username e password richiesti' };
             }
 
-            const users = this.getUsers();
-            const user = this.findUserForLogin(users, emailOrUsername.trim(), password);
+            // 🌐 CHIAMA API SERVER per login
+            const response = await fetch('https://shapiro.ninja/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    emailOrUsername: emailOrUsername.trim(), 
+                    password 
+                })
+            });
 
-            if (!user) {
-                return { success: false, error: 'Credenziali non valide' };
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                console.error('❌ Login failed:', data.error);
+                return { success: false, error: data.error || 'Credenziali non valide' };
             }
 
-            // Aggiorna last login
-            user.lastLogin = new Date().toISOString();
-            this.saveUsers(users);
+            // Salva utente in sessione locale (solo per UX)
+            this.currentUser = data.user;
+            this.saveCurrentUser(data.user);
 
-            // Imposta utente corrente
-            this.currentUser = user;
-            this.saveCurrentUser(user);
-
-            console.log('✅ Login successful for:', user.username);
-            return { success: true, user };
+            console.log('✅ Login successful for:', data.user.username);
+            return { success: true, user: data.user };
 
         } catch (error) {
             console.error('❌ Login error:', error);
-            return { success: false, error: 'Errore interno durante il login' };
+            return { success: false, error: 'Errore di connessione al server' };
         }
     }
 
