@@ -203,6 +203,27 @@ class ShopifyMonitor {
         const productsUrl = `${this.baseUrl}/products.json?limit=250`;
         console.log(`[Shopify] 📡 Check TUTTI i prodotti: ${productsUrl}`);
         
+        // EXTRA STEALTH: Simula comportamento umano
+        // 1. Prima visita homepage
+        console.log(`[Shopify] 🏠 Visita homepage prima...`);
+        await page.goto(this.baseUrl, {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+        });
+        
+        // 2. Wait random (simula lettura pagina)
+        const randomWait = Math.floor(Math.random() * 3000) + 2000; // 2-5 secondi
+        await new Promise(resolve => setTimeout(resolve, randomWait));
+        
+        // 3. Scroll pagina (simula utente reale)
+        await page.evaluate(() => {
+            window.scrollBy(0, Math.random() * 500 + 300);
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 4. Ora vai all'API JSON
+        console.log(`[Shopify] 📡 Ora carico products.json...`);
         await page.goto(productsUrl, {
             waitUntil: 'networkidle0',
             timeout: 30000
@@ -212,6 +233,11 @@ class ShopifyMonitor {
         const text = await page.content();
         if (text.includes('Cloudflare') && text.includes('blocked')) {
             console.error(`[Shopify] ⚠️ Cloudflare block rilevato`);
+            return;
+        }
+        
+        if (text.includes('You do not have access')) {
+            console.error(`[Shopify] ⚠️ Accesso negato da Cloudflare, riprovo prossimo check...`);
             return;
         }
 
