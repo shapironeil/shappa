@@ -751,16 +751,21 @@ class ShopifyMonitor {
                 };
             }
             
+            // 🖼️ Determina URL immagine (priorità: images array, poi image singolo)
+            const imageUrl = product.images && product.images[0] ? product.images[0].src : (product.image || null);
+            
             const embed = {
                 title: product.title,
                 url: productUrl,
                 color: 0x10b981,
                 fields: variantsField ? [variantsField] : [],
-                image: {
-                    url: product.images && product.images[0] ? product.images[0].src : (product.image || null)
-                },
                 timestamp: new Date().toISOString()
             };
+            
+            // ✅ Aggiungi immagine SOLO se URL valido (Discord non accetta null)
+            if (imageUrl && imageUrl.startsWith('http')) {
+                embed.image = { url: imageUrl };
+            }
 
             await axios.post(this.discordWebhook, {
                 embeds: [embed]
