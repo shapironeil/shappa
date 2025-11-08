@@ -638,7 +638,21 @@ class ShopifyMonitor {
                 }
                 
                 // Invia notifica con varianti
-                await this.notifyNewProduct(product);
+                const notificationSuccess = await this.notifyNewProduct(product);
+                
+                // 🎯 AUTO-STOP: Se notifica completa inviata con successo, ferma monitor
+                if (notificationSuccess && product.status === 'ONLINE' && product.variants && product.variants.length > 0) {
+                    console.log(`[Shopify] 🎯 MISSIONE COMPIUTA! Notifica completa inviata con:`);
+                    console.log(`[Shopify]    ✅ Foto: ${product.image ? 'SI' : 'NO'}`);
+                    console.log(`[Shopify]    ✅ Titolo: ${product.title}`);
+                    console.log(`[Shopify]    ✅ Status: ${product.status}`);
+                    console.log(`[Shopify]    ✅ Taglie: ${product.variants.length} link direct-to-cart`);
+                    console.log(`[Shopify] 🛑 STOP AUTOMATICO - Obiettivo raggiunto!`);
+                    
+                    // Ferma il monitor
+                    await this.stop();
+                    return; // Esci dal loop
+                }
                 
                 // Delay tra notifiche
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -716,11 +730,12 @@ class ShopifyMonitor {
     /**
      * Notifica NUOVO PRODOTTO rilevato
      * 🔴 IMPORTANTE: Questa è la notifica più importante!
+     * @returns {boolean} true se notifica completa inviata (foto + titolo + status ONLINE + taglie)
      */
     async notifyNewProduct(product) {
         if (!this.discordWebhook) {
             console.log(`[Shopify] ⚠️ Webhook Discord non configurato`);
-            return;
+            return false;
         }
 
         try {
@@ -795,7 +810,9 @@ class ShopifyMonitor {
                     variantsField,
                     {
                         name: '📊 Stato Monitor',
-                        value: '✅ Monitor continua (user controlla stop)',
+                        value: product.status === 'ONLINE' && product.variants && product.variants.length > 0 ?
+                            '🎯 STOP AUTOMATICO - Prodotto completo trovato!' :
+                            '⏰ Monitor continua fino a trovare prodotto ONLINE con taglie',
                         inline: false
                     }
                 ],
@@ -817,11 +834,25 @@ class ShopifyMonitor {
 
             console.log(`[Shopify] Notifica NUOVO PRODOTTO inviata: ${product.title} (matcha: ${matchesKeywords})`);
 
+            // 🎯 Verifica se messaggio è COMPLETO (foto + titolo + status ONLINE + taglie)
+            const hasImage = product.image || (product.images && product.images[0]);
+            const hasTitle = product.title && product.title.length > 0;
+            const isOnline = product.status === 'ONLINE';
+            const hasVariants = product.variants && product.variants.length > 0;
+            const isComplete = hasImage && hasTitle && isOnline && hasVariants;
+            
+            if (isComplete) {
+                console.log(`[Shopify] ✅ Messaggio COMPLETO inviato! (foto + titolo + ${product.variants.length} taglie)`);
+            }
+            
+            return isComplete; // Ritorna true se messaggio completo
+
         } catch (error) {
             console.error(`[Shopify] Errore notifica nuovo prodotto:`, error.message);
             if (error.response) {
                 console.error(`[Shopify] Discord response:`, error.response.status, error.response.data);
             }
+            return false; // Errore = notifica non completata
         }
     }
 
