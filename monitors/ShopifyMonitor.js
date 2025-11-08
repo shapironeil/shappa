@@ -113,6 +113,7 @@ class ShopifyMonitor {
 
     /**
      * Check disponibilità via Shopify JSON API
+     * Usa /products.json invece di /products/{handle}.js per evitare 403
      */
     async check() {
         this.checksCount++;
@@ -121,8 +122,9 @@ class ShopifyMonitor {
         try {
             console.log(`[Shopify] 🔍 Check #${this.checksCount} - ${this.productName}`);
 
-            // Fetch product JSON
-            const productUrl = `${this.baseUrl}/products/${this.productHandle}.js`;
+            // STRATEGIA ANTI-BOT: usa /products.json?limit=250 invece di singolo prodotto
+            // Questo endpoint è meno protetto perché usato dai crawler legittimi
+            const productsUrl = `${this.baseUrl}/products.json?limit=250`;
             
             // User agents realistici random
             const userAgents = [
@@ -133,7 +135,7 @@ class ShopifyMonitor {
             ];
             const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
             
-            const response = await axios.get(productUrl, {
+            const response = await axios.get(productsUrl, {
                 headers: {
                     'User-Agent': randomUA,
                     'Accept': 'application/json, text/javascript, */*; q=0.01',
@@ -149,7 +151,29 @@ class ShopifyMonitor {
                 timeout: 15000
             });
 
-            const product = response.data;
+            const data = response.data;
+            
+            // Cerca il prodotto nella lista completa
+            let product = null;
+            if (this.productHandle) {
+                product = data.products.find(p => p.handle === this.productHandle);
+            }
+            
+            // Se non trova handle, cerca per keywords nel titolo
+            if (!product && this.searchKeywords.length > 0) {
+                product = data.products.find(p => {
+                    const title = p.title.toLowerCase();
+                    const matchCount = this.searchKeywords.filter(kw => title.includes(kw)).length;
+                    return (matchCount / this.searchKeywords.length) >= 0.5; // 50% match
+                });
+            }
+            
+            if (!product) {
+                console.log(`[Shopify] ⏭️ Prodotto non trovato in catalogo (handle: ${this.productHandle})`);
+                return;
+            }
+            
+            console.log(`[Shopify] ✅ Prodotto trovato: "${product.title}"`);
 
             // 🎯 FILTRO PRODOTTO - Match intelligente
             if (this.searchKeywords.length > 0) {
