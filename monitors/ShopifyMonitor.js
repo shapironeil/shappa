@@ -368,8 +368,8 @@ class ShopifyMonitor {
                 else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
                     status = 'SOLD OUT';
                 }
-                // ⏳ SOON = terza priorità (solo se ESPLICITO)  
-                else if (fullText.match(/coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
+                // ⏳ SOON = terza priorità (ESPLICITO: "SOON", "Coming Soon", ecc.)
+                else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
                     status = 'SOON';
                 }
                 // 🔍 FALLBACK: Se non trova NESSUN indicatore chiaro, assume ONLINE se ci sono link prodotto validi
@@ -400,17 +400,33 @@ class ShopifyMonitor {
         if (this.productFilter && this.productFilter.trim()) {
             // Rimuovi virgolette e caratteri speciali, split su spazi
             const cleanFilter = this.productFilter.replace(/["""]/g, '').trim();
-            const keywords = cleanFilter.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+            const filterLower = cleanFilter.toLowerCase();
             
             filteredProducts = products.filter(p => {
                 const title = p.title.toLowerCase();
-                // Matcha se almeno UNA keyword è presente nel titolo
-                return keywords.some(kw => title.includes(kw));
+                
+                // STRATEGIA 1: Match ESATTO (ignora case e punteggiatura)
+                const titleNormalized = title.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+                const filterNormalized = filterLower.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+                
+                if (titleNormalized === filterNormalized) {
+                    return true; // Match esatto!
+                }
+                
+                // STRATEGIA 2: Match TUTTE le keywords principali (min 3 caratteri)
+                const keywords = filterLower.split(/\s+/).filter(k => k.length >= 3);
+                if (keywords.length > 0) {
+                    const allKeywordsPresent = keywords.every(kw => title.includes(kw));
+                    return allKeywordsPresent;
+                }
+                
+                return false;
             });
             
             console.log(`[Shopify] 🔍 ${filteredProducts.length} prodotti matchano filtro "${this.productFilter}"`);
-            if (filteredProducts.length === 0 && keywords.length > 0) {
-                console.log(`[Shopify] ⚠️ Keywords cercate: [${keywords.join(', ')}] - nessun match trovato`);
+            if (filteredProducts.length === 0) {
+                console.log(`[Shopify] ⚠️ NESSUN prodotto matcha il filtro. Titoli presenti:`);
+                products.slice(0, 5).forEach(p => console.log(`  - "${p.title}"`));
             }
         }
 

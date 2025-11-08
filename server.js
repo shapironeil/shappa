@@ -1971,6 +1971,124 @@ app.get('/api/monitors/user/:userId', (req, res) => {
     }
 });
 
+/**
+ * GET /api/admin/server-data
+ * Admin endpoint: visualizza TUTTI i dati server (users, interests, webhooks, monitors)
+ */
+app.get('/api/admin/server-data', async (req, res) => {
+    try {
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        // Leggi tutti i file dal server
+        const usersDir = path.join(__dirname, 'data', 'users');
+        const interestsDir = path.join(__dirname, 'data', 'interests');
+        const webhooksDir = path.join(__dirname, 'data', 'webhooks');
+        
+        // Funzione helper per leggere directory
+        const readDirFiles = async (dir) => {
+            try {
+                const files = await fs.readdir(dir);
+                const data = {};
+                
+                for (const file of files) {
+                    if (file.endsWith('.json')) {
+                        const filePath = path.join(dir, file);
+                        const content = await fs.readFile(filePath, 'utf8');
+                        data[file] = JSON.parse(content);
+                    }
+                }
+                
+                return data;
+            } catch (err) {
+                console.error(`Error reading dir ${dir}:`, err);
+                return {};
+            }
+        };
+        
+        // Leggi tutti i dati
+        const users = await readDirFiles(usersDir);
+        const interests = await readDirFiles(interestsDir);
+        const webhooks = await readDirFiles(webhooksDir);
+        
+        // Statistiche monitor attivi
+        const monitorStats = monitorManager.getStats();
+        
+        return res.json({
+            success: true,
+            timestamp: new Date().toISOString(),
+            data: {
+                users,
+                interests,
+                webhooks,
+                monitorStats
+            },
+            counts: {
+                totalUsers: Object.keys(users).length,
+                totalInterests: Object.keys(interests).length,
+                totalWebhooks: Object.keys(webhooks).length,
+                activeMonitors: monitorStats.total
+            }
+        });
+        
+    } catch (error) {
+        console.error('❌ Error getting admin data:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/admin/user/:userId
+ * Admin endpoint: elimina completamente un utente (user file + interests + webhooks)
+ */
+app.delete('/api/admin/user/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const fs = require('fs').promises;
+        const path = require('path');
+        
+        // 1. Ferma tutti i monitor dell'utente
+        const stoppedMonitors = monitorManager.stopUserMonitors(userId);
+        
+        // 2. Elimina file user
+        const userFile = path.join(__dirname, 'data', 'users', `${userId}.json`);
+        try {
+            await fs.unlink(userFile);
+            console.log(`🗑️ Deleted user file: ${userId}`);
+        } catch (err) {
+            console.log(`⚠️ User file not found: ${userId}`);
+        }
+        
+        // 3. Elimina interests
+        const interestsFile = path.join(__dirname, 'data', 'interests', `interests_${userId}.json`);
+        try {
+            await fs.unlink(interestsFile);
+            console.log(`🗑️ Deleted interests file: ${userId}`);
+        } catch (err) {
+            console.log(`⚠️ Interests file not found: ${userId}`);
+        }
+        
+        // 4. Elimina webhooks
+        const webhooksFile = path.join(__dirname, 'data', 'webhooks', `webhooks_${userId}.json`);
+        try {
+            await fs.unlink(webhooksFile);
+            console.log(`🗑️ Deleted webhooks file: ${userId}`);
+        } catch (err) {
+            console.log(`⚠️ Webhooks file not found: ${userId}`);
+        }
+        
+        return res.json({
+            success: true,
+            message: `User ${userId} completamente eliminato`,
+            monitorsStopped: stoppedMonitors.stopped
+        });
+        
+    } catch (error) {
+        console.error('❌ Error deleting user:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
