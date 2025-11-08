@@ -441,6 +441,12 @@ class ShopifyMonitor {
                 
                 if (!title || title.length < 5) return; // Skip elementi vuoti
                 
+                // 🚫 SKIP DUPLICATI: Ignora titoli con "alternate", "image", "thumbnail" (immagini secondarie)
+                const titleLower = title.toLowerCase();
+                if (titleLower.includes('alternate') || titleLower.includes('thumbnail') || titleLower.match(/image\s*\d/)) {
+                    return; // Skip immagini alternative
+                }
+                
                 // Genera un ID fittizio basato sul titolo
                 const fakeHandle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);
                 if (productsMap.has(fakeHandle)) return; // Skip duplicati
@@ -617,16 +623,18 @@ class ShopifyMonitor {
         }
 
         if (productsToNotify.length > 0) {
-            console.log(`[Shopify] 📢 ${productsToNotify.length} prodotti da notificare`);
+            console.log(`[Shopify] 📢 ${productsToNotify.length} prodotti rilevati (nuovi o cambio status)`);
             
-            // Status: PRODUCT FOUND
-            const onlineCount = productsToNotify.filter(p => p.status === 'ONLINE').length;
-            if (onlineCount > 0) {
-                await this.updateMonitorStatus(`🎯 ${onlineCount} product${onlineCount > 1 ? 's' : ''} found!`, 'product found');
+            // 🎯 FILTRA SOLO PRODOTTI ONLINE DA NOTIFICARE
+            const onlineProducts = productsToNotify.filter(p => p.status === 'ONLINE');
+            
+            if (onlineProducts.length > 0) {
+                console.log(`[Shopify] ✅ ${onlineProducts.length} prodotti ONLINE da notificare`);
+                await this.updateMonitorStatus(`🎯 ${onlineProducts.length} product${onlineProducts.length > 1 ? 's' : ''} found!`, 'product found');
             }
             
-            // 🛒 ESTRAI VARIANTI da API se non già presenti
-            for (const product of productsToNotify) {
+            // 🛒 ESTRAI VARIANTI da API se non già presenti (SOLO PRODOTTI ONLINE)
+            for (const product of onlineProducts) {
                 // Se prodotto ONLINE ma senza varianti, usa API .js
                 if (product.status === 'ONLINE' && (!product.variants || product.variants.length === 0)) {
                     console.log(`[Shopify] 🔍 Estraggo varianti API per: ${product.title}`);
@@ -684,9 +692,9 @@ class ShopifyMonitor {
             }
             
             // 🎯 DOPO AVER INVIATO TUTTE LE NOTIFICHE → ELIMINA TASK
-            const onlineProductsSent = productsToNotify.filter(p => p.status === 'ONLINE' && p.variants && p.variants.length > 0);
-            if (onlineProductsSent.length > 0) {
-                console.log(`[Shopify] 🛑 STOP MONITOR: ${onlineProductsSent.length} prodotti ONLINE inviati. ELIMINO TASK.`);
+            if (onlineProducts.length > 0) {
+                const successfullySent = onlineProducts.filter(p => p.variants && p.variants.length > 0);
+                console.log(`[Shopify] ✅ Monitor completato: ${successfullySent.length} prodotti ONLINE inviati. Task eliminata.`);
                 await this.updateMonitorStatus(`🛑 Stopped`, 'stopped');
                 await this.stop(true); // true = elimina task automaticamente
                 return;
@@ -987,7 +995,7 @@ class ShopifyMonitor {
     }
 
     /**
-     * 🔴 NOTIFICA 3: Monitor bloccato/errore (probabilmente security/Cloudflare)
+     * 🔴 NOTIFICA 3: Monitor terminato con errore tecnico
      */
     async notifyMonitorError(errorMessage) {
         if (!this.discordWebhook) return;
@@ -1004,11 +1012,11 @@ class ShopifyMonitor {
                 '❌ **Errore Tecnico**';
 
             const embed = {
-                title: '🔴 MONITOR BLOCCATO',
+                title: '⚠️ MONITOR INTERROTTO',
                 description: isCloudflareBlock ? 
                     'Il monitor è stato bloccato dal sistema di sicurezza del sito (Cloudflare)' :
-                    'Il monitor ha riscontrato un errore tecnico',
-                color: 0xef4444, // Rosso
+                    'Il monitor ha riscontrato un errore tecnico imprevisto',
+                color: 0xf59e0b, // Arancione warning
                 fields: [
                     {
                         name: '🔍 Tipo Problema',
@@ -1026,16 +1034,16 @@ class ShopifyMonitor {
                         inline: false
                     },
                     {
-                        name: '🔄 Stato',
+                        name: '🔄 Prossimi Passi',
                         value: isCloudflareBlock ?
-                            '⚠️ Il sistema riproverà, ma potrebbe continuare a essere bloccato' :
-                            '🔄 Il sistema riproverà al prossimo intervallo',
+                            '⚠️ Riprova manualmente tra qualche minuto' :
+                            '🔄 Ricrea il monitor per riprovare',
                         inline: false
                     }
                 ],
                 timestamp: new Date().toISOString(),
                 footer: {
-                    text: 'Shappa Monitor Error'
+                    text: 'Shappa Monitor - Technical Error'
                 }
             };
 
