@@ -455,63 +455,57 @@ class ShopifyMonitor {
 
         console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina (cliccabili + non cliccabili)`);
 
-        // 🔍 VERIFICA STATUS per prodotti UNKNOWN (apri pagina prodotto)
+        // 🔍 VERIFICA STATUS + ESTRAI VARIANTI usando Shopify API (.js endpoint)
         for (const product of products) {
             if (product.status === 'UNKNOWN' && product.url) {
-                console.log(`[Shopify] 🔍 Verifico status per: ${product.title}`);
+                console.log(`[Shopify] 🔍 Verifico status + varianti per: ${product.title}`);
                 try {
+                    // Estrai handle dall'URL (es. /products/jacket-name → jacket-name)
+                    const handle = product.url.replace('/products/', '').split('?')[0];
+                    const apiUrl = `${this.baseUrl}/products/${handle}.js`;
+                    
+                    console.log(`[Shopify] 📡 API Request: ${apiUrl}`);
+                    
+                    // Fetch dati prodotto da Shopify API
                     const checkPage = await this.browser.newPage();
-                    const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
+                    await checkPage.goto(apiUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
                     
-                    await checkPage.goto(fullUrl, {
-                        waitUntil: 'domcontentloaded',
-                        timeout: 10000
-                    });
-                    
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    
-                    // Controlla se prodotto è ONLINE (ha bottone Add to Cart)
-                    const isOnline = await checkPage.evaluate(() => {
-                        // 1. Cerca bottoni Add to Cart ABILITATI (non disabled)
-                        const addToCartButton = document.querySelector(
-                            'button[name="add"]:not([disabled]), ' +
-                            'button[type="submit"]:not([disabled]), ' +
-                            'input[type="submit"][name="add"]:not([disabled]), ' +
-                            '.add-to-cart:not([disabled]), ' +
-                            '[class*="add-to-cart"]:not([disabled])'
-                        );
-                        
-                        // 2. Cerca form carrello (Shopify standard)
-                        const cartForm = document.querySelector('form[action*="/cart"]');
-                        
-                        // 3. Cerca bottoni con testo "Add to Cart" ABILITATI
-                        const buttons = Array.from(document.querySelectorAll('button, input[type="submit"], .btn, [class*="button"]'));
-                        const enabledAddToCartButton = buttons.find(btn => {
-                            const text = btn.textContent.toLowerCase();
-                            const isDisabled = btn.disabled || btn.hasAttribute('disabled');
-                            const hasAddToCartText = text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|shop\s*now/);
-                            const hasSoonText = text.match(/coming\s*soon|notify\s*me|sold\s*out|unavailable/);
-                            
-                            // Deve avere testo "Add to Cart" E NON essere disabilitato E NON avere testo "Soon"
-                            return hasAddToCartText && !isDisabled && !hasSoonText;
-                        });
-                        
-                        // 4. Verifica che NON ci siano messaggi "Coming Soon" o "Sold Out"
-                        const pageText = document.body.textContent.toLowerCase();
-                        const hasSoonMessage = pageText.includes('coming soon') || pageText.includes('notify me when available');
-                        
-                        // ONLINE solo se: Ha bottone abilitato O form carrello E NON ha messaggi "Soon"
-                        return (addToCartButton || cartForm || enabledAddToCartButton) && !hasSoonMessage;
+                    const productData = await checkPage.evaluate(() => {
+                        try {
+                            return JSON.parse(document.body.textContent);
+                        } catch {
+                            return null;
+                        }
                     });
                     
                     await checkPage.close();
                     
-                    product.status = isOnline ? 'ONLINE' : 'SOON';
-                    console.log(`[Shopify] ✅ Status verificato: ${product.title} → ${product.status}`);
+                    if (productData && productData.variants) {
+                        // ✅ ESTRAI VARIANTI CON DISPONIBILITÀ dal JSON
+                        const variants = productData.variants.map(v => ({
+                            id: v.id.toString(),
+                            title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
+                            price: v.price || 0, // Prezzo in centesimi
+                            available: v.available || false
+                        }));
+                        
+                        product.variants = variants;
+                        
+                        // Determina status: ONLINE se almeno UNA variante disponibile
+                        const hasAvailable = variants.some(v => v.available);
+                        product.status = hasAvailable ? 'ONLINE' : 'SOON';
+                        
+                        console.log(`[Shopify] ✅ ${product.title} → ${product.status} (${variants.filter(v => v.available).length}/${variants.length} taglie disponibili)`);
+                    } else {
+                        product.status = 'SOON';
+                        product.variants = [];
+                        console.log(`[Shopify] ⚠️ ${product.title} → Nessun dato API, marcato SOON`);
+                    }
                     
                 } catch (error) {
-                    console.error(`[Shopify] ⚠️ Errore verifica status: ${error.message}`);
+                    console.error(`[Shopify] ⚠️ Errore API per ${product.title}: ${error.message}`);
                     product.status = 'SOON'; // Fallback
+                    product.variants = [];
                 }
             }
         }
@@ -602,104 +596,44 @@ class ShopifyMonitor {
         if (productsToNotify.length > 0) {
             console.log(`[Shopify] 📢 ${productsToNotify.length} prodotti da notificare`);
             
-            // 🛒 PER OGNI PRODOTTO ONLINE: Estrai varianti navigando nella pagina
+            // 🛒 ESTRAI VARIANTI da API se non già presenti
             for (const product of productsToNotify) {
-                // Se status è ONLINE, vai nella pagina prodotto ed estrai varianti
-                if (product.status === 'ONLINE') {
-                    console.log(`[Shopify] 🔍 Estraggo varianti per: ${product.title}`);
-                    const productPage = await this.browser.newPage();
+                // Se prodotto ONLINE ma senza varianti, usa API .js
+                if (product.status === 'ONLINE' && (!product.variants || product.variants.length === 0)) {
+                    console.log(`[Shopify] 🔍 Estraggo varianti API per: ${product.title}`);
                     
                     try {
-                        // Naviga URL completo del prodotto
-                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
-                        await productPage.goto(fullUrl, {
-                            waitUntil: 'domcontentloaded',
-                            timeout: 15000
+                        const handle = product.url.replace('/products/', '').split('?')[0];
+                        const apiUrl = `${this.baseUrl}/products/${handle}.js`;
+                        
+                        const apiPage = await this.browser.newPage();
+                        await apiPage.goto(apiUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+                        
+                        const productData = await apiPage.evaluate(() => {
+                            try {
+                                return JSON.parse(document.body.textContent);
+                            } catch {
+                                return null;
+                            }
                         });
                         
-                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        await apiPage.close();
                         
-                        // Estrai varianti dalla pagina
-                        const variants = await productPage.evaluate(() => {
-                            const variantsData = [];
+                        if (productData && productData.variants) {
+                            product.variants = productData.variants.map(v => ({
+                                id: v.id.toString(),
+                                title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
+                                price: v.price || 0,
+                                available: v.available || false
+                            }));
                             
-                            // PRIMA: Cerca script JSON con prodotto Shopify (es. Travis Scott)
-                            const productJsonScript = document.querySelector('script.js-product-json, script[type="application/json"]');
-                            
-                            if (productJsonScript) {
-                                try {
-                                    const productData = JSON.parse(productJsonScript.textContent);
-                                    
-                                    // Il JSON contiene array variants con id, option1, available
-                                    if (productData.variants && Array.isArray(productData.variants)) {
-                                        // ✅ ESTRAI TUTTE LE VARIANTI con PREZZO (anche se available=false per SOON)
-                                        productData.variants.forEach(variant => {
-                                            const title = variant.public_title || variant.option1 || 
-                                                         variant.options?.join(' - ') || 'Default';
-                                            
-                                            variantsData.push({
-                                                id: variant.id.toString(),
-                                                title: title.toUpperCase(),
-                                                price: variant.price || 0, // Prezzo in centesimi
-                                                available: variant.available // Info disponibilità
-                                            });
-                                        });
-                                    }
-                                } catch (err) {
-                                    console.error('[Shopify] Errore parsing JSON prodotto:', err);
-                                }
-                            }
-                            
-                            // FALLBACK: Cerca select per taglie/varianti (temi standard)
-                            if (variantsData.length === 0) {
-                                const selects = document.querySelectorAll('select[name*="id"], select.product-form__input, select[data-index="option1"]');
-                                
-                                selects.forEach(select => {
-                                    const options = select.querySelectorAll('option');
-                                    options.forEach(opt => {
-                                        if (opt.value && opt.value !== '' && !opt.disabled) {
-                                            variantsData.push({
-                                                id: opt.value,
-                                                title: opt.textContent.trim(),
-                                                available: true
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                            
-                            // FALLBACK 2: Cerca bottoni varianti
-                            if (variantsData.length === 0) {
-                                const variantButtons = document.querySelectorAll('[data-variant-id], .variant-input:not([disabled]), input[name="id"]:not([disabled])');
-                                variantButtons.forEach(btn => {
-                                    const variantId = btn.getAttribute('data-variant-id') || btn.value;
-                                    const label = btn.getAttribute('data-variant-title') || btn.nextElementSibling?.textContent || 'Variant';
-                                    
-                                    if (variantId) {
-                                        variantsData.push({
-                                            id: variantId,
-                                            title: label.trim(),
-                                            available: true
-                                        });
-                                    }
-                                });
-                            }
-                            
-                            return variantsData;
-                        });
-                        
-                        console.log(`[Shopify] ✅ Trovate ${variants.length} varianti per ${product.title}`);
-                        product.variants = variants; // Aggiungi varianti al prodotto
+                            console.log(`[Shopify] ✅ API: ${product.variants.length} varianti estratte per ${product.title}`);
+                        }
                         
                     } catch (err) {
-                        console.error(`[Shopify] ❌ Errore estrazione varianti: ${err.message}`);
-                        product.variants = []; // Fallback vuoto
-                    } finally {
-                        await productPage.close();
+                        console.error(`[Shopify] ❌ Errore API varianti: ${err.message}`);
+                        product.variants = [];
                     }
-                } else {
-                    // Prodotto non ONLINE, nessuna variante
-                    product.variants = [];
                 }
                 
                 // Invia notifica con varianti
@@ -996,92 +930,45 @@ class ShopifyMonitor {
                 }
                 
                 if (product.status === 'ONLINE' && product.url) {
-                    // Naviga pagina prodotto per estrarre varianti
+                    // USA API .js per estrarre varianti (più veloce e affidabile)
                     try {
-                        const productPage = await this.browser.newPage();
-                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
+                        const handle = product.url.replace('/products/', '').split('?')[0];
+                        const apiUrl = `${this.baseUrl}/products/${handle}.js`;
                         
-                        await productPage.goto(fullUrl, {
-                            waitUntil: 'domcontentloaded',
-                            timeout: 10000
+                        const apiPage = await this.browser.newPage();
+                        await apiPage.goto(apiUrl, { waitUntil: 'domcontentloaded', timeout: 10000 });
+                        
+                        const productData = await apiPage.evaluate(() => {
+                            try {
+                                return JSON.parse(document.body.textContent);
+                            } catch {
+                                return null;
+                            }
                         });
                         
-                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        await apiPage.close();
                         
-                        // Estrai varianti
-                        const variants = await productPage.evaluate(() => {
-                            const variantsData = [];
+                        if (productData && productData.variants) {
+                            const variants = productData.variants.map(v => ({
+                                id: v.id.toString(),
+                                title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
+                                price: v.price || 0,
+                                available: v.available || false
+                            }));
                             
-                            // PRIMA: Cerca script JSON Shopify (Travis Scott)
-                            const productJsonScript = document.querySelector('script.js-product-json, script[type="application/json"]');
-                            
-                            if (productJsonScript) {
-                                try {
-                                    const productData = JSON.parse(productJsonScript.textContent);
-                                    
-                                    if (productData.variants && Array.isArray(productData.variants)) {
-                                        // ✅ ESTRAI TUTTE LE VARIANTI con PREZZO (anche se available=false per SOON products)
-                                        productData.variants.forEach(variant => {
-                                            const title = variant.public_title || variant.option1 || 
-                                                         variant.options?.join(' - ') || 'Default';
-                                            
-                                            variantsData.push({
-                                                id: variant.id.toString(),
-                                                title: title.toUpperCase(),
-                                                price: variant.price || 0, // Prezzo in centesimi
-                                                available: variant.available // Mantieni info disponibilità
-                                            });
-                                        });
-                                    }
-                                } catch (err) {
-                                    console.error('[Shopify] Errore parsing JSON:', err);
-                                }
-                            }
-                            
-                            // FALLBACK: Cerca select taglie (temi standard)
-                            if (variantsData.length === 0) {
-                                const selects = document.querySelectorAll('select[name*="id"], select.product-form__input');
-                                selects.forEach(select => {
-                                    const options = select.querySelectorAll('option');
-                                    options.forEach(opt => {
-                                        if (opt.value && opt.value !== '' && !opt.disabled) {
-                                            variantsData.push({
-                                                id: opt.value,
-                                                title: opt.textContent.trim()
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                            
-                            // FALLBACK 2: Cerca bottoni varianti
-                            if (variantsData.length === 0) {
-                                const buttons = document.querySelectorAll('[data-variant-id], input[name="id"]:not([disabled])');
-                                buttons.forEach(btn => {
-                                    const id = btn.getAttribute('data-variant-id') || btn.value;
-                                    const label = btn.getAttribute('data-variant-title') || btn.closest('label')?.textContent || 'Variant';
-                                    if (id) variantsData.push({ id, title: label.trim() });
-                                });
-                            }
-                            
-                            return variantsData;
-                        });
-                        
-                        await productPage.close();
-                        
-                        // Crea link direct-to-cart con PREZZO
-                        if (variants.length > 0) {
+                            // Crea link direct-to-cart con PREZZO
                             variantsText = variants.map(v => {
                                 const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
                                 const price = v.price ? ` - $${(v.price / 100).toFixed(2)}` : '';
-                                return `🛒 [**${v.title}**${price}](${cartUrl})`;
+                                const availableIcon = v.available ? '✅' : '❌';
+                                return `${availableIcon} [**${v.title}**${price}](${cartUrl})`;
                             }).join('\n');
+                            
+                            console.log(`[Shopify] ✅ API: ${variants.length} varianti estratte per ${product.title}`);
                         }
                         
-                        console.log(`[Shopify] ✅ Estratte ${variants.length} varianti per ${product.title}`);
-                        
                     } catch (err) {
-                        console.error(`[Shopify] ⚠️ Errore estrazione varianti: ${err.message}`);
+                        console.error(`[Shopify] ⚠️ Errore API varianti: ${err.message}`);
                     }
                 }
 
