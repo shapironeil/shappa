@@ -822,7 +822,7 @@ class ShopifyMonitor {
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] Notifica NUOVO PRODOTTO inviata: ${product.title} (matcha: ${matchesKeywords})`);
+            console.log(`[Shopify] ✅ Notifica NUOVO PRODOTTO inviata: ${product.title}`);
 
             // 🎯 Verifica se messaggio è COMPLETO (foto + titolo + status ONLINE + taglie)
             const hasImage = product.image || (product.images && product.images[0]);
