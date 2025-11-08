@@ -692,7 +692,7 @@ class ShopifyMonitor {
             const onlineProductsSent = productsToNotify.filter(p => p.status === 'ONLINE' && p.variants && p.variants.length > 0);
             if (onlineProductsSent.length > 0) {
                 console.log(`[Shopify] 🛑 STOP MONITOR: ${onlineProductsSent.length} prodotti ONLINE inviati. ELIMINO TASK.`);
-                await this.updateMonitorStatus(`✅ ${onlineProductsSent.length} prodotti ONLINE inviati!`, 'completed');
+                await this.updateMonitorStatus(`🛑 Stopped - ${onlineProductsSent.length} prodotti inviati`, 'stopped');
                 await this.stop(true); // true = elimina task automaticamente
                 return;
             }
@@ -802,46 +802,21 @@ class ShopifyMonitor {
                     inline: false
                 };
             }
-
-            // Determina colore e tipo notifica
-            let notificationType = '🆕 NUOVO PRODOTTO TROVATO!';
-            let notificationColor = 0x10b981; // Verde
-            let changeDescription = '';
-            
-            if (product.changeType === 'STATUS_CHANGE') {
-                notificationType = `🔄 CAMBIO STATUS: ${product.previousStatus} → ${product.status}`;
-                
-                if (product.status === 'ONLINE') {
-                    notificationColor = 0x10b981; // Verde (ONLINE)
-                    changeDescription = `\n\n⚠️ **PRODOTTO ORA DISPONIBILE!**`;
-                } else if (product.status === 'SOLD OUT') {
-                    notificationColor = 0xef4444; // Rosso (SOLD OUT)
-                    changeDescription = `\n\n❌ Prodotto esaurito`;
-                } else {
-                    notificationColor = 0xf59e0b; // Arancione (altro)
-                    changeDescription = `\n\n🔄 Status cambiato`;
-                }
-            }
             
             const embed = {
-                title: notificationType,
                 url: productUrl,
-                color: notificationColor,
-                description: `**${product.title}**${changeDescription}\n\n🛒 CLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO`,
+                color: 0x10b981,
                 fields: [
                     variantsField
                 ],
-                thumbnail: {
+                image: {
                     url: product.images && product.images[0] ? product.images[0].src : null
                 },
-                timestamp: new Date().toISOString(),
-                footer: {
-                    text: `Shappa Monitor`
-                }
+                timestamp: new Date().toISOString()
             };
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> 🔥 ${product.status === 'ONLINE' ? 'DROP ALERT!' : 'Status Update'}`,
+                content: `<@${this.userId}>`,
                 embeds: [embed]
             });
 

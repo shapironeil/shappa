@@ -3442,12 +3442,14 @@
         document.getElementById('releasingModal').remove();
         
         if (success) {
+            // Ricarica solo la tabella invece di reload completo
+            await loadInterestsTable();
+            
             // Avvia monitor automaticamente
             await startMonitor(monitor.id);
             
             const moduleName = monitor.module === 'shopify' ? 'Shopify' : 'Universale';
             alert(`✅ Monitor ${moduleName} attivato!\n\n🔍 Controlla ogni ${monitor.interval} min\n📱 Notifica Discord quando disponibile`);
-            location.reload();
         } else {
             alert('❌ Errore durante il salvataggio');
         }
@@ -3806,13 +3808,15 @@
             
             const dateText = interest.releaseDate ? new Date(interest.releaseDate).toLocaleDateString('it-IT') : '-';
             
-            // Status badge: monitoring (verde), not monitored (grigio), blocked (rosso)
-            let statusText = 'Not Monitored';
+            // Status badge con statusMessage visibile
+            let statusText = interest.statusMessage || 'Not Monitored';
             let statusColor = '#6b7280';
             
             if (interest.status === 'active' || interest.status === 'monitoring') {
-                statusText = 'Monitoring';
                 statusColor = '#10b981';
+            } else if (interest.status === 'stopped') {
+                statusText = interest.statusMessage || 'Stopped';
+                statusColor = '#ef4444';
             } else if (interest.status === 'blocked') {
                 statusText = 'Blocked';
                 statusColor = '#ef4444';
@@ -3987,11 +3991,35 @@
         }
     }
 
+    // 🔄 Auto-refresh tabella ogni 2 secondi per mostrare status in tempo reale
+    let autoRefreshInterval = null;
+    
+    function startAutoRefresh() {
+        if (autoRefreshInterval) return; // Evita duplicati
+        
+        autoRefreshInterval = setInterval(async () => {
+            await loadInterestsTable();
+        }, 2000); // Ogni 2 secondi
+        
+        console.log('✅ Auto-refresh attivato (ogni 2s)');
+    }
+    
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+            console.log('🛑 Auto-refresh fermato');
+        }
+    }
+
     // Load release dates on page load
     document.addEventListener('DOMContentLoaded', async () => {
         await loadInterestsTable();
         await loadReleaseDates();
         await updateCounters();
+        
+        // Avvia auto-refresh per vedere status in tempo reale
+        startAutoRefresh();
     });
     </script>
 </body>
