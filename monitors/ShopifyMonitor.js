@@ -288,6 +288,7 @@ class ShopifyMonitor {
 
         // NOTIFICA INIZIALE (primo check)
         if (!this.initialNotificationSent) {
+            console.log(`[Shopify] 📢 Invio notifica iniziale Discord...`);
             await this.notifyMonitorStarted(products, filteredProducts);
             this.initialNotificationSent = true;
             
@@ -296,7 +297,7 @@ class ShopifyMonitor {
                 this.seenProductIds.add(product.id);
             }
             
-            console.log(`[Shopify] ✅ Notifica iniziale inviata. ${this.seenProductIds.size} prodotti tracciati`);
+            console.log(`[Shopify] ✅ Notifica iniziale completata. ${this.seenProductIds.size} prodotti tracciati`);
             return; // Esci, prossimo check rileverà nuovi prodotti
         }
 
@@ -470,7 +471,12 @@ class ShopifyMonitor {
      * 📢 NOTIFICA 1: Monitor avviato correttamente con lista prodotti trovati
      */
     async notifyMonitorStarted(allProducts, filteredProducts) {
-        if (!this.discordWebhook) return;
+        if (!this.discordWebhook) {
+            console.log(`[Shopify] ⚠️ Webhook Discord NON configurato, skip notifica`);
+            return;
+        }
+
+        console.log(`[Shopify] 📢 Preparazione embed Discord per ${filteredProducts.length} prodotti...`);
 
         try {
             // Lista primi 10 prodotti (per evitare messaggi troppo lunghi)
@@ -525,15 +531,19 @@ class ShopifyMonitor {
                 }
             };
 
+            console.log(`[Shopify] 🌐 Invio richiesta a Discord webhook...`);
             await axios.post(this.discordWebhook, {
                 content: `🚀 **MONITOR INIZIALIZZATO**`,
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] ✅ Notifica START inviata`);
+            console.log(`[Shopify] ✅ Notifica START inviata con successo a Discord!`);
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore notifica start:`, error.message);
+            if (error.response) {
+                console.error(`[Shopify] ❌ Discord response:`, error.response.status, error.response.data);
+            }
         }
     }
 
