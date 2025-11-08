@@ -50,9 +50,10 @@ class ShopifyMonitor {
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
         
-        // ⏰ TIMING DROPS - Check intensivi OGNI MEZZ'ORA
-        this.intensiveCheckDuration = 5; // Minuti di check intensivi (5 min dopo ogni mezz'ora)
-        this.intensiveCheckInterval = 25; // Secondi tra check intensivi (25-30s)
+        // ⏰ TIMING DROPS - Finestre di monitoring intensive
+        this.intensiveCheckDuration = 4; // Minuti di check intensivi (4 min)
+        this.intensiveCheckInterval = 25; // Secondi tra check intensivi (25-30s random)
+        this.idleCheckInterval = 5; // Minuti tra check idle (ogni 5 min)
     }
 
     /**
@@ -76,27 +77,29 @@ class ShopifyMonitor {
 
     /**
      * Determina intervallo check in base all'orario
-     * LOGICA: Check intensivi per 5 min OGNI MEZZ'ORA (X:00, X:30)
-     * Ritorna intervallo in millisecondi
+     * LOGICA: Check intensivi per 4 min OGNI intervallo utente (default 30 min)
+     * - X:00-X:04 → Check ogni 25-30s random
+     * - X:04-X:30 → Check ogni 5 min
+     * - X:30-X:34 → Check ogni 25-30s random
+     * - X:34-X:60 → Check ogni 5 min
      */
     getCurrentCheckInterval() {
         const now = new Date();
         const currentMinute = now.getMinutes();
         
-        // Controlla se siamo in finestra intensiva:
-        // - Primi 5 minuti dell'ora (00:00-00:05, 01:00-01:05, etc)
-        // - Primi 5 minuti dopo la mezz'ora (00:30-00:35, 01:30-01:35, etc)
-        const isIntensiveWindow = 
-            (currentMinute >= 0 && currentMinute < this.intensiveCheckDuration) ||
-            (currentMinute >= 30 && currentMinute < (30 + this.intensiveCheckDuration));
+        // Calcola inizio finestra intensiva (multiplo di this.interval)
+        const windowStart = Math.floor(currentMinute / this.interval) * this.interval;
+        const isIntensiveWindow = (currentMinute >= windowStart && currentMinute < (windowStart + this.intensiveCheckDuration));
         
         if (isIntensiveWindow) {
-            // Check INTENSIVO ogni 25 secondi
-            return this.intensiveCheckInterval * 1000;
+            // Check INTENSIVO ogni 25-30s random
+            const randomSeconds = Math.floor(Math.random() * 6) + 25; // 25-30s
+            return randomSeconds * 1000;
         }
         
-        // Check NORMALE ogni 5 minuti
-        return this.interval * 60 * 1000;
+        // Check IDLE: attendi fino alla prossima finestra intensiva
+        const minutesUntilNextWindow = this.interval - (currentMinute % this.interval);
+        return minutesUntilNextWindow * 60 * 1000;
     }
 
     /**
@@ -140,8 +143,8 @@ class ShopifyMonitor {
         if (this.isRunning) return;
         
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
-        console.log(`[Shopify] ⏰ Check intensivi: OGNI MEZZ'ORA per 5 minuti (X:00-X:05, X:30-X:35)`);
-        console.log(`[Shopify] 💤 Check normali: ogni 5 minuti negli altri orari`);
+        console.log(`[Shopify] ⏰ Finestre intensive: Ogni ${this.interval} min per ${this.intensiveCheckDuration} min (check ogni 25-30s random)`);
+        console.log(`[Shopify] 💤 Check idle: Ogni ${this.idleCheckInterval} min tra le finestre`);
         
         // Status: STARTING
         await this.updateMonitorStatus('🚀 Starting...', 'starting');
@@ -306,12 +309,6 @@ class ShopifyMonitor {
         const isAvailable = availableVariants.length > 0;
 
         console.log(`[Shopify] Status: ${isAvailable ? '✅ DISPONIBILE' : '❌ NON DISPONIBILE'} (${availableVariants.length}/${product.variants.length} varianti)`);
-
-        // Detect cambio stato
-        if (this.lastStatus !== null && !this.lastStatus && isAvailable) {
-            console.log(`[Shopify] ⚡ CAMBIO STATO → DISPONIBILE!`);
-            await this.notifyDiscord(product, availableVariants);
-        }
 
         this.lastStatus = isAvailable;
     }
@@ -705,66 +702,6 @@ class ShopifyMonitor {
     }
 
     /**
-     * Invia notifica Discord
-     */
-    async notifyDiscord(product, variants) {
-        if (!this.discordWebhook) {
-            console.log(`[Shopify] ⚠️ Webhook Discord non configurato`);
-            return;
-        }
-
-        try {
-            // 🛒 GENERA LINK DIRECT-TO-CART per ogni variante
-            const variantLinks = variants.map(v => {
-                const price = (v.price / 100).toFixed(2);
-                const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
-                const stockInfo = v.inventory_quantity ? ` (${v.inventory_quantity} disponibili)` : '';
-                return `🛒 [**${v.title}** - $${price}${stockInfo}](${cartUrl})`;
-            }).join('\n');
-
-            const embed = {
-                title: `🚨 ${product.title} DISPONIBILE!`,
-                url: this.productUrl,
-                color: 0x10b981,
-                description: `**CLICCA LA TAGLIA PER AGGIUNGERLA AL CARRELLO** 👇`,
-                fields: [
-                    {
-                        name: '💰 Prezzo',
-                        value: `$${(product.variants[0].price / 100).toFixed(2)}`,
-                        inline: true
-                    },
-                    {
-                        name: '📦 Varianti Disponibili',
-                        value: `${variants.length}/${product.variants.length}`,
-                        inline: true
-                    },
-                    {
-                        name: '🛒 Link Direct-to-Cart',
-                        value: variantLinks || 'N/A',
-                        inline: false
-                    }
-                ],
-                thumbnail: {
-                    url: product.images[0]?.src || product.featured_image
-                },
-                timestamp: new Date().toISOString(),
-                footer: {
-                    text: '🚀 Shappa Shopify Monitor - Click size to add to cart!'
-                }
-            };
-
-            await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> **🔥 DROP ALERT!**`,
-                embeds: [embed]
-            });
-
-            console.log(`[Shopify] ✅ Notifica Discord inviata con ${variants.length} link direct-to-cart`);
-        } catch (error) {
-            console.error(`[Shopify] ❌ Errore invio notifica Discord:`, error.message);
-        }
-    }
-
-    /**
      * Notifica NUOVO PRODOTTO rilevato
      * 🔴 IMPORTANTE: Questa è la notifica più importante!
      * @returns {boolean} true se notifica completa inviata (foto + titolo + status ONLINE + taglie)
@@ -963,7 +900,6 @@ class ShopifyMonitor {
             console.log(`[Shopify] 🌐 Invio richiesta a Discord webhook con ${embeds.length} embeds...`);
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> 🚀 **Monitor avviato!**`,
                 embeds: embeds
             });
 
@@ -1104,7 +1040,6 @@ class ShopifyMonitor {
             };
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> 🚨 **MONITOR BLOCCATO!** ${isCloudflareBlock ? '(Security)' : '(Errore)'}`,
                 embeds: [embed]
             });
 
