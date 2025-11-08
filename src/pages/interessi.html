@@ -3867,6 +3867,10 @@
     async function deleteInterest(id) {
         if (!confirm('Sei sicuro di voler eliminare questo interesse?')) return;
         
+        // 🛑 IMPORTANTE: Ferma il monitor PRIMA di eliminare l'interesse
+        console.log(`🛑 Stopping monitor ${id} before deletion...`);
+        await stopMonitor(id);
+        
         const success = await deleteUserInterest(id);
         
         if (success) {

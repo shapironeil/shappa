@@ -925,9 +925,14 @@ class ShopifyMonitor {
                 }
 
                 // 🛒 Se ONLINE, estrai varianti (asincrono)
-                let variantsText = `[Vedi prodotto](${product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`})`;
+                let variantsText = '[Prodotto in coming soon]';
                 
-                if (product.status === 'ONLINE') {
+                // ⚠️ VERIFICA: Solo se prodotto ha URL (prodotti cliccabili)
+                if (product.url) {
+                    variantsText = `[Vedi prodotto](${product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`})`;
+                }
+                
+                if (product.status === 'ONLINE' && product.url) {
                     // Naviga pagina prodotto per estrarre varianti
                     try {
                         const productPage = await this.browser.newPage();
@@ -1017,7 +1022,7 @@ class ShopifyMonitor {
 
                 const productEmbed = {
                     title: product.title,
-                    url: product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`,
+                    url: product.url ? (product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`) : this.baseUrl,
                     color: statusColor,
                     fields: [
                         {
