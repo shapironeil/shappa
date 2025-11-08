@@ -348,26 +348,15 @@ class ShopifyMonitor {
                 
                 // Determina status con PRIORITÀ - VERIFICA REALE ACQUISTABILITÀ
                 
-                // 1️⃣ CONTROLLO ACQUISTO REALE: form carrello O bottone add to cart
-                const hasForm = productContainer?.querySelector('form[action*="cart"], form[action*="/cart"]');
-                const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], button[type="submit"], [data-action*="add"], .add-to-cart, [class*="add-to-cart"]');
-                const hasCartText = fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|purchase|order\s*now|add\s*to\s*basket|quick\s*add/i);
+                // 🔍 STRATEGIA MIGLIORATA: Per prodotti con link, assumi status sconosciuto
+                // Lo verificheremo aprendo la pagina prodotto dopo
+                status = 'UNKNOWN'; // Sarà verificato dopo aprendo la pagina
                 
-                // ✅ ONLINE = Solo se ha VERI elementi di acquisto (form/button/testo carrello)
-                if (hasForm || hasAddButton || hasCartText) {
-                    status = 'ONLINE';
-                }
-                // ❌ SOLD OUT = Esplicito sold out/unavailable
-                else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
+                // ⚠️ ECCEZIONE: Se ha testo esplicito SOLD OUT/SOON, marca subito
+                if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
                     status = 'SOLD OUT';
-                }
-                // ⏳ SOON = Esplicito coming soon/notify me/pre-order
-                else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
+                } else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming/i)) {
                     status = 'SOON';
-                }
-                // 🔍 FALLBACK = Ha link ma nessun indicatore chiaro → Probabilmente SOON
-                else {
-                    status = 'SOON'; // Se ha link ma non ha form/button acquisto = ancora coming soon
                 }
                 
                 productsMap.set(handle, {
@@ -453,6 +442,60 @@ class ShopifyMonitor {
         });
 
         console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina (cliccabili + non cliccabili)`);
+
+        // 🔍 VERIFICA STATUS per prodotti UNKNOWN (apri pagina prodotto)
+        for (const product of products) {
+            if (product.status === 'UNKNOWN' && product.url) {
+                console.log(`[Shopify] 🔍 Verifico status per: ${product.title}`);
+                try {
+                    const checkPage = await this.browser.newPage();
+                    const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
+                    
+                    await checkPage.goto(fullUrl, {
+                        waitUntil: 'domcontentloaded',
+                        timeout: 10000
+                    });
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    
+                    // Controlla se prodotto è ONLINE (ha bottone Add to Cart)
+                    const isOnline = await checkPage.evaluate(() => {
+                        // Cerca bottoni Add to Cart, form carrello, ecc.
+                        const addToCartButton = document.querySelector(
+                            'button[name="add"], button[type="submit"]:not([disabled]), ' +
+                            'input[type="submit"][name="add"], ' +
+                            '.add-to-cart, [class*="add-to-cart"], ' +
+                            'button:has-text("add to cart"), button:has-text("add to bag")'
+                        );
+                        
+                        const cartForm = document.querySelector('form[action*="/cart"]');
+                        
+                        // Cerca anche testo "Add to Cart" nei bottoni
+                        const buttons = document.querySelectorAll('button, input[type="submit"], .btn, [class*="button"]');
+                        let hasAddText = false;
+                        buttons.forEach(btn => {
+                            const text = btn.textContent.toLowerCase();
+                            if (text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|order\s*now/)) {
+                                hasAddText = true;
+                            }
+                        });
+                        
+                        return !!(addToCartButton || cartForm || hasAddText);
+                    });
+                    
+                    await checkPage.close();
+                    
+                    product.status = isOnline ? 'ONLINE' : 'SOON';
+                    console.log(`[Shopify] ✅ Status verificato: ${product.title} → ${product.status}`);
+                    
+                } catch (error) {
+                    console.error(`[Shopify] ⚠️ Errore verifica status: ${error.message}`);
+                    product.status = 'SOON'; // Fallback
+                }
+            }
+        }
+
+        console.log(`[Shopify] ✅ Status verificato per tutti i prodotti`);
 
         // Filtra per keywords se specificate
         let filteredProducts = products;
