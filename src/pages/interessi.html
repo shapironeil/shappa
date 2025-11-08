@@ -3454,6 +3454,64 @@
     }
 
     /**
+     * Salva webhook Discord sul SERVER (non localStorage)
+     */
+    async function saveDiscordWebhook(webhookUrl) {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('❌ Utente non autenticato');
+            return false;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/webhooks/${user.id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ webhook: webhookUrl })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log('💾 Webhook Discord salvato su SERVER');
+                return true;
+            }
+            
+            console.error('❌ Failed to save webhook:', data.error);
+            return false;
+        } catch (error) {
+            console.error('❌ Error saving webhook:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Carica webhook Discord dal SERVER (non localStorage)
+     */
+    async function loadDiscordWebhook() {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('❌ Utente non autenticato');
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/api/webhooks/${user.id}`);
+            const data = await response.json();
+            
+            if (data.success && data.webhook) {
+                console.log('✅ Webhook Discord caricato da SERVER');
+                return data.webhook;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error('❌ Error loading webhook:', error);
+            return null;
+        }
+    }
+
+    /**
      * Avvia un monitor
      */
     async function startMonitor(interestId) {
@@ -3464,8 +3522,12 @@
                 return false;
             }
 
-            // Carica webhook Discord se configurato
-            const discordWebhook = localStorage.getItem('discord_webhook_url');
+            // ⚠️ IMPORTANTE: Carica webhook dal SERVER, NON da localStorage
+            const discordWebhook = await loadDiscordWebhook();
+            
+            if (!discordWebhook) {
+                console.warn('⚠️ Webhook Discord non configurato - notifiche disabilitate');
+            }
 
             const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
                 method: 'POST',

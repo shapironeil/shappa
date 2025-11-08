@@ -1390,16 +1390,27 @@ app.post('/api/admin/clear-cache', (req, res) => {
 // ============================================
 
 const INTERESTS_DIR = path.join(__dirname, 'data', 'interests');
+const WEBHOOKS_DIR = path.join(__dirname, 'data', 'webhooks');
 
-// Ensure interests directory exists
+// Ensure directories exist
 if (!fs.existsSync(INTERESTS_DIR)) {
     fs.mkdirSync(INTERESTS_DIR, { recursive: true });
     console.log('📁 Created interests directory');
 }
 
+if (!fs.existsSync(WEBHOOKS_DIR)) {
+    fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
+    console.log('📁 Created webhooks directory');
+}
+
 // Get user interests file path
 function getUserInterestsPath(userId) {
     return path.join(INTERESTS_DIR, `interests_${userId}.json`);
+}
+
+// Get user webhook file path
+function getUserWebhookPath(userId) {
+    return path.join(WEBHOOKS_DIR, `webhook_${userId}.json`);
 }
 
 // GET - Retrieve user interests
@@ -1506,6 +1517,64 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
     } catch (error) {
         console.error('❌ Error deleting interest:', error);
         return res.status(500).json({ success: false, error: 'Failed to delete interest' });
+    }
+});
+
+// ============================================
+// DISCORD WEBHOOK ENDPOINTS (SERVER-SIDE)
+// ============================================
+
+// GET - Retrieve user Discord webhook
+app.get('/api/webhooks/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        const filePath = getUserWebhookPath(userId);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.json({ success: true, webhook: null });
+        }
+
+        const data = await fsPromises.readFile(filePath, 'utf8');
+        const webhookData = JSON.parse(data);
+        
+        return res.json({ success: true, webhook: webhookData.url });
+    } catch (error) {
+        console.error('❌ Error reading webhook:', error);
+        return res.status(500).json({ success: false, error: 'Failed to read webhook' });
+    }
+});
+
+// POST - Save user Discord webhook
+app.post('/api/webhooks/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { webhook } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        if (!webhook || !webhook.includes('discord.com/api/webhooks/')) {
+            return res.status(400).json({ success: false, error: 'Invalid webhook URL' });
+        }
+
+        const filePath = getUserWebhookPath(userId);
+        const webhookData = {
+            url: webhook,
+            updatedAt: new Date().toISOString()
+        };
+
+        await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
+        
+        console.log(`💾 Saved Discord webhook for user ${userId}`);
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('❌ Error saving webhook:', error);
+        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
     }
 });
 

@@ -154,10 +154,24 @@ class MonitorManager {
      */
     async loadUserWebhook(userId) {
         try {
-            // TODO: implementare storage webhook in database
-            // Per ora ritorna null, verrà gestito dal frontend
-            return null;
+            const webhookPath = path.join(__dirname, '../data/webhooks', `webhook_${userId}.json`);
+            
+            // Controlla se file esiste
+            const exists = await fs.access(webhookPath).then(() => true).catch(() => false);
+            if (!exists) {
+                console.log(`[Manager] ⚠️ Webhook non trovato per user ${userId}`);
+                return null;
+            }
+
+            // Leggi webhook dal file
+            const data = await fs.readFile(webhookPath, 'utf8');
+            const webhookData = JSON.parse(data);
+            
+            console.log(`[Manager] ✅ Webhook caricato per user ${userId}`);
+            return webhookData.url;
+            
         } catch (error) {
+            console.error(`[Manager] ❌ Errore caricamento webhook:`, error.message);
             return null;
         }
     }
