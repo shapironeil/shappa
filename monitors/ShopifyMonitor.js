@@ -791,6 +791,8 @@ class ShopifyMonitor {
         }
         
         // ⏳ SEMPRE mostra countdown dopo ogni check (se non abbiamo stoppato)
+        console.log(`[Shopify] 🔍 Debug countdown: checksCount=${this.checksCount}, nextCheckInterval=${this.nextCheckInterval}`);
+        
         if (this.checksCount >= 1 && this.nextCheckInterval) {
             // ✅ Abilita modalità intensiva dopo il primo check completo
             if (!this.firstCheckCompleted) {
@@ -813,6 +815,8 @@ class ShopifyMonitor {
             
             console.log(`[Shopify] ⏳ Nessun nuovo prodotto ONLINE. Prossimo check tra ${timeText}...`);
             await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
+        } else {
+            console.log(`[Shopify] ⚠️ Countdown NON impostato: condizioni non soddisfatte`);
         }
     }
 
