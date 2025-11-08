@@ -556,17 +556,36 @@ class ShopifyMonitor {
 
         // NOTIFICA INIZIALE (primo check)
         if (!this.initialNotificationSent) {
-            console.log(`[Shopify] 📢 Invio notifica iniziale Discord...`);
-            await this.notifyMonitorStarted(products, filteredProducts);
+            // 1️⃣ Invia notifica "Monitor avviato"
+            console.log(`[Shopify] 📢 Monitor avviato per: ${this.productFilter || 'tutti i prodotti'}`);
+            await this.notifyMonitorStartedSimple();
             this.initialNotificationSent = true;
             
-            // Inizializza seenProductIds con prodotti esistenti
-            for (const product of filteredProducts) {
-                this.seenProductIds.add(product.id);
+            // 2️⃣ Controlla se ci sono prodotti ONLINE
+            const onlineProducts = filteredProducts.filter(p => p.status === 'ONLINE' && p.variants && p.variants.length > 0);
+            
+            if (onlineProducts.length > 0) {
+                console.log(`[Shopify] 🎯 TROVATI ${onlineProducts.length} prodotti ONLINE!`);
+                
+                // Invia webhook per ogni prodotto
+                for (const product of onlineProducts) {
+                    await this.notifyNewProduct(product);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                console.log(`[Shopify] ✅ Prodotti inviati. CHIUDO MONITOR + ELIMINO TASK.`);
+                await this.stop(true); // true = elimina task
+                return;
             }
             
-            console.log(`[Shopify] ✅ Notifica iniziale completata. ${this.seenProductIds.size} prodotti tracciati`);
-            return; // Esci, prossimo check rileverà nuovi prodotti
+            // 3️⃣ Nessun prodotto ONLINE → Continua monitoraggio
+            console.log(`[Shopify] ⏳ Nessun prodotto ONLINE. Continuo a monitorare...`);
+            for (const product of filteredProducts) {
+                this.seenProductIds.add(product.id);
+                this.productStates.set(product.id, product.status);
+            }
+            
+            return;
         }
 
         // Rileva NUOVI prodotti o CAMBIAMENTI DI STATUS
@@ -661,19 +680,17 @@ class ShopifyMonitor {
                     console.log(`[Shopify]    ✅ Titolo: ${product.title}`);
                     console.log(`[Shopify]    ✅ Status: ${product.status}`);
                     console.log(`[Shopify]    ✅ Taglie: ${product.variants.length} link direct-to-cart`);
-                    console.log(`[Shopify] � Monitor continua (user stoppa manualmente)`);
+                    console.log(`[Shopify]  STOP MONITOR + ELIMINA TASK`);
+                    await this.stop(true);
+                    return;
                 }
                 
                 // Delay tra notifiche
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            // ✅ CONTINUA IL MONITORAGGIO (user controlla quando fermare)
-            console.log(`[Shopify] ✅ Monitor continua. User stoppa manualmente quando serve.`);
-            
         } else if (this.checksCount > 1) {
-            // Solo dopo il primo check (primo check inizializza seenProductIds)
-            console.log(`[Shopify] ✅ Nessun nuovo prodotto rilevato`);
+            console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
         }
     }
 
@@ -864,6 +881,63 @@ class ShopifyMonitor {
                 console.error(`[Shopify] Discord response:`, error.response.status, error.response.data);
             }
             return false; // Errore = notifica non completata
+        }
+    }
+
+    /**
+     * 📢 NOTIFICA SEMPLICE: Monitor avviato (senza dettagli prodotti)
+     */
+    async notifyMonitorStartedSimple() {
+        if (!this.discordWebhook) {
+            console.log(`[Shopify] ⚠️ Webhook Discord NON configurato, skip notifica`);
+            return;
+        }
+
+        console.log(`[Shopify] 📢 Invio notifica: Monitor avviato...`);
+
+        try {
+            const embed = {
+                title: '✅ MONITOR AVVIATO',
+                description: `Monitor Shopify attivo su **${this.baseUrl}**`,
+                color: 0x10b981, // Verde
+                fields: [
+                    {
+                        name: '🌐 URL',
+                        value: this.baseUrl,
+                        inline: false
+                    },
+                    {
+                        name: '🎯 Filtro',
+                        value: this.productFilter || 'Nessun filtro',
+                        inline: true
+                    },
+                    {
+                        name: '⏱️ Intervallo',
+                        value: `Ogni ${this.interval} minuti`,
+                        inline: true
+                    },
+                    {
+                        name: '🔍 Stato',
+                        value: '🔄 Ricerca prodotti ONLINE...',
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: `Monitor ID: ${this.monitorId}`,
+                    icon_url: 'https://cdn.shopify.com/s/files/1/0155/7645/files/shopify-icon.png'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            await axios.post(this.discordWebhook, {
+                username: 'Shappa Monitor',
+                avatar_url: 'https://cdn.shopify.com/s/files/1/0155/7645/files/shopify-icon.png',
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] ✅ Notifica "Monitor avviato" inviata`);
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore invio notifica avvio:`, error.message);
         }
     }
 
