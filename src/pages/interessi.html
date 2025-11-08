@@ -3655,11 +3655,9 @@
     }
 
     // ============================================
-    // API CONFIGURATION
+    // API CONFIGURATION - SEMPRE ONLINE (no localhost)
     // ============================================
-    const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000'
-        : 'http://207.154.218.16:3000';
+    const API_BASE = 'https://shapiro.ninja';
 
     // ============================================
     // USER-SPECIFIC STORAGE - SERVER API
