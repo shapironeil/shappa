@@ -316,12 +316,16 @@ class ShopifyMonitor {
             
             // Notifica per ogni nuovo prodotto
             for (const product of newProducts) {
-                const availableVariants = product.variants.filter(v => v.available);
-                await this.notifyNewProduct(product, availableVariants);
+                await this.notifyNewProduct(product);
                 
                 // Delay tra notifiche per evitare spam
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
+            
+            // 🔴 IMPORTANTE: STOPPA IL MONITOR dopo aver trovato prodotti!
+            console.log(`[Shopify] 🛑 Prodotti trovati! Stoppo monitor automaticamente...`);
+            await this.stop();
+            
         } else if (this.checksCount > 1) {
             // Solo dopo il primo check (primo check inizializza seenProductIds)
             console.log(`[Shopify] ✅ Nessun nuovo prodotto rilevato`);
@@ -393,8 +397,9 @@ class ShopifyMonitor {
 
     /**
      * Notifica NUOVO PRODOTTO rilevato
+     * 🔴 IMPORTANTE: Questa è la notifica più importante!
      */
-    async notifyNewProduct(product, variants) {
+    async notifyNewProduct(product) {
         if (!this.discordWebhook) {
             console.log(`[Shopify] ⚠️ Webhook Discord non configurato`);
             return;
@@ -402,47 +407,42 @@ class ShopifyMonitor {
 
         try {
             const productUrl = `${this.baseUrl}/products/${product.handle}`;
-            const price = product.variants[0] ? `$${(product.variants[0].price / 100).toFixed(2)}` : 'N/A';
-            const availableCount = variants.length;
-            const totalCount = product.variants.length;
+            
+            // Verifica se matcha keywords
+            const matchesKeywords = this.productFilter && this.productFilter.trim() ? 
+                product.title.toLowerCase().includes(this.productFilter.toLowerCase()) : 
+                true; // Se no filtro, sempre match
 
-            // Prepara info varianti disponibili
-            let variantsList = 'Nessuna variante disponibile';
-            if (availableCount > 0) {
-                variantsList = variants.slice(0, 5).map(v => {
-                    const vPrice = (v.price / 100).toFixed(2);
-                    return `• **${v.title}** - $${vPrice}`;
-                }).join('\n');
-                
-                if (availableCount > 5) {
-                    variantsList += `\n*...e altre ${availableCount - 5} varianti*`;
-                }
-            }
+            const keywordStatus = this.productFilter ? 
+                (matchesKeywords ? 
+                    `✅ **MATCHA KEYWORDS**: "${this.productFilter}"` : 
+                    `❌ Non matcha keywords: "${this.productFilter}"`) :
+                `ℹ️ Nessun filtro keywords impostato`;
 
             const embed = {
-                title: `🆕 NUOVO PRODOTTO! ${product.title}`,
+                title: `🆕 NUOVO PRODOTTO TROVATO!`,
                 url: productUrl,
-                color: 0xf59e0b, // Arancione per nuovo prodotto
-                description: `**${product.vendor || 'Travis Scott'}** ha appena aggiunto un nuovo prodotto!`,
+                color: matchesKeywords ? 0x10b981 : 0xf59e0b, // Verde se matcha, arancione altrimenti
+                description: `**${product.title}**`,
                 fields: [
                     {
-                        name: '💰 Prezzo',
-                        value: price,
-                        inline: true
+                        name: '🎯 Verifica Keywords',
+                        value: keywordStatus,
+                        inline: false
                     },
                     {
-                        name: '📦 Disponibilità',
-                        value: `${availableCount}/${totalCount} varianti`,
-                        inline: true
-                    },
-                    {
-                        name: '🎨 Varianti Disponibili',
-                        value: variantsList,
+                        name: '🌐 URL Prodotto',
+                        value: product.url.startsWith('http') ? product.url : productUrl,
                         inline: false
                     },
                     {
                         name: '🔗 Link Diretto',
-                        value: `[ACQUISTA ORA](${productUrl})`,
+                        value: `[🛒 ACQUISTA ORA](${productUrl})`,
+                        inline: false
+                    },
+                    {
+                        name: '� Stato Monitor',
+                        value: '🛑 **Monitor stoppato automaticamente** (prodotto trovato!)',
                         inline: false
                     }
                 ],
@@ -451,19 +451,24 @@ class ShopifyMonitor {
                 },
                 timestamp: new Date().toISOString(),
                 footer: {
-                    text: `Shappa Monitor • Travis Scott Shop`
+                    text: `Shappa Monitor • Prodotto #${this.checksCount}`
                 }
             };
 
             await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}> 🔥 **NUOVO PRODOTTO RILEVATO!** 🔥`,
+                content: matchesKeywords ? 
+                    `<@${this.userId}> 🎉🎉🎉 **PRODOTTO TROVATO CON KEYWORDS!** 🎉🎉🎉` :
+                    `<@${this.userId}> � **Nuovo prodotto rilevato**`,
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] ✅ Notifica NUOVO PRODOTTO inviata: ${product.title}`);
+            console.log(`[Shopify] ✅ Notifica NUOVO PRODOTTO inviata: ${product.title} (matcha: ${matchesKeywords})`);
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore notifica nuovo prodotto:`, error.message);
+            if (error.response) {
+                console.error(`[Shopify] ❌ Discord response:`, error.response.status, error.response.data);
+            }
         }
     }
 
@@ -609,30 +614,49 @@ class ShopifyMonitor {
     }
 
     /**
-     * 🔴 NOTIFICA 3: Monitor bloccato/errore
+     * 🔴 NOTIFICA 3: Monitor bloccato/errore (probabilmente security/Cloudflare)
      */
     async notifyMonitorError(errorMessage) {
         if (!this.discordWebhook) return;
 
         try {
+            // Rileva tipo errore
+            const isCloudflareBlock = errorMessage.includes('Cloudflare') || 
+                                     errorMessage.includes('blocked') || 
+                                     errorMessage.includes('403') ||
+                                     errorMessage.includes('You do not have access');
+            
+            const errorType = isCloudflareBlock ? 
+                '🛡️ **Bloccato da Security/Cloudflare**' : 
+                '❌ **Errore Tecnico**';
+
             const embed = {
-                title: '🔴 ERRORE MONITOR',
-                description: `Il monitor ha riscontrato un problema`,
+                title: '🔴 MONITOR BLOCCATO',
+                description: isCloudflareBlock ? 
+                    'Il monitor è stato bloccato dal sistema di sicurezza del sito (Cloudflare)' :
+                    'Il monitor ha riscontrato un errore tecnico',
                 color: 0xef4444, // Rosso
                 fields: [
                     {
-                        name: '❌ Errore',
-                        value: errorMessage,
+                        name: '🔍 Tipo Problema',
+                        value: errorType,
                         inline: false
                     },
                     {
-                        name: '📊 Info',
-                        value: `Check falliti: ${this.checksCount}\nURL: ${this.baseUrl}`,
+                        name: '❌ Dettaglio Errore',
+                        value: `\`\`\`${errorMessage.substring(0, 200)}\`\`\``,
                         inline: false
                     },
                     {
-                        name: '🔄 Azione',
-                        value: 'Il sistema riproverà al prossimo intervallo',
+                        name: '📊 Statistiche',
+                        value: `Check eseguiti: ${this.checksCount}\nURL: ${this.baseUrl}`,
+                        inline: false
+                    },
+                    {
+                        name: '🔄 Stato',
+                        value: isCloudflareBlock ?
+                            '⚠️ Il sistema riproverà, ma potrebbe continuare a essere bloccato' :
+                            '🔄 Il sistema riproverà al prossimo intervallo',
                         inline: false
                     }
                 ],
@@ -643,11 +667,11 @@ class ShopifyMonitor {
             };
 
             await axios.post(this.discordWebhook, {
-                content: `⚠️ **ATTENZIONE: Monitor in errore!**`,
+                content: `<@${this.userId}> 🚨 **MONITOR BLOCCATO!** ${isCloudflareBlock ? '(Security)' : '(Errore)'}`,
                 embeds: [embed]
             });
 
-            console.log(`[Shopify] 🔴 Notifica ERRORE inviata`);
+            console.log(`[Shopify] 🔴 Notifica ERRORE inviata (Cloudflare: ${isCloudflareBlock})`);
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore notifica errore:`, error.message);
