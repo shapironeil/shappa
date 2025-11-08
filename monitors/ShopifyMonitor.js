@@ -299,12 +299,14 @@ class ShopifyMonitor {
             return;
         }
 
-        // ESTRAI PRODOTTI dalla pagina HTML (come utente reale)
+        // ESTRAI PRODOTTI dalla pagina HTML (TUTTI i prodotti, anche non cliccabili)
         const products = await page.evaluate(() => {
-            const productElements = document.querySelectorAll('a[href*="/products/"]');
             const productsMap = new Map();
             
-            productElements.forEach(el => {
+            // STRATEGIA 1: Prodotti con link (prodotti online/acquistabili)
+            const productLinks = document.querySelectorAll('a[href*="/products/"]');
+            
+            productLinks.forEach(el => {
                 const href = el.getAttribute('href');
                 if (!href) return;
                 
@@ -324,10 +326,9 @@ class ShopifyMonitor {
                     title = el.textContent.trim();
                 }
                 
-                // 🆕 ESTRAI IMMAGINE
+                // Estrai immagine
                 let imageUrl = null;
                 if (img) {
-                    // Prova src, data-src, srcset
                     imageUrl = img.src || img.getAttribute('data-src') || null;
                     if (!imageUrl && img.srcset) {
                         const srcsetMatch = img.srcset.match(/https?:\/\/[^\s]+/);
@@ -335,65 +336,102 @@ class ShopifyMonitor {
                     }
                 }
                 
-                // 🆕 RILEVA STATUS INTELLIGENTE - Cerca in TUTTO il DOM del prodotto
-                let status = null; // Inizialmente null, deve trovarlo
+                // Rileva STATUS - cerca testo vicino al prodotto
+                let status = null;
+                const productContainer = el.closest('.product-item, .product-card, .grid-item, [class*="product"]') || el;
+                const allText = productContainer.textContent.toLowerCase();
                 
-                // 1. Cerca nel parent container del prodotto
-                const productContainer = el.closest('.product-item, .product-card, .grid-item, .product, .grid__item, article, .product-wrap');
-                
-                // 2. Raccoglie TUTTO il testo del container
-                const allText = productContainer ? productContainer.textContent.toLowerCase() : el.textContent.toLowerCase();
-                
-                // 3. Cerca nei badge/button specifici (più affidabile)
-                const badges = productContainer?.querySelectorAll('.badge, .product-badge, .tag, .label, button, .button, .btn, .product-status, .availability') || [];
-                let badgeText = '';
-                badges.forEach(badge => {
-                    badgeText += ' ' + badge.textContent.toLowerCase();
-                });
-                
-                // 4. Combina tutto il testo disponibile
+                // Badge o testo specifico
+                const badge = productContainer.querySelector('.badge, .tag, [class*="badge"], [class*="status"]');
+                const badgeText = badge ? badge.textContent.toLowerCase() : '';
                 const fullText = allText + ' ' + badgeText;
                 
-                // 5. Determina status con PRIORITÀ (più specifico prima)
-                
-                // ✅ ONLINE = Prima priorità se ha CHIARE indicazioni di acquisto
+                // Determina status con PRIORITÀ
                 const hasCartIndicators = fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|in\s*stock|available\s*now|purchase|order\s*now|add\s*to\s*basket|shop|quick\s*add/i);
                 const hasForm = productContainer?.querySelector('form[action*="cart"], form[action*="/cart"]');
                 const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], button[type="submit"], [data-action*="add"], .add-to-cart, [class*="add-to-cart"]');
                 
                 if (hasCartIndicators || hasForm || hasAddButton) {
-                    status = 'ONLINE'; // Ha indicatori di acquisto = DISPONIBILE
-                }
-                // ❌ SOLD OUT = seconda priorità (solo se ESPLICITO)
-                else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
-                    status = 'SOLD OUT';
-                }
-                // ⏳ SOON = terza priorità (ESPLICITO: "SOON", "Coming Soon", ecc.)
-                else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
-                    status = 'SOON';
-                }
-                // 🔍 FALLBACK: Se non trova NESSUN indicatore chiaro, assume ONLINE se ci sono link prodotto validi
-                else {
-                    // Se ha link /products/ valido, probabilmente è acquistabile
-                    console.log(`[Shopify] ⚠️ Status ambiguo per "${title}", ma ha link prodotto → Assumo ONLINE`);
                     status = 'ONLINE';
+                } else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
+                    status = 'SOLD OUT';
+                } else if (fullText.match(/\bsoon\b|coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
+                    status = 'SOON';
+                } else {
+                    status = 'ONLINE'; // Default per prodotti con link
                 }
                 
-                // Crea oggetto prodotto simile a Shopify API
                 productsMap.set(handle, {
-                    id: handle, // Usa handle come ID
+                    id: handle,
                     handle: handle,
                     title: title || handle,
                     url: href,
                     image: imageUrl,
-                    status: status
+                    status: status,
+                    isClickable: true // Ha link prodotto
+                });
+            });
+            
+            // STRATEGIA 2: Prodotti SENZA link (coming soon, solo immagini)
+            // Cerca elementi con testo tipo "AIR JORDAN" + "SOON" ma senza link
+            const allContainers = document.querySelectorAll('.product-item, .product-card, .grid-item, [class*="product"], [class*="grid"]');
+            
+            allContainers.forEach(container => {
+                // Se già ha un link /products/, skip (già processato sopra)
+                if (container.querySelector('a[href*="/products/"]')) return;
+                
+                // Cerca titoli/testo nel container
+                const titleElements = container.querySelectorAll('h2, h3, h4, .title, .product-title, [class*="title"], [class*="name"]');
+                let title = '';
+                
+                if (titleElements.length > 0) {
+                    title = Array.from(titleElements).map(el => el.textContent.trim()).join(' ');
+                } else {
+                    // Fallback: prendi alt text dalle immagini
+                    const imgs = container.querySelectorAll('img[alt]');
+                    if (imgs.length > 0) {
+                        title = Array.from(imgs).map(img => img.alt).filter(Boolean).join(' ');
+                    }
+                }
+                
+                if (!title || title.length < 5) return; // Skip elementi vuoti
+                
+                // Genera un ID fittizio basato sul titolo
+                const fakeHandle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50);
+                if (productsMap.has(fakeHandle)) return; // Skip duplicati
+                
+                // Estrai immagine
+                let imageUrl = null;
+                const img = container.querySelector('img');
+                if (img) {
+                    imageUrl = img.src || img.getAttribute('data-src') || null;
+                }
+                
+                // Rileva STATUS (prodotti senza link sono sempre SOON o COMING SOON)
+                const allText = container.textContent.toLowerCase();
+                let status = 'SOON'; // Default per prodotti non cliccabili
+                
+                if (allText.match(/sold\s*out|soldout|esaurito/i)) {
+                    status = 'SOLD OUT';
+                } else if (allText.match(/\bsoon\b|coming\s*soon|notify|pre\s*order|upcoming/i)) {
+                    status = 'SOON';
+                }
+                
+                productsMap.set(fakeHandle, {
+                    id: fakeHandle,
+                    handle: fakeHandle,
+                    title: title.trim(),
+                    url: null, // Nessun link ancora
+                    image: imageUrl,
+                    status: status,
+                    isClickable: false // NON ha link (solo immagine/testo)
                 });
             });
             
             return Array.from(productsMap.values());
         });
 
-        console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina HTML`);
+        console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina (cliccabili + non cliccabili)`);
 
         // Filtra per keywords se specificate
         let filteredProducts = products;
