@@ -533,25 +533,50 @@ class ShopifyMonitor {
                     
                     await new Promise(resolve => setTimeout(resolve, 1000));
                     
-                    // Estrai JSON dal tag <script> della pagina
+                    // Estrai JSON dal tag <script> della pagina + immagine dalla pagina
                     const productData = await productPage.evaluate(() => {
                         // Cerca script con JSON prodotto
                         const script = document.querySelector('script.js-product-json, script[type="application/json"][data-product-json]');
+                        let jsonData = null;
+                        
                         if (script) {
                             try {
-                                return JSON.parse(script.textContent);
+                                jsonData = JSON.parse(script.textContent);
                             } catch (e) {
                                 console.error('Parse error:', e);
                             }
                         }
-                        return null;
+                        
+                        // 🖼️ ESTRAI IMMAGINE PRINCIPALE dalla pagina HTML (più affidabile)
+                        let mainImage = null;
+                        const imgSelectors = [
+                            '.product__main-photos img',
+                            '.product-single__photo img',
+                            '.product-image-main img',
+                            '.product__image img',
+                            '[class*="product"] img[src*="cdn.shopify"]',
+                            'img[src*="cdn.shopify"]'
+                        ];
+                        
+                        for (const selector of imgSelectors) {
+                            const img = document.querySelector(selector);
+                            if (img && img.src && img.src.includes('http')) {
+                                mainImage = img.src;
+                                break;
+                            }
+                        }
+                        
+                        return { 
+                            json: jsonData, 
+                            mainImage: mainImage 
+                        };
                     });
                     
                     await productPage.close();
                     
-                    if (productData && productData.variants) {
+                    if (productData.json && productData.json.variants) {
                         // ✅ ESTRAI VARIANTI CON DISPONIBILITÀ
-                        const variants = productData.variants.map(v => ({
+                        const variants = productData.json.variants.map(v => ({
                             id: v.id.toString(),
                             title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
                             price: v.price || 0,
@@ -560,13 +585,19 @@ class ShopifyMonitor {
                         
                         product.variants = variants;
                         
-                        // 🖼️ ESTRAI IMMAGINI (priorità: images array, poi featured_image, poi image già presente)
-                        if (productData.images && productData.images.length > 0) {
-                            product.images = productData.images;
-                        } else if (productData.featured_image) {
-                            product.images = [{ src: productData.featured_image }];
+                        // 🖼️ ESTRAI IMMAGINI (priorità: HTML img, poi JSON images, poi featured_image)
+                        if (productData.mainImage) {
+                            product.images = [{ src: productData.mainImage }];
+                            console.log(`[Shopify] 📸 Immagine estratta da HTML: ${productData.mainImage.substring(0, 60)}...`);
+                        } else if (productData.json.images && productData.json.images.length > 0) {
+                            product.images = productData.json.images;
+                            console.log(`[Shopify] 📸 ${productData.json.images.length} immagini estratte da JSON`);
+                        } else if (productData.json.featured_image) {
+                            product.images = [{ src: productData.json.featured_image }];
+                            console.log(`[Shopify] 📸 Featured image estratta: ${productData.json.featured_image.substring(0, 60)}...`);
                         } else if (product.image) {
                             product.images = [{ src: product.image }];
+                            console.log(`[Shopify] 📸 Immagine fallback dalla homepage`);
                         }
                         
                         // ONLINE se almeno UNA variante disponibile
