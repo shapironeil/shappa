@@ -3445,11 +3445,8 @@
             // Ricarica solo la tabella invece di reload completo
             await loadInterestsTable();
             
-            // Avvia monitor automaticamente
+            // Avvia monitor automaticamente (in background, no alert)
             await startMonitor(monitor.id);
-            
-            const moduleName = monitor.module === 'shopify' ? 'Shopify' : 'Universale';
-            alert(`✅ Monitor ${moduleName} attivato!\n\n🔍 Controlla ogni ${monitor.interval} min\n📱 Notifica Discord quando disponibile`);
         } else {
             alert('❌ Errore durante il salvataggio');
         }

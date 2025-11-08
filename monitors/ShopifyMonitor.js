@@ -626,7 +626,6 @@ class ShopifyMonitor {
         // 🎯 PRIMO CHECK: Inizializza status update
         if (!this.initialNotificationSent) {
             console.log(`[Shopify] 📢 Monitor avviato per: ${this.productFilter || 'tutti i prodotti'}`);
-            await this.updateMonitorStatus('🔍 Monitoring...', 'monitoring');
             this.initialNotificationSent = true;
         }
 
@@ -706,9 +705,12 @@ class ShopifyMonitor {
                 return;
             }
             
-        } else if (this.checksCount > 1) {
-            console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
-            await this.updateMonitorStatus(`🔍 Monitoring...`, 'monitoring');
+        } else {
+            // Nessun prodotto da notificare - mantieni status Monitoring
+            if (this.checksCount >= 1) {
+                console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
+                await this.updateMonitorStatus(`🔍 Monitoring...`, 'monitoring');
+            }
         }
     }
 
