@@ -249,6 +249,9 @@ class ShopifyMonitor {
      */
     async check(nextCheckInterval = null) {
         this.checksCount++;
+        
+        // 💾 Salva nextCheckInterval per usarlo nel catch
+        this.nextCheckInterval = nextCheckInterval;
 
         try {
             console.log(`[Shopify] 🔍 Check #${this.checksCount} - ${this.productName}`);
@@ -309,10 +312,10 @@ class ShopifyMonitor {
             }
             
             // ⏳ Anche in caso di errore, mostra countdown per prossimo check
-            if (this.checksCount >= 1 && nextCheckInterval) {
-                const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
+            if (this.checksCount >= 1 && this.nextCheckInterval) {
+                const secondsUntilNext = Math.ceil(this.nextCheckInterval / 1000);
                 console.log(`[Shopify] ⏳ Prossimo tentativo tra ${secondsUntilNext}s...`);
-                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', nextCheckInterval);
+                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
             }
         }
     }
@@ -785,7 +788,7 @@ class ShopifyMonitor {
             
         } else {
             // Nessun prodotto da notificare - mostra countdown accurato
-            if (this.checksCount >= 1 && nextCheckInterval) {
+            if (this.checksCount >= 1 && this.nextCheckInterval) {
                 // ✅ Abilita modalità intensiva dopo il primo check completo
                 if (!this.firstCheckCompleted) {
                     this.firstCheckCompleted = true;
@@ -793,7 +796,7 @@ class ShopifyMonitor {
                     console.log(`[Shopify] ✅ Primo check completato - modalità intensiva ora disponibile`);
                 }
                 
-                const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
+                const secondsUntilNext = Math.ceil(this.nextCheckInterval / 1000);
                 
                 // Formatta tempo in modo leggibile per i log
                 let timeText = '';
@@ -807,7 +810,7 @@ class ShopifyMonitor {
                 
                 console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${timeText}...`);
                 // USA il nextCheckInterval passato come parametro (già calcolato PRIMA del check)
-                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', nextCheckInterval);
+                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
             }
         }
     }
