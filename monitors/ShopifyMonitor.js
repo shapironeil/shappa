@@ -591,19 +591,16 @@ class ShopifyMonitor {
             // 🆕 Aggiungi embeds per ogni prodotto (max 5)
             const topProducts = filteredProducts.slice(0, 5);
             for (const product of topProducts) {
-                // Emoji status
-                let statusEmoji = '🟢';
+                // Colore status (no emoji nel titolo)
                 let statusColor = 0x10b981; // Verde default
                 if (product.status === 'SOON') {
-                    statusEmoji = '🔜';
                     statusColor = 0xf59e0b; // Arancione
                 } else if (product.status === 'SOLD OUT') {
-                    statusEmoji = '🔴';
                     statusColor = 0xef4444; // Rosso
                 }
 
                 const productEmbed = {
-                    title: `${statusEmoji} ${product.title}`,
+                    title: product.title, // ✅ Nessuna emoji nel titolo
                     url: product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`,
                     color: statusColor,
                     fields: [
