@@ -398,12 +398,20 @@ class ShopifyMonitor {
         // Filtra per keywords se specificate
         let filteredProducts = products;
         if (this.productFilter && this.productFilter.trim()) {
-            const keywords = this.productFilter.toLowerCase().split(' ').filter(k => k.length > 2);
+            // Rimuovi virgolette e caratteri speciali, split su spazi
+            const cleanFilter = this.productFilter.replace(/["""]/g, '').trim();
+            const keywords = cleanFilter.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+            
             filteredProducts = products.filter(p => {
                 const title = p.title.toLowerCase();
+                // Matcha se almeno UNA keyword è presente nel titolo
                 return keywords.some(kw => title.includes(kw));
             });
+            
             console.log(`[Shopify] 🔍 ${filteredProducts.length} prodotti matchano filtro "${this.productFilter}"`);
+            if (filteredProducts.length === 0 && keywords.length > 0) {
+                console.log(`[Shopify] ⚠️ Keywords cercate: [${keywords.join(', ')}] - nessun match trovato`);
+            }
         }
 
         // NOTIFICA INIZIALE (primo check)
@@ -485,18 +493,16 @@ class ShopifyMonitor {
                                     
                                     // Il JSON contiene array variants con id, option1, available
                                     if (productData.variants && Array.isArray(productData.variants)) {
+                                        // ✅ ESTRAI TUTTE LE VARIANTI (anche se available=false per SOON)
                                         productData.variants.forEach(variant => {
-                                            if (variant.available) {
-                                                // Costruisci titolo da options o public_title
-                                                const title = variant.public_title || variant.option1 || 
-                                                             variant.options?.join(' - ') || 'Default';
-                                                
-                                                variantsData.push({
-                                                    id: variant.id.toString(),
-                                                    title: title.toUpperCase(),
-                                                    available: true
-                                                });
-                                            }
+                                            const title = variant.public_title || variant.option1 || 
+                                                         variant.options?.join(' - ') || 'Default';
+                                            
+                                            variantsData.push({
+                                                id: variant.id.toString(),
+                                                title: title.toUpperCase(),
+                                                available: variant.available // Info disponibilità
+                                            });
                                         });
                                     }
                                 } catch (err) {
@@ -840,16 +846,16 @@ class ShopifyMonitor {
                                     const productData = JSON.parse(productJsonScript.textContent);
                                     
                                     if (productData.variants && Array.isArray(productData.variants)) {
+                                        // ✅ ESTRAI TUTTE LE VARIANTI (anche se available=false per SOON products)
                                         productData.variants.forEach(variant => {
-                                            if (variant.available) {
-                                                const title = variant.public_title || variant.option1 || 
-                                                             variant.options?.join(' - ') || 'Default';
-                                                
-                                                variantsData.push({
-                                                    id: variant.id.toString(),
-                                                    title: title.toUpperCase()
-                                                });
-                                            }
+                                            const title = variant.public_title || variant.option1 || 
+                                                         variant.options?.join(' - ') || 'Default';
+                                            
+                                            variantsData.push({
+                                                id: variant.id.toString(),
+                                                title: title.toUpperCase(),
+                                                available: variant.available // Mantieni info disponibilità
+                                            });
                                         });
                                     }
                                 } catch (err) {

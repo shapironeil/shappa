@@ -1518,6 +1518,9 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
         
+        // 🛑 FERMA IL MONITOR se attivo
+        monitorManager.stopMonitor(interestId);
+        
         console.log(`🗑️ Deleted interest ${interestId} for user ${userId}`);
         return res.json({ success: true, remaining: filtered.length });
     } catch (error) {
