@@ -93,7 +93,6 @@ class ShopifyMonitor {
         
         // Calcola inizio finestra intensiva (multiplo di this.interval)
         // Es: interval=30 → finestre ai minuti 0 e 30
-        // Es: interval=5 → finestre ai minuti 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55
         const windowStart = Math.floor(currentMinute / this.interval) * this.interval;
         const isIntensiveWindow = (currentMinute >= windowStart && currentMinute < (windowStart + this.intensiveCheckDuration));
         
@@ -108,15 +107,14 @@ class ShopifyMonitor {
             return randomSeconds * 1000;
         }
         
-        // Fuori dalla finestra intensiva - disattiva modalità intensiva e usa IDLE
+        // Fuori dalla finestra intensiva - disattiva modalità intensiva e usa IDLE fisso (5 min)
         if (this.allowIntensiveMode && !isIntensiveWindow) {
             this.allowIntensiveMode = false;
-            console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle`);
+            console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle (5 min)`);
         }
         
-        // Check IDLE: attendi fino alla prossima finestra intensiva
-        const minutesUntilNextWindow = this.interval - (currentMinute % this.interval);
-        return minutesUntilNextWindow * 60 * 1000;
+        // Check IDLE: sempre 5 minuti
+        return 5 * 60 * 1000; // 5 minuti fissi
     }
 
     /**
