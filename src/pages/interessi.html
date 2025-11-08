@@ -3529,7 +3529,7 @@
                 console.warn('⚠️ Webhook Discord non configurato - notifiche disabilitate');
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
+            const response = await fetch(`${API_BASE}/api/monitors/start`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3565,7 +3565,7 @@
                 return false;
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/monitors/stop/${interestId}`, {
+            const response = await fetch(`${API_BASE}/api/monitors/stop/${interestId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId: user.id })
@@ -3658,8 +3658,8 @@
     // API CONFIGURATION
     // ============================================
     const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'https://localhost:3000'
-        : 'https://shapiro.ninja';
+        ? 'http://localhost:3000'
+        : 'http://207.154.218.16:3000';
 
     // ============================================
     // USER-SPECIFIC STORAGE - SERVER API
