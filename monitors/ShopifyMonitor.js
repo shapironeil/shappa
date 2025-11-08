@@ -141,12 +141,24 @@ class ShopifyMonitor {
     /**
      * Ferma monitor
      */
-    async stop() {
+    async stop(deleteInterest = false) {
         if (!this.isRunning) return;
         
         console.log(`[Shopify] 🛑 Monitor fermato: ${this.productName}`);
         this.isRunning = false;
         clearInterval(this.intervalId);
+        
+        // 🗑️ Se richiesto, elimina l'interesse dal database (task auto-eliminata)
+        if (deleteInterest && this.userId && this.monitorId) {
+            try {
+                console.log(`[Shopify] 🗑️ Eliminazione automatica task ${this.monitorId}...`);
+                const API_BASE = process.env.NODE_ENV === 'production' ? 'https://shapiro.ninja' : 'https://localhost:3000';
+                await axios.delete(`${API_BASE}/api/interests/${this.userId}/${this.monitorId}`);
+                console.log(`[Shopify] ✅ Task eliminata automaticamente dalla tabella`);
+            } catch (error) {
+                console.error(`[Shopify] ⚠️ Errore eliminazione task:`, error.message);
+            }
+        }
         
         // Notifica Discord di STOP
         await this.notifyMonitorStopped();
@@ -464,8 +476,7 @@ class ShopifyMonitor {
                         const addToCartButton = document.querySelector(
                             'button[name="add"], button[type="submit"]:not([disabled]), ' +
                             'input[type="submit"][name="add"], ' +
-                            '.add-to-cart, [class*="add-to-cart"], ' +
-                            'button:has-text("add to cart"), button:has-text("add to bag")'
+                            '.add-to-cart, [class*="add-to-cart"]'
                         );
                         
                         const cartForm = document.querySelector('form[action*="/cart"]');
@@ -475,7 +486,7 @@ class ShopifyMonitor {
                         let hasAddText = false;
                         buttons.forEach(btn => {
                             const text = btn.textContent.toLowerCase();
-                            if (text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|order\s*now/)) {
+                            if (text.match(/add\s*to\s*(cart|bag)|buy\s*now|purchase|order\s*now|shop\s*now/)) {
                                 hasAddText = true;
                             }
                         });
@@ -690,10 +701,10 @@ class ShopifyMonitor {
                     console.log(`[Shopify]    ✅ Titolo: ${product.title}`);
                     console.log(`[Shopify]    ✅ Status: ${product.status}`);
                     console.log(`[Shopify]    ✅ Taglie: ${product.variants.length} link direct-to-cart`);
-                    console.log(`[Shopify] 🛑 STOP AUTOMATICO - Obiettivo raggiunto!`);
+                    console.log(`[Shopify] 🛑 STOP AUTOMATICO + ELIMINAZIONE TASK`);
                     
-                    // Ferma il monitor
-                    await this.stop();
+                    // Ferma il monitor + Elimina task dalla tabella
+                    await this.stop(true); // deleteInterest = true
                     return; // Esci dal loop
                 }
                 

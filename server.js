@@ -1921,20 +1921,37 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
 
 /**
  * POST /api/monitors/stop-all
- * Ferma TUTTI i monitor (admin utility)
+ * Ferma TUTTI i monitor + Elimina tutti gli interessi (admin utility)
  */
 app.post('/api/monitors/stop-all', async (req, res) => {
     try {
-        console.log('🛑 Richiesta STOP ALL MONITORS');
+        console.log('🛑 Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
         
         const result = monitorManager.stopAllMonitors();
         
         console.log(`✅ Tutti i monitor fermati: ${result.stopped}`);
         
+        // 🗑️ Elimina tutti i file interests
+        const interestsDir = path.join(__dirname, 'data', 'interests');
+        const files = fs.readdirSync(interestsDir);
+        let deletedCount = 0;
+        
+        for (const file of files) {
+            if (file.startsWith('interests_') && file.endsWith('.json')) {
+                const filePath = path.join(interestsDir, file);
+                fs.writeFileSync(filePath, '[]', 'utf8'); // Svuota invece di eliminare
+                deletedCount++;
+                console.log(`🗑️ Svuotato file interests: ${file}`);
+            }
+        }
+        
+        console.log(`✅ ${deletedCount} file interests svuotati`);
+        
         return res.json({ 
             success: true, 
-            message: `Fermati tutti i ${result.stopped} monitor`,
-            stopped: result.stopped
+            message: `Fermati ${result.stopped} monitor e svuotati ${deletedCount} file interests`,
+            stopped: result.stopped,
+            interestsCleared: deletedCount
         });
     } catch (error) {
         console.error('❌ Error stopping all monitors:', error);
