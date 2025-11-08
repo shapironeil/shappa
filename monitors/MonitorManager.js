@@ -31,20 +31,8 @@ class MonitorManager {
         }
 
         try {
-            // Usa webhook passato da interestData, altrimenti carica dal server
-            let discordWebhook = interestData.discordWebhook;
-            
-            if (!discordWebhook) {
-                console.log(`[Manager] 🔄 Webhook non nell'interest, carico dal server...`);
-                discordWebhook = await this.loadUserWebhook(userId);
-            }
-            
-            if (!discordWebhook) {
-                console.warn(`[Manager] ⚠️ Nessun webhook Discord configurato per monitor ${monitorId}`);
-                console.warn(`[Manager] 💡 Vai su Impostazioni → Discord Webhook per configurarlo`);
-            } else {
-                console.log(`[Manager] ✅ Webhook Discord configurato per monitor ${monitorId}`);
-            }
+            // Carica webhook Discord dell'utente
+            const discordWebhook = await this.loadUserWebhook(userId);
 
             // Crea config per monitor
             const config = {
@@ -52,14 +40,8 @@ class MonitorManager {
                 name: interestData.name,
                 url: interestData.url,
                 interval: interestData.interval || 5,
-                module: interestData.module || 'universal',
                 userId: userId,
-                discordWebhook: discordWebhook,
-                // Aggiungi filtri Shopify se presenti
-                productFilter: interestData.productFilter || '',
-                variantFilter: interestData.variantFilter || '',
-                // Aggiungi target Universal se presente
-                target: interestData.target || ''
+                discordWebhook: discordWebhook
             };
 
             // Determina tipo monitor e crea istanza
@@ -172,18 +154,10 @@ class MonitorManager {
      */
     async loadUserWebhook(userId) {
         try {
-            const fs = require('fs').promises;
-            const path = require('path');
-            
-            const webhookFile = path.join(__dirname, '..', 'data', 'webhooks', `webhook_${userId}.json`);
-            
-            const data = await fs.readFile(webhookFile, 'utf8');
-            const webhook = JSON.parse(data);
-            
-            console.log(`[Manager] ✅ Webhook caricato dal server per user ${userId}`);
-            return webhook.webhookUrl;
+            // TODO: implementare storage webhook in database
+            // Per ora ritorna null, verrà gestito dal frontend
+            return null;
         } catch (error) {
-            console.log(`[Manager] ⚠️ Nessun webhook trovato per user ${userId}`);
             return null;
         }
     }

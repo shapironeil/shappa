@@ -1626,9 +1626,6 @@
     </script>
     
     <script>
-        // API Base URL per chiamate al server
-        const API_BASE_URL = window.location.origin;
-
         // Initialize Auth System
         let authSystem;
         try {
@@ -3271,28 +3268,18 @@
     // ============================================
     
     /**
-     * Toggle campi in base al modulo selezionato
+     * Toggle opzioni avanzate
      */
-    function toggleModuleFields() {
+    function toggleAdvancedOptions() {
         const module = document.getElementById('rlMonitorModule').value;
-        const shopifyFields = document.getElementById('shopifyFields');
-        const universalFields = document.getElementById('universalFields');
         const advancedOptions = document.getElementById('advancedOptions');
         
-        if (module === 'shopify') {
-            shopifyFields.style.display = 'block';
-            universalFields.style.display = 'none';
-            advancedOptions.style.display = 'none';
-        } else {
-            shopifyFields.style.display = 'none';
-            universalFields.style.display = 'block';
+        // Mostra opzioni avanzate solo per modulo universale
+        if (module === 'universal') {
             advancedOptions.style.display = 'block';
+        } else {
+            advancedOptions.style.display = 'none';
         }
-    }
-    
-    // Mantengo per compatibilità
-    function toggleAdvancedOptions() {
-        toggleModuleFields();
     }
     
     function openReleasingModal() {
@@ -3342,35 +3329,17 @@
                     </div>
                     
                     <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Keywords Blocco (opzionale)</label>
+                        <input type="text" id="rlProductName" placeholder='es: "SOON", "SOLD OUT", "COMING SOON"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Parole che indicano prodotto NON disponibile. Quando spariscono → notifica!</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
                         <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Tipo Sito</label>
-                        <select id="rlMonitorModule" onchange="toggleModuleFields()" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                        <select id="rlMonitorModule" onchange="toggleAdvancedOptions()" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
                             <option value="universal" selected>🌐 Universale (funziona su qualsiasi sito)</option>
                             <option value="shopify">🛍️ Shopify (Travis Scott, Supreme, Nike)</option>
                         </select>
-                    </div>
-                    
-                    <!-- CAMPI SHOPIFY -->
-                    <div id="shopifyFields" style="display: none;">
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">🔍 Filtro Prodotto (opzionale)</label>
-                            <input type="text" id="rlProductFilter" placeholder='es: "AIR JORDAN 1 LOW OG SP FRAGMENT"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">💡 Cerca prodotti con queste parole nel titolo. Lascia vuoto per monitorare TUTTI i prodotti.</p>
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">🎨 Filtro Varianti (opzionale)</label>
-                            <input type="text" id="rlVariantFilter" placeholder='es: "Size L", "Black", "Medium"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">💡 Notifica solo per varianti specifiche (taglie/colori). Lascia vuoto per qualsiasi variante.</p>
-                        </div>
-                    </div>
-                    
-                    <!-- CAMPI UNIVERSAL -->
-                    <div id="universalFields" style="display: block;">
-                        <div style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">🚫 Keywords Blocco (opzionale)</label>
-                            <input type="text" id="rlKeywordsBlock" placeholder='es: "SOON", "SOLD OUT", "COMING SOON"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
-                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">💡 Parole che indicano "NON disponibile". Quando spariscono → DISPONIBILE!</p>
-                        </div>
                     </div>
                     
                     <div id="advancedOptions" style="display: none;">
@@ -3443,12 +3412,9 @@
     async function saveReleasing(e) {
         e.preventDefault();
         
-        console.log('🟢 saveReleasing() chiamata');
-        
-        const module = document.getElementById('rlMonitorModule').value;
+        // Keywords = campo nome (opzionale)
+        const keywords = document.getElementById('rlProductName').value.trim();
         const url = document.getElementById('rlProductUrl').value.trim();
-        
-        console.log('📝 Dati form:', { module, url });
         
         // Estrai nome prodotto dall'URL per display
         const urlParts = url.split('/').filter(p => p);
@@ -3458,35 +3424,24 @@
             .map(w => w.charAt(0).toUpperCase() + w.slice(1))
             .join(' ');
         
-        let monitor = {
+        const monitor = {
             id: Date.now(),
             type: 'releasing',
+            name: keywords || 'SOON,SOLD OUT,COMING SOON', // Keywords default
             url: url,
             displayName: displayName, // Per UI
-            module: module,
+            module: document.getElementById('rlMonitorModule').value,
+            target: document.getElementById('rlMonitorTarget')?.value?.trim() || '',
             interval: parseInt(document.getElementById('rlCheckInterval').value),
             status: 'active',
             createdAt: new Date().toISOString()
         };
         
-        // Campi specifici per modulo
-        if (module === 'shopify') {
-            monitor.productFilter = document.getElementById('rlProductFilter')?.value?.trim() || '';
-            monitor.variantFilter = document.getElementById('rlVariantFilter')?.value?.trim() || '';
-            monitor.name = monitor.productFilter || displayName; // Usa filtro prodotto come nome
-        } else {
-            monitor.name = document.getElementById('rlKeywordsBlock')?.value?.trim() || 'SOON,SOLD OUT,COMING SOON';
-            monitor.target = document.getElementById('rlMonitorTarget')?.value?.trim() || '';
-        }
-        
         const success = await addUserInterest(monitor);
-        
-        console.log('✅ Monitor salvato, ID:', monitor.id);
         
         document.getElementById('releasingModal').remove();
         
         if (success) {
-            console.log('🚀 Avvio monitor automatico...');
             // Avvia monitor automaticamente
             await startMonitor(monitor.id);
             
@@ -3502,45 +3457,15 @@
      * Avvia un monitor
      */
     async function startMonitor(interestId) {
-        console.log('🔵 startMonitor() chiamata con ID:', interestId);
-        
         try {
             const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
             if (!user) {
-                console.error('❌ User not authenticated');
+                console.warn('User not authenticated');
                 return false;
             }
 
-            // Carica webhook Discord dal SERVER (fallback localStorage)
-            let discordWebhook = null;
-            
-            try {
-                const webhookResponse = await fetch(`${API_BASE_URL}/api/user/webhook/${user.id}`);
-                const webhookResult = await webhookResponse.json();
-                
-                if (webhookResult.success && webhookResult.webhookUrl) {
-                    discordWebhook = webhookResult.webhookUrl;
-                    console.log('✅ Webhook caricato dal server');
-                } else {
-                    // Fallback localStorage
-                    discordWebhook = localStorage.getItem('discord_webhook_url');
-                    console.log('⚠️ Webhook da localStorage (fallback)');
-                }
-            } catch (error) {
-                console.error('❌ Errore caricamento webhook, uso localStorage:', error);
-                discordWebhook = localStorage.getItem('discord_webhook_url');
-            }
-            
-            console.log('🔍 DEBUG startMonitor:');
-            console.log('- userId:', user.id);
-            console.log('- interestId:', interestId);
-            console.log('- discordWebhook:', discordWebhook ? `${discordWebhook.substring(0, 50)}...` : 'NULL');
-            
-            if (!discordWebhook) {
-                console.warn('⚠️ WEBHOOK NON CONFIGURATO! Vai su Impostazioni → Discord Webhook');
-            }
-
-            console.log('📡 Invio richiesta a /api/monitors/start...');
+            // Carica webhook Discord se configurato
+            const discordWebhook = localStorage.getItem('discord_webhook_url');
 
             const response = await fetch(`${API_BASE_URL}/api/monitors/start`, {
                 method: 'POST',
@@ -3551,12 +3476,8 @@
                     discordWebhook: discordWebhook
                 })
             });
-            
-            console.log('📡 Risposta ricevuta, status:', response.status);
 
             const result = await response.json();
-            
-            console.log('📦 Risultato:', result);
             
             if (result.success) {
                 console.log(`✅ Monitor ${interestId} avviato`);
@@ -3566,7 +3487,7 @@
                 return false;
             }
         } catch (error) {
-            console.error('❌ ERRORE CATCH startMonitor:', error);
+            console.error('❌ Errore avvio monitor:', error);
             return false;
         }
     }
@@ -3845,11 +3766,11 @@
                     <div style="display: flex; align-items: center; gap: 12px;">
                         <div>
                             <div style="font-weight: 600; color: var(--venus-text-primary); margin-bottom: 4px;">
-                                ${interest.displayName || interest.name || 'Product Monitor'}
+                                ${interest.name}
                             </div>
                             ${interest.url ? `<a href="${interest.url}" target="_blank" style="font-size: 12px; color: var(--venus-primary); text-decoration: none;">🔗 ${interest.url.substring(0, 40)}...</a>` : ''}
                             <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                ${interest.module === 'shopify' ? '🛍️ Shopify' : '🌐 Universal'} • Check ogni ${interest.interval || 5}min
+                                ${interest.module || 'Standard'} • ${interest.interval || 30}min
                             </div>
                         </div>
                     </div>

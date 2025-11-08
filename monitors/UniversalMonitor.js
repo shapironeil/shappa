@@ -32,12 +32,6 @@ class UniversalMonitor {
         this.lastStatus = null;
         this.checksCount = 0;
         
-        // Notification tracking
-        this.hasNotifiedStart = false;
-        this.lastHeartbeat = null;
-        this.hasFoundKeyword = false; // One-time notification quando trova keyword blocco
-        this.heartbeatInterval = 2 * 60 * 60 * 1000; // 2 ore in ms
-        
         // Parse keywords
         this.blockingKeywords = this.keywords
             .split(',')
@@ -78,12 +72,6 @@ class UniversalMonitor {
         console.log(`[Universal] 🚀 Monitor avviato: ${this.productName}`);
         console.log(`[Universal] 🔍 Keywords blocco: ${this.blockingKeywords.join(', ')}`);
         this.isRunning = true;
-
-        // 🔔 NOTIFICA 1: Monitor Started
-        if (!this.hasNotifiedStart) {
-            await this.notifyMonitorStart();
-            this.hasNotifiedStart = true;
-        }
 
         // Primo check immediato
         await this.check();
@@ -132,67 +120,30 @@ class UniversalMonitor {
             // 2. CHECK BUTTON ADD TO CART
             const buttonAvailable = this.checkButtonAvailability($);
 
-            // 3. CHECK PREZZO (extra sicurezza)
-            const hasPriceVisible = this.checkPriceVisibility($);
-
-            // 4. CHECK FORM PRODOTTO (extra sicurezza)
-            const hasProductForm = $('form[action*="cart"]').length > 0 || 
-                                   $('form.product-form').length > 0 ||
-                                   $('[data-product-form]').length > 0;
-
-            // LOGICA DISPONIBILITÀ - Multi-check per sicurezza massima
+            // LOGICA DISPONIBILITÀ
             let isAvailable = false;
             let reason = '';
-            let confidence = 0; // Score 0-100
 
-            // Calcola confidence score
-            if (!hasBlockingKeyword) confidence += 40; // Keywords OK
-            if (buttonAvailable) confidence += 30;      // Button OK
-            if (hasPriceVisible) confidence += 15;      // Prezzo visibile
-            if (hasProductForm) confidence += 15;       // Form presente
-
-            // Determina disponibilità basata su confidence
-            if (confidence >= 70) {
+            if (!hasBlockingKeyword && buttonAvailable) {
                 isAvailable = true;
-                const checks = [];
-                if (!hasBlockingKeyword) checks.push('Keywords OK');
-                if (buttonAvailable) checks.push('Button attivo');
-                if (hasPriceVisible) checks.push('Prezzo visibile');
-                if (hasProductForm) checks.push('Form acquisto presente');
-                reason = `${checks.join(' + ')} (Confidence: ${confidence}%)`;
+                reason = 'Keywords sparite + Button attivo';
+            } else if (!hasBlockingKeyword) {
+                isAvailable = true;
+                reason = 'Keywords blocco non trovate';
+            } else if (buttonAvailable) {
+                isAvailable = true;
+                reason = 'Button Add to Cart attivo';
             } else {
                 isAvailable = false;
-                const blocks = [];
-                if (hasBlockingKeyword) {
-                    const found = this.blockingKeywords.filter(k => pageText.includes(k));
-                    blocks.push(`Keywords: ${found.join(', ')}`);
-                }
-                if (!buttonAvailable) blocks.push('Button inattivo');
-                if (!hasPriceVisible) blocks.push('Prezzo nascosto');
-                if (!hasProductForm) blocks.push('Form mancante');
-                reason = `Blocchi: ${blocks.join(' | ')} (Confidence: ${confidence}%)`;
+                const foundKeywords = this.blockingKeywords.filter(k => pageText.includes(k));
+                reason = `Blocco attivo: ${foundKeywords.join(', ')}`;
             }
 
             console.log(`[Universal] Status: ${isAvailable ? '✅ DISPONIBILE' : '❌ NON DISPONIBILE'} (${reason})`);
 
-            // 🔔 NOTIFICA 4: Keyword Detected (one-time quando trova keyword blocco)
-            if (hasBlockingKeyword && !this.hasFoundKeyword) {
-                const foundKeywords = this.blockingKeywords.filter(k => pageText.includes(k));
-                await this.notifyKeywordDetected(foundKeywords);
-                this.hasFoundKeyword = true;
-            }
-
-            // 🔔 NOTIFICA 2: Heartbeat ogni 2 ore
-            const now = Date.now();
-            if (!this.lastHeartbeat || (now - this.lastHeartbeat) >= this.heartbeatInterval) {
-                await this.notifyHeartbeat(isAvailable, confidence);
-                this.lastHeartbeat = now;
-            }
-
             // Detect cambio stato
             if (this.lastStatus !== null && !this.lastStatus && isAvailable) {
                 console.log(`[Universal] ⚡ CAMBIO STATO → DISPONIBILE!`);
-                // 🔔 NOTIFICA 3: Product Found (esistente)
                 await this.notifyDiscord(reason);
             }
 
@@ -259,36 +210,6 @@ class UniversalMonitor {
         }
 
         console.log(`[Universal] ⚠️ Nessun button ATC trovato`);
-        return false;
-    }
-
-    /**
-     * Verifica visibilità prezzo (extra check)
-     */
-    checkPriceVisibility($) {
-        const priceSelectors = [
-            '.price',
-            '.product-price',
-            '.money',
-            '[data-price]',
-            '.price__current',
-            'span.amount',
-            '.product__price'
-        ];
-
-        for (const selector of priceSelectors) {
-            const priceEl = $(selector).first();
-            if (priceEl.length > 0) {
-                const priceText = priceEl.text().trim();
-                // Prezzo deve contenere numeri
-                if (/\d+/.test(priceText)) {
-                    console.log(`[Universal] ✅ Prezzo trovato: "${priceText}"`);
-                    return true;
-                }
-            }
-        }
-
-        console.log(`[Universal] ⚠️ Nessun prezzo visibile`);
         return false;
     }
 
@@ -370,162 +291,6 @@ class UniversalMonitor {
             lastStatus: this.lastStatus,
             interval: this.interval
         };
-    }
-
-    /**
-     * 🔔 NOTIFICA 1: Monitor Started
-     */
-    async notifyMonitorStart() {
-        if (!this.discordWebhook) return;
-
-        try {
-            const embed = {
-                title: `🚀 Monitor Avviato`,
-                url: this.productUrl,
-                color: 0x3b82f6, // Blu
-                description: `Il monitoraggio per **${this.productName}** è iniziato!`,
-                fields: [
-                    {
-                        name: '🔗 URL',
-                        value: this.productUrl,
-                        inline: false
-                    },
-                    {
-                        name: '🔍 Keywords Blocco',
-                        value: this.blockingKeywords.join(', '),
-                        inline: false
-                    },
-                    {
-                        name: '⏱️ Intervallo Check',
-                        value: `${this.interval} minuto/i`,
-                        inline: true
-                    },
-                    {
-                        name: '🌐 Modulo',
-                        value: 'Universal Monitor',
-                        inline: true
-                    }
-                ],
-                timestamp: new Date().toISOString(),
-                footer: {
-                    text: 'Shappa Monitor System'
-                }
-            };
-
-            await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}>`,
-                embeds: [embed]
-            });
-
-            console.log(`[Universal] ✅ Notifica START inviata`);
-        } catch (error) {
-            console.error(`[Universal] ❌ Errore notifica START:`, error.message);
-        }
-    }
-
-    /**
-     * 🔔 NOTIFICA 2: Heartbeat ogni 2 ore
-     */
-    async notifyHeartbeat(isAvailable, confidence) {
-        if (!this.discordWebhook) return;
-
-        try {
-            const statusEmoji = isAvailable ? '✅' : '⏳';
-            const statusText = isAvailable ? 'DISPONIBILE' : 'Non ancora disponibile';
-            const colorCode = isAvailable ? 0x10b981 : 0x6b7280; // Verde o Grigio
-
-            const embed = {
-                title: `💓 Heartbeat - Monitor Attivo`,
-                url: this.productUrl,
-                color: colorCode,
-                description: `Status update per **${this.productName}**`,
-                fields: [
-                    {
-                        name: `${statusEmoji} Status Corrente`,
-                        value: statusText,
-                        inline: true
-                    },
-                    {
-                        name: '🎯 Confidence Score',
-                        value: `${confidence}%`,
-                        inline: true
-                    },
-                    {
-                        name: '🔢 Check Effettuati',
-                        value: `${this.checksCount}`,
-                        inline: true
-                    },
-                    {
-                        name: '⏱️ Intervallo',
-                        value: `Ogni ${this.interval} min`,
-                        inline: true
-                    },
-                    {
-                        name: '🔗 Link',
-                        value: `[Vai al prodotto](${this.productUrl})`,
-                        inline: false
-                    }
-                ],
-                timestamp: new Date().toISOString(),
-                footer: {
-                    text: 'Monitor attivo - prossimo heartbeat tra 2 ore'
-                }
-            };
-
-            await axios.post(this.discordWebhook, {
-                embeds: [embed]
-            });
-
-            console.log(`[Universal] ✅ Notifica HEARTBEAT inviata`);
-        } catch (error) {
-            console.error(`[Universal] ❌ Errore notifica HEARTBEAT:`, error.message);
-        }
-    }
-
-    /**
-     * 🔔 NOTIFICA 4: Keyword Detected (one-time)
-     */
-    async notifyKeywordDetected(foundKeywords) {
-        if (!this.discordWebhook) return;
-
-        try {
-            const embed = {
-                title: `🔍 Keyword Rilevata`,
-                url: this.productUrl,
-                color: 0xf59e0b, // Arancione
-                description: `Ho rilevato keyword di blocco su **${this.productName}**`,
-                fields: [
-                    {
-                        name: '⚠️ Keywords Trovate',
-                        value: foundKeywords.map(k => `\`${k.toUpperCase()}\``).join(', '),
-                        inline: false
-                    },
-                    {
-                        name: '📌 Cosa significa?',
-                        value: 'Il prodotto NON è ancora disponibile. Ti avviserò quando la keyword sparisce!',
-                        inline: false
-                    },
-                    {
-                        name: '🔗 Link',
-                        value: `[Monitora pagina](${this.productUrl})`,
-                        inline: false
-                    }
-                ],
-                timestamp: new Date().toISOString(),
-                footer: {
-                    text: 'Notifica one-time - continuerò a monitorare'
-                }
-            };
-
-            await axios.post(this.discordWebhook, {
-                content: `<@${this.userId}>`,
-                embeds: [embed]
-            });
-
-            console.log(`[Universal] ✅ Notifica KEYWORD DETECTED inviata`);
-        } catch (error) {
-            console.error(`[Universal] ❌ Errore notifica KEYWORD:`, error.message);
-        }
     }
 }
 

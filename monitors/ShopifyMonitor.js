@@ -35,6 +35,13 @@ class ShopifyMonitor {
         // Filtro prodotto opzionale (es: "AIR JORDAN 1")
         this.productFilter = config.productFilter || config.name || '';
         
+        // Tracking notifiche heartbeat (ogni 2 ore)
+        this.lastHeartbeatTime = null;
+        this.heartbeatInterval = 2 * 60 * 60 * 1000; // 2 ore in ms
+        
+        // Flag per notifica iniziale
+        this.initialNotificationSent = false;
+        
         // Estrai handle dal URL
         this.productHandle = this.extractHandle(config.url);
         this.baseUrl = this.extractBaseUrl(config.url);
@@ -68,7 +75,7 @@ class ShopifyMonitor {
         console.log(`[Shopify] 🚀 Monitor avviato: ${this.productName}`);
         this.isRunning = true;
 
-        // Primo check immediato
+        // Primo check immediato (invierà notifica iniziale)
         await this.check();
 
         // Polling ogni N minuti
@@ -86,6 +93,9 @@ class ShopifyMonitor {
         console.log(`[Shopify] 🛑 Monitor fermato: ${this.productName}`);
         this.isRunning = false;
         clearInterval(this.intervalId);
+        
+        // Notifica Discord di STOP
+        await this.notifyMonitorStopped();
         
         // Chiudi browser se aperto
         if (this.browser) {
@@ -144,9 +154,15 @@ class ShopifyMonitor {
             }
 
             await page.close();
+            
+            // Invia notifica HEARTBEAT (ogni 2 ore)
+            await this.checkAndSendHeartbeat();
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore check:`, error.message);
+            
+            // Notifica errore bloccante
+            await this.notifyMonitorError(error.message);
             
             // Se errore grave, resetta browser
             if (this.browser) {
@@ -270,7 +286,21 @@ class ShopifyMonitor {
             console.log(`[Shopify] 🔍 ${filteredProducts.length} prodotti matchano filtro "${this.productFilter}"`);
         }
 
-        // Rileva NUOVI prodotti
+        // NOTIFICA INIZIALE (primo check)
+        if (!this.initialNotificationSent) {
+            await this.notifyMonitorStarted(products, filteredProducts);
+            this.initialNotificationSent = true;
+            
+            // Inizializza seenProductIds con prodotti esistenti
+            for (const product of filteredProducts) {
+                this.seenProductIds.add(product.id);
+            }
+            
+            console.log(`[Shopify] ✅ Notifica iniziale inviata. ${this.seenProductIds.size} prodotti tracciati`);
+            return; // Esci, prossimo check rileverà nuovi prodotti
+        }
+
+        // Rileva NUOVI prodotti (dai check successivi)
         const newProducts = [];
         for (const product of filteredProducts) {
             if (!this.seenProductIds.has(product.id)) {
@@ -433,6 +463,229 @@ class ShopifyMonitor {
 
         } catch (error) {
             console.error(`[Shopify] ❌ Errore notifica nuovo prodotto:`, error.message);
+        }
+    }
+
+    /**
+     * 📢 NOTIFICA 1: Monitor avviato correttamente con lista prodotti trovati
+     */
+    async notifyMonitorStarted(allProducts, filteredProducts) {
+        if (!this.discordWebhook) return;
+
+        try {
+            // Lista primi 10 prodotti (per evitare messaggi troppo lunghi)
+            const productsList = filteredProducts.slice(0, 10).map((p, idx) => 
+                `${idx + 1}. **${p.title}**`
+            ).join('\n');
+
+            const moreProducts = filteredProducts.length > 10 ? 
+                `\n... e altri ${filteredProducts.length - 10} prodotti` : '';
+
+            const embed = {
+                title: '✅ MONITOR AVVIATO CON SUCCESSO',
+                description: `Monitor Shopify attivo su **${this.baseUrl}**`,
+                color: 0x10b981, // Verde
+                fields: [
+                    {
+                        name: '🌐 URL Monitorato',
+                        value: this.baseUrl,
+                        inline: false
+                    },
+                    {
+                        name: '📊 Prodotti Totali Trovati',
+                        value: `${allProducts.length} prodotti`,
+                        inline: true
+                    },
+                    {
+                        name: '🎯 Prodotti Matchano Filtro',
+                        value: this.productFilter ? 
+                            `${filteredProducts.length} prodotti (keyword: "${this.productFilter}")` :
+                            `${filteredProducts.length} prodotti (nessun filtro)`,
+                        inline: false
+                    },
+                    {
+                        name: '📦 Prodotti Tracciati',
+                        value: productsList + moreProducts || 'Nessuno',
+                        inline: false
+                    },
+                    {
+                        name: '⏱️ Intervallo Check',
+                        value: `Ogni ${this.interval} minuti`,
+                        inline: true
+                    },
+                    {
+                        name: '🔔 Notifiche',
+                        value: 'Riceverai notifiche per nuovi prodotti!',
+                        inline: true
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Shappa Shopify Monitor'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                content: `🚀 **MONITOR INIZIALIZZATO**`,
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] ✅ Notifica START inviata`);
+
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica start:`, error.message);
+        }
+    }
+
+    /**
+     * 💓 NOTIFICA 2: Heartbeat ogni 2 ore (monitor funziona ancora)
+     */
+    async checkAndSendHeartbeat() {
+        if (!this.discordWebhook) return;
+
+        const now = Date.now();
+        
+        // Invia solo se sono passate 2 ore dall'ultimo heartbeat
+        if (this.lastHeartbeatTime && (now - this.lastHeartbeatTime < this.heartbeatInterval)) {
+            return; // Non è ancora ora
+        }
+
+        try {
+            this.lastHeartbeatTime = now;
+
+            const uptime = Math.floor((now - (this.lastHeartbeatTime - this.heartbeatInterval)) / 60000); // minuti
+            
+            const embed = {
+                title: '💓 MONITOR ATTIVO',
+                description: `Il monitor sta funzionando correttamente`,
+                color: 0x3b82f6, // Blu
+                fields: [
+                    {
+                        name: '📊 Statistiche',
+                        value: `✅ Check eseguiti: ${this.checksCount}\n📦 Prodotti tracciati: ${this.seenProductIds.size}\n⏱️ Intervallo: ogni ${this.interval} min`,
+                        inline: false
+                    },
+                    {
+                        name: '🎯 Filtro Keywords',
+                        value: this.productFilter || 'Nessun filtro (tutti i prodotti)',
+                        inline: false
+                    },
+                    {
+                        name: '🔄 Stato',
+                        value: '🟢 Online e funzionante',
+                        inline: true
+                    },
+                    {
+                        name: '⏰ Prossimo Check',
+                        value: `Tra ${this.interval} minuti`,
+                        inline: true
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Heartbeat • Shappa Monitor'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] 💓 Heartbeat inviato (${this.checksCount} checks)`);
+
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore heartbeat:`, error.message);
+        }
+    }
+
+    /**
+     * 🔴 NOTIFICA 3: Monitor bloccato/errore
+     */
+    async notifyMonitorError(errorMessage) {
+        if (!this.discordWebhook) return;
+
+        try {
+            const embed = {
+                title: '🔴 ERRORE MONITOR',
+                description: `Il monitor ha riscontrato un problema`,
+                color: 0xef4444, // Rosso
+                fields: [
+                    {
+                        name: '❌ Errore',
+                        value: errorMessage,
+                        inline: false
+                    },
+                    {
+                        name: '📊 Info',
+                        value: `Check falliti: ${this.checksCount}\nURL: ${this.baseUrl}`,
+                        inline: false
+                    },
+                    {
+                        name: '🔄 Azione',
+                        value: 'Il sistema riproverà al prossimo intervallo',
+                        inline: false
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Shappa Monitor Error'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                content: `⚠️ **ATTENZIONE: Monitor in errore!**`,
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] 🔴 Notifica ERRORE inviata`);
+
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica errore:`, error.message);
+        }
+    }
+
+    /**
+     * 🛑 NOTIFICA 4: Monitor stoppato manualmente
+     */
+    async notifyMonitorStopped() {
+        if (!this.discordWebhook) return;
+
+        try {
+            const embed = {
+                title: '🛑 MONITOR FERMATO',
+                description: `Il monitor è stato fermato`,
+                color: 0x6b7280, // Grigio
+                fields: [
+                    {
+                        name: '📊 Statistiche Finali',
+                        value: `✅ Check totali: ${this.checksCount}\n📦 Prodotti tracciati: ${this.seenProductIds.size}`,
+                        inline: false
+                    },
+                    {
+                        name: '🌐 URL',
+                        value: this.baseUrl,
+                        inline: false
+                    },
+                    {
+                        name: '⏰ Durata',
+                        value: `Intervallo: ogni ${this.interval} min`,
+                        inline: true
+                    }
+                ],
+                timestamp: new Date().toISOString(),
+                footer: {
+                    text: 'Shappa Monitor Stopped'
+                }
+            };
+
+            await axios.post(this.discordWebhook, {
+                embeds: [embed]
+            });
+
+            console.log(`[Shopify] 🛑 Notifica STOP inviata`);
+
+        } catch (error) {
+            console.error(`[Shopify] ❌ Errore notifica stop:`, error.message);
         }
     }
 
