@@ -590,13 +590,15 @@ class ShopifyMonitor {
                         
                         product.variants = variants;
                         
-                        // 🖼️ ESTRAI IMMAGINI (priorità: HTML img, poi JSON images, poi featured_image)
+                        // 🖼️ ESTRAI SOLO LA PRIMA IMMAGINE (priorità: HTML img, poi JSON images[0], poi featured_image)
                         if (productData.mainImage) {
                             product.images = [{ src: productData.mainImage }];
                             console.log(`[Shopify] 📸 Immagine estratta da HTML: ${productData.mainImage.substring(0, 60)}...`);
                         } else if (productData.json.images && productData.json.images.length > 0) {
-                            product.images = productData.json.images;
-                            console.log(`[Shopify] 📸 ${productData.json.images.length} immagini estratte da JSON`);
+                            // 🎯 PRENDI SOLO LA PRIMA IMMAGINE
+                            const firstImage = productData.json.images[0];
+                            product.images = [firstImage];
+                            console.log(`[Shopify] 📸 Prima immagine estratta da JSON`);
                         } else if (productData.json.featured_image) {
                             product.images = [{ src: productData.json.featured_image }];
                             console.log(`[Shopify] 📸 Featured image estratta: ${productData.json.featured_image.substring(0, 60)}...`);
