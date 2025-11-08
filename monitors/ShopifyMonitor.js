@@ -105,10 +105,12 @@ class ShopifyMonitor {
     /**
      * Aggiorna status visibile nella UI
      */
-    async updateMonitorStatus(statusMessage, statusType = 'monitoring') {
+    async updateMonitorStatus(statusMessage, statusType = 'monitoring', nextCheckIn = null) {
         try {
             const fs = require('fs').promises;
             const path = require('path');
+            
+            console.log(`[Shopify] 📝 updateMonitorStatus chiamato: message="${statusMessage}", type="${statusType}", nextCheckIn=${nextCheckIn}`);
             
             // Leggi file interest dell'utente
             const interestFile = path.join(__dirname, '..', 'data', 'interests', `interests_${this.userId}.json`);
@@ -124,12 +126,22 @@ class ShopifyMonitor {
                     interest.statusMessage = statusMessage;
                     interest.lastUpdate = new Date().toISOString();
                     
+                    // 🕒 Aggiungi timestamp prossimo check (per countdown dinamico)
+                    if (nextCheckIn !== null) {
+                        interest.nextCheckTime = Date.now() + nextCheckIn; // timestamp in ms
+                        console.log(`[Shopify] ⏰ nextCheckTime impostato: ${interest.nextCheckTime} (tra ${Math.ceil(nextCheckIn/1000)}s)`);
+                    } else {
+                        delete interest.nextCheckTime; // Rimuovi se non serve
+                        console.log(`[Shopify] 🗑️ nextCheckTime rimosso`);
+                    }
+                    
                     // Salva file aggiornato
                     await fs.writeFile(interestFile, JSON.stringify(interests, null, 2));
-                    console.log(`[Shopify] 📝 Status aggiornato: ${statusMessage}`);
+                    console.log(`[Shopify] � File salvato con status: ${statusMessage}`);
                 }
             } catch (err) {
                 // File non esiste ancora, normale per nuovo monitor
+                console.log(`[Shopify] ⚠️ File interests non trovato (potrebbe essere nuovo): ${err.message}`);
             }
         } catch (error) {
             console.error(`[Shopify] ⚠️ Errore aggiornamento status:`, error.message);
@@ -158,25 +170,29 @@ class ShopifyMonitor {
         const dynamicCheck = async () => {
             if (!this.isRunning) return;
             
-            const interval = this.getCurrentCheckInterval();
-            const isIntensive = interval === this.intensiveCheckInterval * 1000;
+            // 🕒 IMPORTANTE: Calcola intervallo PRIMA del check
+            const nextInterval = this.getCurrentCheckInterval();
+            const isIntensive = nextInterval < 60000; // Meno di 1 minuto = intensivo
             
             if (isIntensive && !this.lastIntensiveLog) {
-                console.log(`[Shopify] 🔥 MODALITÀ INTENSIVA ATTIVATA - Check ogni ${this.intensiveCheckInterval}s`);
+                console.log(`[Shopify] 🔥 MODALITÀ INTENSIVA ATTIVATA - Check ogni 25-30s random`);
                 this.lastIntensiveLog = true;
             } else if (!isIntensive && this.lastIntensiveLog) {
-                console.log(`[Shopify] 💤 Modalità normale - Check ogni ${this.interval} min`);
+                const minutesToWait = Math.ceil(nextInterval / 60000);
+                console.log(`[Shopify] 💤 Modalità idle - Prossimo check tra ${minutesToWait} min`);
                 this.lastIntensiveLog = false;
             }
             
-            await this.check();
+            // Esegui check
+            await this.check(nextInterval); // Passa l'intervallo al check
             
-            // Schedule prossimo check con intervallo dinamico
-            this.intervalId = setTimeout(dynamicCheck, interval);
+            // Schedule prossimo check con intervallo già calcolato
+            this.intervalId = setTimeout(dynamicCheck, nextInterval);
         };
         
-        // Avvia ciclo
+        // Avvia ciclo con primo intervallo
         const firstInterval = this.getCurrentCheckInterval();
+        console.log(`[Shopify] ⏰ Primo check tra ${Math.ceil(firstInterval/1000)}s`);
         this.intervalId = setTimeout(dynamicCheck, firstInterval);
     }
 
@@ -218,8 +234,10 @@ class ShopifyMonitor {
      * MODALITÀ:
      * 1. Se productHandle specificato → monitora QUEL prodotto
      * 2. Se NO productHandle → monitora TUTTI i prodotti (rileva NUOVI)
+     * 
+     * @param {number} nextCheckInterval - Millisecondi fino al prossimo check (per countdown accurato)
      */
-    async check() {
+    async check(nextCheckInterval = null) {
         this.checksCount++;
 
         try {
@@ -748,12 +766,11 @@ class ShopifyMonitor {
             }
             
         } else {
-            // Nessun prodotto da notificare - calcola tempo prossimo check
-            if (this.checksCount >= 1) {
-                const nextCheckInterval = this.getCurrentCheckInterval();
+            // Nessun prodotto da notificare - mostra countdown accurato
+            if (this.checksCount >= 1 && nextCheckInterval) {
                 const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
                 
-                // Formatta tempo in modo leggibile
+                // Formatta tempo in modo leggibile per i log
                 let timeText = '';
                 if (secondsUntilNext >= 60) {
                     const minutes = Math.floor(secondsUntilNext / 60);
@@ -764,7 +781,8 @@ class ShopifyMonitor {
                 }
                 
                 console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${timeText}...`);
-                await this.updateMonitorStatus(`⏳ Waiting ${timeText}`, 'monitoring');
+                // USA il nextCheckInterval passato come parametro (già calcolato PRIMA del check)
+                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', nextCheckInterval);
             }
         }
     }

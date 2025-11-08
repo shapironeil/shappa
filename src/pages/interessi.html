@@ -3806,20 +3806,50 @@
             const dateText = interest.releaseDate ? new Date(interest.releaseDate).toLocaleDateString('it-IT') : '-';
             
             // Status badge con 4 stati: starting, monitoring, product found, stopped
-            let statusText = interest.statusMessage || 'Not Monitored';
+            let statusText = 'Not Monitored'; // Default solo se non c'è nessun status
             let statusColor = '#6b7280'; // Grigio default
             
+            // 🎨 Imposta colore in base allo status
             if (interest.status === 'starting') {
                 statusColor = '#3b82f6'; // Blu
+                statusText = interest.statusMessage || '🚀 Starting...';
             } else if (interest.status === 'monitoring') {
                 statusColor = '#10b981'; // Verde
+                statusText = interest.statusMessage || '🔍 Monitoring...';
             } else if (interest.status === 'product found') {
                 statusColor = '#f59e0b'; // Arancione
+                statusText = interest.statusMessage || '✅ Product Found';
             } else if (interest.status === 'stopped') {
                 statusColor = '#ef4444'; // Rosso
+                statusText = interest.statusMessage || '⏹️ Stopped';
             } else if (interest.status === 'blocked') {
                 statusText = 'Blocked';
                 statusColor = '#ef4444'; // Rosso
+            } else if (interest.statusMessage) {
+                // Se c'è un messaggio ma nessuno status riconosciuto, usa il messaggio
+                statusText = interest.statusMessage;
+            }
+            
+            // 🕒 Se c'è nextCheckTime, calcola countdown dinamico e sovrascrive il testo
+            if (interest.nextCheckTime) {
+                const now = Date.now();
+                const msRemaining = interest.nextCheckTime - now;
+                
+                console.log(`[UI] Countdown per ${interest.name}: nextCheckTime=${interest.nextCheckTime}, now=${now}, msRemaining=${msRemaining}`);
+                
+                if (msRemaining > 0) {
+                    const secondsRemaining = Math.ceil(msRemaining / 1000);
+                    
+                    if (secondsRemaining >= 60) {
+                        const minutes = Math.floor(secondsRemaining / 60);
+                        const seconds = secondsRemaining % 60;
+                        statusText = seconds > 0 ? `⏳ Waiting ${minutes}m ${seconds}s` : `⏳ Waiting ${minutes} min`;
+                    } else {
+                        statusText = `⏳ Waiting ${secondsRemaining}s`;
+                    }
+                } else {
+                    statusText = '🔍 Checking...';
+                }
             }
             
             row.innerHTML = `
@@ -3991,7 +4021,7 @@
         }
     }
 
-    // 🔄 Auto-refresh tabella ogni 2 secondi per mostrare status in tempo reale
+    // 🔄 Auto-refresh tabella ogni 1 secondo per countdown dinamico
     let autoRefreshInterval = null;
     
     function startAutoRefresh() {
@@ -3999,7 +4029,7 @@
         
         autoRefreshInterval = setInterval(async () => {
             await loadInterestsTable();
-        }, 2000); // Ogni 2 secondi
+        }, 1000); // Ogni 1 secondo per countdown fluido
         
         console.log('✅ Auto-refresh attivato (ogni 2s)');
     }
