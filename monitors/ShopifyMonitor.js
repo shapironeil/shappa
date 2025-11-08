@@ -18,7 +18,7 @@ class ShopifyMonitor {
         this.monitorId = config.id;
         this.productUrl = config.url;
         this.productName = config.name;
-        this.interval = config.interval || 5;
+        this.interval = config.interval || 30; // Default 30 minuti
         this.userId = config.userId;
         this.discordWebhook = config.discordWebhook;
         
