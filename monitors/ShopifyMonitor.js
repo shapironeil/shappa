@@ -198,69 +198,81 @@ class ShopifyMonitor {
 
     /**
      * Monitora TUTTI i prodotti del sito (rileva NUOVI prodotti)
+     * STRATEGIA NUOVA: Naviga pagina HTML reale, NON API JSON (Cloudflare blocca API)
      */
     async checkAllProducts(page) {
-        const productsUrl = `${this.baseUrl}/products.json?limit=250`;
-        console.log(`[Shopify] 📡 Check TUTTI i prodotti: ${productsUrl}`);
+        // Naviga alla pagina COLLECTIONS (HTML normale, non JSON)
+        const collectionsUrl = `${this.baseUrl}/collections/all`;
+        console.log(`[Shopify] �️ Navigo pagina prodotti HTML: ${collectionsUrl}`);
         
-        // EXTRA STEALTH: Simula comportamento umano
-        // 1. Prima visita homepage
-        console.log(`[Shopify] 🏠 Visita homepage prima...`);
-        await page.goto(this.baseUrl, {
-            waitUntil: 'networkidle2',
+        await page.goto(collectionsUrl, {
+            waitUntil: 'domcontentloaded',
             timeout: 30000
         });
-        
-        // 2. Wait random (simula lettura pagina)
-        const randomWait = Math.floor(Math.random() * 3000) + 2000; // 2-5 secondi
-        await new Promise(resolve => setTimeout(resolve, randomWait));
-        
-        // 3. Scroll pagina (simula utente reale)
-        await page.evaluate(() => {
-            window.scrollBy(0, Math.random() * 500 + 300);
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // 4. Ora vai all'API JSON
-        console.log(`[Shopify] 📡 Ora carico products.json...`);
-        await page.goto(productsUrl, {
-            waitUntil: 'networkidle0',
-            timeout: 30000
-        });
+
+        // Wait per rendering completo
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Controlla se Cloudflare ha bloccato
         const text = await page.content();
-        if (text.includes('Cloudflare') && text.includes('blocked')) {
-            console.error(`[Shopify] ⚠️ Cloudflare block rilevato`);
-            return;
-        }
-        
-        if (text.includes('You do not have access')) {
-            console.error(`[Shopify] ⚠️ Accesso negato da Cloudflare, riprovo prossimo check...`);
+        if (text.includes('Cloudflare') || text.includes('You do not have access') || text.includes('blocked')) {
+            console.error(`[Shopify] ⚠️ Cloudflare block rilevato, riprovo prossimo check...`);
             return;
         }
 
-        // Estrai JSON dalla pagina
-        const jsonText = await page.evaluate(() => document.body.innerText);
-        const data = JSON.parse(jsonText);
+        // ESTRAI PRODOTTI dalla pagina HTML (come utente reale)
+        const products = await page.evaluate(() => {
+            const productElements = document.querySelectorAll('a[href*="/products/"]');
+            const productsMap = new Map();
+            
+            productElements.forEach(el => {
+                const href = el.getAttribute('href');
+                if (!href) return;
+                
+                // Estrai handle prodotto dall'URL
+                const match = href.match(/\/products\/([^/?#]+)/);
+                if (!match) return;
+                
+                const handle = match[1];
+                if (productsMap.has(handle)) return; // Skip duplicati
+                
+                // Cerca titolo (prima prova img alt, poi testo link)
+                let title = '';
+                const img = el.querySelector('img');
+                if (img && img.alt) {
+                    title = img.alt;
+                } else {
+                    title = el.textContent.trim();
+                }
+                
+                // Crea oggetto prodotto simile a Shopify API
+                productsMap.set(handle, {
+                    id: handle, // Usa handle come ID
+                    handle: handle,
+                    title: title || handle,
+                    url: href
+                });
+            });
+            
+            return Array.from(productsMap.values());
+        });
 
-        console.log(`[Shopify] 📦 Trovati ${data.products.length} prodotti totali`);
+        console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina HTML`);
 
         // Filtra per keywords se specificate
-        let products = data.products;
+        let filteredProducts = products;
         if (this.productFilter && this.productFilter.trim()) {
             const keywords = this.productFilter.toLowerCase().split(' ').filter(k => k.length > 2);
-            products = products.filter(p => {
+            filteredProducts = products.filter(p => {
                 const title = p.title.toLowerCase();
                 return keywords.some(kw => title.includes(kw));
             });
-            console.log(`[Shopify] 🔍 ${products.length} prodotti matchano filtro "${this.productFilter}"`);
+            console.log(`[Shopify] 🔍 ${filteredProducts.length} prodotti matchano filtro "${this.productFilter}"`);
         }
 
         // Rileva NUOVI prodotti
         const newProducts = [];
-        for (const product of products) {
+        for (const product of filteredProducts) {
             if (!this.seenProductIds.has(product.id)) {
                 // NUOVO PRODOTTO!
                 newProducts.push(product);
