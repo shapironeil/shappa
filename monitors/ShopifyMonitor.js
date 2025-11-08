@@ -268,17 +268,26 @@ class ShopifyMonitor {
      * STRATEGIA NUOVA: Naviga pagina HTML reale, NON API JSON (Cloudflare blocca API)
      */
     async checkAllProducts(page) {
-        // Naviga alla pagina COLLECTIONS (HTML normale, non JSON)
-        const collectionsUrl = `${this.baseUrl}/collections/all`;
-        console.log(`[Shopify] �️ Navigo pagina prodotti HTML: ${collectionsUrl}`);
+        // 🔧 FIX: Se productUrl è homepage, usa quella; altrimenti prova /collections/all
+        let targetUrl = this.productUrl;
         
-        await page.goto(collectionsUrl, {
+        // Se URL finisce con /, è homepage diretta
+        if (!targetUrl.endsWith('/products/') && !targetUrl.includes('/collections/')) {
+            // Prova prima homepage
+            console.log(`[Shopify] 🏠 URL è homepage, navigo direttamente: ${targetUrl}`);
+        } else {
+            // Prova collections
+            targetUrl = `${this.baseUrl}/collections/all`;
+            console.log(`[Shopify] 🗂️ Navigo pagina collections: ${targetUrl}`);
+        }
+        
+        await page.goto(targetUrl, {
             waitUntil: 'domcontentloaded',
             timeout: 30000
         });
 
-        // Wait per rendering completo
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait per rendering completo (JS client-side)
+        await new Promise(resolve => setTimeout(resolve, 3000));
 
         // Controlla se Cloudflare ha bloccato
         const text = await page.content();
@@ -343,30 +352,28 @@ class ShopifyMonitor {
                 const fullText = allText + ' ' + badgeText;
                 
                 // 5. Determina status con PRIORITÀ (più specifico prima)
-                // SOLD OUT = massima priorità
-                if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available/i)) {
+                
+                // ✅ ONLINE = Prima priorità se ha CHIARE indicazioni di acquisto
+                const hasCartIndicators = fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|in\s*stock|available\s*now|purchase|order\s*now|add\s*to\s*basket|shop|quick\s*add/i);
+                const hasForm = productContainer?.querySelector('form[action*="cart"], form[action*="/cart"]');
+                const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], button[type="submit"], [data-action*="add"], .add-to-cart, [class*="add-to-cart"]');
+                
+                if (hasCartIndicators || hasForm || hasAddButton) {
+                    status = 'ONLINE'; // Ha indicatori di acquisto = DISPONIBILE
+                }
+                // ❌ SOLD OUT = seconda priorità (solo se ESPLICITO)
+                else if (fullText.match(/sold\s*out|soldout|out\s*of\s*stock|unavailable|not\s*available|esaurito/i)) {
                     status = 'SOLD OUT';
                 }
-                // SOON = seconda priorità  
-                else if (fullText.match(/soon|coming\s*soon|pre\s*order|preorder|notify\s*me|not\s*yet|upcoming/i)) {
+                // ⏳ SOON = terza priorità (solo se ESPLICITO)  
+                else if (fullText.match(/coming\s*soon|notify\s*me|pre\s*order|preorder|not\s*yet|upcoming|launch/i)) {
                     status = 'SOON';
                 }
-                // ONLINE = terza priorità (deve avere indicatori chiari)
-                else if (fullText.match(/add\s*to\s*(cart|bag)|buy\s*now|shop\s*now|in\s*stock|available\s*now|purchase|order\s*now/i)) {
-                    status = 'ONLINE';
-                }
-                // Se non trova NULLA di chiaro, cerca nel form (presence = disponibile)
+                // 🔍 FALLBACK: Se non trova NESSUN indicatore chiaro, assume ONLINE se ci sono link prodotto validi
                 else {
-                    const hasForm = productContainer?.querySelector('form[action*="cart"]');
-                    const hasAddButton = productContainer?.querySelector('button[name="add"], input[name="add"], [data-action*="add"]');
-                    
-                    if (hasForm || hasAddButton) {
-                        status = 'ONLINE'; // Ha form carrello = disponibile
-                    } else {
-                        // Ultimo fallback: se proprio non trova nulla, analizza URL
-                        console.log(`[Shopify] ⚠️ Status ambiguo per "${title}", defaulting a SOON`);
-                        status = 'SOON';
-                    }
+                    // Se ha link /products/ valido, probabilmente è acquistabile
+                    console.log(`[Shopify] ⚠️ Status ambiguo per "${title}", ma ha link prodotto → Assumo ONLINE`);
+                    status = 'ONLINE';
                 }
                 
                 // Crea oggetto prodotto simile a Shopify API
@@ -424,11 +431,81 @@ class ShopifyMonitor {
         if (newProducts.length > 0) {
             console.log(`[Shopify] 🆕 RILEVATI ${newProducts.length} NUOVI PRODOTTI!`);
             
-            // Notifica per ogni nuovo prodotto
+            // 🛒 PER OGNI PRODOTTO ONLINE: Estrai varianti navigando nella pagina
             for (const product of newProducts) {
+                // Se status è ONLINE, vai nella pagina prodotto ed estrai varianti
+                if (product.status === 'ONLINE') {
+                    console.log(`[Shopify] 🔍 Estraggo varianti per: ${product.title}`);
+                    const productPage = await this.browser.newPage();
+                    
+                    try {
+                        // Naviga URL completo del prodotto
+                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
+                        await productPage.goto(fullUrl, {
+                            waitUntil: 'domcontentloaded',
+                            timeout: 15000
+                        });
+                        
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        
+                        // Estrai varianti dalla pagina
+                        const variants = await productPage.evaluate(() => {
+                            const variantsData = [];
+                            
+                            // Cerca select per taglie/varianti
+                            const selects = document.querySelectorAll('select[name*="id"], select.product-form__input, select[data-index="option1"]');
+                            
+                            selects.forEach(select => {
+                                const options = select.querySelectorAll('option');
+                                options.forEach(opt => {
+                                    if (opt.value && opt.value !== '' && !opt.disabled) {
+                                        variantsData.push({
+                                            id: opt.value,
+                                            title: opt.textContent.trim(),
+                                            available: true
+                                        });
+                                    }
+                                });
+                            });
+                            
+                            // Se non trova select, cerca bottoni varianti
+                            if (variantsData.length === 0) {
+                                const variantButtons = document.querySelectorAll('[data-variant-id], .variant-input:not([disabled]), input[name="id"]:not([disabled])');
+                                variantButtons.forEach(btn => {
+                                    const variantId = btn.getAttribute('data-variant-id') || btn.value;
+                                    const label = btn.getAttribute('data-variant-title') || btn.nextElementSibling?.textContent || 'Variant';
+                                    
+                                    if (variantId) {
+                                        variantsData.push({
+                                            id: variantId,
+                                            title: label.trim(),
+                                            available: true
+                                        });
+                                    }
+                                });
+                            }
+                            
+                            return variantsData;
+                        });
+                        
+                        console.log(`[Shopify] ✅ Trovate ${variants.length} varianti per ${product.title}`);
+                        product.variants = variants; // Aggiungi varianti al prodotto
+                        
+                    } catch (err) {
+                        console.error(`[Shopify] ❌ Errore estrazione varianti: ${err.message}`);
+                        product.variants = []; // Fallback vuoto
+                    } finally {
+                        await productPage.close();
+                    }
+                } else {
+                    // Prodotto non ONLINE, nessuna variante
+                    product.variants = [];
+                }
+                
+                // Invia notifica con varianti
                 await this.notifyNewProduct(product);
                 
-                // Delay tra notifiche per evitare spam
+                // Delay tra notifiche
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
@@ -526,36 +603,28 @@ class ShopifyMonitor {
                     `Non matcha keywords: "${this.productFilter}"`) :
                 `Nessun filtro keywords impostato`;
 
-            // ESTRAI VARIANTI E GENERA LINK DIRECT-TO-CART
-            let variantsField = { name: 'Link Prodotto', value: `[Visualizza pagina](${productUrl})`, inline: false };
+            // 🛒 USA VARIANTI GIÀ ESTRATTE e genera link direct-to-cart
+            let variantsField = { name: '🔗 Link Prodotto', value: `[Visualizza pagina](${productUrl})`, inline: false };
             
-            try {
-                // Carica dati completi prodotto per avere varianti
-                const response = await axios.get(`${productUrl}.js`);
-                const fullProduct = response.data;
+            if (product.variants && product.variants.length > 0) {
+                // Ha varianti estratte!
+                const variantLinks = product.variants.map(v => {
+                    const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
+                    return `🛒 [**${v.title}**](${cartUrl})`;
+                }).join(' • ');
                 
-                if (fullProduct.variants && fullProduct.variants.length > 0) {
-                    const availableVariants = fullProduct.variants.filter(v => v.available);
-                    
-                    if (availableVariants.length > 0) {
-                        const variantLinks = availableVariants.map(v => {
-                            const price = (v.price / 100).toFixed(2);
-                            const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
-                            const stockInfo = v.inventory_quantity > 0 ? ` (${v.inventory_quantity} disponibili)` : '';
-                            return `[**${v.title}** - $${price}${stockInfo}](${cartUrl})`;
-                        }).join('\n');
-                        
-                        variantsField = {
-                            name: 'Link Direct-to-Cart - CLICCA TAGLIA',
-                            value: variantLinks,
-                            inline: false
-                        };
-                    } else {
-                        variantsField.value = 'Tutte le varianti sold out - [Vedi prodotto](${productUrl})';
-                    }
-                }
-            } catch (err) {
-                console.error(`[Shopify] Errore fetch varianti:`, err.message);
+                variantsField = {
+                    name: `👟 Taglie Disponibili (${product.variants.length})`,
+                    value: variantLinks || '[Visualizza pagina prodotto](${productUrl})',
+                    inline: false
+                };
+            } else if (product.status === 'ONLINE') {
+                // Prodotto ONLINE ma nessuna variante estratta (fallback)
+                variantsField = {
+                    name: '🛒 Acquista',
+                    value: `[Aggiungi al carrello](${productUrl})`,
+                    inline: false
+                };
             }
 
             const embed = {
@@ -659,19 +728,83 @@ class ShopifyMonitor {
             };
             embeds.push(mainEmbed);
 
-            // 🆕 Aggiungi embeds per ogni prodotto (max 5)
-            const topProducts = filteredProducts.slice(0, 5);
+            // 🆕 Aggiungi embeds per ogni prodotto (max 10 invece di 5)
+            const topProducts = filteredProducts.slice(0, 10);
             for (const product of topProducts) {
-                // Colore status (no emoji nel titolo)
-                let statusColor = 0x10b981; // Verde default
+                // Colore status
+                let statusColor = 0x10b981; // Verde default (ONLINE)
                 if (product.status === 'SOON') {
                     statusColor = 0xf59e0b; // Arancione
                 } else if (product.status === 'SOLD OUT') {
                     statusColor = 0xef4444; // Rosso
                 }
 
+                // 🛒 Se ONLINE, estrai varianti (asincrono)
+                let variantsText = `[Vedi prodotto](${product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`})`;
+                
+                if (product.status === 'ONLINE') {
+                    // Naviga pagina prodotto per estrarre varianti
+                    try {
+                        const productPage = await this.browser.newPage();
+                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
+                        
+                        await productPage.goto(fullUrl, {
+                            waitUntil: 'domcontentloaded',
+                            timeout: 10000
+                        });
+                        
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        
+                        // Estrai varianti
+                        const variants = await productPage.evaluate(() => {
+                            const variantsData = [];
+                            
+                            // Cerca select taglie
+                            const selects = document.querySelectorAll('select[name*="id"], select.product-form__input');
+                            selects.forEach(select => {
+                                const options = select.querySelectorAll('option');
+                                options.forEach(opt => {
+                                    if (opt.value && opt.value !== '' && !opt.disabled) {
+                                        variantsData.push({
+                                            id: opt.value,
+                                            title: opt.textContent.trim()
+                                        });
+                                    }
+                                });
+                            });
+                            
+                            // Fallback: cerca bottoni varianti
+                            if (variantsData.length === 0) {
+                                const buttons = document.querySelectorAll('[data-variant-id], input[name="id"]:not([disabled])');
+                                buttons.forEach(btn => {
+                                    const id = btn.getAttribute('data-variant-id') || btn.value;
+                                    const label = btn.getAttribute('data-variant-title') || btn.closest('label')?.textContent || 'Variant';
+                                    if (id) variantsData.push({ id, title: label.trim() });
+                                });
+                            }
+                            
+                            return variantsData;
+                        });
+                        
+                        await productPage.close();
+                        
+                        // Crea link direct-to-cart
+                        if (variants.length > 0) {
+                            variantsText = variants.map(v => {
+                                const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
+                                return `[${v.title}](${cartUrl})`;
+                            }).join(' • ');
+                        }
+                        
+                        console.log(`[Shopify] ✅ Estratte ${variants.length} varianti per ${product.title}`);
+                        
+                    } catch (err) {
+                        console.error(`[Shopify] ⚠️ Errore estrazione varianti: ${err.message}`);
+                    }
+                }
+
                 const productEmbed = {
-                    title: product.title, // ✅ Nessuna emoji nel titolo
+                    title: product.title,
                     url: product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`,
                     color: statusColor,
                     fields: [
@@ -684,6 +817,11 @@ class ShopifyMonitor {
                             name: '🔗 Handle',
                             value: product.handle,
                             inline: true
+                        },
+                        {
+                            name: product.status === 'ONLINE' ? '👟 Taglie / Quick Buy' : '🔗 Link',
+                            value: variantsText,
+                            inline: false
                         }
                     ],
                     thumbnail: product.image ? { url: product.image } : null,
@@ -693,9 +831,9 @@ class ShopifyMonitor {
             }
 
             // Messaggio se ci sono più prodotti
-            if (filteredProducts.length > 5) {
+            if (filteredProducts.length > 10) {
                 const remainingEmbed = {
-                    description: `... e altri **${filteredProducts.length - 5} prodotti** monitorati`,
+                    description: `... e altri **${filteredProducts.length - 10} prodotti** monitorati (non mostrati per evitare spam)`,
                     color: 0x6366f1
                 };
                 embeds.push(remainingEmbed);

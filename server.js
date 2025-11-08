@@ -1797,6 +1797,34 @@ app.put('/api/auth/user/:userId', async (req, res) => {
     }
 });
 
+// POST /api/auth/logout - Logout utente (stoppa tutti i monitor)
+app.post('/api/auth/logout', async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        console.log(`🚪 Logout richiesto per utente: ${userId}`);
+
+        // Stoppa tutti i monitor dell'utente
+        const result = monitorManager.stopUserMonitors(userId);
+        
+        console.log(`✅ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
+
+        return res.json({ 
+            success: true, 
+            message: 'Logout completato',
+            monitorsStopped: result.stopped
+        });
+
+    } catch (error) {
+        console.error('❌ Error during logout:', error);
+        return res.status(500).json({ success: false, error: 'Failed to logout' });
+    }
+});
+
 // Initialize database on startup
 initUsersDatabase();
 
@@ -1884,6 +1912,29 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
         return res.json(result);
     } catch (error) {
         console.error('❌ Error stopping monitor:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/monitors/stop-all
+ * Ferma TUTTI i monitor (admin utility)
+ */
+app.post('/api/monitors/stop-all', async (req, res) => {
+    try {
+        console.log('🛑 Richiesta STOP ALL MONITORS');
+        
+        const result = monitorManager.stopAllMonitors();
+        
+        console.log(`✅ Tutti i monitor fermati: ${result.stopped}`);
+        
+        return res.json({ 
+            success: true, 
+            message: `Fermati tutti i ${result.stopped} monitor`,
+            stopped: result.stopped
+        });
+    } catch (error) {
+        console.error('❌ Error stopping all monitors:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });

@@ -108,6 +108,26 @@ class MonitorManager {
     }
 
     /**
+     * Ferma TUTTI i monitor (utility per cleanup)
+     */
+    stopAllMonitors() {
+        let stopped = 0;
+        
+        for (const [monitorId, monitor] of this.activeMonitors.entries()) {
+            try {
+                monitor.stop();
+                this.activeMonitors.delete(monitorId);
+                stopped++;
+            } catch (err) {
+                console.error(`[Manager] Errore stop monitor ${monitorId}:`, err.message);
+            }
+        }
+
+        console.log(`[Manager] 🛑 Fermati TUTTI i ${stopped} monitor`);
+        return { success: true, stopped };
+    }
+
+    /**
      * Carica tutti i monitor attivi al boot del server
      */
     async loadAllMonitors() {
