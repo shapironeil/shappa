@@ -493,8 +493,30 @@ class ShopifyMonitor {
 
         console.log(`[Shopify] 📦 Trovati ${products.length} prodotti sulla pagina (cliccabili + non cliccabili)`);
 
-        // 🔍 VERIFICA STATUS + ESTRAI VARIANTI navigando pagina prodotto
-        for (const product of products) {
+        // 🔍 FILTRA PER KEYWORDS PRIMA di verificare status (ottimizzazione)
+        let productsToCheck = products;
+        if (this.productFilter && this.productFilter.trim()) {
+            const cleanFilter = this.productFilter.replace(/["""]/g, '').trim();
+            const filterLower = cleanFilter.toLowerCase();
+            
+            productsToCheck = products.filter(p => {
+                const title = p.title.toLowerCase();
+                const keywords = filterLower.split(/\s+/).filter(k => k.length >= 3);
+                if (keywords.length > 0) {
+                    return keywords.every(kw => title.includes(kw));
+                }
+                return true;
+            });
+            
+            console.log(`[Shopify] 🔍 ${productsToCheck.length} prodotti matchano filtro "${this.productFilter}"`);
+            if (productsToCheck.length === 0) {
+                console.log(`[Shopify] ⚠️ NESSUN prodotto matcha il filtro. Titoli presenti:`);
+                products.slice(0, 5).forEach(p => console.log(`  - "${p.title}"`));
+            }
+        }
+
+        // 🔍 VERIFICA STATUS + ESTRAI VARIANTI solo per prodotti filtrati
+        for (const product of productsToCheck) {
             if (product.status === 'UNKNOWN' && product.url) {
                 console.log(`[Shopify] 🔍 Check per: ${product.title}`);
                 try {
@@ -555,42 +577,10 @@ class ShopifyMonitor {
             }
         }
 
-        console.log(`[Shopify] ✅ Status verificato per tutti i prodotti`);
+        console.log(`[Shopify] ✅ Status verificato per tutti i prodotti filtrati`);
 
-        // Filtra per keywords se specificate
-        let filteredProducts = products;
-        if (this.productFilter && this.productFilter.trim()) {
-            // Rimuovi virgolette e caratteri speciali, split su spazi
-            const cleanFilter = this.productFilter.replace(/["""]/g, '').trim();
-            const filterLower = cleanFilter.toLowerCase();
-            
-            filteredProducts = products.filter(p => {
-                const title = p.title.toLowerCase();
-                
-                // STRATEGIA 1: Match ESATTO (ignora case e punteggiatura)
-                const titleNormalized = title.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
-                const filterNormalized = filterLower.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
-                
-                if (titleNormalized === filterNormalized) {
-                    return true; // Match esatto!
-                }
-                
-                // STRATEGIA 2: Match TUTTE le keywords principali (min 3 caratteri)
-                const keywords = filterLower.split(/\s+/).filter(k => k.length >= 3);
-                if (keywords.length > 0) {
-                    const allKeywordsPresent = keywords.every(kw => title.includes(kw));
-                    return allKeywordsPresent;
-                }
-                
-                return false;
-            });
-            
-            console.log(`[Shopify] 🔍 ${filteredProducts.length} prodotti matchano filtro "${this.productFilter}"`);
-            if (filteredProducts.length === 0) {
-                console.log(`[Shopify] ⚠️ NESSUN prodotto matcha il filtro. Titoli presenti:`);
-                products.slice(0, 5).forEach(p => console.log(`  - "${p.title}"`));
-            }
-        }
+        // I prodotti sono già filtrati, usa productsToCheck come filteredProducts
+        const filteredProducts = productsToCheck;
 
         // Rileva NUOVI prodotti o CAMBIAMENTI DI STATUS
         const productsToNotify = [];
