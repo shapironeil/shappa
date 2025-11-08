@@ -748,10 +748,23 @@ class ShopifyMonitor {
             }
             
         } else {
-            // Nessun prodotto da notificare - mantieni status Monitoring
+            // Nessun prodotto da notificare - calcola tempo prossimo check
             if (this.checksCount >= 1) {
-                console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${this.interval} minuti...`);
-                await this.updateMonitorStatus(`🔍 Monitoring...`, 'monitoring');
+                const nextCheckInterval = this.getCurrentCheckInterval();
+                const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
+                
+                // Formatta tempo in modo leggibile
+                let timeText = '';
+                if (secondsUntilNext >= 60) {
+                    const minutes = Math.floor(secondsUntilNext / 60);
+                    const seconds = secondsUntilNext % 60;
+                    timeText = seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes} min`;
+                } else {
+                    timeText = `${secondsUntilNext}s`;
+                }
+                
+                console.log(`[Shopify] ⏳ Nessun nuovo prodotto. Prossimo check tra ${timeText}...`);
+                await this.updateMonitorStatus(`⏳ Waiting ${timeText}`, 'monitoring');
             }
         }
     }
