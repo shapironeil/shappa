@@ -935,7 +935,7 @@ class ShopifyMonitor {
                     statusColor = 0xef4444; // Rosso
                 }
 
-                // 🛒 Se ONLINE, estrai varianti (asincrono)
+                // 🛒 USA VARIANTI GIÀ ESTRATTE (nel loop principale)
                 let variantsText = '[Prodotto in coming soon]';
                 
                 // ⚠️ VERIFICA: Solo se prodotto ha URL (prodotti cliccabili)
@@ -943,54 +943,16 @@ class ShopifyMonitor {
                     variantsText = `[Vedi prodotto](${product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`})`;
                 }
                 
-                if (product.status === 'ONLINE' && product.url) {
-                    // USA API .js per estrarre varianti (più veloce e affidabile)
-                    try {
-                        const productPage = await this.browser.newPage();
-                        const fullUrl = product.url.startsWith('http') ? product.url : `${this.baseUrl}${product.url}`;
-                        
-                        await productPage.goto(fullUrl, { 
-                            waitUntil: 'domcontentloaded', 
-                            timeout: 10000 
-                        });
-                        
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        
-                        // Estrai JSON dal tag <script>
-                        const productData = await productPage.evaluate(() => {
-                            const script = document.querySelector('script.js-product-json, script[type="application/json"][data-product-json]');
-                            if (script) {
-                                try {
-                                    return JSON.parse(script.textContent);
-                                } catch (e) { return null; }
-                            }
-                            return null;
-                        });
-                        
-                        await productPage.close();
-                        
-                        if (productData && productData.variants) {
-                            const variants = productData.variants.map(v => ({
-                                id: v.id.toString(),
-                                title: (v.title || v.option1 || v.public_title || 'Default').toUpperCase(),
-                                price: v.price || 0,
-                                available: v.available || false
-                            }));
-                            
-                            // Crea link direct-to-cart con PREZZO
-                            variantsText = variants.map(v => {
-                                const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
-                                const price = v.price ? ` - $${(v.price / 100).toFixed(2)}` : '';
-                                const availableIcon = v.available ? '✅' : '❌';
-                                return `${availableIcon} [**${v.title}**${price}](${cartUrl})`;
-                            }).join('\n');
-                            
-                            console.log(`[Shopify] ✅ API: ${variants.length} varianti estratte per ${product.title}`);
-                        }
-                        
-                    } catch (err) {
-                        console.error(`[Shopify] ⚠️ Errore API varianti: ${err.message}`);
-                    }
+                // Se ha varianti già estratte, mostra link direct-to-cart
+                if (product.variants && product.variants.length > 0) {
+                    variantsText = product.variants.map(v => {
+                        const cartUrl = `${this.baseUrl}/cart/add?id=${v.id}&quantity=1`;
+                        const price = v.price ? ` - $${(v.price / 100).toFixed(2)}` : '';
+                        const availableIcon = v.available ? '✅' : '❌';
+                        return `${availableIcon} [**${v.title}**${price}](${cartUrl})`;
+                    }).join('\n');
+                    
+                    console.log(`[Shopify] ✅ Notifica START: ${product.variants.length} varianti per ${product.title}`);
                 }
 
                 const productEmbed = {
