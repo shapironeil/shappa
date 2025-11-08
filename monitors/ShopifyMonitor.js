@@ -800,6 +800,11 @@ class ShopifyMonitor {
                 imageUrl = product.image;
             }
             
+            // 🔧 FIX: Se URL inizia con //, aggiungi https:
+            if (imageUrl && typeof imageUrl === 'string' && imageUrl.startsWith('//')) {
+                imageUrl = 'https:' + imageUrl;
+            }
+            
             console.log(`[Shopify] 🖼️ URL immagine per ${product.title}: ${imageUrl ? imageUrl.substring(0, 80) : 'NESSUNA'}`);
             
             const embed = {
@@ -815,7 +820,7 @@ class ShopifyMonitor {
                 embed.image = { url: imageUrl };
                 console.log(`[Shopify] ✅ Immagine aggiunta all'embed Discord`);
             } else {
-                console.log(`[Shopify] ⚠️ Nessuna immagine valida da aggiungere`);
+                console.log(`[Shopify] ⚠️ Nessuna immagine valida da aggiungere (URL: ${imageUrl})`);
             }
 
             await axios.post(this.discordWebhook, {
