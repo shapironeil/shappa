@@ -54,6 +54,10 @@ class ShopifyMonitor {
         this.intensiveCheckDuration = 4; // Minuti di check intensivi (4 min)
         this.intensiveCheckInterval = 25; // Secondi tra check intensivi (25-30s random)
         this.idleCheckInterval = 5; // Minuti tra check idle (ogni 5 min)
+        
+        // 🚫 Disabilita modalità intensiva per i primi check (evita start immediato)
+        this.allowIntensiveMode = false;
+        this.firstCheckCompleted = false;
     }
 
     /**
@@ -86,6 +90,12 @@ class ShopifyMonitor {
     getCurrentCheckInterval() {
         const now = new Date();
         const currentMinute = now.getMinutes();
+        
+        // 🚫 Se non è ancora permessa la modalità intensiva, usa sempre IDLE
+        if (!this.allowIntensiveMode) {
+            console.log(`[Shopify] 💤 Modalità intensiva disabilitata - uso idle (${this.idleCheckInterval} min)`);
+            return this.idleCheckInterval * 60 * 1000;
+        }
         
         // Calcola inizio finestra intensiva (multiplo di this.interval)
         const windowStart = Math.floor(currentMinute / this.interval) * this.interval;
@@ -286,8 +296,9 @@ class ShopifyMonitor {
         } catch (error) {
             console.error(`[Shopify] ❌ Errore check:`, error.message);
             
-            // Notifica errore bloccante
-            await this.notifyMonitorError(error.message);
+            // 🔴 NON inviare notifica a ogni errore - solo log
+            // Il monitor continua a funzionare
+            console.log(`[Shopify] ⚠️ Errore temporaneo, il monitor continuerà...`);
             
             // Se errore grave, resetta browser
             if (this.browser) {
@@ -295,6 +306,13 @@ class ShopifyMonitor {
                     await this.browser.close();
                 } catch (e) {}
                 this.browser = null;
+            }
+            
+            // ⏳ Anche in caso di errore, mostra countdown per prossimo check
+            if (this.checksCount >= 1 && nextCheckInterval) {
+                const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
+                console.log(`[Shopify] ⏳ Prossimo tentativo tra ${secondsUntilNext}s...`);
+                await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', nextCheckInterval);
             }
         }
     }
@@ -768,6 +786,13 @@ class ShopifyMonitor {
         } else {
             // Nessun prodotto da notificare - mostra countdown accurato
             if (this.checksCount >= 1 && nextCheckInterval) {
+                // ✅ Abilita modalità intensiva dopo il primo check completo
+                if (!this.firstCheckCompleted) {
+                    this.firstCheckCompleted = true;
+                    this.allowIntensiveMode = true;
+                    console.log(`[Shopify] ✅ Primo check completato - modalità intensiva ora disponibile`);
+                }
+                
                 const secondsUntilNext = Math.ceil(nextCheckInterval / 1000);
                 
                 // Formatta tempo in modo leggibile per i log
