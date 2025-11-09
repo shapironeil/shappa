@@ -2112,6 +2112,21 @@ if (!fs.existsSync(SPORT_DATA_DIR)) {
     fs.mkdirSync(SPORT_DATA_DIR, { recursive: true });
 }
 
+const SPORT_WEBHOOK_CONFIG_FILE = path.join(SPORT_DATA_DIR, 'webhook_config.json');
+
+// Helper to get sport webhook URL
+function getSportWebhookUrl() {
+    try {
+        if (fs.existsSync(SPORT_WEBHOOK_CONFIG_FILE)) {
+            const config = JSON.parse(fs.readFileSync(SPORT_WEBHOOK_CONFIG_FILE, 'utf8'));
+            return config.webhookUrl || null;
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not read webhook config:', error.message);
+    }
+    return null;
+}
+
 // POST /api/sport/profile - Save user sport profile (quiz data)
 app.post('/api/sport/profile', async (req, res) => {
     try {
@@ -2236,12 +2251,14 @@ app.post('/api/sport/program', async (req, res) => {
 
         // Invia webhook notifica
         try {
-            const webhookUrl = process.env.SPORT_WEBHOOK_URL || 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID';
-            if (webhookUrl && webhookUrl !== 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID') {
+            const webhookUrl = getSportWebhookUrl();
+            if (webhookUrl) {
                 await axios.post(webhookUrl, {
                     content: `🎯 **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
                 });
                 console.log('📢 Webhook inviato per nuovo programma');
+            } else {
+                console.log('ℹ️ Nessun webhook configurato');
             }
         } catch (webhookError) {
             console.warn('⚠️ Webhook failed:', webhookError.message);
@@ -2377,6 +2394,49 @@ function calculateStreak(completedWorkouts) {
     
     return streak;
 }
+
+// POST /api/sport/test-webhook - Test webhook notification
+app.post('/api/sport/test-webhook', async (req, res) => {
+    try {
+        const { webhookUrl } = req.body;
+        
+        if (!webhookUrl) {
+            return res.status(400).json({ success: false, error: 'webhookUrl required' });
+        }
+
+        // Salva webhook URL
+        fs.writeFileSync(SPORT_WEBHOOK_CONFIG_FILE, JSON.stringify({ 
+            webhookUrl,
+            updatedAt: new Date().toISOString() 
+        }, null, 2), 'utf8');
+
+        // Invia notifica di test
+        await axios.post(webhookUrl, {
+            content: `🧪 **Test Webhook Sport & Fitness**\n\n✅ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\n📅 ${new Date().toLocaleString('it-IT')}`
+        });
+
+        console.log('📢 Test webhook sent successfully');
+        return res.json({ success: true, message: 'Test webhook sent' });
+    } catch (error) {
+        console.error('❌ Error sending test webhook:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/sport/webhook - Get configured webhook URL
+app.get('/api/sport/webhook', async (req, res) => {
+    try {
+        const webhookUrl = getSportWebhookUrl();
+        return res.json({ 
+            success: true, 
+            webhookUrl: webhookUrl || null,
+            configured: !!webhookUrl
+        });
+    } catch (error) {
+        console.error('❌ Error getting webhook:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');

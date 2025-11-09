@@ -434,8 +434,11 @@
 
         <!-- Sport Profiles Table -->
         <div class="section">
-            <h2 class="section-title">
-                🏋️ Profili Sport & Fitness
+            <h2 class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>💪 Sport & Fitness</span>
+                <button class="btn btn-refresh" onclick="configureSportWebhook()" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    Configura Webhook
+                </button>
             </h2>
             
             <div class="table-container">
@@ -847,6 +850,54 @@
                 console.log(`🗑️ User deleted: ${username}`);
                 alert(`✅ Utente "${username}" eliminato!`);
                 refreshData();
+            }
+        }
+
+        // Configure Sport Webhook
+        async function configureSportWebhook() {
+            try {
+                // Recupera webhook corrente dal server
+                const response = await fetch('/api/sport/webhook');
+                const data = await response.json();
+                const currentUrl = data.success && data.webhookUrl ? data.webhookUrl : '';
+
+                const newUrl = prompt(
+                    '🔔 Configura Webhook per notifiche Sport\n\n' +
+                    'Inserisci l\'URL del webhook (Discord, Slack, etc.):\n' +
+                    'Es: https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN',
+                    currentUrl
+                );
+
+                if (newUrl !== null) {
+                    if (newUrl.trim() === '') {
+                        alert('⚠️ Per rimuovere il webhook, contatta l\'amministratore del server');
+                        return;
+                    }
+                    
+                    // Valida URL
+                    try {
+                        new URL(newUrl);
+                        
+                        // Invia webhook di test (che salva anche l'URL)
+                        const testResponse = await fetch('/api/sport/test-webhook', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ webhookUrl: newUrl.trim() })
+                        });
+                        
+                        const result = await testResponse.json();
+                        
+                        if (result.success) {
+                            alert('✅ Webhook configurato e testato con successo!\n\nControlla il tuo canale per la notifica di test.');
+                        } else {
+                            alert('⚠️ Errore durante la configurazione:\n' + result.error);
+                        }
+                    } catch (e) {
+                        alert('❌ URL non valido. Inserisci un URL completo (es: https://...)');
+                    }
+                }
+            } catch (error) {
+                alert('❌ Errore: ' + error.message);
             }
         }
 
