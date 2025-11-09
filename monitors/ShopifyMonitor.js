@@ -129,14 +129,17 @@ class ShopifyMonitor {
             
             // Leggi file interest dell'utente
             const interestFile = path.join(__dirname, '..', 'data', 'interests', `interests_${this.userId}.json`);
+            console.log(`[Shopify] 📂 File path: ${interestFile}, monitorId: ${this.monitorId}`);
             
             try {
                 const data = await fs.readFile(interestFile, 'utf8');
                 const interests = JSON.parse(data);
+                console.log(`[Shopify] 📋 Trovati ${interests.length} interests nel file`);
                 
                 // Trova l'interest corrente
                 const interest = interests.find(i => i.id === this.monitorId);
                 if (interest) {
+                    console.log(`[Shopify] ✅ Interest trovato, aggiorno status...`);
                     interest.status = statusType;
                     interest.statusMessage = statusMessage;
                     interest.lastUpdate = new Date().toISOString();
