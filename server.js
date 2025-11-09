@@ -2242,7 +2242,7 @@ app.post('/api/sport/program', async (req, res) => {
             programData,
             startedAt: new Date().toISOString(),
             completedWorkouts: [],
-            weekSchedule: [],
+            weekSchedule: programData?.weekSchedule || [],
             version: '1.0'
         };
 

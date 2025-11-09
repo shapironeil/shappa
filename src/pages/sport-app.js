@@ -17,7 +17,7 @@ let currentQuestionIndex = 0;
 let currentAnswer = "";
 
 // ========== INITIALIZATION ==========
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Auth check
     if (!AuthManager.isLoggedIn()) {
         window.location.href = '/src/pages/login.html';
@@ -48,11 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Load data from localStorage
-    loadUserData();
-    loadScheduledWorkouts();
+    // Load data from server and then render UI
+    await Promise.all([
+        loadUserData(),
+        loadScheduledWorkouts()
+    ]);
 
-    // Render initial UI
+    // Render initial UI after data is loaded
     renderWeeklyCalendar();
     renderPrograms('recommended');
     renderProgressWidget();
@@ -76,6 +78,7 @@ async function loadUserData() {
             const result = await response.json();
             if (result.success && result.data) {
                 userData = result.data.profile || {};
+                console.log('✅ Loaded user data:', Object.keys(userData).length, 'fields');
             }
         }
     } catch (error) {
@@ -122,6 +125,7 @@ async function loadScheduledWorkouts() {
             if (result.success && result.data) {
                 scheduledWorkouts = result.data.weekSchedule || [];
                 selectedProgramId = result.data.programId || null;
+                console.log('✅ Loaded workouts:', scheduledWorkouts.length, 'Program ID:', selectedProgramId);
             }
         }
     } catch (error) {
