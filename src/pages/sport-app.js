@@ -189,7 +189,7 @@ function renderWeeklyCalendar() {
         if (hasWorkout) classes += ' has-workout';
 
         html += `
-            <div class="${classes}">
+            <div class="${classes}" ${hasWorkout ? `onclick="openWorkoutDetail(${dayIndex})" style="cursor: pointer;"` : ''}>
                 <div class="day-name">${dayNames[i]}</div>
                 <div class="day-number">${dayNum}</div>
                 ${hasWorkout ? `
@@ -207,6 +207,110 @@ function renderWeeklyCalendar() {
     }
 
     container.innerHTML = html;
+}
+
+// Apri dettagli workout
+function openWorkoutDetail(dayIndex) {
+    const currentProgram = workoutPrograms.find(p => p.id === selectedProgramId);
+    
+    if (!currentProgram || !currentProgram.sessions) {
+        showNotification('Nessun programma attivo', 'warning');
+        return;
+    }
+
+    // Trova il workout per questo giorno
+    const dayNames = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato'];
+    const dayName = dayNames[dayIndex].toLowerCase();
+    const workout = currentProgram.sessions.find(s => 
+        s.day.toLowerCase().includes(dayName.substring(0, 3))
+    );
+
+    if (!workout) {
+        showNotification('Nessun allenamento programmato per questo giorno', 'info');
+        return;
+    }
+
+    // Crea e mostra modal con dettagli
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.cssText = 'display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;';
+    
+    const exercisesList = workout.exercises.map((ex, idx) => `
+        <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 4px;">
+                <strong style="color: #1f2937;">${idx + 1}. ${ex.name}</strong>
+                <span style="font-size: 12px; color: #6b7280;">${ex.sets} × ${ex.reps}</span>
+            </div>
+            ${ex.muscleGroup ? `<div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;"><i class="fas fa-bullseye"></i> ${ex.muscleGroup}</div>` : ''}
+            ${ex.execution ? `<div style="font-size: 13px; color: #4b5563; margin-top: 6px;">${ex.execution}</div>` : ''}
+            ${ex.notes ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 4px; font-style: italic;">${ex.notes}</div>` : ''}
+        </div>
+    `).join('');
+
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 16px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0; color: #1f2937;">${workout.workoutTitle}</h2>
+                <button onclick="this.closest('.modal').remove()" style="background: #f3f4f6; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px;">×</button>
+            </div>
+            
+            <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="padding: 8px 12px; background: #eff6ff; border-radius: 8px; color: #1e40af;">
+                    <i class="fas fa-dumbbell"></i> ${workout.muscleGroup || 'Forza'}
+                </div>
+                <div style="padding: 8px 12px; background: #fef3c7; border-radius: 8px; color: #92400e;">
+                    <i class="fas fa-clock"></i> ${workout.duration || '60-75 min'}
+                </div>
+                <div style="padding: 8px 12px; background: #fce7f3; border-radius: 8px; color: #9f1239;">
+                    <i class="fas fa-fire"></i> ${workout.estimatedCalories || '400'} kcal
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0 12px 0; color: #1f2937; font-size: 16px;">Esercizi (${workout.exercises.length})</h3>
+            ${exercisesList}
+            
+            <div style="margin-top: 20px; display: flex; gap: 12px;">
+                <button onclick="completeWorkout(${dayIndex})" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    <i class="fas fa-check"></i> Segna Completato
+                </button>
+                <button onclick="this.closest('.modal').remove()" style="flex: 1; background: #f3f4f6; color: #374151; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Chiudi cliccando fuori
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
+// Completa workout
+async function completeWorkout(dayIndex) {
+    try {
+        const response = await fetch('/api/sport/stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                workoutCompleted: true,
+                caloriesBurned: 400,
+                date: new Date().toISOString()
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('🎉 Workout completato!', 'success');
+            document.querySelector('.modal')?.remove();
+            renderProgressWidget();
+            renderWeeklyCalendar();
+        }
+    } catch (error) {
+        showNotification('Errore nel salvare il workout', 'error');
+    }
 }
 
 // ========== WORKOUT PROGRAMS (WorkoutCards.tsx) ==========

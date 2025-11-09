@@ -1487,6 +1487,8 @@ const workoutPrograms = [
             {
                 day: "Giovedì",
                 focus: "Spalle - 3 Angolazioni POF",
+                duration: "55-70 min",
+                estimatedCalories: 380,
                 warmup: "10 min cardio + mobilità spalle",
                 exercises: [
                     { 
@@ -1494,32 +1496,80 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "60 sec", 
                         rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Core stability",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Core",
+                        execution: "Mantieni posizione neutra, addome contratto"
                     },
                     { 
                         name: "Lento avanti (Contrazione Media)", 
                         sets: "4", 
                         reps: "8-10", 
                         rest: "90 sec",
+                        notes: "POF 1/3: Esercizio base",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi"
+                        muscleGroup: "Deltoidi",
+                        execution: "Movimento completo per tensione media costante"
                     },
                     { 
                         name: "Alzate laterali inclinate (Massimo Stiramento)", 
                         sets: "4", 
                         reps: "12-15", 
                         rest: "60 sec", 
-                        notes: "Decubito laterale per massimo stretch",
+                        notes: "POF 2/3: Decubito laterale per massimo stretch",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoide laterale"
+                        muscleGroup: "Deltoide laterale",
+                        execution: "Inclinati lateralmente per massimo allungamento del deltoide"
+                    },
+                    { 
+                        name: "Alzate frontali manubri", 
+                        sets: "3", 
+                        reps: "12", 
+                        rest: "60 sec",
+                        notes: "Focus deltoide anteriore",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide anteriore",
+                        execution: "Solleva manubrio fino altezza occhi"
                     },
                     { 
                         name: "Alzate laterali cavi (Picco Contrazione)", 
                         sets: "4", 
                         reps: "15", 
                         rest: "60 sec",
+                        notes: "POF 3/3: Tensione continua",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoide laterale"
+                        muscleGroup: "Deltoide laterale",
+                        execution: "Cavi per tensione costante, contrazione massima"
+                    },
+                    { 
+                        name: "Rear delt fly", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec",
+                        notes: "Deltoide posteriore",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide posteriore",
+                        execution: "Contrazione massima quando braccia aperte"
+                    },
+                    { 
+                        name: "Shrugs manubri", 
+                        sets: "3", 
+                        reps: "15", 
+                        rest: "60 sec",
+                        notes: "Trapezio",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Trapezio",
+                        execution: "Solleva spalle verso orecchie"
+                    },
+                    { 
+                        name: "French press", 
+                        sets: "3", 
+                        reps: "12", 
+                        rest: "60 sec",
+                        notes: "Complementare tricipiti",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti",
+                        execution: "Estensione dietro testa"
                     }
                 ],
                 cooldown: "Stretching spalle 5 min"
@@ -1527,6 +1577,8 @@ const workoutPrograms = [
             {
                 day: "Sabato",
                 focus: "Gambe - 3 Angolazioni POF",
+                duration: "70-85 min",
+                estimatedCalories: 550,
                 warmup: "10 min cardio + mobilità",
                 exercises: [
                     { 
@@ -1534,40 +1586,80 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
                         name: "Squat (Contrazione Media)", 
                         sets: "4", 
                         reps: "10-12", 
                         rest: "2 min",
+                        notes: "POF 1/3: Re degli esercizi",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei"
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Discesa controllata fino parallelo, tensione costante"
+                    },
+                    { 
+                        name: "Leg press", 
+                        sets: "4", 
+                        reps: "12-15", 
+                        rest: "2 min",
+                        notes: "Volume sicuro",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Piedi larghezza spalle, discesa profonda"
                     },
                     { 
                         name: "Sissy Squat (Massimo Stiramento)", 
                         sets: "3", 
                         reps: "12-15", 
                         rest: "90 sec", 
-                        notes: "Allungamento estremo quadricipiti",
+                        notes: "POF 2/3: Allungamento estremo quadricipiti",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti"
+                        muscleGroup: "Quadricipiti",
+                        execution: "Arretra busto mantenendo ginocchia ferme per massimo allungamento"
                     },
                     { 
                         name: "Leg Extension (Picco Contrazione)", 
                         sets: "4", 
                         reps: "15-20", 
                         rest: "60 sec",
+                        notes: "POF 3/3: Picco contrazione",
                         image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg",
-                        muscleGroup: "Quadricipiti"
+                        muscleGroup: "Quadricipiti",
+                        execution: "Contrai al massimo in estensione completa"
+                    },
+                    { 
+                        name: "Stacchi rumeni", 
+                        sets: "3", 
+                        reps: "10", 
+                        rest: "2 min",
+                        notes: "Focus femorali",
+                        image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
+                        muscleGroup: "Femorali, Glutei",
+                        execution: "Gambe quasi tese, discendi col busto"
                     },
                     { 
                         name: "Leg Curl", 
                         sets: "4", 
                         reps: "12-15", 
                         rest: "60 sec",
+                        notes: "Isolamento femorali",
                         image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
-                        muscleGroup: "Femorali"
+                        muscleGroup: "Femorali",
+                        execution: "Fletti ginocchia portando talloni ai glutei"
+                    },
+                    { 
+                        name: "Calf in piedi", 
+                        sets: "4", 
+                        reps: "20", 
+                        rest: "60 sec",
+                        notes: "Polpacci",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Gastrocnemio",
+                        execution: "Estensione caviglia completa"
                     }
                 ],
                 cooldown: "Stretching gambe 10 min"
