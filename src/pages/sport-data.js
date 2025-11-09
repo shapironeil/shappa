@@ -1781,192 +1781,87 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Spalle + Tricipiti",
+                duration: "65-75 min",
+                estimatedCalories: 450,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Panca piana (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "90 sec", 
-                        notes: "6 reps peso X, togli 20% NO PAUSA, 4 reps, togli altro 20% NO PAUSA, 4 reps. Totale 14 reps continuit",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Stripping: 3 drop consecutivi senza pausa per ultra-pompaggio"
-                    },
-                    { 
-                        name: "Croci manubri (Rifinitura)", 
-                        sets: "3", 
-                        reps: "12-15", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg"
-                    },
-                    { 
-                        name: "Alzate laterali (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi"
-                    },
-                    { 
-                        name: "Push down (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti"
-                    }
+                    { name: "Crunch", sets: "3", reps: "15", rest: "30 sec", notes: "Core activation", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione addome" },
+                    { name: "Panca piana (Stripping)", sets: "5", reps: "6-4-4", rest: "90 sec", notes: "6 reps peso X, togli 20% NO PAUSA, 4 reps, togli altro 20% NO PAUSA, 4 reps", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Stripping: 3 drop consecutivi senza pausa per ultra-pompaggio" },
+                    { name: "Panca inclinata manubri", sets: "3", reps: "10-12", rest: "90 sec", notes: "Pettorale alto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale clavicolare", execution: "Inclinazione 30-45°" },
+                    { name: "Croci manubri (Rifinitura)", sets: "3", reps: "12-15", rest: "60 sec", notes: "Pompaggio", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Focus su contrazione picco" },
+                    { name: "Alzate laterali (Stripping)", sets: "5", reps: "6-4-4", rest: "60 sec", notes: "Drop set per deltoidi", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Scala peso senza pausa" },
+                    { name: "Alzate frontali", sets: "3", reps: "12", rest: "60 sec", notes: "Deltoide anteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide anteriore", execution: "Fino altezza occhi" },
+                    { name: "Push down (Stripping)", sets: "5", reps: "6-4-4", rest: "60 sec", notes: "Finisher tricipiti", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Drop set, estensione completa" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti",
+                duration: "60-70 min",
+                estimatedCalories: 430,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch inverso", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Lat Machine (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "90 sec",
-                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale"
-                    },
-                    { 
-                        name: "Pulley (Rifinitura)", 
-                        sets: "3", 
-                        reps: "12-15", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg"
-                    },
-                    { 
-                        name: "Curl bilanciere (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti"
-                    }
+                    { name: "Crunch inverso", sets: "3", reps: "15", rest: "30 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Solleva bacino" },
+                    { name: "Trazioni", sets: "3", reps: "max", rest: "3 min", notes: "Fondamentale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Completo al petto" },
+                    { name: "Lat Machine (Stripping)", sets: "5", reps: "6-4-4", rest: "90 sec", notes: "Drop set dorsale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Scala peso senza pausa" },
+                    { name: "Rematore bilanciere", sets: "3", reps: "10-12", rest: "90 sec", notes: "Spessore", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale, Trapezio", execution: "Tira al petto" },
+                    { name: "Pulley (Rifinitura)", sets: "3", reps: "12-15", rest: "60 sec", notes: "Pump dorsale", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Contrazione picco" },
+                    { name: "Curl bilanciere (Stripping)", sets: "5", reps: "6-4-4", rest: "60 sec", notes: "Drop set bicipiti", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Scala peso senza pausa" },
+                    { name: "Curl manubri alternati", sets: "3", reps: "12 per braccio", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Supinazione completa" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Mercoledì",
                 focus: "Gambe",
+                duration: "70-80 min",
+                estimatedCalories: 540,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Plank", 
-                        sets: "3", 
-                        reps: "60 sec", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Leg Press (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "2 min",
-                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei"
-                    },
-                    { 
-                        name: "Leg Extension (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg"
-                    },
-                    { 
-                        name: "Leg Curl (Stripping)", 
-                        sets: "5", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/VqGhJdq/deadlift.jpg"
-                    }
+                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Posizione stabile" },
+                    { name: "Squat", sets: "4", reps: "10-12", rest: "3 min", notes: "Base gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Parallelo controllato" },
+                    { name: "Leg Press (Stripping)", sets: "5", reps: "6-4-4", rest: "2 min", notes: "Drop set gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Scala peso senza pausa" },
+                    { name: "Leg Extension (Stripping)", sets: "5", reps: "6-4-4", rest: "60 sec", notes: "Pump quadricipiti", image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg", muscleGroup: "Quadricipiti", execution: "Drop set no pausa" },
+                    { name: "Stacchi rumeni", sets: "3", reps: "10", rest: "2 min", notes: "Femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali, Glutei", execution: "Gambe tese" },
+                    { name: "Leg Curl (Stripping)", sets: "5", reps: "6-4-4", rest: "60 sec", notes: "Drop femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali", execution: "Scala peso" },
+                    { name: "Calf in piedi", sets: "4", reps: "20", rest: "60 sec", notes: "Polpacci", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gastrocnemio", execution: "Estensione completa" }
                 ],
                 cooldown: "Stretching 10 min"
             },
             {
                 day: "Venerdì",
                 focus: "Upper Body",
+                duration: "60-70 min",
+                estimatedCalories: 440,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Panca 30° (Stripping)", 
-                        sets: "4", 
-                        reps: "6-4-4", 
-                        rest: "90 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg"
-                    },
-                    { 
-                        name: "Rematore (Stripping)", 
-                        sets: "4", 
-                        reps: "6-4-4", 
-                        rest: "90 sec",
-                        image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg"
-                    },
-                    { 
-                        name: "Lento manubri (Stripping)", 
-                        sets: "4", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg"
-                    }
+                    { name: "Crunch", sets: "3", reps: "15", rest: "30 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione addome" },
+                    { name: "Panca 30° (Stripping)", sets: "4", reps: "6-4-4", rest: "90 sec", notes: "Drop pettorale alto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale alto", execution: "Inclinata drop set" },
+                    { name: "Croci cavi alti", sets: "3", reps: "12-15", rest: "60 sec", notes: "Pump petto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Tensione continua" },
+                    { name: "Rematore (Stripping)", sets: "4", reps: "6-4-4", rest: "90 sec", notes: "Drop dorsale", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Scala peso" },
+                    { name: "Pulldown braccia tese", sets: "3", reps: "15", rest: "60 sec", notes: "Finisher dorsale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Contrazione picco" },
+                    { name: "Lento manubri (Stripping)", sets: "4", reps: "6-4-4", rest: "60 sec", notes: "Drop spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Scala peso" },
+                    { name: "Rear delt fly", sets: "3", reps: "15", rest: "60 sec", notes: "Deltoide posteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide posteriore", execution: "Contrazione massima" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Sabato",
                 focus: "Pump Day - Braccia",
+                duration: "55-65 min",
+                estimatedCalories: 390,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Plank", 
-                        sets: "3", 
-                        reps: "60 sec", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Curl bilanciere (Stripping)", 
-                        sets: "6", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti"
-                    },
-                    { 
-                        name: "Panca stretta (Stripping)", 
-                        sets: "6", 
-                        reps: "6-4-4", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti"
-                    }
+                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Stabilità" },
+                    { name: "Curl bilanciere (Stripping)", sets: "6", reps: "6-4-4", rest: "60 sec", notes: "Pump bicipiti", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Drop set massivo" },
+                    { name: "Curl martello", sets: "3", reps: "12", rest: "60 sec", notes: "Brachiale", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti, Brachiale", execution: "Presa neutra" },
+                    { name: "Curl concentrato", sets: "3", reps: "12 per braccio", rest: "60 sec", notes: "Isolamento", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Focus contrazione picco" },
+                    { name: "Panca stretta (Stripping)", sets: "6", reps: "6-4-4", rest: "60 sec", notes: "Pump tricipiti", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Drop set massivo" },
+                    { name: "French press", sets: "3", reps: "12", rest: "60 sec", notes: "Capo lungo", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Dietro testa" },
+                    { name: "Kick back manubri", sets: "3", reps: "15 per braccio", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Estensione completa" }
                 ],
-                cooldown: "Stretching braccia 10 min"
+                cooldown: "Stretching braccia 5 min"
             }
         ]
     },
@@ -1993,68 +1888,102 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Tricipiti",
+                duration: "50-60 min",
+                estimatedCalories: 410,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Crunch", sets: "5", reps: "15", rest: "20 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
+                    { name: "Crunch", sets: "5", reps: "15", rest: "20 sec", notes: "Warm up core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione rapida" },
                     { name: "Panca piana (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "8 serie x 8 reps con SOLO 30 sec recupero! Pompa estrema", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Metodo Gironda: 64 reps totali con recupero minimo" },
-                    { name: "Pectoral machine (rifinitura)", sets: "2", reps: "10", rest: "60 sec", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg" },
-                    { name: "Push down (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti" }
+                    { name: "Panca inclinata manubri", sets: "3", reps: "10-12", rest: "60 sec", notes: "Standard", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale alto", execution: "Complementare" },
+                    { name: "Croci cavi", sets: "3", reps: "12", rest: "60 sec", notes: "Pump", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Tensione continua" },
+                    { name: "Pectoral machine (rifinitura)", sets: "2", reps: "15", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Contrazione picco" },
+                    { name: "Push down (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps tricipiti", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Recupero 30 sec" },
+                    { name: "French press", sets: "2", reps: "12", rest: "60 sec", notes: "Rifinitura", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Capo lungo" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti",
+                duration: "50-60 min",
+                estimatedCalories: 400,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Crunch inverso", sets: "5", reps: "15", rest: "20 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Lat Machine (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale" },
-                    { name: "Pulley (rifinitura)", sets: "2", reps: "10", rest: "60 sec", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg" },
-                    { name: "Curl bil AZ (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti" }
+                    { name: "Crunch inverso", sets: "5", reps: "15", rest: "20 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Rapido" },
+                    { name: "Lat Machine (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps dorsale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Recupero minimo" },
+                    { name: "Rematore bilanciere", sets: "3", reps: "10-12", rest: "90 sec", notes: "Standard", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Spessore" },
+                    { name: "Pulley (rifinitura)", sets: "2", reps: "15", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Pump" },
+                    { name: "Pulldown braccia tese", sets: "2", reps: "15", rest: "60 sec", notes: "Dettaglio", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Contrazione" },
+                    { name: "Curl bilanciere (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps bicipiti", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Gironda style" },
+                    { name: "Curl manubri", sets: "2", reps: "12", rest: "60 sec", notes: "Rifinitura", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Supinazione" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Mercoledì",
                 focus: "Gambe",
+                duration: "60-70 min",
+                estimatedCalories: 510,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Leg Press (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei" },
-                    { name: "Leg Curl (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg" }
+                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Stabile" },
+                    { name: "Squat", sets: "4", reps: "10-12", rest: "3 min", notes: "Base", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Parallelo" },
+                    { name: "Leg Press (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Pump massimo" },
+                    { name: "Leg Extension", sets: "3", reps: "12-15", rest: "60 sec", notes: "Rifinitura quad", image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg", muscleGroup: "Quadricipiti", execution: "Contrazione" },
+                    { name: "Stacchi rumeni", sets: "3", reps: "10", rest: "2 min", notes: "Femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali, Glutei", execution: "Gambe tese" },
+                    { name: "Leg Curl (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali", execution: "Pump" },
+                    { name: "Calf in piedi", sets: "4", reps: "20", rest: "60 sec", notes: "Polpacci", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gastrocnemio", execution: "Estensione completa" }
                 ],
                 cooldown: "Stretching 10 min"
             },
             {
                 day: "Giovedì",
                 focus: "Spalle",
+                duration: "50-60 min",
+                estimatedCalories: 380,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Crunch", sets: "5", reps: "15", rest: "20 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Alzate laterali (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi" },
-                    { name: "Alzate posteriori (rifinitura)", sets: "2", reps: "10", rest: "60 sec", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg" }
+                    { name: "Crunch", sets: "5", reps: "15", rest: "20 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Rapido" },
+                    { name: "Lento avanti", sets: "3", reps: "8-10", rest: "90 sec", notes: "Base spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Completo" },
+                    { name: "Alzate laterali (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps deltoidi", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Pump laterale" },
+                    { name: "Alzate frontali", sets: "3", reps: "12", rest: "60 sec", notes: "Anteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide anteriore", execution: "Altezza occhi" },
+                    { name: "Alzate posteriori (rifinitura)", sets: "2", reps: "15", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide posteriore", execution: "Busto a 90°" },
+                    { name: "Rear delt fly", sets: "3", reps: "15", rest: "60 sec", notes: "Posteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide posteriore", execution: "Contrazione" },
+                    { name: "Shrugs", sets: "3", reps: "15", rest: "60 sec", notes: "Trapezio", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Trapezio", execution: "Su e giù" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Venerdì",
                 focus: "Upper Body",
+                duration: "55-65 min",
+                estimatedCalories: 420,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Crunch inverso", sets: "5", reps: "15", rest: "20 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Panca 30° (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg" },
-                    { name: "Rematore (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg" }
+                    { name: "Crunch inverso", sets: "5", reps: "15", rest: "20 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Rapido" },
+                    { name: "Panca 30° (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps petto alto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale alto", execution: "Pump" },
+                    { name: "Croci inclinate", sets: "2", reps: "12", rest: "60 sec", notes: "Rifinitura", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Stretch" },
+                    { name: "Rematore (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps dorsale", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Pump" },
+                    { name: "Pulley", sets: "2", reps: "12", rest: "60 sec", notes: "Rifinitura", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Contrazione" },
+                    { name: "Lento manubri", sets: "3", reps: "10", rest: "90 sec", notes: "Spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Completo" },
+                    { name: "Alzate laterali", sets: "3", reps: "12", rest: "60 sec", notes: "Finisher spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Pump" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Sabato",
                 focus: "Braccia Pump",
+                duration: "50-60 min",
+                estimatedCalories: 370,
                 warmup: "10 min cardio",
                 exercises: [
-                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Curl manubri (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti" },
-                    { name: "French press (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti" }
+                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Stabile" },
+                    { name: "Curl manubri (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps bicipiti", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Pump massimo" },
+                    { name: "Curl martello", sets: "3", reps: "12", rest: "60 sec", notes: "Brachiale", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti, Brachiale", execution: "Presa neutra" },
+                    { name: "Curl concentrato", sets: "2", reps: "12 per braccio", rest: "60 sec", notes: "Isolamento", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Picco contrazione" },
+                    { name: "French press (Gironda 8x8)", sets: "8", reps: "8", rest: "30 sec", notes: "64 reps tricipiti", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Pump massimo" },
+                    { name: "Push down cavi", sets: "3", reps: "15", rest: "60 sec", notes: "Finisher tri", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Estensione completa" },
+                    { name: "Kick back", sets: "2", reps: "15 per braccio", rest: "60 sec", notes: "Rifinitura", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Contrazione picco" }
                 ],
                 cooldown: "Stretching 10 min"
             }
