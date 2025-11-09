@@ -115,6 +115,8 @@ const workoutPrograms = [
             {
                 day: "Mercoledì",
                 focus: "Workout B - Stacco Focus",
+                duration: "65-80 min",
+                estimatedCalories: 480,
                 warmup: "10 min cardio + mobilità articolare dinamica",
                 exercises: [
                     { 
@@ -124,8 +126,8 @@ const workoutPrograms = [
                         rest: "30 sec", 
                         notes: "Focus sulla parte bassa dell'addome",
                         image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
-                        muscleGroup: "Addominali",
-                        execution: "Solleva il bacino verso il petto mantenendo gambe piegate"
+                        muscleGroup: "Addominali inferiori",
+                        execution: "Solleva il bacino verso il petto mantenendo gambe piegate a 90°"
                     },
                     { 
                         name: "Stacco da terra", 
@@ -135,17 +137,27 @@ const workoutPrograms = [
                         notes: "75-80% 1RM - Re degli esercizi per catena posteriore",
                         image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
                         muscleGroup: "Glutei, Femorali, Erettori spinali, Trapezio",
-                        execution: "Schiena dritta, afferra bilanciere, estendi gambe e schiena simultaneamente"
+                        execution: "Esercizio pluriarticolare fondamentale. Schiena dritta, estendi gambe e schiena simultaneamente"
                     },
                     { 
                         name: "Lento avanti con bilanciere", 
                         sets: "5", 
                         reps: "5", 
                         rest: "3 min", 
-                        notes: "Esercizio base per deltoidi",
+                        notes: "Esercizio base per deltoidi - 80% 1RM",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
                         muscleGroup: "Deltoide, Trapezio superiore, Tricipiti",
-                        execution: "Premi il bilanciere dal petto verso l'alto mantenendo core stabile"
+                        execution: "Movimento pluriarticolare. Premi il bilanciere dal petto verso l'alto mantenendo core stabile"
+                    },
+                    { 
+                        name: "Alzate laterali", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "90 sec", 
+                        notes: "Complementare per deltoide laterale",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide laterale (medio)",
+                        execution: "Monoarticolare. Abduzione della spalla fino a braccio parallelo"
                     },
                     { 
                         name: "Trazioni alla sbarra", 
@@ -155,7 +167,27 @@ const workoutPrograms = [
                         notes: "Se non raggiungi 5 reps, usa elastico o lat machine",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
                         muscleGroup: "Gran dorsale, Bicipiti, Trapezio",
-                        execution: "Presa prona leggermente più larga delle spalle, tira fino al mento alla sbarra"
+                        execution: "Esercizio pluriarticolare a corpo libero. Presa prona, tira fino al mento alla sbarra"
+                    },
+                    { 
+                        name: "Rematore manubri", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Unilaterale per focus su ogni lato",
+                        image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
+                        muscleGroup: "Dorsale, Trapezio, Romboidi",
+                        execution: "Appoggiato su panca, tira il manubrio verso l'anca contraendo il dorsale"
+                    },
+                    { 
+                        name: "Curl manubri", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Complementare bicipiti",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti brachiale",
+                        execution: "Muscolo biarticolare. Flette gomito e spalla, movimento completo con supinazione"
                     }
                 ],
                 cooldown: "Stretching 5-10 min con focus su catena posteriore"
@@ -163,6 +195,8 @@ const workoutPrograms = [
             {
                 day: "Venerdì",
                 focus: "Workout A - Ripetizione",
+                duration: "60-75 min",
+                estimatedCalories: 450,
                 warmup: "10 min cardio + mobilità articolare dinamica",
                 exercises: [
                     { 
@@ -172,38 +206,68 @@ const workoutPrograms = [
                         rest: "60 sec", 
                         notes: "Stabilizzazione core",
                         image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
-                        muscleGroup: "Addominali, Core",
-                        execution: "Mantieni corpo rigido come una tavola, non inarcare la schiena"
+                        muscleGroup: "Addominali, Core, Erettori",
+                        execution: "Mantieni corpo rigido come una tavola, addominali contratti, non inarcare la schiena"
                     },
                     { 
                         name: "Squat con bilanciere", 
                         sets: "5", 
                         reps: "5", 
                         rest: "3-5 min", 
-                        notes: "80-85% 1RM",
+                        notes: "80-85% 1RM - Mantieni tecnica impeccabile",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
                         muscleGroup: "Quadricipiti, Glutei, Femorali",
-                        execution: "Ripeti con la stessa tecnica impeccabile del Lunedì"
+                        execution: "Ripeti con la stessa tecnica del Lunedì, concentrati sulla forma"
+                    },
+                    { 
+                        name: "Leg Press", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Complementare gambe",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Piedi larghezza spalle, scendi controllato fino a 90°"
                     },
                     { 
                         name: "Distensione bilanciere panca piana", 
                         sets: "5", 
                         reps: "5", 
                         rest: "3-4 min", 
-                        notes: "80-85% 1RM",
+                        notes: "80-85% 1RM - Focus contrazione pettorale",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
                         muscleGroup: "Pettorale, Deltoide anteriore, Tricipiti",
-                        execution: "Focus sulla contrazione del pettorale"
+                        execution: "Movimento pluriarticolare. Focus sulla contrazione del pettorale, non solo sulla forza"
+                    },
+                    { 
+                        name: "Croci manubri panca piana", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Complementare per petto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale (fibre centrali)",
+                        execution: "Monoarticolare. Adduzione orizzontale della spalla, squeeze al centro"
                     },
                     { 
                         name: "Rematore con bilanciere", 
                         sets: "5", 
                         reps: "5", 
                         rest: "3 min", 
-                        notes: "Tecnica impeccabile",
+                        notes: "Tecnica impeccabile - Busto a 45°",
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
-                        muscleGroup: "Gran dorsale, Trapezio",
-                        execution: "Tira con il dorsale, non con le braccia"
+                        muscleGroup: "Gran dorsale, Trapezio, Romboidi",
+                        execution: "Tira con il dorsale, non con le braccia. Gomiti stretti al corpo"
+                    },
+                    { 
+                        name: "Pullover manubrio", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Espansione toracica e dorsale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Gran dorsale, Pettorale, Serratus",
+                        execution: "Braccia semi-tese, porta manubrio sopra la testa allungando dorsale"
                     }
                 ],
                 cooldown: "Stretching completo 10 min"
@@ -233,6 +297,8 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Spalle + Tricipiti",
+                duration: "60-75 min",
+                estimatedCalories: 430,
                 warmup: "10 min cardio + mobilità articolare",
                 exercises: [
                     { 
@@ -240,8 +306,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec", 
-                        notes: "Addominali attivati",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione addominali",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
                         name: "Distensione bilanciere panca piana (Rest Pause)", 
@@ -251,26 +319,57 @@ const workoutPrograms = [
                         notes: "4 reps + pausa 20sec + 2 reps + pausa 20sec + 1 rep. Carico per 4RM",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
                         muscleGroup: "Pettorale, Deltoidi, Tricipiti",
-                        execution: "Metodo Rest Pause: prolunga l'intensità massimale con micro-pause"
+                        execution: "Metodo Rest Pause: prolunga l'intensità massimale oltre il cedimento con micro-pause"
+                    },
+                    { 
+                        name: "Panca inclinata manubri", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Complementare pettorale alto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale alto, Deltoidi anteriori",
+                        execution: "Movimento pluriarticolare con enfasi su capo clavicolare del pettorale"
                     },
                     { 
                         name: "Lento avanti (Rest Pause)", 
                         sets: "4", 
                         reps: "4+2+1", 
                         rest: "20 sec intra-serie, 2 min tra serie", 
-                        notes: "Stessa logica Rest Pause",
+                        notes: "Stessa logica Rest Pause per spalle",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi, Trapezio, Tricipiti"
+                        muscleGroup: "Deltoidi, Trapezio superiore, Tricipiti",
+                        execution: "Premi il bilanciere sopra la testa con core stabile"
+                    },
+                    { 
+                        name: "Alzate laterali", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "90 sec", 
+                        notes: "Isolamento deltoide laterale",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide laterale",
+                        execution: "Monoarticolare. Abduzione spalla fino a braccio parallelo al suolo"
                     },
                     { 
                         name: "Panca stretta (Rest Pause)", 
                         sets: "4", 
                         reps: "4+2+1", 
                         rest: "20 sec intra-serie, 2 min tra serie", 
-                        notes: "Focus tricipiti",
+                        notes: "Focus tricipiti con Rest Pause",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
                         muscleGroup: "Tricipiti, Pettorale interno",
-                        execution: "Presa stretta, gomiti vicini al corpo"
+                        execution: "Presa stretta (larghezza spalle), gomiti vicini al corpo per massimo focus tricipiti"
+                    },
+                    { 
+                        name: "Push down ai cavi", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Finisher tricipiti",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti (capo laterale)",
+                        execution: "Monoarticolare. Estensione completa del gomito con tensione continua"
                     }
                 ],
                 cooldown: "Stretching petto, spalle, tricipiti 5-10 min"
@@ -278,6 +377,8 @@ const workoutPrograms = [
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti",
+                duration: "60-75 min",
+                estimatedCalories: 420,
                 warmup: "10 min cardio + mobilità articolare",
                 exercises: [
                     { 
@@ -285,7 +386,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Contrai l'addome sollevando il bacino verso il petto"
                     },
                     { 
                         name: "Trazioni alla sbarra (Rest Pause)", 
@@ -294,15 +398,28 @@ const workoutPrograms = [
                         rest: "20 sec intra-serie, 3 min tra serie", 
                         notes: "Vai al massimo, pausa 20 sec, ancora max reps per 3 volte",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale, Bicipiti, Trapezio"
+                        muscleGroup: "Dorsale, Bicipiti, Trapezio",
+                        execution: "Esercizio pluriarticolare fondamentale. Tira il corpo verso l'alto contraendo dorsale e bicipiti"
                     },
                     { 
                         name: "Rematore bilanciere (Rest Pause)", 
                         sets: "4", 
                         reps: "4+2+1", 
                         rest: "20 sec intra-serie, 2 min tra serie",
+                        notes: "Tecnica rigorosa, busto inclinato 45°",
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
-                        muscleGroup: "Dorsale, Trapezio"
+                        muscleGroup: "Dorsale, Trapezio, Romboidi",
+                        execution: "Tira il bilanciere verso l'ombelico contraendo le scapole"
+                    },
+                    { 
+                        name: "Pulley basso", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Complementare per spessore dorsale",
+                        image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
+                        muscleGroup: "Dorsale centrale, Romboidi",
+                        execution: "Tira la sbarra al petto contraendo le scapole indietro"
                     },
                     { 
                         name: "Curl bilanciere (Rest Pause)", 
@@ -311,8 +428,28 @@ const workoutPrograms = [
                         rest: "20 sec intra-serie, 90 sec tra serie", 
                         notes: "Movimento biarticolare per bicipite completo",
                         image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti",
-                        execution: "Movimento completo da massimo allungamento a massima contrazione"
+                        muscleGroup: "Bicipiti brachiale",
+                        execution: "Muscolo biarticolare: flette gomito e spalla. Movimento completo da massimo allungamento a contrazione"
+                    },
+                    { 
+                        name: "Curl manubri alternato", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus su supinazione completa",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti, Brachiale",
+                        execution: "Ruota il polso durante la salita per massima contrazione del picco"
+                    },
+                    { 
+                        name: "Hammer Curl", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Finisher per brachiale e avambracci",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Brachiale, Brachioradiale",
+                        execution: "Presa neutra (martello), lavora sul brachiale sottostante il bicipite"
                     }
                 ],
                 cooldown: "Stretching dorsali e braccia 5-10 min"
@@ -320,6 +457,8 @@ const workoutPrograms = [
             {
                 day: "Giovedì",
                 focus: "Gambe Completo",
+                duration: "65-80 min",
+                estimatedCalories: 500,
                 warmup: "10 min cardio + mobilità anche e ginocchia",
                 exercises: [
                     { 
@@ -327,7 +466,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "60 sec", 
                         rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Stabilizzazione core prima dello squat",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Core, Addominali",
+                        execution: "Corpo rigido come una tavola, addominali contratti"
                     },
                     { 
                         name: "Squat (Rest Pause)", 
@@ -336,7 +478,8 @@ const workoutPrograms = [
                         rest: "20 sec intra-serie, 4 min tra serie", 
                         notes: "Il Rest Pause più duro del programma",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei, Femorali"
+                        muscleGroup: "Quadricipiti, Glutei, Femorali",
+                        execution: "Re degli esercizi. Scendi controllato fino a coscie parallele, risali esplosivo"
                     },
                     { 
                         name: "Stacco gambe tese", 
@@ -345,17 +488,48 @@ const workoutPrograms = [
                         rest: "20 sec intra-serie, 3 min tra serie", 
                         notes: "Focus femorali",
                         image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
-                        muscleGroup: "Femorali, Glutei, Erettori spinali"
+                        muscleGroup: "Femorali, Glutei, Erettori spinali",
+                        execution: "Gambe semi-tese, scendi con bilanciere lungo le gambe allungando femorali"
+                    },
+                    { 
+                        name: "Leg Press", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "2 min", 
+                        notes: "Complementare per quadricipiti e glutei",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Piedi larghezza spalle, scendi fino a 90° al ginocchio"
                     },
                     { 
                         name: "Leg Extension", 
                         sets: "3", 
                         reps: "12-15", 
                         rest: "90 sec", 
-                        notes: "Esercizio complementare per quadricipiti",
+                        notes: "Esercizio monoarticolare per isolamento quadricipiti",
                         image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg",
-                        muscleGroup: "Quadricipiti",
-                        execution: "Monoarticolare, estensione completa contraendo il vasto"
+                        muscleGroup: "Quadricipiti (vasto mediale, laterale, intermedio)",
+                        execution: "Monoarticolare, estensione completa contraendo il vasto mediale"
+                    },
+                    { 
+                        name: "Leg Curl", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "90 sec", 
+                        notes: "Isolamento femorali",
+                        image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
+                        muscleGroup: "Bicipite femorale",
+                        execution: "Monoarticolare per femorali. Fletti le ginocchia contraendo i femorali"
+                    },
+                    { 
+                        name: "Calf Raise in piedi", 
+                        sets: "4", 
+                        reps: "15-20", 
+                        rest: "60 sec", 
+                        notes: "Finisher per polpacci",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Gastrocnemio, Soleo",
+                        execution: "Estendi completamente la caviglia contraendo i polpacci al massimo"
                     }
                 ],
                 cooldown: "Stretching gambe completo 10 min"
@@ -363,6 +537,8 @@ const workoutPrograms = [
             {
                 day: "Sabato",
                 focus: "Upper Body Completo",
+                duration: "60-75 min",
+                estimatedCalories: 440,
                 warmup: "10 min cardio + mobilità",
                 exercises: [
                     { 
@@ -370,32 +546,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione addominali",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
                         name: "Panca piana (Rest Pause)", 
                         sets: "3", 
                         reps: "4+2+1", 
                         rest: "20 sec intra, 3 min tra serie",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg"
+                        notes: "Rest Pause per massima intensità sul petto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale, Deltoidi, Tricipiti",
+                        execution: "Esercizio pluriarticolare base. Abbassa controllato, premi esplosivo"
                     },
                     { 
                         name: "Lat Machine (Rest Pause)", 
                         sets: "3", 
                         reps: "4+2+1", 
                         rest: "20 sec intra, 2 min tra serie",
+                        notes: "Dorsali ad alta intensità",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale, Bicipiti"
+                        muscleGroup: "Dorsale, Bicipiti, Trapezio",
+                        execution: "Tira la sbarra al petto contraendo le scapole"
+                    },
+                    { 
+                        name: "Military Press manubri", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "2 min", 
+                        notes: "Spalle complete",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide, Trapezio, Tricipiti",
+                        execution: "Premi i manubri verso l'alto da seduto, movimento controllato"
                     },
                     { 
                         name: "Alzate laterali manubri", 
                         sets: "3", 
                         reps: "12-15", 
                         rest: "90 sec", 
-                        notes: "Esercizio complementare deltoidi",
+                        notes: "Esercizio monoarticolare per deltoide laterale",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
                         muscleGroup: "Deltoide laterale",
-                        execution: "Abduce la spalla sollevando il braccio lateralmente"
+                        execution: "Abduzione della spalla. Solleva lateralmente fino a spalla parallela al suolo"
+                    },
+                    { 
+                        name: "French Press", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Tricipiti capo lungo",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti (capo lungo)",
+                        execution: "Estensione del gomito sopra la testa per massimo allungamento tricipite"
+                    },
+                    { 
+                        name: "Curl ai cavi", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Finisher bicipiti con tensione continua",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti",
+                        execution: "Tensione continua grazie ai cavi, contrazione costante"
                     }
                 ],
                 cooldown: "Stretching completo 10 min"
@@ -427,6 +641,8 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Tricipiti",
+                duration: "60-75 min",
+                estimatedCalories: 440,
                 warmup: "10 min cardio + 2 serie riscaldamento leggere",
                 exercises: [
                     { 
@@ -434,7 +650,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo gli addominali"
                     },
                     { 
                         name: "Distensione panca piana (Drop Set)", 
@@ -443,8 +662,18 @@ const workoutPrograms = [
                         rest: "90 sec", 
                         notes: "Serie 1: 5 reps peso massimale. Serie 2: -10%, 7 reps. Serie 3: -10%, 9 reps. Serie 4: -10%, 11 reps",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale, Deltoidi, Tricipiti",
-                        execution: "Drop set: riduci carico e aumenta reps ad ogni serie senza pausa"
+                        muscleGroup: "Pettorale, Deltoidi anteriori, Tricipiti",
+                        execution: "Metodo Drop Set: riduci carico e aumenta reps ad ogni serie per massimo stress metabolico"
+                    },
+                    { 
+                        name: "Panca inclinata 30° bilanciere", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "90 sec", 
+                        notes: "Focus pettorale alto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale alto (clavicolare)",
+                        execution: "Inclinazione 30° per enfasi su fibre clavicolari"
                     },
                     { 
                         name: "Croci manubri 30° (Drop Set)", 
@@ -453,26 +682,38 @@ const workoutPrograms = [
                         rest: "60 sec", 
                         notes: "Arriva al cedimento, togli 20-30%, continua senza pausa",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Esercizio complementare con grande stretch del pettorale"
+                        muscleGroup: "Pettorale (fibre centrali)",
+                        execution: "Monoarticolare. Grande stretch del pettorale, squeeze al centro"
                     },
                     { 
                         name: "Panca stretta (Drop Set)", 
                         sets: "4", 
                         reps: "5 → 7 → 9", 
                         rest: "90 sec",
+                        notes: "Progressione carico decrescente",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti"
+                        muscleGroup: "Tricipiti, Pettorale interno",
+                        execution: "Presa stretta, gomiti vicini per massimo stimolo tricipiti"
                     },
                     { 
-                        name: "Push Down", 
+                        name: "French Press manubrio", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Isolamento capo lungo tricipiti",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti (capo lungo)",
+                        execution: "Estensione sopra la testa per allungamento massimo"
+                    },
+                    { 
+                        name: "Push Down ai cavi", 
                         sets: "3", 
                         reps: "12-15", 
                         rest: "60 sec", 
-                        notes: "Complementare tricipiti",
+                        notes: "Finisher tricipiti",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti",
-                        execution: "Esercizio monoarticolare di isolamento"
+                        muscleGroup: "Tricipiti (capo laterale)",
+                        execution: "Monoarticolare. Estensione completa con tensione continua"
                     }
                 ],
                 cooldown: "Stretching petto e tricipiti 5 min"
@@ -480,6 +721,8 @@ const workoutPrograms = [
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti",
+                duration: "60-75 min",
+                estimatedCalories: 420,
                 warmup: "10 min cardio + mobilità spalle",
                 exercises: [
                     { 
@@ -487,7 +730,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione addominali inferiori",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali inferiori",
+                        execution: "Solleva il bacino verso il petto contraendo l'addome"
                     },
                     { 
                         name: "Trazioni alla sbarra (Drop Set)", 
@@ -496,32 +742,58 @@ const workoutPrograms = [
                         rest: "90 sec", 
                         notes: "Inizia zavorrato, poi bodyweight, poi con elastico assistenza",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale, Bicipiti"
+                        muscleGroup: "Gran dorsale, Bicipiti, Trapezio",
+                        execution: "Esercizio pluriarticolare fondamentale. Tira il corpo verso l'alto contraendo dorsale"
+                    },
+                    { 
+                        name: "Lat Machine presa larga", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus larghezza dorsale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Gran dorsale (larghezza)",
+                        execution: "Tira la sbarra al petto contraendo le scapole"
                     },
                     { 
                         name: "Rematore bilanciere (Drop Set)", 
                         sets: "4", 
                         reps: "5 → 7 → 9", 
                         rest: "90 sec",
+                        notes: "Progressione carichi decrescenti",
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
-                        muscleGroup: "Dorsale, Trapezio"
+                        muscleGroup: "Dorsale centrale, Trapezio, Romboidi",
+                        execution: "Busto inclinato 45°, tira il bilanciere verso l'ombelico"
                     },
                     { 
-                        name: "Pulley basso", 
+                        name: "Pulley basso presa stretta", 
                         sets: "3", 
                         reps: "10-12", 
                         rest: "60 sec", 
-                        notes: "Complementare dorsale",
+                        notes: "Spessore dorsale centrale",
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
-                        muscleGroup: "Dorsale"
+                        muscleGroup: "Dorsale centrale, Romboidi",
+                        execution: "Tira la maniglia al petto contraendo scapole indietro"
                     },
                     { 
                         name: "Curl bilanciere (Drop Set)", 
                         sets: "4", 
                         reps: "5 → 7 → 9", 
                         rest: "60 sec",
+                        notes: "Metodo Drop Set per bicipiti",
                         image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti"
+                        muscleGroup: "Bicipiti brachiale",
+                        execution: "Muscolo biarticolare. Movimento completo con supinazione"
+                    },
+                    { 
+                        name: "Curl manubri inclinato", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Massimo allungamento bicipiti",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti (capo lungo)",
+                        execution: "Su panca 45°, massimo stretch in basso, contrazione al top"
                     }
                 ],
                 cooldown: "Stretching dorsali e bicipiti 5 min"
@@ -529,6 +801,8 @@ const workoutPrograms = [
             {
                 day: "Giovedì",
                 focus: "Spalle + Trapezi",
+                duration: "60-70 min",
+                estimatedCalories: 400,
                 warmup: "10 min cardio + mobilità spalle e scapole",
                 exercises: [
                     { 
@@ -536,33 +810,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "60 sec", 
                         rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Stabilizzazione core e scapole",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Core, Addominali",
+                        execution: "Mantieni corpo rigido, scapole stabili"
                     },
                     { 
                         name: "Lento avanti (Drop Set)", 
                         sets: "4", 
                         reps: "5 → 7 → 9", 
                         rest: "90 sec",
+                        notes: "Progressione carichi decrescenti",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi, Trapezio"
+                        muscleGroup: "Deltoidi (anteriore, laterale), Trapezio, Tricipiti",
+                        execution: "Movimento pluriarticolare. Premi sopra la testa con core stabile"
+                    },
+                    { 
+                        name: "Military Press manubri", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Movimento controllato",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoidi",
+                        execution: "Premi manubri da seduto con traiettoria verticale"
                     },
                     { 
                         name: "Alzate laterali (Drop Set)", 
                         sets: "4", 
                         reps: "10-15 drop", 
                         rest: "60 sec", 
-                        notes: "Drop rapido -30% e continua",
+                        notes: "Drop rapido -30% e continua senza pausa",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoide laterale"
+                        muscleGroup: "Deltoide laterale (medio)",
+                        execution: "Monoarticolare. Abduzione spalla fino a braccio parallelo"
+                    },
+                    { 
+                        name: "Alzate posteriori", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "90 sec", 
+                        notes: "Focus deltoide posteriore",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide posteriore",
+                        execution: "Busto inclinato 90°, abduzione orizzontale della spalla"
                     },
                     { 
                         name: "Tirate al petto bilanciere", 
                         sets: "4", 
                         reps: "8-10", 
                         rest: "90 sec", 
-                        notes: "Base per trapezi",
+                        notes: "Esercizio base per trapezi",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Trapezio, Deltoidi"
+                        muscleGroup: "Trapezio superiore, Deltoidi",
+                        execution: "Tira il bilanciere verso il mento con gomiti alti"
+                    },
+                    { 
+                        name: "Shrugs con manubri", 
+                        sets: "3", 
+                        reps: "15-20", 
+                        rest: "60 sec", 
+                        notes: "Isolamento trapezio",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Trapezio superiore",
+                        execution: "Monoarticolare. Elevazione scapole contraendo il trapezio"
                     }
                 ],
                 cooldown: "Stretching spalle 5 min"
@@ -570,6 +881,8 @@ const workoutPrograms = [
             {
                 day: "Sabato",
                 focus: "Gambe Completo",
+                duration: "65-80 min",
+                estimatedCalories: 500,
                 warmup: "10 min cardio + mobilità anche",
                 exercises: [
                     { 
@@ -577,41 +890,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
                         name: "Squat (Drop Set)", 
                         sets: "4", 
                         reps: "5 → 7 → 9 → 11", 
                         rest: "2 min", 
-                        notes: "Drop set progressivo, massima intensità",
+                        notes: "Drop set progressivo, massima intensità metabolica",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei"
+                        muscleGroup: "Quadricipiti, Glutei, Femorali",
+                        execution: "Re degli esercizi. Scendi controllato, risali esplosivo. Drop set per massimo pompaggio"
+                    },
+                    { 
+                        name: "Leg Press", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "90 sec", 
+                        notes: "Complementare per quadricipiti",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Piedi larghezza spalle, scendi fino a 90° al ginocchio"
+                    },
+                    { 
+                        name: "Affondi con manubri", 
+                        sets: "3", 
+                        reps: "10-12 per gamba", 
+                        rest: "90 sec", 
+                        notes: "Stabilizzazione e lavoro unilaterale",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Movimento pluriarticolare unilaterale per equilibrio muscolare"
                     },
                     { 
                         name: "Leg Extension (Drop Set)", 
                         sets: "3", 
                         reps: "12-20 drop", 
                         rest: "60 sec",
+                        notes: "Finisher quadricipiti",
                         image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg",
-                        muscleGroup: "Quadricipiti"
+                        muscleGroup: "Quadricipiti (vasto mediale, laterale)",
+                        execution: "Monoarticolare. Estensione completa contraendo il vasto mediale"
                     },
                     { 
                         name: "Leg Curl (Drop Set)", 
                         sets: "3", 
                         reps: "12-20 drop", 
                         rest: "60 sec",
+                        notes: "Finisher femorali",
                         image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
-                        muscleGroup: "Femorali"
+                        muscleGroup: "Bicipite femorale",
+                        execution: "Monoarticolare. Fletti le ginocchia contraendo i femorali"
                     },
                     { 
                         name: "Calf in piedi", 
                         sets: "4", 
                         reps: "15-20", 
                         rest: "60 sec", 
-                        notes: "Leva di 2° tipo - vantaggiosa",
+                        notes: "Leva di 2° tipo - vantaggiosa per polpacci",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Gastrocnemio"
+                        muscleGroup: "Gastrocnemio, Soleo",
+                        execution: "Estendi completamente la caviglia contraendo i polpacci al massimo"
                     }
                 ],
                 cooldown: "Stretching gambe completo 10 min"

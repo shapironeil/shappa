@@ -653,17 +653,17 @@ function openGoalSelection() {
     const body = document.getElementById('goalBody');
 
     body.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
             ${goalOptions.map(goal => {
                 const icon = getIconHTML(goal.icon);
                 const isSelected = userData.goal === goal.id;
                 return `
-                    <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectGoal('${goal.id}')" style="flex-direction: column; align-items: start; padding: 14px;">
-                        <div style="font-size: 28px; margin-bottom: 8px;">${icon}</div>
-                        <div style="font-weight: 600; margin-bottom: 3px; font-size: 14px;">${goal.title}</div>
-                        <div style="font-size: 11px; color: #6b7280; line-height: 1.3;">${goal.description}</div>
+                    <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectGoal('${goal.id}')" style="flex-direction: column; align-items: center; padding: 12px; text-align: center;">
+                        <div style="font-size: 24px; margin-bottom: 6px;">${icon}</div>
+                        <div style="font-weight: 600; margin-bottom: 3px; font-size: 13px;">${goal.title}</div>
+                        <div style="font-size: 10px; color: #6b7280; line-height: 1.3;">${goal.description}</div>
                         ${isSelected ? `
-                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dbeafe; width: 100%; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #3b82f6;">
+                            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid #dbeafe; width: 100%; display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 10px; color: #3b82f6;">
                                 <i class="fas fa-check"></i>
                                 Selezionato
                             </div>
