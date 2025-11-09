@@ -2103,29 +2103,8 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
     }
 });
 
-// ========================================
-// 🎨 FRONTEND REACT - SPORT PAGE
-// ========================================
-
-// Serve frontend React build per la pagina Sport
-app.use('/sport', express.static(path.join(__dirname, 'frontend', 'build')));
-
-// Redirect /src/pages/sport.html → React app
-app.get('/src/pages/sport.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
-});
-
-// Fallback per routing React (SPA)
-app.get('/sport/*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'build', 'index.html'));
-});
-
-// ========================================
-// 🚀 SERVER STARTUP
-// ========================================
-
 function startHttp() {
-    console.log('🌐 Starting HTTP server as fallback...');
+    console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
     console.log('✅ Shappa Backend Server Running (HTTP)');
