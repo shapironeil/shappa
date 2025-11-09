@@ -61,10 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ========== AUTH ==========
 function handleLogout() {
-    if (confirm('Sei sicuro di voler uscire?')) {
-        AuthManager.logout();
-        window.location.href = '/src/pages/login.html';
-    }
+    AuthManager.logout();
+    window.location.href = '/src/pages/login.html';
 }
 
 // ========== DATA PERSISTENCE (Server API) ==========
@@ -264,7 +262,7 @@ function renderPrograms(tab) {
                 </div>
                 <div class="program-meta">
                     <span><i class="fas fa-calendar"></i> ${program.frequency}x/sett</span>
-                    <span><i class="fas fa-clock"></i> ${program.sessions[0]?.exercises.length * 3 || 45}min</span>
+                    <span><i class="fas fa-clock"></i> ${program.sessions[0]?.exercises.length * 8 || 60}min</span>
                 </div>
                 <div class="program-actions">
                     ${isSelected ? `
@@ -458,7 +456,6 @@ function confirmSchedule() {
     const selectedDays = Array.from(selectedDayElements).map(el => parseInt(el.dataset.day));
 
     if (selectedDays.length === 0) {
-        alert('Seleziona almeno un giorno');
         return;
     }
 
@@ -469,7 +466,7 @@ function confirmSchedule() {
     scheduledWorkouts = scheduledWorkouts.filter(w => w.workoutId !== program.id);
 
     // Add new scheduled workouts
-    const avgDuration = program.sessions[0]?.exercises.length * 3 || 45;
+    const avgDuration = program.sessions[0]?.exercises.length * 8 || 60;
     selectedDays.forEach(dayIndex => {
         scheduledWorkouts.push({
             dayIndex,
@@ -485,8 +482,6 @@ function confirmSchedule() {
     renderPrograms(document.querySelector('.tab-btn.active').dataset.tab);
     renderProgressWidget();
     closeSchedule();
-
-    alert(`✅ ${program.title} programmato per ${selectedDays.length} giorni!`);
 }
 
 function closeSchedule() {
@@ -494,7 +489,6 @@ function closeSchedule() {
 }
 
 function cancelProgram(programId) {
-    if (!confirm('Sei sicuro di voler annullare questo programma?')) return;
 
     scheduledWorkouts = scheduledWorkouts.filter(w => w.workoutId !== programId);
     saveScheduledWorkouts();
@@ -503,8 +497,6 @@ function cancelProgram(programId) {
     renderWeeklyCalendar();
     renderPrograms(document.querySelector('.tab-btn.active').dataset.tab);
     renderProgressWidget();
-
-    alert('✅ Programma annullato');
 }
 
 // ========== PROGRESS WIDGET (ProgressWidget.tsx) ==========
@@ -587,7 +579,7 @@ async function renderProgressWidget() {
 }
 
 function showProgressInfo() {
-    alert(`📊 Sistema di Tracciamento\n\n✅ Monitoriamo i tuoi allenamenti automaticamente\n\n🔔 Sistema Webhook Discord:\n• Il sistema legge il calendario e invia notifiche nei giorni programmati\n• Confermi il completamento direttamente da Discord\n• I progressi si aggiornano automaticamente\n\n🏆 Tracciamento Intelligente:\nCalcoliamo automaticamente allenamenti completati, calorie bruciate, progressione settimanale e streak di costanza.`);
+    // Removed alert - info shown in widget
 }
 
 // ========== PERSONAL CARD (PersonalCard.tsx) ==========
@@ -699,7 +691,6 @@ function selectGoal(goalId) {
     renderPersonalCard();
     renderPrograms(document.querySelector('.tab-btn.active').dataset.tab);
     closeGoal();
-    alert('✅ Obiettivo aggiornato!');
 }
 
 function closeGoal() {
@@ -794,7 +785,6 @@ function nextQuestion() {
 
     // Validate
     if (!currentAnswer) {
-        alert('❌ Per favore, rispondi alla domanda');
         return;
     }
 
@@ -812,7 +802,6 @@ function nextQuestion() {
         renderPersonalCard();
         renderPrograms('recommended');
         closeQuiz();
-        alert('✅ Profilo completato con successo! 🎉');
     }
 }
 

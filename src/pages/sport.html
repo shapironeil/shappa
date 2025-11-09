@@ -178,6 +178,9 @@
             padding: 24px 32px;
             background: white;
             border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .venus-page-title {
@@ -720,7 +723,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 9999;
             padding: 20px;
             overflow-y: auto;
         }
@@ -1013,6 +1016,9 @@
         <main class="venus-main-content">
             <div class="venus-page-header">
                 <h1 class="venus-page-title">💪 Sport & Fitness</h1>
+                <button class="btn btn-sm" onclick="configureSportWebhook()" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    <i class="fas fa-bell"></i> Configura Webhook
+                </button>
             </div>
 
             <div class="venus-content-area">
@@ -1141,5 +1147,47 @@
     <script src="../utils/auth-v2.js"></script>
     <script src="sport-data.js"></script>
     <script src="sport-app.js"></script>
+    <script>
+    // Configure Sport Webhook
+    async function configureSportWebhook() {
+        try {
+            // Recupera webhook corrente dal server
+            const response = await fetch('/api/sport/webhook');
+            const data = await response.json();
+            const currentUrl = data.success && data.webhookUrl ? data.webhookUrl : '';
+
+            const newUrl = prompt(
+                '🔔 Configura Webhook Discord\n\n' +
+                'Inserisci URL webhook:\n' +
+                'Es: https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN',
+                currentUrl
+            );
+
+            if (newUrl !== null && newUrl.trim() !== '') {
+                // Valida URL
+                try {
+                    new URL(newUrl);
+                    
+                    // Invia test (salva anche URL)
+                    const testResponse = await fetch('/api/sport/test-webhook', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ webhookUrl: newUrl.trim() })
+                    });
+                    
+                    const result = await testResponse.json();
+                    
+                    if (result.success) {
+                        console.log('✅ Webhook configurato');
+                    }
+                } catch (e) {
+                    console.error('URL non valido');
+                }
+            }
+        } catch (error) {
+            console.error('Errore:', error);
+        }
+    }
+    </script>
 </body>
 </html>
