@@ -142,13 +142,16 @@ class ShopifyMonitor {
                     interest.lastUpdate = new Date().toISOString();
                     
                     // 🕒 Aggiungi timestamp prossimo check (per countdown dinamico)
-                    if (nextCheckIn !== null) {
+                    // ⚠️ NON rimuovere nextCheckTime se null - mantieni valore precedente durante check
+                    if (nextCheckIn !== null && nextCheckIn !== undefined) {
                         interest.nextCheckTime = Date.now() + nextCheckIn; // timestamp in ms
                         console.log(`[Shopify] ⏰ nextCheckTime impostato: ${interest.nextCheckTime} (tra ${Math.ceil(nextCheckIn/1000)}s)`);
-                    } else {
-                        delete interest.nextCheckTime; // Rimuovi se non serve
+                    } else if (nextCheckIn === false) {
+                        // Solo quando esplicitamente false, rimuovi (es. stop monitor)
+                        delete interest.nextCheckTime;
                         console.log(`[Shopify] 🗑️ nextCheckTime rimosso`);
                     }
+                    // Se nextCheckIn === null → mantieni nextCheckTime esistente (durante check in corso)
                     
                     // Salva file aggiornato
                     await fs.writeFile(interestFile, JSON.stringify(interests, null, 2));
@@ -787,7 +790,7 @@ class ShopifyMonitor {
             if (onlineProducts.length > 0) {
                 const successfullySent = onlineProducts.filter(p => p.variants && p.variants.length > 0);
                 console.log(`[Shopify] ✅ Monitor completato: ${successfullySent.length} prodotti ONLINE inviati. Task eliminata.`);
-                await this.updateMonitorStatus(`🛑 Stopped`, 'stopped');
+                await this.updateMonitorStatus(`🛑 Stopped`, 'stopped', false); // false = rimuovi nextCheckTime
                 await this.stop(true); // true = elimina task automaticamente
                 return;
             }
