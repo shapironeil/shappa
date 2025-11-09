@@ -1871,11 +1871,8 @@ app.post('/api/monitors/start', async (req, res) => {
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
 
-        if (result.success) {
-            // Aggiorna status a "monitoring"
-            interest.status = 'monitoring';
-            await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
-        }
+        // ⚠️ NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
+        // Se riscriviamo, perdiamo statusMessage e nextCheckTime che il monitor ha appena aggiunto
 
         return res.json(result);
     } catch (error) {
