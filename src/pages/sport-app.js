@@ -281,14 +281,22 @@ function showProgramInfo(programId) {
                             ` : ''}
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 ${session.exercises.map((ex, exIdx) => `
-                                    <div style="display: flex; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
-                                        <div style="flex: 1;">
+                                    <div style="display: flex; gap: 12px; padding: 8px; border-bottom: 1px solid #e5e7eb;">
+                                        ${ex.image ? `
+                                            <img src="${ex.image}" 
+                                                 alt="${ex.name}" 
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; flex-shrink: 0;"
+                                                 onerror="this.style.display='none'">
+                                        ` : ''}
+                                        <div style="flex: 1; min-width: 0;">
                                             <div style="font-size: 14px; font-weight: 500;">${exIdx + 1}. ${ex.name}</div>
-                                            ${ex.notes ? `<div style="font-size: 12px; color: #6b7280; margin-top: 2px;">${ex.notes}</div>` : ''}
+                                            ${ex.muscleGroup ? `<div style="font-size: 11px; color: #3b82f6; margin-top: 2px;"><i class="fas fa-dumbbell"></i> ${ex.muscleGroup}</div>` : ''}
+                                            ${ex.notes ? `<div style="font-size: 12px; color: #6b7280; margin-top: 4px;">${ex.notes}</div>` : ''}
+                                            ${ex.execution ? `<div style="font-size: 11px; color: #8b5cf6; margin-top: 4px; font-style: italic;"><i class="fas fa-info-circle"></i> ${ex.execution}</div>` : ''}
                                         </div>
-                                        <div style="display: flex; gap: 12px; font-size: 12px; color: #6b7280; white-space: nowrap;">
-                                            <span>${ex.sets} serie</span>
-                                            <span>${ex.reps} rip</span>
+                                        <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6b7280; white-space: nowrap; text-align: right;">
+                                            <span><strong>${ex.sets}</strong> serie</span>
+                                            <span><strong>${ex.reps}</strong> rip</span>
                                             <span>${ex.rest} rec</span>
                                         </div>
                                     </div>
