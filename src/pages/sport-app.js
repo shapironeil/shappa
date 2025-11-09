@@ -174,35 +174,37 @@ function renderPrograms(tab) {
 
         return `
             <div class="program-card ${isSelected ? 'selected' : ''}" data-program-id="${program.id}">
-                <div class="program-icon ${program.icon}">
-                    ${icon}
-                </div>
-                <div class="program-details">
-                    <div class="program-header">
-                        <div>
-                            <h3 class="program-title">${program.title}</h3>
-                            <p class="program-subtitle">${program.subtitle}</p>
+                <div class="program-card-top">
+                    <div class="program-icon ${program.icon}">
+                        ${icon}
+                    </div>
+                    <div class="program-details">
+                        <div class="program-header">
+                            <div style="flex: 1; min-width: 0;">
+                                <h3 class="program-title">${program.title}</h3>
+                                <p class="program-subtitle">${program.subtitle}</p>
+                            </div>
+                            <span class="program-badge ${diffColor}">${diffLabel}</span>
                         </div>
-                        <span class="program-badge ${diffColor}">${diffLabel}</span>
                     </div>
-                    <div class="program-meta">
-                        <span><i class="fas fa-calendar"></i> ${program.frequency}x/sett</span>
-                        <span><i class="fas fa-clock"></i> ${program.sessions[0]?.exercises.length * 3 || 45}min</span>
-                    </div>
-                    <div class="program-actions">
-                        ${isSelected ? `
-                            <button class="btn btn-sm btn-outline" onclick="cancelProgram(${program.id})">
-                                <i class="fas fa-times"></i> Annulla
-                            </button>
-                        ` : `
-                            <button class="btn btn-sm btn-primary" onclick="startProgram(${program.id})">
-                                Inizia
-                            </button>
-                        `}
-                        <button class="btn btn-sm btn-icon btn-outline" onclick="showProgramInfo(${program.id})">
-                            <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="program-meta">
+                    <span><i class="fas fa-calendar"></i> ${program.frequency}x/sett</span>
+                    <span><i class="fas fa-clock"></i> ${program.sessions[0]?.exercises.length * 3 || 45}min</span>
+                </div>
+                <div class="program-actions">
+                    ${isSelected ? `
+                        <button class="btn btn-sm btn-outline" onclick="cancelProgram(${program.id})">
+                            <i class="fas fa-times"></i> Annulla
                         </button>
-                    </div>
+                    ` : `
+                        <button class="btn btn-sm btn-primary" onclick="startProgram(${program.id})">
+                            Inizia
+                        </button>
+                    `}
+                    <button class="btn btn-sm btn-icon btn-outline" onclick="showProgramInfo(${program.id})">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
                 </div>
             </div>
         `;
