@@ -1615,12 +1615,6 @@ const goalOptions = [
 
 const quizQuestions = [
     {
-        id: "name",
-        question: "Come ti chiami?",
-        type: "text",
-        placeholder: "Il tuo nome"
-    },
-    {
         id: "age",
         question: "Quanti anni hai?",
         type: "number",

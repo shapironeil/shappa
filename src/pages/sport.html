@@ -234,10 +234,11 @@
         }
 
         .card-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
             color: var(--text-primary);
             margin: 0;
+            padding: 12px 0;
         }
 
         /* ========== WEEKLY CALENDAR (WeeklyCalendar.tsx) ========== */
@@ -1079,18 +1080,17 @@
     <!-- Quiz Modal -->
     <div class="modal-overlay" id="quizModal">
         <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="quizTitle">Completa il tuo profilo</h3>
-                <p class="modal-subtitle">Aiutaci a creare il programma perfetto per te</p>
+            <div class="modal-header" style="padding-bottom: 20px; border-bottom: none;">
+                <h3 class="modal-title" id="quizTitle" style="margin-bottom: 0;">Completa il tuo profilo</h3>
             </div>
-            <div class="wizard-progress">
-                <span class="wizard-progress-text" id="quizProgress">Domanda 1 di 8</span>
+            <div class="wizard-progress" style="margin: 20px 32px 0 32px;">
+                <span class="wizard-progress-text" id="quizProgress">Domanda 1 di 7</span>
                 <span class="wizard-progress-text" id="quizPercent">0%</span>
             </div>
-            <div class="wizard-progress-bar">
+            <div class="wizard-progress-bar" style="margin: 8px 32px 0 32px;">
                 <div class="wizard-progress-fill" id="quizProgressFill" style="width: 0%;"></div>
             </div>
-            <div class="modal-body" id="quizBody"></div>
+            <div class="modal-body" id="quizBody" style="padding-top: 28px;"></div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeQuiz()">Chiudi</button>
                 <button class="btn btn-primary" id="quizNextBtn" onclick="nextQuestion()">Continua</button>
@@ -1144,6 +1144,35 @@
         </div>
     </div>
 
+    <!-- Webhook Configuration Modal -->
+    <div class="modal-overlay" id="webhookModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🔔 Configura Webhook Discord</h3>
+                <p class="modal-subtitle">Ricevi notifiche quando scegli un programma</p>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: #1f2937;">URL Webhook</label>
+                    <input 
+                        type="text" 
+                        id="webhookUrlInput" 
+                        placeholder="https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN"
+                        style="width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;"
+                    />
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 0.5rem;">
+                        Copia l'URL webhook dal tuo server Discord
+                    </p>
+                </div>
+                <div id="webhookStatus" style="margin-top: 1rem; padding: 12px; border-radius: 8px; display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeWebhookModal()">Annulla</button>
+                <button class="btn btn-primary" onclick="saveWebhook()">Salva e Testa</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../utils/auth-v2.js"></script>
     <script src="sport-data.js"></script>
     <script src="sport-app.js"></script>
@@ -1155,37 +1184,66 @@
             const response = await fetch('/api/sport/webhook');
             const data = await response.json();
             const currentUrl = data.success && data.webhookUrl ? data.webhookUrl : '';
-
-            const newUrl = prompt(
-                '🔔 Configura Webhook Discord\n\n' +
-                'Inserisci URL webhook:\n' +
-                'Es: https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN',
-                currentUrl
-            );
-
-            if (newUrl !== null && newUrl.trim() !== '') {
-                // Valida URL
-                try {
-                    new URL(newUrl);
-                    
-                    // Invia test (salva anche URL)
-                    const testResponse = await fetch('/api/sport/test-webhook', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ webhookUrl: newUrl.trim() })
-                    });
-                    
-                    const result = await testResponse.json();
-                    
-                    if (result.success) {
-                        console.log('✅ Webhook configurato');
-                    }
-                } catch (e) {
-                    console.error('URL non valido');
-                }
-            }
+            
+            document.getElementById('webhookUrlInput').value = currentUrl;
+            document.getElementById('webhookModal').classList.add('active');
+            document.getElementById('webhookStatus').style.display = 'none';
         } catch (error) {
             console.error('Errore:', error);
+        }
+    }
+
+    function closeWebhookModal() {
+        document.getElementById('webhookModal').classList.remove('active');
+    }
+
+    async function saveWebhook() {
+        const urlInput = document.getElementById('webhookUrlInput');
+        const statusDiv = document.getElementById('webhookStatus');
+        const newUrl = urlInput.value.trim();
+
+        if (!newUrl) {
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#fef2f2';
+            statusDiv.style.color = '#991b1b';
+            statusDiv.textContent = '❌ Inserisci un URL valido';
+            return;
+        }
+
+        try {
+            new URL(newUrl);
+            
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#fffbeb';
+            statusDiv.style.color = '#92400e';
+            statusDiv.textContent = '⏳ Invio test in corso...';
+            
+            const testResponse = await fetch('/api/sport/test-webhook', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ webhookUrl: newUrl })
+            });
+            
+            const result = await testResponse.json();
+            
+            if (result.success) {
+                statusDiv.style.background = '#f0fdf4';
+                statusDiv.style.color = '#166534';
+                statusDiv.textContent = '✅ Webhook configurato! Controlla Discord per il messaggio di test.';
+                
+                setTimeout(() => {
+                    closeWebhookModal();
+                }, 2000);
+            } else {
+                statusDiv.style.background = '#fef2f2';
+                statusDiv.style.color = '#991b1b';
+                statusDiv.textContent = '❌ Errore: ' + result.error;
+            }
+        } catch (e) {
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#fef2f2';
+            statusDiv.style.color = '#991b1b';
+            statusDiv.textContent = '❌ URL non valido';
         }
     }
     </script>

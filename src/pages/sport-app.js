@@ -586,7 +586,7 @@ function showProgressInfo() {
 function renderPersonalCard() {
     const container = document.getElementById('profileContent');
 
-    if (!userData.name) {
+    if (!userData.age) {
         container.innerHTML = `
             <div class="profile-empty">
                 <p class="profile-empty-text">Completa il tuo profilo per iniziare</p>
@@ -600,14 +600,6 @@ function renderPersonalCard() {
 
     container.innerHTML = `
         <div class="profile-info">
-            <div class="profile-row">
-                <span class="profile-label">Nome</span>
-                <span class="profile-value">${userData.name}</span>
-            </div>
-            <div class="profile-row">
-                <span class="profile-label">Età</span>
-                <span class="profile-value">${userData.age} anni</span>
-            </div>
             <div class="profile-stats">
                 <div class="profile-stat">
                     <div class="profile-stat-icon">⚖️</div>
@@ -661,19 +653,19 @@ function openGoalSelection() {
     const body = document.getElementById('goalBody');
 
     body.innerHTML = `
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             ${goalOptions.map(goal => {
                 const icon = getIconHTML(goal.icon);
                 const isSelected = userData.goal === goal.id;
                 return `
-                    <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectGoal('${goal.id}')" style="flex-direction: column; align-items: start; padding: 20px;">
-                        <div style="font-size: 32px; margin-bottom: 12px;">${icon}</div>
-                        <div style="font-weight: 600; margin-bottom: 4px;">${goal.title}</div>
-                        <div style="font-size: 12px; color: #6b7280; line-height: 1.4;">${goal.description}</div>
+                    <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectGoal('${goal.id}')" style="flex-direction: column; align-items: start; padding: 14px;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">${icon}</div>
+                        <div style="font-weight: 600; margin-bottom: 3px; font-size: 14px;">${goal.title}</div>
+                        <div style="font-size: 11px; color: #6b7280; line-height: 1.3;">${goal.description}</div>
                         ${isSelected ? `
-                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #dbeafe; width: 100%; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #3b82f6;">
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #dbeafe; width: 100%; display: flex; align-items: center; gap: 6px; font-size: 11px; color: #3b82f6;">
                                 <i class="fas fa-check"></i>
-                                Obiettivo selezionato
+                                Selezionato
                             </div>
                         ` : ''}
                     </div>
@@ -747,13 +739,13 @@ function renderQuizQuestion() {
     } else if (question.type === 'select') {
         body.innerHTML = `
             <h3 class="quiz-question">${question.question}</h3>
-            <div class="quiz-options">
+            <div class="quiz-options" style="max-height: none; overflow: visible;">
                 ${question.options.map((option, index) => {
                     const isSelected = userData[question.id] === option.value;
                     return `
-                        <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectOption('${option.value}')">
-                            <div class="quiz-option-letter">${String.fromCharCode(65 + index)}</div>
-                            <div class="quiz-option-text">${option.label}</div>
+                        <div class="quiz-option ${isSelected ? 'selected' : ''}" onclick="selectOption('${option.value}')" style="padding: 12px 16px; min-height: auto;">
+                            <div class="quiz-option-letter" style="width: 32px; height: 32px; font-size: 14px;">${String.fromCharCode(65 + index)}</div>
+                            <div class="quiz-option-text" style="font-size: 14px;">${option.label}</div>
                         </div>
                     `;
                 }).join('')}
