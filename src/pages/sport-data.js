@@ -2014,42 +2014,63 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Cardio + Gambe",
+                duration: "45-55 min",
+                estimatedCalories: 380,
                 warmup: "5 min mobilità articolare",
                 exercises: [
                     { name: "Cyclette/Tapis", sets: "1", reps: "20 min", rest: "-", notes: "Zona aerobica 65-75% FCMax", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Sistema cardiovascolare", execution: "Mantieni ritmo costante, respiro regolare" },
-                    { name: "Squat bodyweight", sets: "3", reps: "15-20", rest: "60 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg" },
-                    { name: "Affondi alternati", sets: "3", reps: "12+12", rest: "60 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg" },
-                    { name: "Burpees", sets: "3", reps: "10", rest: "60 sec", notes: "Esercizio funzionale completo", image: "https://i.ibb.co/9GBPLFT/squat.jpg" }
+                    { name: "Squat bodyweight", sets: "3", reps: "15-20", rest: "60 sec", notes: "A corpo libero", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Profondo e controllato" },
+                    { name: "Affondi alternati", sets: "3", reps: "12+12", rest: "60 sec", notes: "Funzionale", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Ginocchio tocca quasi terra" },
+                    { name: "Burpees", sets: "3", reps: "10", rest: "60 sec", notes: "Esercizio funzionale completo", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Total Body", execution: "Squat, plank, jump" },
+                    { name: "Mountain climbers", sets: "3", reps: "20+20", rest: "45 sec", notes: "Cardio + core", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Core, Gambe", execution: "Veloce e controllato" },
+                    { name: "Plank", sets: "3", reps: "45-60 sec", rest: "60 sec", notes: "Core stability", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Corpo allineato" },
+                    { name: "Jumping jacks", sets: "3", reps: "30", rest: "45 sec", notes: "Cardio finisher", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Cardiovascolare", execution: "Ritmo sostenuto" }
                 ],
                 cooldown: "10 min cardio leggero + stretching"
             },
             {
                 day: "Mercoledì",
                 focus: "Circuito Upper Body",
+                duration: "40-50 min",
+                estimatedCalories: 350,
                 warmup: "5 min cardio + mobilità",
                 exercises: [
-                    { name: "Circuit Training", sets: "3 giri", reps: "vedi note", rest: "2 min tra giri", notes: "Piegamenti x15, Trazioni assistite x10, Alzate lat x12, Crunch x20, Plank 45sec. NO PAUSA tra esercizi", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Upper Body completo", execution: "Esegui tutti gli esercizi in sequenza senza fermarti" }
+                    { name: "Piegamenti", sets: "3", reps: "12-15", rest: "60 sec", notes: "Base petto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale, Tricipiti", execution: "Completo al petto" },
+                    { name: "Trazioni assistite/Australian", sets: "3", reps: "8-10", rest: "90 sec", notes: "Dorsale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Tira scapole" },
+                    { name: "Pike push ups", sets: "3", reps: "10-12", rest: "60 sec", notes: "Spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "A V rovesciata" },
+                    { name: "Dips su panca", sets: "3", reps: "12-15", rest: "60 sec", notes: "Tricipiti", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Gomiti indietro" },
+                    { name: "Plank to downdog", sets: "3", reps: "12", rest: "45 sec", notes: "Dinamico", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core, Spalle", execution: "Plank poi V rovesciata" },
+                    { name: "Crunch completi", sets: "3", reps: "20", rest: "45 sec", notes: "Addominali", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione addome" },
+                    { name: "Superman holds", sets: "3", reps: "30 sec", rest: "45 sec", notes: "Schiena bassa", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Lombari", execution: "Braccia e gambe sollevate" }
                 ],
                 cooldown: "Stretching upper body 10 min"
             },
             {
                 day: "Venerdì",
                 focus: "Cardio HIIT",
+                duration: "35-45 min",
+                estimatedCalories: 420,
                 warmup: "5 min mobilità",
                 exercises: [
                     { name: "HIIT Intervals", sets: "10", reps: "30 sec sprint / 30 sec recupero", rest: "-", notes: "Alternanza alta-bassa intensità", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Sistema cardiovascolare", execution: "30 sec massima intensità, 30 sec recupero attivo. Ripeti 10 volte" },
-                    { name: "Mountain Climbers", sets: "3", reps: "20+20", rest: "45 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg" },
-                    { name: "Jump Squats", sets: "3", reps: "12", rest: "60 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg" }
+                    { name: "Mountain Climbers", sets: "3", reps: "20+20", rest: "45 sec", notes: "Esplosivi", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Core, Gambe", execution: "Veloce" },
+                    { name: "Jump Squats", sets: "3", reps: "12", rest: "60 sec", notes: "Potenza gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Salta esplosivo" },
+                    { name: "Burpees", sets: "3", reps: "10", rest: "60 sec", notes: "Total body", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Total Body", execution: "Completo" },
+                    { name: "High knees", sets: "3", reps: "30 sec", rest: "45 sec", notes: "Cardio", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Cardiovascolare", execution: "Ginocchia alte" },
+                    { name: "Plank jacks", sets: "3", reps: "20", rest: "45 sec", notes: "Core dinamico", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Plank con salti gambe" },
+                    { name: "Box jumps/Step ups", sets: "3", reps: "10-12", rest: "60 sec", notes: "Esplosività", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Salta su rialzo" }
                 ],
                 cooldown: "10 min defaticamento + stretching"
             },
             {
                 day: "Domenica",
                 focus: "Active Recovery",
+                duration: "45-50 min",
+                estimatedCalories: 200,
                 warmup: "5 min camminata",
                 exercises: [
-                    { name: "Camminata veloce/Jogging leggero", sets: "1", reps: "30 min", rest: "-", notes: "Recupero attivo, bassa intensità", image: "https://i.ibb.co/9GBPLFT/squat.jpg" },
-                    { name: "Yoga/Stretching", sets: "1", reps: "15 min", rest: "-", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" }
+                    { name: "Camminata veloce/Jogging leggero", sets: "1", reps: "30 min", rest: "-", notes: "Recupero attivo, bassa intensità 60-65% FCMax", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Cardiovascolare", execution: "Ritmo confortevole" },
+                    { name: "Yoga/Stretching completo", sets: "1", reps: "15 min", rest: "-", notes: "Flessibilità", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Total Body", execution: "Pose statiche e dinamiche" }
                 ],
                 cooldown: "Rilassamento 5 min"
             }
@@ -2078,34 +2099,51 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Full Body Leggero",
+                duration: "50-60 min",
+                estimatedCalories: 320,
                 warmup: "10 min cardio leggero",
                 exercises: [
-                    { name: "Crunch", sets: "3", reps: "15", rest: "45 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Panca piana", sets: "3", reps: "12-15", rest: "90 sec", notes: "Carico moderato, tecnica perfetta", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale" },
-                    { name: "Lat Machine", sets: "3", reps: "12-15", rest: "90 sec", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale" },
-                    { name: "Alzate laterali", sets: "3", reps: "12-15", rest: "60 sec", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi" },
-                    { name: "Leg Press", sets: "3", reps: "15", rest: "90 sec", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe" }
+                    { name: "Crunch", sets: "3", reps: "15", rest: "45 sec", notes: "Warm up", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione addome" },
+                    { name: "Panca piana", sets: "3", reps: "12-15", rest: "90 sec", notes: "Carico moderato, tecnica perfetta", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Controllato" },
+                    { name: "Lat Machine", sets: "3", reps: "12-15", rest: "90 sec", notes: "Presa media", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Tira al petto" },
+                    { name: "Lento manubri", sets: "3", reps: "12", rest: "90 sec", notes: "Spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Seduto" },
+                    { name: "Alzate laterali", sets: "3", reps: "12-15", rest: "60 sec", notes: "Leggero", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Fino spalla" },
+                    { name: "Leg Press", sets: "3", reps: "15", rest: "90 sec", notes: "Gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Profondo" },
+                    { name: "Curl bicipiti", sets: "2", reps: "12", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Supinazione" }
                 ],
                 cooldown: "Stretching completo 10 min"
             },
             {
                 day: "Mercoledì",
                 focus: "Cardio + Core",
+                duration: "40-50 min",
+                estimatedCalories: 280,
                 warmup: "5 min mobilità articolare",
                 exercises: [
-                    { name: "Cyclette", sets: "1", reps: "20 min", rest: "-", notes: "Ritmo confortevole 60-70% FCMax", image: "https://i.ibb.co/9GBPLFT/squat.jpg" },
-                    { name: "Plank", sets: "3", reps: "45-60 sec", rest: "60 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core" },
-                    { name: "Crunch completi", sets: "3", reps: "20", rest: "45 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg" },
-                    { name: "Obliqui alternati", sets: "3", reps: "15+15", rest: "45 sec", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Obliqui", execution: "Torsioni alternate del tronco" }
+                    { name: "Cyclette", sets: "1", reps: "20 min", rest: "-", notes: "Ritmo confortevole 60-70% FCMax", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Cardiovascolare", execution: "Costante" },
+                    { name: "Plank", sets: "3", reps: "45-60 sec", rest: "60 sec", notes: "Core base", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Corpo dritto" },
+                    { name: "Crunch completi", sets: "3", reps: "20", rest: "45 sec", notes: "Addominali", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Completo" },
+                    { name: "Obliqui alternati", sets: "3", reps: "15+15", rest: "45 sec", notes: "Torsioni", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Obliqui", execution: "Torsioni alternate del tronco" },
+                    { name: "Russian twists", sets: "3", reps: "20+20", rest: "45 sec", notes: "Rotazioni", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Obliqui", execution: "Seduto, ruota" },
+                    { name: "Bird dog", sets: "3", reps: "10+10", rest: "45 sec", notes: "Equilibrio", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core, Lombari", execution: "Braccio e gamba opposti" },
+                    { name: "Dead bug", sets: "3", reps: "12+12", rest: "45 sec", notes: "Coordinazione", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Supino, alternato" }
                 ],
                 cooldown: "Stretching addominali 5 min"
             },
             {
                 day: "Venerdì",
                 focus: "Tonificazione Generale",
+                duration: "45-55 min",
+                estimatedCalories: 310,
                 warmup: "10 min cardio leggero",
                 exercises: [
-                    { name: "Circuit Training Total Body", sets: "3 giri", reps: "vedi note", rest: "2 min tra giri", notes: "Piegamenti x12, Squat x15, Rematore x12, Affondi x10+10, Alzate lat x12, Plank 45sec. NO PAUSA tra esercizi", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Total Body", execution: "Circuito completo per tonificazione generale" }
+                    { name: "Piegamenti", sets: "3", reps: "10-12", rest: "60 sec", notes: "Petto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Completo" },
+                    { name: "Squat bodyweight", sets: "3", reps: "15", rest: "60 sec", notes: "Gambe", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Profondo" },
+                    { name: "Australian pull ups", sets: "3", reps: "10-12", rest: "90 sec", notes: "Dorsale", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Orizzontale" },
+                    { name: "Affondi alternati", sets: "3", reps: "10+10", rest: "60 sec", notes: "Funzionale", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gambe", execution: "Ginocchio a terra" },
+                    { name: "Pike push ups", sets: "3", reps: "10-12", rest: "60 sec", notes: "Spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "V rovesciata" },
+                    { name: "Plank", sets: "3", reps: "45 sec", rest: "60 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Stabile" },
+                    { name: "Jumping jacks", sets: "3", reps: "30", rest: "45 sec", notes: "Cardio finisher", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Cardiovascolare", execution: "Ritmo sostenuto" }
                 ],
                 cooldown: "Stretching completo 15 min"
             }
