@@ -1223,6 +1223,8 @@ const workoutPrograms = [
             {
                 day: "Sabato",
                 focus: "Gambe",
+                duration: "65-80 min",
+                estimatedCalories: 520,
                 warmup: "10 min cardio + mobilità",
                 exercises: [
                     { 
@@ -1230,24 +1232,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
-                        name: "SUPERSET: Leg Extension + Squat", 
+                        name: "Squat bilanciere", 
                         sets: "4", 
-                        reps: "12 + 8-10", 
-                        rest: "no pausa, 3 min tra superset", 
-                        notes: "Pre-affatica quadricipiti poi squat pesante",
+                        reps: "8-10", 
+                        rest: "3 min", 
+                        notes: "Esercizio base fondamentale",
                         image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei"
+                        muscleGroup: "Quadricipiti, Glutei, Femorali",
+                        execution: "Re degli esercizi. Pluriarticolare completo"
+                    },
+                    { 
+                        name: "SUPERSET: Leg Extension + Leg Press", 
+                        sets: "4", 
+                        reps: "12-15 + 10-12", 
+                        rest: "no pausa, 2 min tra superset", 
+                        notes: "Pre-affatica quadricipiti poi movimento composto",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Monoarticolare + pluriarticolare per quadricipiti"
+                    },
+                    { 
+                        name: "Affondi alternati", 
+                        sets: "3", 
+                        reps: "10-12 per gamba", 
+                        rest: "90 sec", 
+                        notes: "Lavoro unilaterale",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Unilaterale per equilibrio muscolare"
                     },
                     { 
                         name: "SUPERSET: Leg Curl + Stacco gambe tese", 
                         sets: "4", 
-                        reps: "12 + 8-10", 
+                        reps: "12-15 + 8-10", 
                         rest: "no pausa, 2 min tra superset",
+                        notes: "Isolamento seguito da composto per femorali",
                         image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
-                        muscleGroup: "Femorali, Glutei"
+                        muscleGroup: "Femorali, Glutei",
+                        execution: "Monoarticolare + pluriarticolare per catena posteriore"
+                    },
+                    { 
+                        name: "Stacchi rumeni", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "2 min", 
+                        notes: "Focus glutei e femorali",
+                        image: "https://i.ibb.co/VqGhJdq/deadlift.jpg",
+                        muscleGroup: "Femorali, Glutei, Erettori",
+                        execution: "Massimo allungamento femorali e glutei"
+                    },
+                    { 
+                        name: "Calf in piedi", 
+                        sets: "4", 
+                        reps: "15-20", 
+                        rest: "60 sec", 
+                        notes: "Finisher polpacci",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Gastrocnemio, Soleo",
+                        execution: "Estensione completa caviglia"
                     }
                 ],
                 cooldown: "Stretching gambe 10 min"
@@ -1279,6 +1327,8 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto - 3 Angolazioni POF",
+                duration: "60-75 min",
+                estimatedCalories: 440,
                 warmup: "10 min cardio",
                 exercises: [
                     { 
@@ -1286,7 +1336,10 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
                         name: "Panca piana (Contrazione Media)", 
@@ -1295,8 +1348,18 @@ const workoutPrograms = [
                         rest: "90 sec", 
                         notes: "POF 1/3: contrazione nella posizione media del movimento",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Movimento completo che coinvolge il pettorale in tutta la sua escursione"
+                        muscleGroup: "Pettorale, Deltoidi, Tricipiti",
+                        execution: "Metodo POF: movimento completo per tensione media costante"
+                    },
+                    { 
+                        name: "Panca inclinata manubri", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus pettorale alto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale clavicolare",
+                        execution: "Inclinazione 30-45° per fibre superiori"
                     },
                     { 
                         name: "Croci manubri (Massimo Stiramento)", 
@@ -1305,8 +1368,8 @@ const workoutPrograms = [
                         rest: "90 sec", 
                         notes: "POF 2/3: massimo allungamento del pettorale",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Focus sullo stretch massimo del pettorale nella fase eccentrica"
+                        muscleGroup: "Pettorale (fibre centrali)",
+                        execution: "Focus sullo stretch massimo nella fase eccentrica. Monoarticolare"
                     },
                     { 
                         name: "Pectoral Machine (Picco Contrazione)", 
@@ -1315,8 +1378,28 @@ const workoutPrograms = [
                         rest: "60 sec", 
                         notes: "POF 3/3: contrazione massima quando le mani si incontrano",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
+                        muscleGroup: "Pettorale interno",
                         execution: "Contrai al massimo al termine del movimento, picco di contrazione"
+                    },
+                    { 
+                        name: "Dip alle parallele", 
+                        sets: "3", 
+                        reps: "max", 
+                        rest: "2 min", 
+                        notes: "Complementare composto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale, Tricipiti",
+                        execution: "Busto inclinato per enfasi petto"
+                    },
+                    { 
+                        name: "Push down ai cavi", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Finisher tricipiti",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti",
+                        execution: "Monoarticolare, estensione completa"
                     }
                 ],
                 cooldown: "Stretching pettorale 5 min"
@@ -1324,6 +1407,8 @@ const workoutPrograms = [
             {
                 day: "Martedì",
                 focus: "Dorsali - 3 Angolazioni POF",
+                duration: "60-75 min",
+                estimatedCalories: 430,
                 warmup: "10 min cardio",
                 exercises: [
                     { 
@@ -1331,34 +1416,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Solleva bacino verso petto"
+                    },
+                    { 
+                        name: "Trazioni alla sbarra", 
+                        sets: "4", 
+                        reps: "max", 
+                        rest: "3 min", 
+                        notes: "Esercizio base fondamentale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Gran dorsale, Bicipiti",
+                        execution: "Pluriarticolare completo"
                     },
                     { 
                         name: "Rematore bilanciere (Contrazione Media)", 
                         sets: "4", 
                         reps: "8-10", 
                         rest: "90 sec",
+                        notes: "POF 1/3: contrazione media",
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
-                        muscleGroup: "Dorsale"
+                        muscleGroup: "Dorsale, Trapezio",
+                        execution: "Movimento completo per tensione costante"
+                    },
+                    { 
+                        name: "Lat Machine presa larga", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus larghezza dorsale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Gran dorsale",
+                        execution: "Tira al petto contraendo scapole"
                     },
                     { 
                         name: "Pull over manubri (Massimo Stiramento)", 
                         sets: "4", 
                         reps: "10-12", 
                         rest: "90 sec", 
-                        notes: "Allungamento massimo del gran dorsale",
+                        notes: "POF 2/3: allungamento massimo",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
                         muscleGroup: "Dorsale, Grande rotondo",
-                        execution: "Abbassa manubrio dietro la testa per massimo stretch del dorsale"
+                        execution: "Abbassa manubrio dietro la testa per massimo stretch"
                     },
                     { 
                         name: "Pulldown braccia tese (Picco Contrazione)", 
                         sets: "4", 
                         reps: "12-15", 
                         rest: "60 sec",
+                        notes: "POF 3/3: contrazione massima",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
                         muscleGroup: "Dorsale",
                         execution: "Massima contrazione del dorsale a braccia tese"
+                    },
+                    { 
+                        name: "Curl bilanciere", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Complementare bicipiti",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti",
+                        execution: "Movimento completo con supinazione"
                     }
                 ],
                 cooldown: "Stretching dorsale 5 min"
