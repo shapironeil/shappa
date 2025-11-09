@@ -95,9 +95,9 @@ function renderWeeklyCalendar() {
     const container = document.getElementById('weeklyCalendar');
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Lunedì
+    startOfWeek.setDate(today.getDate() - today.getDay()); // Domenica
 
-    const dayNames = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    const dayNames = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
     let html = '';
 
     for (let i = 0; i < 7; i++) {
@@ -129,7 +129,7 @@ function renderWeeklyCalendar() {
                         <i class="fas fa-clock"></i>
                         ${workout.duration}min
                     </div>
-                ` : ''}
+                ` : '<div class="day-dot"></div>'}
             </div>
         `;
     }
@@ -479,9 +479,8 @@ function renderPersonalCard() {
     if (!userData.name) {
         container.innerHTML = `
             <div class="profile-empty">
-                <div class="profile-empty-icon">👤</div>
                 <p class="profile-empty-text">Completa il tuo profilo per iniziare</p>
-                <button class="btn btn-primary" onclick="openQuiz()">Inizia Quiz</button>
+                <button class="btn-quiz" onclick="openQuiz()">Inizia Quiz</button>
             </div>
         `;
         return;

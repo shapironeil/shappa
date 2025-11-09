@@ -197,19 +197,13 @@
         /* ========== NUOVO LAYOUT FIGMA ========== */
         .sport-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr 380px;
+            grid-template-columns: 2fr 380px;
             gap: 24px;
             max-width: 1600px;
             margin: 0 auto;
         }
 
         .sport-column-left {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .sport-column-center {
             display: flex;
             flex-direction: column;
             gap: 24px;
@@ -247,56 +241,69 @@
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
+            gap: 8px;
         }
 
         .day-card {
             background: white;
-            border: 2px solid var(--card-border);
-            border-radius: 12px;
-            padding: 16px 12px;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 20px 12px;
             text-align: center;
             transition: all 0.2s;
             cursor: pointer;
-            min-height: 120px;
+            min-height: 100px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
         }
 
         .day-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
         }
 
         .day-card.today {
-            border-color: var(--primary-blue);
-            border-width: 3px;
+            border-color: #3b82f6;
+            border-width: 2px;
             background: linear-gradient(to bottom, #eff6ff 0%, white 100%);
         }
 
         .day-card.has-workout {
-            border-color: var(--success-green);
-            border-width: 3px;
+            border-color: #3b82f6;
+            border-width: 2px;
         }
 
         .day-name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
+            text-transform: capitalize;
+            color: #6b7280;
+            margin-bottom: 12px;
         }
 
         .day-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
             margin-bottom: auto;
         }
 
         .day-card.today .day-number {
-            color: var(--primary-blue);
+            color: #3b82f6;
+        }
+
+        .day-dot {
+            width: 6px;
+            height: 6px;
+            background: #d1d5db;
+            border-radius: 50%;
+            margin-top: 12px;
+        }
+
+        .day-card.today .day-dot {
+            background: #3b82f6;
         }
 
         .workout-badge {
@@ -322,7 +329,7 @@
 
         .workout-duration {
             font-size: 10px;
-            color: var(--text-muted);
+            color: #9ca3af;
             margin-top: 2px;
             display: flex;
             align-items: center;
@@ -332,21 +339,21 @@
         /* ========== WORKOUT CARDS (WorkoutCards.tsx) ========== */
         .tabs {
             display: flex;
-            gap: 4px;
+            gap: 0;
             background: #f3f4f6;
             padding: 4px;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 8px 16px;
+            padding: 10px 16px;
             border: none;
             background: transparent;
-            color: var(--text-secondary);
+            color: #6b7280;
             font-weight: 500;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 14px;
@@ -354,18 +361,18 @@
 
         .tab-btn.active {
             background: white;
-            color: var(--text-primary);
+            color: #111827;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .programs-grid {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .program-card {
-            border: 2px solid var(--card-border);
+            border: 1.5px solid #e5e7eb;
             border-radius: 12px;
             padding: 16px;
             transition: all 0.2s;
@@ -373,22 +380,22 @@
             display: flex;
             gap: 16px;
             align-items: start;
+            background: white;
         }
 
         .program-card:hover {
-            border-color: var(--primary-blue);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-            transform: translateY(-2px);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
         }
 
         .program-card.selected {
-            border-color: var(--primary-blue);
-            background: var(--primary-blue-light);
+            border-color: #3b82f6;
+            background: #eff6ff;
         }
 
         .program-icon {
-            width: 48px;
-            height: 48px;
+            width: 56px;
+            height: 56px;
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -397,11 +404,11 @@
             flex-shrink: 0;
         }
 
-        .program-icon.strength { background: linear-gradient(135deg, #fef3c7, #fde68a); }
-        .program-icon.muscle { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
-        .program-icon.shape { background: linear-gradient(135deg, #e9d5ff, #ddd6fe); }
-        .program-icon.pump { background: linear-gradient(135deg, #fce7f3, #fbcfe8); }
-        .program-icon.cardio { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .program-icon.strength { background: #fef3c7; }
+        .program-icon.muscle { background: #dbeafe; }
+        .program-icon.shape { background: #e9d5ff; }
+        .program-icon.pump { background: #fce7f3; }
+        .program-icon.cardio { background: #d1fae5; }
 
         .program-details {
             flex: 1;
@@ -416,52 +423,53 @@
         }
 
         .program-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--text-primary);
+            color: #111827;
             margin: 0 0 4px 0;
         }
 
         .program-subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
+            font-size: 13px;
+            color: #6b7280;
             margin: 0;
         }
 
         .program-badge {
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
             white-space: nowrap;
         }
 
-        .program-badge.beginner { background: #e0e7ff; color: #3730a3; }
-        .program-badge.intermediate { background: #fef3c7; color: #92400e; }
-        .program-badge.advanced { background: #fee2e2; color: #991b1b; }
+        .program-badge.beginner { background: #000; color: #fff; }
+        .program-badge.intermediate { background: #000; color: #fff; }
+        .program-badge.advanced { background: #dc2626; color: #fff; }
 
         .program-meta {
             display: flex;
             gap: 16px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin: 12px 0;
+            font-size: 13px;
+            color: #6b7280;
+            margin: 8px 0;
         }
 
         .program-meta span {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
 
         .program-actions {
             display: flex;
             gap: 8px;
+            margin-top: 8px;
         }
 
         .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 10px 20px;
+            border-radius: 8px;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -473,34 +481,34 @@
         }
 
         .btn-primary {
-            background: var(--primary-blue);
+            background: #000;
             color: white;
         }
 
         .btn-primary:hover {
-            background: var(--primary-blue-dark);
+            background: #1f2937;
         }
 
         .btn-outline {
             background: white;
-            border: 1px solid var(--card-border);
-            color: var(--text-primary);
+            border: 1.5px solid #e5e7eb;
+            color: #111827;
         }
 
         .btn-outline:hover {
-            border-color: var(--primary-blue);
-            color: var(--primary-blue);
+            border-color: #cbd5e1;
+            background: #f9fafb;
         }
 
         .btn-sm {
-            padding: 6px 12px;
+            padding: 8px 16px;
             font-size: 13px;
         }
 
         .btn-icon {
-            padding: 6px;
-            width: 32px;
-            height: 32px;
+            padding: 8px;
+            width: 36px;
+            height: 36px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -508,29 +516,45 @@
 
         /* ========== PROGRESS WIDGET (ProgressWidget.tsx) ========== */
         .progress-item {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
         }
 
         .progress-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .progress-label {
             font-size: 14px;
             font-weight: 500;
-            color: var(--text-primary);
+            color: #111827;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
+        .progress-label i {
+            font-size: 16px;
+        }
+
+        .progress-label i.fa-target {
+            color: #3b82f6;
+        }
+
+        .progress-label i.fa-fire {
+            color: #f97316;
+        }
+
         .progress-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            color: #6b7280;
         }
 
         .progress-bar {
@@ -538,34 +562,46 @@
             background: #f3f4f6;
             border-radius: 4px;
             overflow: hidden;
+            margin-bottom: 6px;
         }
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            background: #e5e7eb;
             transition: width 0.3s ease;
         }
 
         .progress-percent {
             font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
+            color: #9ca3af;
         }
 
         /* ========== PERSONAL CARD (PersonalCard.tsx) ========== */
         .profile-empty {
             text-align: center;
-            padding: 40px 20px;
-        }
-
-        .profile-empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
+            padding: 60px 20px;
         }
 
         .profile-empty-text {
-            color: var(--text-secondary);
-            margin-bottom: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .btn-quiz {
+            background: #000;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-quiz:hover {
+            background: #1f2937;
         }
 
         .profile-info {
@@ -827,33 +863,25 @@
         }
 
         /* ========== RESPONSIVE ========== */
-        @media (max-width: 1400px) {
+        @media (max-width: 1200px) {
             .sport-layout {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .sport-column-right {
-                grid-column: 1 / -1;
+                grid-template-columns: 1fr;
             }
         }
 
         @media (max-width: 900px) {
-            .sport-layout {
-                grid-template-columns: 1fr;
-            }
-
             .calendar-grid {
                 grid-template-columns: repeat(7, 1fr);
-                gap: 8px;
+                gap: 6px;
             }
 
             .day-card {
-                padding: 12px 8px;
-                min-height: 100px;
+                padding: 16px 8px;
+                min-height: 90px;
             }
 
             .day-number {
-                font-size: 20px;
+                font-size: 18px;
             }
         }
 
@@ -916,21 +944,20 @@
 
             <div class="venus-content-area">
                 <div class="sport-layout">
-                    <!-- ========== LEFT COLUMN: Weekly Calendar ========== -->
+                    <!-- ========== LEFT COLUMN: Weekly Calendar + Workout Programs ========== -->
                     <div class="sport-column-left">
+                        <!-- Weekly Calendar -->
                         <div class="card">
                             <div class="card-header">
-                                <h2 class="card-title">📅 Calendario Settimanale</h2>
+                                <h2 class="card-title">Calendario Settimanale</h2>
                             </div>
                             <div id="weeklyCalendar" class="calendar-grid"></div>
                         </div>
-                    </div>
 
-                    <!-- ========== CENTER COLUMN: Workout Programs ========== -->
-                    <div class="sport-column-center">
+                        <!-- Workout Programs -->
                         <div class="card">
                             <div class="card-header">
-                                <h2 class="card-title">💪 Programmi di Allenamento</h2>
+                                <h2 class="card-title">Programmi di Allenamento</h2>
                             </div>
                             <div class="tabs">
                                 <button class="tab-btn active" data-tab="recommended">Consigliati per te</button>
