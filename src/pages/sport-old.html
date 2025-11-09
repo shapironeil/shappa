@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Sport & Fitness</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 240px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-page-header {
+            padding: 24px 32px;
+            background: white;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        /* Sport Layout */
+        .sport-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            height: 100%;
+        }
+
+        .sport-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sport-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .add-workout-btn {
+            padding: 10px 20px;
+            background: var(--venus-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-workout-btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        /* Weekly Calendar */
+        .weekly-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        .week-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .week-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .week-nav-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .week-nav-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-nav-btn:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .day-cell {
+            background: white;
+            border: 2px solid var(--venus-border);
+            border-radius: 12px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-cell:hover {
+            border-color: var(--venus-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .day-cell.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .day-cell.has-workout {
+            border-color: #10b981;
+            border-width: 3px;
+            background: linear-gradient(to bottom, white 0%, #f0fdf4 100%);
+        }
+
+        .day-name {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .day-number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .day-workout {
+            font-size: 11px;
+            margin-top: auto;
+            padding: 4px 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .day-cell.today .day-workout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Workouts List */
+        .workouts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .workout-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-left: 4px solid;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .workout-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .workout-item.cardio {
+            border-color: #ef4444;
+        }
+
+        .workout-item.strength {
+            border-color: #3b82f6;
+        }
+
+        .workout-item.yoga {
+            border-color: #8b5cf6;
+        }
+
+        .workout-item.running {
+            border-color: #f59e0b;
+        }
+
+        .workout-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .workout-item.cardio .workout-icon {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+
+        .workout-item.strength .workout-icon {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+
+        .workout-item.yoga .workout-icon {
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+        }
+
+        .workout-item.running .workout-icon {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+
+        .workout-details {
+            flex: 1;
+        }
+
+        .workout-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin: 0 0 4px 0;
+        }
+
+        .workout-meta {
+            font-size: 13px;
+            color: var(--venus-text-muted);
+            margin: 0;
+        }
+
+        .workout-duration {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-primary);
+            align-self: center;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .progress-item {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--venus-border);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .progress-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .progress-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--venus-primary);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-content.wizard-modal {
+            max-width: 750px;
+            max-height: 65vh;
+            padding: 24px 32px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--venus-text-muted);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--venus-border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--venus-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--venus-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Profile Wizard */
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .wizard-progress::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .wizard-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .wizard-step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .wizard-step.active .wizard-step-circle {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: white;
+        }
+
+        .wizard-step.completed .wizard-step-circle {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .wizard-step-label {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+            font-weight: 500;
+        }
+
+        .wizard-question {
+            text-align: left;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin-bottom: 20px;
+        }
+
+        .wizard-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .wizard-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid var(--venus-border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wizard-option:hover {
+            border-color: var(--venus-primary);
+            background: #f0f9ff;
+        }
+
+        .wizard-option.selected {
+            border-color: var(--venus-primary);
+            background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%);
+        }
+
+        .wizard-option-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--venus-border);
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: white;
+            font-size: 14px;
+        }
+
+        .wizard-option.selected .wizard-option-circle {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: white;
+        }
+
+        .wizard-option-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        /* Workout Templates */
+        .template-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .template-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .template-desc {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+
+        .template-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 1200px) {
+            .sport-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .weekly-calendar {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+            }
+
+            .day-cell {
+                padding: 8px 4px;
+                min-height: 80px;
+            }
+
+            .day-number {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    Obiettivi
+                </a>
+                <a href="progetti.html" class="venus-menu-item">
+                    Progetti
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="interessi.html" class="venus-menu-item">
+                    I Miei Interessi
+                </a>
+                <a href="sport.html" class="venus-menu-item venus-active">
+                    Sport
+                </a>
+                <a href="dieta.html" class="venus-menu-item">
+                    Dieta
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Utente</div>
+                        <div class="venus-user-role">Member</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-page-header">
+                <h1 class="venus-page-title">💪 Sport & Fitness</h1>
+            </div>
+
+            <div class="venus-content-area">
+                <div class="sport-container">
+                    <!-- Main Column -->
+                    <div class="sport-main">
+                        <!-- Weekly Calendar -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">📅 Settimana Corrente</h2>
+                            </div>
+
+                            <div class="week-nav">
+                                <span class="week-label" id="weekLabel">Settimana 1 - Nov 2025</span>
+                                <div class="week-nav-btns">
+                                    <button class="week-nav-btn" onclick="previousWeek()">← Prec</button>
+                                    <button class="week-nav-btn" onclick="nextWeek()">Succ →</button>
+                                </div>
+                            </div>
+
+                            <div class="weekly-calendar" id="weeklyCalendar"></div>
+                        </div>
+
+                        <!-- Workout Templates -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">💪 Schede Allenamento</h2>
+                            </div>
+
+                            <div id="workoutTemplates" style="display: flex; flex-direction: column; gap: 12px;">
+                                <!-- Le schede verranno caricate dinamicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div>
+                        <!-- Crea Scheda Personale -->
+                        <div class="sport-card" style="cursor: pointer; transition: all 0.2s;" onclick="openProfileWizard()">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;">
+                                    +
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--venus-text-primary);">Aggiungi Scheda Personale</h3>
+                                    <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--venus-text-muted);" id="profileStatus">Configura il tuo profilo</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="monthlyWorkouts">0</div>
+                                <div class="stat-label">Allenamenti/Mese</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="totalMinutes">0</div>
+                                <div class="stat-label">Minuti Totali</div>
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">📈 I Tuoi Progressi</h2>
+                            </div>
+
+                            <div class="progress-section" id="progressSection">
+                                <p style="text-align: center; color: var(--venus-text-muted); padding: 20px;">
+                                    I progressi verranno visualizzati qui dopo aver selezionato una scheda allenamento.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Profile Wizard Modal -->
+    <div class="modal-overlay" id="profileWizard">
+        <div class="modal-content wizard-modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Configura il tuo Profilo Sport</h2>
+                <button class="modal-close" onclick="closeProfileWizard()">&times;</button>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="wizard-progress">
+                <div class="wizard-step active" id="wizardStep1">
+                    <div class="wizard-step-circle">1</div>
+                    <div class="wizard-step-label">Nascita</div>
+                </div>
+                <div class="wizard-step" id="wizardStep2">
+                    <div class="wizard-step-circle">2</div>
+                    <div class="wizard-step-label">Altezza</div>
+                </div>
+                <div class="wizard-step" id="wizardStep3">
+                    <div class="wizard-step-circle">3</div>
+                    <div class="wizard-step-label">Peso</div>
+                </div>
+                <div class="wizard-step" id="wizardStep4">
+                    <div class="wizard-step-circle">4</div>
+                    <div class="wizard-step-label">Frequenza</div>
+                </div>
+                <div class="wizard-step" id="wizardStep5">
+                    <div class="wizard-step-circle">5</div>
+                    <div class="wizard-step-label">Sport</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Birthdate -->
+            <div id="wizardContent1" class="wizard-content">
+                <h3 class="wizard-question">📅 Quando sei nato/a?</h3>
+                
+                <div class="form-group">
+                    <input type="date" class="form-input" id="profileBirthdate" required style="font-size: 16px; padding: 14px;">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProfileWizard()">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(2)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Height -->
+            <div id="wizardContent2" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">📏 Quanto sei alto/a?</h3>
+                
+                <div class="form-group">
+                    <input type="number" class="form-input" id="profileHeight" required min="100" max="250" placeholder="175" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Altezza in centimetri</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Weight -->
+            <div id="wizardContent3" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">⚖️ Quanto pesi?</h3>
+                
+                <div class="form-group">
+                    <input type="number" class="form-input" id="profileWeight" required min="30" max="300" placeholder="70" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Peso in kilogrammi</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(4)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Frequency -->
+            <div id="wizardContent4" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">🔢 Quante volte a settimana ti alleni?</h3>
+                
+                <div class="form-group">
+                    <input type="number" class="form-input" id="profileFrequency" required min="1" max="7" placeholder="3" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Inserisci un numero da 1 a 7</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(3)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(5)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Sports Type -->
+            <div id="wizardContent5" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">🏃 Che tipo di sport pratichi?</h3>
+                
+                <div class="form-group">
+                    <div class="wizard-options">
+                        <div class="wizard-option" onclick="toggleSport('palestra')">
+                            <div class="wizard-option-circle">💪</div>
+                            <div class="wizard-option-text">Palestra/Pesi</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('cardio')">
+                            <div class="wizard-option-circle">❤️</div>
+                            <div class="wizard-option-text">Cardio/Running</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('sport_squadra')">
+                            <div class="wizard-option-circle">⚽</div>
+                            <div class="wizard-option-text">Sport di Squadra</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('yoga')">
+                            <div class="wizard-option-circle">🧘</div>
+                            <div class="wizard-option-text">Yoga/Pilates</div>
+                        </div>
+                    </div>
+                    <small style="color: var(--venus-text-muted); margin-top: 12px; display: block; text-align: center;">Puoi selezionarne più di uno</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(4)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProfile()">Salva Profilo 🎉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Global variables
+        let currentWeek = 0;
+        let workouts = [];
+        let profileData = {
+            birthdate: '',
+            height: 0,
+            weight: 0,
+            frequency: 0,
+            sports: [],
+            duration: 0,
+            timePreference: ''
+        };
+
+        // Workout Templates
+        const workoutTemplates = [
+            {
+                id: 1,
+                name: 'Palestra Full Body',
+                type: 'strength',
+                difficulty: 'Principiante',
+                days: 3,
+                duration: 60,
+                description: 'Allenamento completo per tutto il corpo, 3 volte a settimana',
+                exercises: ['Squat', 'Panca piana', 'Lat machine', 'Military press', 'Curl bicipiti', 'French press'],
+                gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            },
+            {
+                id: 2,
+                name: 'Split Routine',
+                type: 'strength',
+                difficulty: 'Intermedio',
+                days: 4,
+                duration: 75,
+                description: 'Allenamento diviso per gruppi muscolari, 4 volte a settimana',
+                exercises: ['Petto/Tricipiti', 'Dorso/Bicipiti', 'Gambe', 'Spalle/Addome'],
+                gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            },
+            {
+                id: 3,
+                name: 'HIIT Intensivo',
+                type: 'cardio',
+                difficulty: 'Avanzato',
+                days: 5,
+                duration: 45,
+                description: 'Alta intensità per massima combustione calorie',
+                exercises: ['Burpees', 'Mountain climbers', 'Jump squat', 'Sprint intervals', 'Battle rope'],
+                gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            },
+            {
+                id: 4,
+                name: 'Cutter - Definizione',
+                type: 'mixed',
+                difficulty: 'Intermedio',
+                days: 5,
+                duration: 60,
+                description: 'Allenamento per definizione muscolare e perdita grasso',
+                exercises: ['Circuit training', 'Cardio LISS', 'Pesi moderati alto volume', 'Core workout'],
+                gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            },
+            {
+                id: 5,
+                name: 'Mantenimento Standard',
+                type: 'balanced',
+                difficulty: 'Principiante',
+                days: 3,
+                duration: 50,
+                description: 'Programma equilibrato per mantenere la forma',
+                exercises: ['Cardio leggero', 'Pesi base', 'Stretching', 'Yoga'],
+                gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            }
+        ];
+
+        // Auth Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const userName = user.username || user.email || 'Utente';
+                document.getElementById('userName').textContent = userName;
+                const initial = userName[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+            }
+
+            // Setup logout
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Load data
+            loadProfile();
+            loadWorkouts();
+            generateWeeklyCalendar();
+            renderWorkoutTemplates();
+        });
+
+        function loadProfile() {
+            const saved = localStorage.getItem('sport_profile');
+            if (saved) {
+                profileData = JSON.parse(saved);
+                updateProfileStatus();
+            }
+        }
+
+        function updateProfileStatus() {
+            const statusEl = document.getElementById('profileStatus');
+            if (profileData.birthdate) {
+                const age = calculateAge(profileData.birthdate);
+                statusEl.textContent = `${age} anni • ${profileData.weight}kg • ${profileData.frequency}x/settimana`;
+                statusEl.parentElement.parentElement.onclick = () => editProfile();
+            } else {
+                statusEl.textContent = 'Configura il tuo profilo';
+            }
+        }
+
+        function calculateAge(birthdate) {
+            const today = new Date();
+            const birth = new Date(birthdate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function renderWorkoutTemplates() {
+            const container = document.getElementById('workoutTemplates');
+            
+            const html = workoutTemplates.map(template => `
+                <div class="template-card" style="background: ${template.gradient};" onclick="viewTemplate(${template.id})">
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-desc">${template.description}</div>
+                    <div class="template-meta">
+                        <span>📊 ${template.difficulty}</span>
+                        <span>📅 ${template.days} giorni/sett</span>
+                        <span>⏱️ ${template.duration} min</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function viewTemplate(templateId) {
+            const template = workoutTemplates.find(t => t.id === templateId);
+            if (!template) return;
+
+            alert(`🏋️ ${template.name}\n\n${template.description}\n\n📋 Esercizi:\n${template.exercises.map(e => `• ${e}`).join('\n')}\n\n⏱️ Durata: ${template.duration} minuti\n📅 Frequenza: ${template.days} giorni/settimana\n📊 Livello: ${template.difficulty}`);
+        }
+
+        // Profile Wizard Functions
+        function openProfileWizard() {
+            // Pre-fill if data exists
+            if (profileData.birthdate) {
+                document.getElementById('profileBirthdate').value = profileData.birthdate;
+                document.getElementById('profileHeight').value = profileData.height;
+                document.getElementById('profileWeight').value = profileData.weight;
+                document.getElementById('profileFrequency').value = profileData.frequency;
+                
+                // Re-select sports
+                profileData.sports.forEach(sport => {
+                    const options = document.querySelectorAll('#wizardContent5 .wizard-option');
+                    options.forEach(option => {
+                        const text = option.querySelector('.wizard-option-text').textContent.toLowerCase();
+                        if ((sport === 'palestra' && text.includes('palestra')) ||
+                            (sport === 'cardio' && text.includes('cardio')) ||
+                            (sport === 'sport_squadra' && text.includes('squadra')) ||
+                            (sport === 'yoga' && text.includes('yoga'))) {
+                            option.classList.add('selected');
+                        }
+                    });
+                });
+            }
+            
+            document.getElementById('profileWizard').classList.add('active');
+            goToStep(1);
+        }
+
+        function closeProfileWizard() {
+            document.getElementById('profileWizard').classList.remove('active');
+        }
+
+        function editProfile() {
+            openProfileWizard();
+        }
+
+        function goToStep(step) {
+            // Validate current step before moving forward
+            if (step > 1) {
+                const currentStep = parseInt(document.querySelector('.wizard-step.active').id.replace('wizardStep', ''));
+                
+                if (currentStep === 1) {
+                    const birthdate = document.getElementById('profileBirthdate').value;
+                    if (!birthdate) {
+                        alert('❌ Inserisci la tua data di nascita');
+                        return;
+                    }
+                } else if (currentStep === 2) {
+                    const height = document.getElementById('profileHeight').value;
+                    if (!height || height < 100 || height > 250) {
+                        alert('❌ Inserisci un\'altezza valida (100-250 cm)');
+                        return;
+                    }
+                } else if (currentStep === 3) {
+                    const weight = document.getElementById('profileWeight').value;
+                    if (!weight || weight < 30 || weight > 300) {
+                        alert('❌ Inserisci un peso valido (30-300 kg)');
+                        return;
+                    }
+                } else if (currentStep === 4) {
+                    const frequency = document.getElementById('profileFrequency').value;
+                    if (!frequency || frequency < 1 || frequency > 7) {
+                        alert('❌ Inserisci una frequenza valida (1-7 giorni)');
+                        return;
+                    }
+                    profileData.frequency = parseInt(frequency);
+                }
+            }
+
+            // Hide all steps
+            for (let i = 1; i <= 5; i++) {
+                const content = document.getElementById(`wizardContent${i}`);
+                const stepEl = document.getElementById(`wizardStep${i}`);
+                if (content) content.style.display = 'none';
+                if (stepEl) stepEl.classList.remove('active', 'completed');
+            }
+
+            // Show current step
+            document.getElementById(`wizardContent${step}`).style.display = 'block';
+            document.getElementById(`wizardStep${step}`).classList.add('active');
+
+            // Mark completed steps
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`wizardStep${i}`).classList.add('completed');
+            }
+        }
+
+        function toggleSport(sport) {
+            const option = event.target.closest('.wizard-option');
+            
+            if (profileData.sports.includes(sport)) {
+                profileData.sports = profileData.sports.filter(s => s !== sport);
+                option.classList.remove('selected');
+            } else {
+                profileData.sports.push(sport);
+                option.classList.add('selected');
+            }
+        }
+
+        function saveProfile() {
+            // Validate all fields
+            const birthdate = document.getElementById('profileBirthdate').value;
+            const height = parseInt(document.getElementById('profileHeight').value);
+            const weight = parseInt(document.getElementById('profileWeight').value);
+            const frequency = parseInt(document.getElementById('profileFrequency').value);
+
+            if (!birthdate) {
+                alert('❌ Inserisci la data di nascita');
+                goToStep(1);
+                return;
+            }
+
+            if (!height || height < 100 || height > 250) {
+                alert('❌ Inserisci un\'altezza valida');
+                goToStep(2);
+                return;
+            }
+
+            if (!weight || weight < 30 || weight > 300) {
+                alert('❌ Inserisci un peso valido');
+                goToStep(3);
+                return;
+            }
+
+            if (!frequency || frequency < 1 || frequency > 7) {
+                alert('❌ Inserisci una frequenza valida');
+                goToStep(4);
+                return;
+            }
+
+            if (profileData.sports.length === 0) {
+                alert('❌ Seleziona almeno un tipo di sport');
+                goToStep(5);
+                return;
+            }
+
+            // Save data
+            profileData.birthdate = birthdate;
+            profileData.height = height;
+            profileData.weight = weight;
+            profileData.frequency = frequency;
+
+            localStorage.setItem('sport_profile', JSON.stringify(profileData));
+            
+            updateProfileStatus();
+            closeProfileWizard();
+            
+            alert('✅ Profilo salvato con successo! 🎉');
+        }
+
+        // Workout Functions (existing code)
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler uscire?')) {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            }
+        }
+
+        function loadWorkouts() {
+            const saved = localStorage.getItem('sport_workouts');
+            if (saved) {
+                workouts = JSON.parse(saved);
+            } else {
+                workouts = [];
+                saveWorkouts();
+            }
+            renderWorkoutsList();
+            updateStats();
+        }
+
+        function renderWorkoutsList() {
+            const container = document.getElementById('workoutsList');
+            
+            if (workouts.length === 0) {
+                container.innerHTML = `
+                    <p style="text-align: center; color: var(--venus-text-muted); padding: 40px 20px;">
+                        Nessun allenamento registrato. Clicca su "+ Aggiungi Allenamento" per iniziare!
+                    </p>
+                `;
+                return;
+            }
+
+            // Ordina per data (più recenti prima)
+            const sorted = [...workouts].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const typeIcons = {
+                cardio: '❤️',
+                strength: '💪',
+                yoga: '🧘',
+                running: '🏃',
+                cycling: '🚴',
+                swimming: '🏊'
+            };
+
+            const html = sorted.map(workout => {
+                const date = new Date(workout.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const workoutDate = new Date(date);
+                workoutDate.setHours(0, 0, 0, 0);
+                
+                let dateLabel;
+                const daysDiff = Math.floor((today - workoutDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff === 0) dateLabel = 'Oggi';
+                else if (daysDiff === 1) dateLabel = 'Ieri';
+                else if (daysDiff < 7) dateLabel = `${daysDiff} giorni fa`;
+                else dateLabel = date.toLocaleDateString('it-IT');
+
+                return `
+                    <div class="workout-item ${workout.type}">
+                        <div class="workout-icon">${typeIcons[workout.type] || '💪'}</div>
+                        <div class="workout-details">
+                            <h3 class="workout-title">${workout.notes || workout.type.charAt(0).toUpperCase() + workout.type.slice(1)}</h3>
+                            <p class="workout-meta">${dateLabel}</p>
+                        </div>
+                        <div class="workout-duration">${workout.duration} min</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function updateStats() {
+            // Calcola stats mensili
+            const now = new Date();
+            const thisMonth = workouts.filter(w => {
+                const wDate = new Date(w.date);
+                return wDate.getMonth() === now.getMonth() && wDate.getFullYear() === now.getFullYear();
+            });
+
+            document.getElementById('monthlyWorkouts').textContent = thisMonth.length;
+            
+            const totalMinutes = thisMonth.reduce((sum, w) => sum + w.duration, 0);
+            document.getElementById('totalMinutes').textContent = totalMinutes;
+
+            // Aggiorna progressi
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progressSection = document.getElementById('progressSection');
+            
+            if (workouts.length === 0) {
+                progressSection.innerHTML = `
+                    <p style="text-align: center; color: var(--venus-text-muted); padding: 20px;">
+                        I progressi verranno visualizzati qui dopo aver registrato i tuoi allenamenti.
+                    </p>
+                `;
+                return;
+            }
+
+            // Calcola obiettivo settimanale (assumiamo 3 allenamenti/settimana)
+            const now = new Date();
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay() + 1);
+            
+            const thisWeek = workouts.filter(w => {
+                const wDate = new Date(w.date);
+                return wDate >= weekStart;
+            });
+
+            const weeklyGoal = 3;
+            const weeklyProgress = Math.min((thisWeek.length / weeklyGoal) * 100, 100);
+
+            progressSection.innerHTML = `
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-name">Obiettivo Settimanale</span>
+                        <span class="progress-value">${thisWeek.length}/${weeklyGoal}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${weeklyProgress}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function saveWorkouts() {
+            localStorage.setItem('sport_workouts', JSON.stringify(workouts));
+        }
+
+        function generateWeeklyCalendar() {
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeek * 7));
+
+            const weekDays = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+            let html = '';
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(startOfWeek);
+                day.setDate(startOfWeek.getDate() + i);
+                
+                const dayNum = day.getDate();
+                const dateStr = day.toISOString().split('T')[0];
+                const isToday = dateStr === today.toISOString().split('T')[0];
+                const dayWorkouts = workouts.filter(w => w.date === dateStr);
+                const hasWorkout = dayWorkouts.length > 0;
+
+                let classes = 'day-cell';
+                if (isToday) classes += ' today';
+                if (hasWorkout) classes += ' has-workout';
+
+                html += `
+                    <div class="${classes}" onclick="selectDay('${dateStr}')">
+                        <div class="day-name">${weekDays[i]}</div>
+                        <div class="day-number">${dayNum}</div>
+                        ${hasWorkout ? `<div class="day-workout">${dayWorkouts[0].duration}min</div>` : ''}
+                    </div>
+                `;
+            }
+
+            document.getElementById('weeklyCalendar').innerHTML = html;
+
+            // Update week label
+            const weekNum = Math.abs(currentWeek) + 1;
+            const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+            document.getElementById('weekLabel').textContent = `Settimana ${weekNum} - ${monthNames[startOfWeek.getMonth()]} ${startOfWeek.getFullYear()}`;
+        }
+
+        function previousWeek() {
+            currentWeek--;
+            generateWeeklyCalendar();
+        }
+
+        function nextWeek() {
+            currentWeek++;
+            generateWeeklyCalendar();
+        }
+
+        function selectDay(dateStr) {
+            // Non fa più nulla - rimossa funzionalità di aggiunta allenamenti
+            console.log('Selezionato giorno:', dateStr);
+        }
+
+        // Close modal on overlay click
+        document.getElementById('profileWizard').addEventListener('click', (e) => {
+            if (e.target.id === 'profileWizard') {
+                closeProfileWizard();
+            }
+        });
+    </script>
+</body>
+</html>
