@@ -107,14 +107,14 @@ class ShopifyMonitor {
             return randomSeconds * 1000;
         }
         
-        // Fuori dalla finestra intensiva - disattiva modalità intensiva e usa IDLE fisso (5 min)
+        // Fuori dalla finestra intensiva - disattiva modalità intensiva e usa IDLE fisso (3 min)
         if (this.allowIntensiveMode && !isIntensiveWindow) {
             this.allowIntensiveMode = false;
-            console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle (5 min)`);
+            console.log(`[Shopify] 💤 Finestra intensiva terminata - ritorno in modalità idle (3 min)`);
         }
         
-        // Check IDLE: sempre 5 minuti
-        return 5 * 60 * 1000; // 5 minuti fissi
+        // Check IDLE: sempre 3 minuti
+        return 3 * 60 * 1000; // 3 minuti fissi
     }
 
     /**
