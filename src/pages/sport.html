@@ -515,6 +515,14 @@
             width: 90%;
             max-width: 500px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-content.wizard-modal {
+            max-width: 750px;
+            max-height: 65vh;
+            padding: 24px 32px;
         }
 
         .modal-header {
@@ -619,7 +627,7 @@
         .wizard-progress {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 32px;
+            margin-bottom: 20px;
             position: relative;
         }
 
@@ -653,7 +661,7 @@
             justify-content: center;
             font-weight: 700;
             color: #9ca3af;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .wizard-step.active .wizard-step-circle {
@@ -669,32 +677,32 @@
         }
 
         .wizard-step-label {
-            font-size: 12px;
+            font-size: 11px;
             color: var(--venus-text-muted);
             font-weight: 500;
         }
 
         .wizard-question {
-            text-align: center;
-            font-size: 22px;
+            text-align: left;
+            font-size: 18px;
             font-weight: 700;
             color: var(--venus-text-primary);
-            margin-bottom: 32px;
+            margin-bottom: 20px;
         }
 
         .wizard-options {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
         }
 
         .wizard-option {
             display: flex;
             align-items: center;
-            padding: 16px 20px;
+            padding: 12px 16px;
             background: white;
             border: 2px solid var(--venus-border);
-            border-radius: 12px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -710,17 +718,18 @@
         }
 
         .wizard-option-circle {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid var(--venus-border);
-            margin-right: 16px;
+            margin-right: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             flex-shrink: 0;
             background: white;
+            font-size: 14px;
         }
 
         .wizard-option.selected .wizard-option-circle {
@@ -730,7 +739,7 @@
         }
 
         .wizard-option-text {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--venus-text-primary);
         }
@@ -860,7 +869,6 @@
                         <div class="sport-card">
                             <div class="card-header">
                                 <h2 class="card-title">📅 Settimana Corrente</h2>
-                                <button class="add-workout-btn" onclick="openModal()">+ Aggiungi Allenamento</button>
                             </div>
 
                             <div class="week-nav">
@@ -874,7 +882,7 @@
                             <div class="weekly-calendar" id="weeklyCalendar"></div>
                         </div>
 
-                        <!-- Recent Workouts -->
+                        <!-- Workout Templates -->
                         <div class="sport-card">
                             <div class="card-header">
                                 <h2 class="card-title">💪 Schede Allenamento</h2>
@@ -921,20 +929,9 @@
 
                             <div class="progress-section" id="progressSection">
                                 <p style="text-align: center; color: var(--venus-text-muted); padding: 20px;">
-                                    I progressi verranno visualizzati qui dopo aver registrato i tuoi allenamenti.
+                                    I progressi verranno visualizzati qui dopo aver selezionato una scheda allenamento.
                                 </p>
                             </div>
-                        </div>
-
-                        <!-- Aggiungi Allenamento -->
-                        <div class="sport-card">
-                            <div class="card-header">
-                                <h2 class="card-title">➕ Aggiungi Allenamento</h2>
-                            </div>
-                            
-                            <button class="add-workout-btn" style="width: 100%; margin-top: 12px;" onclick="openWorkoutModal()">
-                                + Registra Allenamento
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -942,53 +939,9 @@
         </main>
     </div>
 
-    <!-- Workout Modal -->
-    <div class="modal-overlay" id="workoutModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Nuovo Allenamento</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-
-            <form id="workoutForm" onsubmit="saveWorkout(event)">
-                <div class="form-group">
-                    <label class="form-label" for="workoutType">Tipo Allenamento *</label>
-                    <select class="form-select" id="workoutType" required>
-                        <option value="cardio">Cardio</option>
-                        <option value="strength">Pesi/Forza</option>
-                        <option value="yoga">Yoga/Stretching</option>
-                        <option value="running">Corsa</option>
-                        <option value="cycling">Ciclismo</option>
-                        <option value="swimming">Nuoto</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="workoutDate">Data *</label>
-                    <input type="date" class="form-input" id="workoutDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="workoutDuration">Durata (minuti) *</label>
-                    <input type="number" class="form-input" id="workoutDuration" required min="1" placeholder="45">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="workoutNotes">Note (opzionale)</label>
-                    <input type="text" class="form-input" id="workoutNotes" placeholder="Es: Serie da 3x12">
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
-                    <button type="submit" class="btn btn-primary">Salva Allenamento</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Profile Wizard Modal -->
     <div class="modal-overlay" id="profileWizard">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content wizard-modal">
             <div class="modal-header">
                 <h2 class="modal-title">Configura il tuo Profilo Sport</h2>
                 <button class="modal-close" onclick="closeProfileWizard()">&times;</button>
@@ -998,35 +951,32 @@
             <div class="wizard-progress">
                 <div class="wizard-step active" id="wizardStep1">
                     <div class="wizard-step-circle">1</div>
-                    <div class="wizard-step-label">Dati Personali</div>
+                    <div class="wizard-step-label">Nascita</div>
                 </div>
                 <div class="wizard-step" id="wizardStep2">
                     <div class="wizard-step-circle">2</div>
-                    <div class="wizard-step-label">Obiettivi</div>
+                    <div class="wizard-step-label">Altezza</div>
                 </div>
                 <div class="wizard-step" id="wizardStep3">
                     <div class="wizard-step-circle">3</div>
-                    <div class="wizard-step-label">Preferenze</div>
+                    <div class="wizard-step-label">Peso</div>
+                </div>
+                <div class="wizard-step" id="wizardStep4">
+                    <div class="wizard-step-circle">4</div>
+                    <div class="wizard-step-label">Frequenza</div>
+                </div>
+                <div class="wizard-step" id="wizardStep5">
+                    <div class="wizard-step-circle">5</div>
+                    <div class="wizard-step-label">Sport</div>
                 </div>
             </div>
 
-            <!-- Step 1: Personal Info -->
+            <!-- Step 1: Birthdate -->
             <div id="wizardContent1" class="wizard-content">
-                <h3 class="wizard-question">📊 Dati Personali</h3>
+                <h3 class="wizard-question">📅 Quando sei nato/a?</h3>
                 
                 <div class="form-group">
-                    <label class="form-label" for="profileBirthdate">Data di Nascita *</label>
-                    <input type="date" class="form-input" id="profileBirthdate" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="profileHeight">Altezza (cm) *</label>
-                    <input type="number" class="form-input" id="profileHeight" required min="100" max="250" placeholder="175">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="profileWeight">Peso (kg) *</label>
-                    <input type="number" class="form-input" id="profileWeight" required min="30" max="300" placeholder="70">
+                    <input type="date" class="form-input" id="profileBirthdate" required style="font-size: 16px; padding: 14px;">
                 </div>
 
                 <div class="modal-actions">
@@ -1035,30 +985,56 @@
                 </div>
             </div>
 
-            <!-- Step 2: Training Goals -->
+            <!-- Step 2: Height -->
             <div id="wizardContent2" class="wizard-content" style="display: none;">
-                <h3 class="wizard-question">🎯 Obiettivi di Allenamento</h3>
+                <h3 class="wizard-question">📏 Quanto sei alto/a?</h3>
                 
                 <div class="form-group">
-                    <label class="form-label">Quante volte a settimana ti alleni? *</label>
-                    <div class="wizard-options">
-                        <div class="wizard-option" onclick="selectFrequency(1)">
-                            <div class="wizard-option-circle">1</div>
-                            <div class="wizard-option-text">1-2 volte a settimana</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectFrequency(3)">
-                            <div class="wizard-option-circle">3</div>
-                            <div class="wizard-option-text">3-4 volte a settimana</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectFrequency(5)">
-                            <div class="wizard-option-circle">5</div>
-                            <div class="wizard-option-text">5+ volte a settimana</div>
-                        </div>
-                    </div>
+                    <input type="number" class="form-input" id="profileHeight" required min="100" max="250" placeholder="175" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Altezza in centimetri</small>
                 </div>
 
-                <div class="form-group" style="margin-top: 24px;">
-                    <label class="form-label">Che tipo di sport pratichi? *</label>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Weight -->
+            <div id="wizardContent3" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">⚖️ Quanto pesi?</h3>
+                
+                <div class="form-group">
+                    <input type="number" class="form-input" id="profileWeight" required min="30" max="300" placeholder="70" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Peso in kilogrammi</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(4)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Frequency -->
+            <div id="wizardContent4" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">🔢 Quante volte a settimana ti alleni?</h3>
+                
+                <div class="form-group">
+                    <input type="number" class="form-input" id="profileFrequency" required min="1" max="7" placeholder="3" style="font-size: 16px; padding: 14px;">
+                    <small style="color: var(--venus-text-muted); margin-top: 8px; display: block;">Inserisci un numero da 1 a 7</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(3)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(5)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Sports Type -->
+            <div id="wizardContent5" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">🏃 Che tipo di sport pratichi?</h3>
+                
+                <div class="form-group">
                     <div class="wizard-options">
                         <div class="wizard-option" onclick="toggleSport('palestra')">
                             <div class="wizard-option-circle">💪</div>
@@ -1077,56 +1053,11 @@
                             <div class="wizard-option-text">Yoga/Pilates</div>
                         </div>
                     </div>
+                    <small style="color: var(--venus-text-muted); margin-top: 12px; display: block; text-align: center;">Puoi selezionarne più di uno</small>
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Indietro</button>
-                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Avanti →</button>
-                </div>
-            </div>
-
-            <!-- Step 3: Preferences -->
-            <div id="wizardContent3" class="wizard-content" style="display: none;">
-                <h3 class="wizard-question">⏰ Preferenze di Allenamento</h3>
-                
-                <div class="form-group">
-                    <label class="form-label">Durata media delle sessioni *</label>
-                    <div class="wizard-options">
-                        <div class="wizard-option" onclick="selectDuration(30)">
-                            <div class="wizard-option-circle">30</div>
-                            <div class="wizard-option-text">30 minuti</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectDuration(60)">
-                            <div class="wizard-option-circle">60</div>
-                            <div class="wizard-option-text">60 minuti</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectDuration(90)">
-                            <div class="wizard-option-circle">90</div>
-                            <div class="wizard-option-text">90+ minuti</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 24px;">
-                    <label class="form-label">Orario preferito *</label>
-                    <div class="wizard-options">
-                        <div class="wizard-option" onclick="selectTimePreference('mattina')">
-                            <div class="wizard-option-circle">🌅</div>
-                            <div class="wizard-option-text">Mattina (6-12)</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectTimePreference('pomeriggio')">
-                            <div class="wizard-option-circle">☀️</div>
-                            <div class="wizard-option-text">Pomeriggio (12-18)</div>
-                        </div>
-                        <div class="wizard-option" onclick="selectTimePreference('sera')">
-                            <div class="wizard-option-circle">🌙</div>
-                            <div class="wizard-option-text">Sera (18-23)</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Indietro</button>
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(4)">← Indietro</button>
                     <button type="button" class="btn btn-primary" onclick="saveProfile()">Salva Profilo 🎉</button>
                 </div>
             </div>
@@ -1298,6 +1229,21 @@
                 document.getElementById('profileBirthdate').value = profileData.birthdate;
                 document.getElementById('profileHeight').value = profileData.height;
                 document.getElementById('profileWeight').value = profileData.weight;
+                document.getElementById('profileFrequency').value = profileData.frequency;
+                
+                // Re-select sports
+                profileData.sports.forEach(sport => {
+                    const options = document.querySelectorAll('#wizardContent5 .wizard-option');
+                    options.forEach(option => {
+                        const text = option.querySelector('.wizard-option-text').textContent.toLowerCase();
+                        if ((sport === 'palestra' && text.includes('palestra')) ||
+                            (sport === 'cardio' && text.includes('cardio')) ||
+                            (sport === 'sport_squadra' && text.includes('squadra')) ||
+                            (sport === 'yoga' && text.includes('yoga'))) {
+                            option.classList.add('selected');
+                        }
+                    });
+                });
             }
             
             document.getElementById('profileWizard').classList.add('active');
@@ -1313,10 +1259,44 @@
         }
 
         function goToStep(step) {
+            // Validate current step before moving forward
+            if (step > 1) {
+                const currentStep = parseInt(document.querySelector('.wizard-step.active').id.replace('wizardStep', ''));
+                
+                if (currentStep === 1) {
+                    const birthdate = document.getElementById('profileBirthdate').value;
+                    if (!birthdate) {
+                        alert('❌ Inserisci la tua data di nascita');
+                        return;
+                    }
+                } else if (currentStep === 2) {
+                    const height = document.getElementById('profileHeight').value;
+                    if (!height || height < 100 || height > 250) {
+                        alert('❌ Inserisci un\'altezza valida (100-250 cm)');
+                        return;
+                    }
+                } else if (currentStep === 3) {
+                    const weight = document.getElementById('profileWeight').value;
+                    if (!weight || weight < 30 || weight > 300) {
+                        alert('❌ Inserisci un peso valido (30-300 kg)');
+                        return;
+                    }
+                } else if (currentStep === 4) {
+                    const frequency = document.getElementById('profileFrequency').value;
+                    if (!frequency || frequency < 1 || frequency > 7) {
+                        alert('❌ Inserisci una frequenza valida (1-7 giorni)');
+                        return;
+                    }
+                    profileData.frequency = parseInt(frequency);
+                }
+            }
+
             // Hide all steps
-            for (let i = 1; i <= 3; i++) {
-                document.getElementById(`wizardContent${i}`).style.display = 'none';
-                document.getElementById(`wizardStep${i}`).classList.remove('active', 'completed');
+            for (let i = 1; i <= 5; i++) {
+                const content = document.getElementById(`wizardContent${i}`);
+                const stepEl = document.getElementById(`wizardStep${i}`);
+                if (content) content.style.display = 'none';
+                if (stepEl) stepEl.classList.remove('active', 'completed');
             }
 
             // Show current step
@@ -1327,14 +1307,6 @@
             for (let i = 1; i < step; i++) {
                 document.getElementById(`wizardStep${i}`).classList.add('completed');
             }
-        }
-
-        function selectFrequency(freq) {
-            profileData.frequency = freq;
-            document.querySelectorAll('#wizardContent2 .wizard-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            event.target.closest('.wizard-option').classList.add('selected');
         }
 
         function toggleSport(sport) {
@@ -1349,45 +1321,40 @@
             }
         }
 
-        function selectDuration(duration) {
-            profileData.duration = duration;
-            document.querySelectorAll('#wizardContent3 .wizard-option').forEach((el, idx) => {
-                if (idx < 3) el.classList.remove('selected');
-            });
-            event.target.closest('.wizard-option').classList.add('selected');
-        }
-
-        function selectTimePreference(time) {
-            profileData.timePreference = time;
-            document.querySelectorAll('#wizardContent3 .wizard-option').forEach((el, idx) => {
-                if (idx >= 3) el.classList.remove('selected');
-            });
-            event.target.closest('.wizard-option').classList.add('selected');
-        }
-
         function saveProfile() {
-            // Validate step 1
+            // Validate all fields
             const birthdate = document.getElementById('profileBirthdate').value;
             const height = parseInt(document.getElementById('profileHeight').value);
             const weight = parseInt(document.getElementById('profileWeight').value);
+            const frequency = parseInt(document.getElementById('profileFrequency').value);
 
-            if (!birthdate || !height || !weight) {
-                alert('❌ Compila tutti i campi obbligatori in Dati Personali');
+            if (!birthdate) {
+                alert('❌ Inserisci la data di nascita');
                 goToStep(1);
                 return;
             }
 
-            // Validate step 2
-            if (!profileData.frequency || profileData.sports.length === 0) {
-                alert('❌ Seleziona la frequenza e almeno uno sport');
+            if (!height || height < 100 || height > 250) {
+                alert('❌ Inserisci un\'altezza valida');
                 goToStep(2);
                 return;
             }
 
-            // Validate step 3
-            if (!profileData.duration || !profileData.timePreference) {
-                alert('❌ Seleziona durata e orario preferito');
+            if (!weight || weight < 30 || weight > 300) {
+                alert('❌ Inserisci un peso valido');
                 goToStep(3);
+                return;
+            }
+
+            if (!frequency || frequency < 1 || frequency > 7) {
+                alert('❌ Inserisci una frequenza valida');
+                goToStep(4);
+                return;
+            }
+
+            if (profileData.sports.length === 0) {
+                alert('❌ Seleziona almeno un tipo di sport');
+                goToStep(5);
                 return;
             }
 
@@ -1395,6 +1362,7 @@
             profileData.birthdate = birthdate;
             profileData.height = height;
             profileData.weight = weight;
+            profileData.frequency = frequency;
 
             localStorage.setItem('sport_profile', JSON.stringify(profileData));
             
@@ -1587,50 +1555,11 @@
         }
 
         function selectDay(dateStr) {
-            document.getElementById('workoutDate').value = dateStr;
-            openWorkoutModal();
-        }
-
-        function openWorkoutModal() {
-            document.getElementById('workoutModal').classList.add('active');
-            document.getElementById('workoutForm').reset();
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('workoutDate').value = today;
-        }
-
-        function closeModal() {
-            document.getElementById('workoutModal').classList.remove('active');
-            document.getElementById('workoutForm').reset();
-        }
-
-        function saveWorkout(e) {
-            e.preventDefault();
-
-            const workout = {
-                id: Date.now(),
-                date: document.getElementById('workoutDate').value,
-                type: document.getElementById('workoutType').value,
-                duration: parseInt(document.getElementById('workoutDuration').value),
-                notes: document.getElementById('workoutNotes').value
-            };
-
-            workouts.push(workout);
-            saveWorkouts();
-            renderWorkoutsList();
-            updateStats();
-            generateWeeklyCalendar();
-            closeModal();
-
-            alert('Allenamento registrato! 💪');
+            // Non fa più nulla - rimossa funzionalità di aggiunta allenamenti
+            console.log('Selezionato giorno:', dateStr);
         }
 
         // Close modal on overlay click
-        document.getElementById('workoutModal').addEventListener('click', (e) => {
-            if (e.target.id === 'workoutModal') {
-                closeModal();
-            }
-        });
-
         document.getElementById('profileWizard').addEventListener('click', (e) => {
             if (e.target.id === 'profileWizard') {
                 closeProfileWizard();
