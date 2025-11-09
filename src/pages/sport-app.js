@@ -386,7 +386,8 @@ function showProgramInfo(programId) {
         ` : ''}
     `;
 
-    selectedProgramId = programId;
+    // Non selezionare automaticamente il programma quando si apre l'info
+    // selectedProgramId = programId; <- RIMOSSO
     modal.classList.add('active');
 }
 
@@ -521,20 +522,34 @@ async function renderProgressWidget() {
             }
         }
 
+        // Verifica se l'utente ha scelto un programma
+        const programResponse = await fetch(`/api/sport/program/${user.id}`);
+        let hasProgram = false;
+        let weeklyGoal = 0;
+        
+        if (programResponse.ok) {
+            const programResult = await programResponse.json();
+            if (programResult.success && programResult.data && programResult.data.programId) {
+                hasProgram = true;
+                const program = workoutPrograms.find(p => p.id === programResult.data.programId);
+                weeklyGoal = program ? program.frequency : 0;
+            }
+        }
+
         // Calculate from scheduled workouts
-        const today = new Date();
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
         const weeklyCompleted = stats.totalWorkouts || 0;
         
-        // Weekly goal from user frequency
-        const weeklyGoal = parseInt(userData.frequency) || 5;
-        const weeklyPercentage = Math.min((weeklyCompleted / weeklyGoal) * 100, 100);
+        // Se non ha scelto un programma, mostra /0
+        if (!hasProgram) {
+            weeklyGoal = 0;
+        }
+        
+        const weeklyPercentage = weeklyGoal > 0 ? Math.min((weeklyCompleted / weeklyGoal) * 100, 100) : 0;
 
         // Calories calculation
-        const caloriesGoal = 2500;
+        const caloriesGoal = hasProgram ? 2500 : 0;
         const caloriesBurned = stats.estimatedCalories || 0;
-        const caloriesPercentage = Math.min((caloriesBurned / caloriesGoal) * 100, 100);
+        const caloriesPercentage = caloriesGoal > 0 ? Math.min((caloriesBurned / caloriesGoal) * 100, 100) : 0;
 
         container.innerHTML = `
             <div class="progress-item">
@@ -548,7 +563,7 @@ async function renderProgressWidget() {
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${weeklyPercentage}%;"></div>
                 </div>
-                <div class="progress-percent">${Math.round(weeklyPercentage)}% completato</div>
+                <div class="progress-percent">${weeklyGoal > 0 ? Math.round(weeklyPercentage) + '% completato' : 'Scegli un programma per iniziare'}</div>
             </div>
 
             <div class="progress-item">
@@ -562,7 +577,7 @@ async function renderProgressWidget() {
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${caloriesPercentage}%;"></div>
                 </div>
-                <div class="progress-percent">${Math.round(caloriesPercentage)}% completato</div>
+                <div class="progress-percent">${caloriesGoal > 0 ? Math.round(caloriesPercentage) + '% completato' : 'Scegli un programma per iniziare'}</div>
             </div>
 
             ${stats.currentStreak > 0 ? `

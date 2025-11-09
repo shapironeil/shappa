@@ -983,6 +983,8 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Tricipiti",
+                duration: "60-75 min",
+                estimatedCalories: 460,
                 warmup: "10 min cardio leggero",
                 exercises: [
                     { 
@@ -990,25 +992,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali",
+                        execution: "Fletti il tronco contraendo l'addome"
                     },
                     { 
-                        name: "SUPERSET: Croci manubri + Panca piana", 
+                        name: "Panca piana bilanciere", 
                         sets: "4", 
-                        reps: "8-10 + 6-8", 
-                        rest: "no pausa tra esercizi, 2 min tra superset", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Esercizio base prima dei superset",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale, Deltoidi, Tricipiti",
+                        execution: "Movimento pluriarticolare fondamentale"
+                    },
+                    { 
+                        name: "SUPERSET: Croci manubri + Panca piana manubri", 
+                        sets: "4", 
+                        reps: "10-12 + 8-10", 
+                        rest: "no pausa tra esercizi, 90 sec tra superset", 
                         notes: "Esaurisci con complementare, poi passa a base senza fermarti",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Superset: complementare + base, massimizza pompaggio e reclutamento"
+                        muscleGroup: "Pettorale (fibre centrali e complessive)",
+                        execution: "Metodo Superset: complementare + base per massimizzare pompaggio"
+                    },
+                    { 
+                        name: "Panca inclinata manubri", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus pettorale alto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale clavicolare (alto)",
+                        execution: "Inclinazione 30-45° per enfasi su fibre superiori"
                     },
                     { 
                         name: "SUPERSET: Push down + Panca stretta", 
                         sets: "4", 
-                        reps: "10-12 + 6-8", 
+                        reps: "12-15 + 8-10", 
                         rest: "no pausa, 90 sec tra superset",
+                        notes: "Isolamento seguito da composto",
                         image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti"
+                        muscleGroup: "Tricipiti (tutti i capi)",
+                        execution: "Monoarticolare + pluriarticolare per tricipiti completi"
+                    },
+                    { 
+                        name: "Dip alle parallele", 
+                        sets: "3", 
+                        reps: "max", 
+                        rest: "2 min", 
+                        notes: "Finisher composto a corpo libero",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale, Tricipiti, Deltoidi",
+                        execution: "Pluriarticolare. Busto inclinato per enfasi petto"
+                    },
+                    { 
+                        name: "French Press", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "60 sec", 
+                        notes: "Isolamento capo lungo tricipiti",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Tricipiti (capo lungo)",
+                        execution: "Estensione sopra la testa per massimo allungamento"
                     }
                 ],
                 cooldown: "Stretching 5 min"
@@ -1016,6 +1063,8 @@ const workoutPrograms = [
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti",
+                duration: "60-75 min",
+                estimatedCalories: 440,
                 warmup: "10 min cardio",
                 exercises: [
                     { 
@@ -1023,24 +1072,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "15", 
                         rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Attivazione addominali inferiori",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Addominali inferiori",
+                        execution: "Solleva il bacino verso il petto"
                     },
                     { 
-                        name: "SUPERSET: Pulley + Trazioni sbarra", 
+                        name: "Trazioni alla sbarra", 
                         sets: "4", 
-                        reps: "8-10 + max", 
-                        rest: "no pausa, 2 min tra superset",
+                        reps: "max", 
+                        rest: "3 min", 
+                        notes: "Esercizio base fondamentale",
                         image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale"
+                        muscleGroup: "Gran dorsale, Bicipiti, Trapezio",
+                        execution: "Pluriarticolare. Tira il corpo verso l'alto"
+                    },
+                    { 
+                        name: "SUPERSET: Pulley + Rematore bilanciere", 
+                        sets: "4", 
+                        reps: "10-12 + 8-10", 
+                        rest: "no pausa, 2 min tra superset",
+                        notes: "Complementare + base per dorso completo",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Dorsale (larghezza + spessore)",
+                        execution: "Metodo Superset per densità allenamento"
+                    },
+                    { 
+                        name: "Lat Machine presa stretta", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Focus spessore dorsale centrale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Dorsale centrale, Romboidi",
+                        execution: "Tira verso il petto contraendo le scapole"
                     },
                     { 
                         name: "SUPERSET: Curl concentrato + Curl bilanciere", 
                         sets: "4", 
-                        reps: "10 + 6-8", 
+                        reps: "10-12 + 8-10", 
                         rest: "no pausa, 90 sec tra superset",
+                        notes: "Monoarticolare + pluriarticolare",
                         image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti",
-                        execution: "Pre-esaurisci con monoarticolare, completa con base"
+                        muscleGroup: "Bicipiti brachiale",
+                        execution: "Pre-esaurisci con isolamento, completa con movimento completo"
+                    },
+                    { 
+                        name: "Curl manubri inclinato", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Massimo allungamento bicipiti",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Bicipiti (capo lungo)",
+                        execution: "Panca 45°, massimo stretch in posizione bassa"
+                    },
+                    { 
+                        name: "Hammer Curl", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Finisher brachiale e avambracci",
+                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
+                        muscleGroup: "Brachiale, Brachioradiale",
+                        execution: "Presa neutra per lavoro su brachiale sottostante"
                     }
                 ],
                 cooldown: "Stretching 5 min"
@@ -1048,6 +1143,8 @@ const workoutPrograms = [
             {
                 day: "Giovedì",
                 focus: "Spalle",
+                duration: "55-70 min",
+                estimatedCalories: 400,
                 warmup: "10 min cardio",
                 exercises: [
                     { 
@@ -1055,23 +1152,70 @@ const workoutPrograms = [
                         sets: "3", 
                         reps: "60 sec", 
                         rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
+                        notes: "Stabilizzazione scapole e core",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Core, Addominali",
+                        execution: "Mantieni scapole stabili"
                     },
                     { 
-                        name: "SUPERSET: Alzate laterali + Lento avanti", 
+                        name: "Military Press bilanciere", 
+                        sets: "4", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Esercizio base per spalle",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoidi, Trapezio, Tricipiti",
+                        execution: "Pluriarticolare fondamentale per spalle"
+                    },
+                    { 
+                        name: "SUPERSET: Alzate laterali + Lento avanti manubri", 
                         sets: "4", 
                         reps: "12-15 + 8-10", 
                         rest: "no pausa, 2 min tra superset",
+                        notes: "Isolamento + composto",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi"
+                        muscleGroup: "Deltoidi (laterale + anteriore)",
+                        execution: "Monoarticolare seguito da pluriarticolare"
+                    },
+                    { 
+                        name: "Arnold Press", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Tutti i fasci del deltoide",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoidi (tutti i fasci)",
+                        execution: "Rotazione che coinvolge tutti i capi del deltoide"
                     },
                     { 
                         name: "SUPERSET: Alzate posteriori + Tirate al petto", 
                         sets: "3", 
-                        reps: "12 + 10", 
+                        reps: "12-15 + 10-12", 
                         rest: "no pausa, 90 sec tra superset",
+                        notes: "Posteriore + trapezi",
                         image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoide posteriore, Trapezio"
+                        muscleGroup: "Deltoide posteriore, Trapezio superiore",
+                        execution: "Completa lo sviluppo della spalla"
+                    },
+                    { 
+                        name: "Alzate frontali", 
+                        sets: "3", 
+                        reps: "12-15", 
+                        rest: "60 sec", 
+                        notes: "Isolamento deltoide anteriore",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Deltoide anteriore",
+                        execution: "Monoarticolare. Flessione della spalla"
+                    },
+                    { 
+                        name: "Shrugs con bilanciere", 
+                        sets: "3", 
+                        reps: "15-20", 
+                        rest: "60 sec", 
+                        notes: "Finisher trapezi",
+                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
+                        muscleGroup: "Trapezio superiore",
+                        execution: "Elevazione scapole contraendo il trapezio"
                     }
                 ],
                 cooldown: "Stretching 5 min"
