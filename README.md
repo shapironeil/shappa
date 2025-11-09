@@ -6,429 +6,857 @@
 
 
 
-------
+---
 
 
 
-## 📋 Indice## � Indice
+## 📋 Indice------
 
 
 
-- [Overview](#-overview)- [Overview](#-overview)
+- [Overview](#-overview)
 
-- [Architettura Sistema](#-architettura-sistema)- [Architettura Sistema](#-architettura-sistema)
+- [Status Production](#-status-production)
 
-- [Setup Ambiente](#-setup-ambiente)- [Setup Ambiente](#-setup-ambiente)
+- [Monitor Shopify](#-monitor-shopify)## 📋 Indice## � Indice
 
-- [Sistema Autenticazione](#-sistema-autenticazione)- [Sistema Autenticazione](#-sistema-autenticazione)
+- [Sistema Timing Intelligente](#-sistema-timing-intelligente)
 
-- [Monitor Shopify](#-monitor-shopify)- [Monitor Shopify](#-monitor-shopify)
+- [Configurazione Monitor](#-configurazione-monitor)
 
-- [Sistema Notifiche Discord](#-sistema-notifiche-discord)- [Sistema Notifiche Discord](#-sistema-notifiche-discord)
+- [Sistema Notifiche Discord](#-sistema-notifiche-discord)
 
-- [API Endpoints](#-api-endpoints)- [API Endpoints](#-api-endpoints)
+- [Strumenti e Tecnologie](#-strumenti-e-tecnologie)- [Overview](#-overview)- [Overview](#-overview)
 
-- [Database](#-database)- [Database](#-database)
+- [Setup Ambiente](#-setup-ambiente)
+
+- [Deploy Production](#-deploy-production)- [Architettura Sistema](#-architettura-sistema)- [Architettura Sistema](#-architettura-sistema)
+
+
+
+---- [Setup Ambiente](#-setup-ambiente)- [Setup Ambiente](#-setup-ambiente)
+
+
+
+## 🎯 Overview- [Sistema Autenticazione](#-sistema-autenticazione)- [Sistema Autenticazione](#-sistema-autenticazione)
+
+
+
+**Shappa** è un sistema di monitoraggio automatizzato per store Shopify che:- [Monitor Shopify](#-monitor-shopify)- [Monitor Shopify](#-monitor-shopify)
+
+
+
+- 🔍 **Monitora prodotti** in tempo reale con Puppeteer Stealth- [Sistema Notifiche Discord](#-sistema-notifiche-discord)- [Sistema Notifiche Discord](#-sistema-notifiche-discord)
+
+- 🚨 **Rileva drop e restock** di prodotti limitati (SOON → ONLINE)
+
+- 📱 **Invia notifiche Discord** con embed ricchi, immagini e link diretti al carrello- [API Endpoints](#-api-endpoints)- [API Endpoints](#-api-endpoints)
+
+- 👤 **Gestione multi-utente** con autenticazione server-side
+
+- ⚙️ **Interessi personalizzati** per filtrare prodotti da monitorare- [Database](#-database)- [Database](#-database)
+
+- ⏱️ **Timing intelligente** con finestre intensive configurabili
 
 - [Deploy Production](#-deploy-production)- [Deploy Production](#-deploy-production)
 
+---
+
 - [Troubleshooting](#-troubleshooting)- [Troubleshooting](#-troubleshooting)
 
-
-
-------
+## 🟢 Status Production
 
 
 
-## 🎯 Overview## 🎯 Overview
+**Ambiente Live:**
+
+- 🌐 **URL**: https://shapiro.ninja------
+
+- 📊 **Status**: Online e funzionante
+
+- 🖥️ **Server**: DigitalOcean Droplet (207.154.218.16)
+
+- 🔄 **Process Manager**: PM2 (auto-restart)
+
+- 🔒 **SSL**: Let's Encrypt (auto-renew)## 🎯 Overview## 🎯 Overview
+
+- 💾 **Database**: File JSON (ready for MongoDB)
 
 
+
+**Ultimo Deploy**: 9 Novembre 2025 - 00:45 UTC
 
 ### Cosa fa Shappa
 
+---
 
+
+
+## 📡 Monitor Shopify
 
 **Shappa** è un sistema di monitoraggio automatizzato per store Shopify che:- **URL Live**: https://shapiro.ninja
 
+### Architettura
 
 
-- 🔍 **Monitora prodotti** in tempo reale con Puppeteer Stealth- **Status**: 200 OK ✅
+
+**File**: `monitors/ShopifyMonitor.js` (1265 righe)  
+
+**Tecnologia**: Puppeteer Stealth + Page Stealth Plugin  - 🔍 **Monitora prodotti** in tempo reale con Puppeteer Stealth- **Status**: 200 OK ✅
+
+**Bypass**: Cloudflare, bot detection, canvas fingerprinting
 
 - 🚨 **Rileva drop e restock** di prodotti limitati
 
+### Funzionalità Core
+
 - 📱 **Invia notifiche Discord** con embed ricchi e immagini- **Server**: PM2 attivo su DigitalOcean## ✅ **DEPLOYMENT STATUS**
 
-- 👤 **Gestisce utenti** con autenticazione server-side
+1. **Rilevamento Status Prodotto**:
 
-- ⚙️ **Personalizza interessi** per filtrare notifiche- **Database**: MongoDB Atlas connesso
+   - `IN_STOCK`: Prodotto disponibile (bottone "Add to Cart" attivo)- 👤 **Gestisce utenti** con autenticazione server-side
+
+   - `OUT_OF_STOCK`: Esaurito (bottone disabilitato o testo "sold out")
+
+   - `SOON`: Coming soon (status custom Shopify)- ⚙️ **Personalizza interessi** per filtrare notifiche- **Database**: MongoDB Atlas connesso
+
+   - `RESTOCK`: Prodotto tornato disponibile dopo essere stato esaurito
 
 - ⏱️ **Timing intelligente** con check intensivi ogni mezz'ora
 
-- **Ultimo Deploy**: 7 Novembre 2025 - 16:00 UTC
+2. **Estrazione Dati**:
 
-### Stato Production
+   - Titolo prodotto- **Ultimo Deploy**: 7 Novembre 2025 - 16:00 UTC
 
-- **Commit**: `ed7835d` - Added Obiettivi and Calendario pages
+   - Prezzo corrente
 
-- **🟢 ONLINE**: https://shapiro.ninja
+   - Immagine principale (con fix protocollo `//` → `https://`)### Stato Production
 
-- **Server**: DigitalOcean @ 207.154.218.16- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**---**Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon****Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon**
+   - Varianti disponibili (taglie, colori)
+
+   - Link diretti "Add to Cart" per ogni variante- **Commit**: `ed7835d` - Added Obiettivi and Calendario pages
+
+
+
+3. **Filtri Intelligenti**:- **🟢 ONLINE**: https://shapiro.ninja
+
+   - Ricerca per keyword nel titolo (es: "AIR JORDAN", "FRAGMENT")
+
+   - Filtra prodotti PRIMA di verificare status (performance)- **Server**: DigitalOcean @ 207.154.218.16- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**---**Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon****Webapp professionale per automatizzare la vendita su eBay attingendo da cataloghi Amazon**
+
+   - Match case-insensitive
 
 - **Process**: PM2 (PID 166829, restart #7300)
 
+---
+
 - **SSL**: Nginx + Let's Encrypt
+
+## ⏱️ Sistema Timing Intelligente
 
 - **Versione**: v2.3.0 (Gennaio 2025)
 
----
+### Modalità di Check
 
 ---
 
+Il monitor utilizza **due modalità** per ottimizzare rilevamento e consumo risorse:
+
+---
+
+#### 1. Modalità IDLE (Check ogni 3 minuti)
+
+- Attiva **fuori** dalle finestre intensive
+
+- Intervallo fisso: **180 secondi** (3 minuti)
+
+- Mantiene copertura costante del monitoraggio## 🏗️ Architettura Sistema
 
 
-## 🏗️ Architettura Sistema
 
-## 🌐 Infrastruttura Production- **URL Live**: https://shapiro.ninja
+#### 2. Modalità INTENSIVE (Check ogni 20-25 secondi)## 🌐 Infrastruttura Production- **URL Live**: https://shapiro.ninja
 
-### Stack Tecnologico
+- Attiva nelle **finestre orarie** configurate dall'utente
+
+- Intervallo random: **20-25 secondi** (anti-pattern detection)### Stack Tecnologico
+
+- Durata finestra: **4 minuti fissi**
 
 
+
+### Calcolo Finestre Intensive
 
 **Backend:**
 
+Le finestre si attivano in base all'**intervallo utente**:
+
 - Node.js 20.x + Express.js### Server- **Status**: 200 OK ✅
 
-- Puppeteer Stealth (bypass Cloudflare)
+| Intervallo | Finestre per Ora | Minuti Attivi | Check Totali/Ora |
 
-- PM2 Process Manager- **Provider**: DigitalOcean Droplet
+|-----------|------------------|---------------|------------------|- Puppeteer Stealth (bypass Cloudflare)
 
-- JSON File Database (ready for MySQL)
+| 1 minuto  | 60 finestre      | 0-4 ogni min  | ~144 check       |
+
+| 3 minuti  | 20 finestre      | 0, 3, 6, 9... | ~80 check        |- PM2 Process Manager- **Provider**: DigitalOcean Droplet
+
+| 15 minuti | 4 finestre       | 0, 15, 30, 45 | ~48 check        |
+
+| 20 minuti | 3 finestre       | 0, 20, 40     | ~45 check        |- JSON File Database (ready for MySQL)
+
+| 30 minuti | 2 finestre       | 0, 30         | ~40 check        |
 
 - **IP**: 207.154.218.16- **Server**: PM2 attivo su DigitalOcean## ✅ **DEPLOYMENT STATUS**
 
-**Frontend:**
+**Esempio con intervallo 30 minuti:**
 
-- Vanilla JavaScript (async/await)- **OS**: Ubuntu 22.04 LTS
+```**Frontend:**
 
-- Venus Design System (CSS Variables)
+12:00 → INTENSIVE START (check ogni 20-25s)
+
+12:01 → check...- Vanilla JavaScript (async/await)- **OS**: Ubuntu 22.04 LTS
+
+12:02 → check...
+
+12:03 → check...- Venus Design System (CSS Variables)
+
+12:04 → INTENSIVE END
 
 - Responsive Layout- **Node.js**: v20.x- **Database**: MongoDB Atlas connesso
 
+12:07 → check idle (3 min)
 
+12:10 → check idle
 
-**Infrastructure:**- **Process Manager**: PM2
+12:13 → check idle
+
+...**Infrastructure:**- **Process Manager**: PM2
+
+12:27 → check idle
 
 - DigitalOcean Ubuntu 22.04 LTS
 
-- Nginx Reverse Proxy (port 3000 → 443)- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Ultimo Deploy**: 7 Novembre 2025 - 15:00 UTC
+12:30 → INTENSIVE START (check ogni 20-25s)
 
-- Let's Encrypt SSL
+12:31 → check...- Nginx Reverse Proxy (port 3000 → 443)- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Ultimo Deploy**: 7 Novembre 2025 - 15:00 UTC
 
-- Git + GitHub CI/CD
+...
 
-
-
-### Flusso Dati### Database- **Commit**: `87ad50a` - Production documentation + fixes
+```- Let's Encrypt SSL
 
 
 
-```- **Provider**: MongoDB Atlas (Cloud)
-
-User Browser → Nginx (443) → Node.js (3000) → Monitor → Shopify Store
-
-                                              ↓- **Cluster**: Shared (condiviso dev/prod)- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**## 🌐 Server Production## 🌐 Server Production
-
-                                         Discord Webhooks
-
-                                              ↓- **Strategy**: Database unico per sviluppo e produzione
-
-                                    JSON Database (users, interests, webhooks)
-
-```  - Dev usa eBay Sandbox per testing sicuro
+### Vantaggi del Sistema- Git + GitHub CI/CD
 
 
 
-### Struttura Cartelle  - Prod usa eBay Production per listing reali
+✅ **Performance**: Meno check quando non necessario  
+
+✅ **Copertura**: Massima frequenza nei momenti critici  
+
+✅ **Anti-Detection**: Intervalli random evitano pattern  ### Flusso Dati### Database- **Commit**: `87ad50a` - Production documentation + fixes
+
+✅ **Scalabilità**: Configurabile per ogni utente
 
 
-
-```### Quick Health Check
-
-shappa/
-
-├── server.js                  # Express API server (1765 LOC)### Dominio
-
-├── package.json               # Dependencies
-
-├── .env                       # Environment variables (NOT COMMITTED)- **Domain**: shapiro.ninja```powershell
-
-├── data/                      # JSON databases
-
-│   ├── users/- **DNS**: Puntato a 207.154.218.16
-
-│   │   └── users_db.json     # User accounts
-
-│   ├── interests/- **SSL**: Let's Encrypt (auto-renew)# Test sito- **URL Live**: https://shapiro.ninja
-
-│   │   └── interests_{userId}.json
-
-│   └── webhooks/
-
-│       └── webhook_{userId}.json
-
-├── monitors/---Invoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing
-
-│   └── ShopifyMonitor.js     # Puppeteer monitor (896 LOC)
-
-├── src/
-
-│   ├── pages/
-
-│   │   ├── index.html        # Landing page## ✨ Funzionalità Core- **Status**: 200 OK ✅
-
-│   │   ├── dashboard.html    # Dashboard utente
-
-│   │   └── settings.html     # Impostazioni
-
-│   ├── utils/
-
-│   │   ├── auth-v2.js        # Auth client (async)### 1. 📊 Dashboard & Gestione# Status PM2 (da server)
-
-│   │   ├── login.js          # Login handler
-
-│   │   └── register.js       # Register handler- **Dashboard Principale**: Overview vendite, profitti, statistiche
-
-│   └── styles/               # CSS
-
-└── public/                    # Static assets- **🎯 Obiettivi**: Sistema di tracking obiettivi di business (vendite, profitti, listing)ssh root@207.154.218.16 "pm2 status"- **Server**: PM2 attivo su DigitalOcean- **URL**: https://shapiro.ninja- **URL**: https://shapiro.ninja
-
-```
-
-- **📅 Calendario**: Pianificazione eventi, scadenze listing, promemoria
 
 ---
 
-- **📈 Reports**: Analytics dettagliati e export dati
+```- **Provider**: MongoDB Atlas (Cloud)
 
-## ⚙️ Setup Ambiente
+## ⚙️ Configurazione Monitor
 
+User Browser → Nginx (443) → Node.js (3000) → Monitor → Shopify Store
 
+### Opzioni Intervallo UI
 
-### Prerequisiti
+                                              ↓- **Cluster**: Shared (condiviso dev/prod)- **Code Audit**: ✅ Completato - Vedi [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)🟢 **ONLINE E FUNZIONANTE**## 🌐 Server Production## 🌐 Server Production
 
-### 2. 🔍 Ricerca Prodotti Multi-Marketplace# Logs real-time- **Database**: MongoDB Atlas connesso
+Nel dropdown di creazione monitor (`interessi.html`):
 
-- **Node.js**: >= 18.x
+                                         Discord Webhooks
 
-- **Git**: Ultima versione- **Amazon**: Scraping real-time con Playwright proprietario (stealth mode)
+- ⚡ **1 minuto** (ultra veloce - high drop)
 
-- **PowerShell**: Windows 10/11
+- 🔥 **3 minuti** (veloce)                                              ↓- **Strategy**: Database unico per sviluppo e produzione
 
-- **Account Discord**: Per creare webhook- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
+- ⭐ **15 minuti** (rapido)
 
+- 🕐 **20 minuti** (normale)                                    JSON Database (users, interests, webhooks)
 
+- 💤 **30 minuti** (consigliato) ⬅️ **DEFAULT**
 
-### Installazione Locale- Filtri avanzati: paese, categoria, prezzo, ordinamento
+```  - Dev usa eBay Sandbox per testing sicuro
 
-
-
-```powershell- Modal dettagli con galleria immagini HD```- **Ultimo Deploy**: 7 Novembre 2025 - 14:30 UTC- **Hosting**: DigitalOcean Droplet (207.154.218.16)- **Hosting**: DigitalOcean Droplet (207.154.218.16)
-
-# 1. Clona repository
-
-git clone https://github.com/shapironeil/shappa.git
-
-cd shappa
-
-### 3. 📦 Gestione Listing
-
-# 2. Installa dipendenze
-
-npm install- Import prodotti con un click
+### Parametri Codice
 
 
+
+```javascript
+
+// monitors/ShopifyMonitor.js### Struttura Cartelle  - Prod usa eBay Production per listing reali
+
+
+
+// Default interval per finestre intensive
+
+this.interval = config.interval || 30; // minuti
+
+```### Quick Health Check
+
+// Durata finestra intensiva (FISSO)
+
+this.intensiveCheckDuration = 4; // minutishappa/
+
+
+
+// Intervallo check IDLE (FISSO)├── server.js                  # Express API server (1765 LOC)### Dominio
+
+// return 3 * 60 * 1000; // 3 minuti = 180000ms
+
+├── package.json               # Dependencies
+
+// Intervallo check INTENSIVE (RANDOM 20-25s)
+
+const randomSeconds = Math.floor(Math.random() * 6) + 20;├── .env                       # Environment variables (NOT COMMITTED)- **Domain**: shapiro.ninja```powershell
+
+return randomSeconds * 1000;
+
+```├── data/                      # JSON databases
+
+
+
+### File di Status│   ├── users/- **DNS**: Puntato a 207.154.218.16
+
+
+
+**Location**: `/data/interests/interests_{userId}.json`│   │   └── users_db.json     # User accounts
+
+
+
+**Campi dinamici aggiunti dal monitor**:│   ├── interests/- **SSL**: Let's Encrypt (auto-renew)# Test sito- **URL Live**: https://shapiro.ninja
+
+```json
+
+{│   │   └── interests_{userId}.json
+
+  "id": 1762648449486,
+
+  "name": "AIR JORDAN 1 LOW OG SP \"FRAGMENT\"",│   └── webhooks/
+
+  "url": "https://shop.travisscott.com/",
+
+  "interval": 30,│       └── webhook_{userId}.json
+
+  "status": "monitoring",
+
+  "statusMessage": "⏳ Waiting...",├── monitors/---Invoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing
+
+  "nextCheckTime": 1762648903636,
+
+  "lastUpdate": "2025-11-09T00:03:23.636Z",│   └── ShopifyMonitor.js     # Puppeteer monitor (896 LOC)
+
+  "discordWebhook": "https://discord.com/api/webhooks/..."
+
+}├── src/
+
+```
+
+│   ├── pages/
+
+**⚠️ IMPORTANTE**: Il campo `nextCheckTime` viene mantenuto durante i check (`null` non rimuove più il valore) per evitare perdita del countdown nell'UI.
+
+│   │   ├── index.html        # Landing page## ✨ Funzionalità Core- **Status**: 200 OK ✅
+
+---
+
+│   │   ├── dashboard.html    # Dashboard utente
+
+## 📬 Sistema Notifiche Discord
+
+│   │   └── settings.html     # Impostazioni
+
+### Tipi di Notifica
+
+│   ├── utils/
+
+#### 1. **Heartbeat** (Ogni 2 ore)
+
+Conferma che il monitor è attivo.│   │   ├── auth-v2.js        # Auth client (async)### 1. 📊 Dashboard & Gestione# Status PM2 (da server)
+
+
+
+```javascript│   │   ├── login.js          # Login handler
+
+{
+
+  "embeds": [{│   │   └── register.js       # Register handler- **Dashboard Principale**: Overview vendite, profitti, statistiche
+
+    "title": "💚 Monitor Attivo",
+
+    "color": 3066993, // Verde│   └── styles/               # CSS
+
+    "fields": [
+
+      { "name": "🕐 Ultimo Check", "value": "09/11/2025 - 00:30:15" },└── public/                    # Static assets- **🎯 Obiettivi**: Sistema di tracking obiettivi di business (vendite, profitti, listing)ssh root@207.154.218.16 "pm2 status"- **Server**: PM2 attivo su DigitalOcean- **URL**: https://shapiro.ninja- **URL**: https://shapiro.ninja
+
+      { "name": "⏱️ Intervallo", "value": "30 minuti (2 finestre/ora)" }
+
+    ]```
+
+  }]
+
+}- **📅 Calendario**: Pianificazione eventi, scadenze listing, promemoria
+
+```
+
+---
+
+#### 2. **Drop** (Prodotto disponibile)
+
+Quando un prodotto passa da `SOON` → `IN_STOCK`.- **📈 Reports**: Analytics dettagliati e export dati
+
+
+
+```javascript## ⚙️ Setup Ambiente
+
+{
+
+  "content": "@everyone 🔥 **DROP RILEVATO!**",
+
+  "embeds": [{
+
+    "title": "🚨 PRODOTTO DISPONIBILE",### Prerequisiti
+
+    "description": "AIR JORDAN 1 LOW OG SP \"FRAGMENT\"",
+
+    "url": "https://shop.travisscott.com/products/...",### 2. 🔍 Ricerca Prodotti Multi-Marketplace# Logs real-time- **Database**: MongoDB Atlas connesso
+
+    "color": 15158332, // Rosso brillante
+
+    "thumbnail": { "url": "https://..." },- **Node.js**: >= 18.x
+
+    "fields": [
+
+      { "name": "💰 Prezzo", "value": "€179.99" },- **Git**: Ultima versione- **Amazon**: Scraping real-time con Playwright proprietario (stealth mode)
+
+      { "name": "👟 Taglie", "value": "EU 42, EU 43, EU 44" },
+
+      { - **PowerShell**: Windows 10/11
+
+        "name": "🛒 Quick Add", 
+
+        "value": "[EU 42](cart-link) • [EU 43](cart-link) • [EU 44](cart-link)" - **Account Discord**: Per creare webhook- **Altri marketplace**: In sviluppo (eBay, Alibaba, Walmart, AliExpress)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
+
+      }
+
+    ]
+
+  }]
+
+}### Installazione Locale- Filtri avanzati: paese, categoria, prezzo, ordinamento
+
+```
+
+
+
+#### 3. **Restock** (Prodotto ritornato disponibile)
+
+Quando un prodotto esaurito torna disponibile.```powershell- Modal dettagli con galleria immagini HD```- **Ultimo Deploy**: 7 Novembre 2025 - 14:30 UTC- **Hosting**: DigitalOcean Droplet (207.154.218.16)- **Hosting**: DigitalOcean Droplet (207.154.218.16)
+
+
+
+```javascript# 1. Clona repository
+
+{
+
+  "content": "@everyone ♻️ **RESTOCK RILEVATO!**",git clone https://github.com/shapironeil/shappa.git
+
+  "embeds": [{
+
+    "title": "♻️ PRODOTTO RESTOCKATO",cd shappa
+
+    "color": 3447003, // Blu brillante
+
+    "fields": [### 3. 📦 Gestione Listing
+
+      { "name": "⏰ Era Esaurito Dal", "value": "08/11/2025 - 08:15:00" }
+
+    ]# 2. Installa dipendenze
+
+  }]
+
+}npm install- Import prodotti con un click
+
+```
+
+
+
+### Configurazione Webhook
 
 # 3. Crea file .env- Calcolo automatico margini e fee eBay---- **Commit**: `820de75` - Complete environment setup and production documentation
 
+**API Endpoint**: `POST /api/webhooks/save`
+
 Copy-Item .env.example .env
 
-# Modifica .env con le tue configurazioni- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
+```javascript
+
+{# Modifica .env con le tue configurazioni- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
+
+  "userId": "user_1762637577613_ynxsce4ye",
+
+  "webhookUrl": "https://discord.com/api/webhooks/123456789/abcdef"
+
+}
+
+```# 4. Avvia in sviluppo- Sincronizzazione multi-marketplace
 
 
 
-# 4. Avvia in sviluppo- Sincronizzazione multi-marketplace
-
-npm run dev
-
-```- Download automatico immagini prodotto
+---npm run dev
 
 
 
-Server disponibile su: **http://localhost:3000**## 🌐 Infrastruttura Production- **Database**: MongoDB Atlas (cluster condiviso dev/prod)- **Database**: MongoDB Atlas (cluster condiviso dev/prod)
+## 🛠️ Strumenti e Tecnologie```- Download automatico immagini prodotto
 
 
+
+### Backend
+
+- **Node.js**: v20.x
+
+- **Express.js**: 5.x (REST API server)Server disponibile su: **http://localhost:3000**## 🌐 Infrastruttura Production- **Database**: MongoDB Atlas (cluster condiviso dev/prod)- **Database**: MongoDB Atlas (cluster condiviso dev/prod)
+
+- **Puppeteer Stealth**: 21.x (bypass anti-bot)
+
+- **PM2**: Process manager con auto-restart
+
+- **Axios**: HTTP client per webhook Discord
 
 ### Variabili d'Ambiente### 4. 🔐 Autenticazione
 
+### Frontend
+
+- **Vanilla JavaScript**: Async/await moderno
+
+- **Venus Design System**: CSS variables + responsive
+
+- **Auth System**: `src/utils/auth-v2.js` (localStorage + server sync)```bash- Sistema login/registrazione completo
 
 
-```bash- Sistema login/registrazione completo
 
-# Server
+### Infrastructure# Server
 
-NODE_ENV=production- OAuth eBay integrato (Sandbox + Production)
+- **DigitalOcean**: Ubuntu 22.04 LTS Droplet
 
-PORT=3000
+- **Nginx**: Reverse proxy (port 3000 → 443)NODE_ENV=production- OAuth eBay integrato (Sandbox + Production)
 
-API_BASE=https://shapiro.ninja- Token management con auto-refresh### Server### Quick Health Check
+- **Let's Encrypt**: SSL/TLS gratuito con auto-renew
+
+- **GitHub**: Version control + deploy manualPORT=3000
 
 
+
+### DatabaseAPI_BASE=https://shapiro.ninja- Token management con auto-refresh### Server### Quick Health Check
+
+- **Tipo**: File JSON (attuale)
+
+- **Location**: `/data/interests/`, `/data/users/`
+
+- **Migrazione**: Ready for MongoDB/MySQL
 
 # Monitor Shopify- Full scopes eBay per accesso completo API
 
+---
+
 SHOPIFY_STORE_URL=https://shop.example.com
+
+## ⚙️ Setup Ambiente
 
 CHECK_INTERVAL=5                    # Minuti tra check normali- Pagine protette con middleware- **Provider**: DigitalOcean Droplet
 
+### Prerequisiti
+
 INTENSIVE_INTERVAL=25               # Secondi tra check intensivi
 
-INTENSIVE_DURATION=5                # Durata modalità intensiva (minuti)
+- Node.js >= 18.x
+
+- GitINTENSIVE_DURATION=5                # Durata modalità intensiva (minuti)
+
+- PowerShell (Windows) o Bash (Linux/Mac)
 
 
+
+### Installazione Locale
 
 # Security---- **IP**: 207.154.218.16```powershell- **Dominio**: shapiro.ninja (DNS puntato a droplet)- **Dominio**: shapiro.ninja (DNS puntato a droplet)
 
-SESSION_SECRET=your_session_secret_here
+```powershell
 
-ADMIN_TOKEN=your_admin_token_here
+# 1. Clona repositorySESSION_SECRET=your_session_secret_here
+
+git clone https://github.com/shapironeil/shappa.git
+
+cd shappaADMIN_TOKEN=your_admin_token_here
 
 
+
+# 2. Installa dipendenze
+
+npm install
 
 # Optional## 🚀 Setup Locale - Quick Start- **OS**: Ubuntu 22.04 LTS
 
-DISABLE_MONITOR=false               # true per disabilitare monitor
+# 3. Configura ambiente
+
+Copy-Item .env.example .envDISABLE_MONITOR=false               # true per disabilitare monitor
+
+# Modifica .env con le tue configurazioni
 
 LOG_LEVEL=info                      # debug|info|warn|error
+
+# 4. Avvia server di sviluppo
+
+npm run dev```
 
 ```
 
 ### Prerequisiti- **Node.js**: v20.x# Test sito
 
+Server disponibile su: `http://localhost:3000`
+
 ---
+
+### Variabili d'Ambiente
 
 - Node.js >= 18.x
 
-## 🔐 Sistema Autenticazione
+```bash
 
-- Git- **Process Manager**: PM2
+# Server## 🔐 Sistema Autenticazione
+
+NODE_ENV=production
+
+PORT=3000- Git- **Process Manager**: PM2
+
+API_BASE=https://shapiro.ninja
 
 ### Architettura Auth
 
-- Account MongoDB Atlas
+# Monitor (opzionali - hanno default nel codice)
 
-**Tipo**: Server-side REST API con JSON database  
+CHECK_INTERVAL_IDLE=3        # Minuti tra check idle (default: 3)- Account MongoDB Atlas
 
-**Storage**: `/data/users/users_db.json`  - (Opzionale) eBay Sandbox credentials- **Reverse Proxy**: Nginx + Let's Encrypt SSLInvoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing- **Server**: Node.js + Express- **Server**: Node.js + Express
+CHECK_INTERVAL_INTENSIVE=22  # Secondi check intensive (default: 20-25 random)
 
-**Session**: localStorage per UX caching (non critico)
-
-
-
-### API Auth Endpoints
-
-### Installazione Rapida
-
-#### 1. POST `/api/auth/register`
+INTENSIVE_DURATION=4         # Durata finestra intensive (default: 4 min)**Tipo**: Server-side REST API con JSON database  
 
 
 
-**Registra nuovo utente**
+# Security**Storage**: `/data/users/users_db.json`  - (Opzionale) eBay Sandbox credentials- **Reverse Proxy**: Nginx + Let's Encrypt SSLInvoke-WebRequest -Uri "https://shapiro.ninja" -UseBasicParsing- **Server**: Node.js + Express- **Server**: Node.js + Express
 
-```powershell### Database
+SESSION_SECRET=your_session_secret_here
 
-```javascript
-
-// Request# 1. Clona repository
-
-{
-
-  "username": "marco",      // 3-20 caratteri, alfanumericogit clone https://github.com/shapironeil/shappa.git- **Provider**: MongoDB Atlas (Cloud)
-
-  "email": "marco@example.com",
-
-  "password": "MyP@ssw0rd!" // Min 8 carattericd shappa
-
-}
-
-- **Cluster**: Shared (condiviso dev/prod)# Status PM2 (da server)- **Process Manager**: PM2- **Process Manager**: PM2
-
-// Response (201 Created)
-
-{# 2. Installa dipendenze
-
-  "success": true,
-
-  "user": {npm install- **Strategy**: Database unico per sviluppo e produzione
-
-    "id": "user_1704067200000_abc123",
-
-    "username": "marco",
-
-    "email": "marco@example.com",
-
-    "createdAt": "2025-01-01T00:00:00.000Z",# 3. Configura ambiente  - Dev usa eBay Sandbox per testing sicurossh root@207.154.218.16 "pm2 status"
-
-    "profile": {
-
-      "avatar": null,Copy-Item .env.example .env
-
-      "bio": null,
-
-      "settings": {}# Modifica .env con le tue credenziali  - Prod usa eBay Production per listing reali
-
-    }
-
-  },
-
-  "message": "Registrazione completata con successo"
-
-}# 4. Avvia server di sviluppo- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Reverse Proxy**: Nginx + Let's Encrypt SSL
-
-
-
-// Error (400 Bad Request)npm run dev
-
-{
-
-  "success": false,```### Dominio
-
-  "error": "Username già in uso"
-
-}
+ADMIN_TOKEN=your_admin_token_here**Session**: localStorage per UX caching (non critico)
 
 ```
 
-Server disponibile su: `http://localhost:3000`- **Domain**: shapiro.ninja# Logs real-time
+
+
+---
+
+### API Auth Endpoints
+
+## 🚀 Deploy Production
+
+### Installazione Rapida
+
+### Architettura
+
+#### 1. POST `/api/auth/register`
+
+```
+
+Internet → DNS (shapiro.ninja) → Nginx (443) → PM2 → Node.js (3000)
+
+```
+
+**Registra nuovo utente**
+
+### Deploy Steps
+
+```powershell### Database
+
+```powershell
+
+# 1. Commit e Push modifiche```javascript
+
+git add .
+
+git commit -m "feat: descrizione modifiche"// Request# 1. Clona repository
+
+git push origin main
+
+{
+
+# 2. SSH nel server
+
+ssh root@207.154.218.16  "username": "marco",      // 3-20 caratteri, alfanumericogit clone https://github.com/shapironeil/shappa.git- **Provider**: MongoDB Atlas (Cloud)
+
+
+
+# 3. Pull e restart  "email": "marco@example.com",
+
+cd /var/www/shappa
+
+git pull origin main  "password": "MyP@ssw0rd!" // Min 8 carattericd shappa
+
+npm ci --only=production
+
+pm2 restart shappa}
+
+pm2 save
+
+- **Cluster**: Shared (condiviso dev/prod)# Status PM2 (da server)- **Process Manager**: PM2- **Process Manager**: PM2
+
+# 4. Verifica deployment
+
+pm2 logs shappa --lines 50// Response (201 Created)
+
+curl https://shapiro.ninja/health
+
+```{# 2. Installa dipendenze
+
+
+
+### Health Check  "success": true,
+
+
+
+```bash  "user": {npm install- **Strategy**: Database unico per sviluppo e produzione
+
+# Status PM2
+
+pm2 status    "id": "user_1704067200000_abc123",
+
+
+
+# Logs real-time    "username": "marco",
+
+pm2 logs shappa --lines 100
+
+    "email": "marco@example.com",
+
+# Test API
+
+curl https://shapiro.ninja/api/health    "createdAt": "2025-01-01T00:00:00.000Z",# 3. Configura ambiente  - Dev usa eBay Sandbox per testing sicurossh root@207.154.218.16 "pm2 status"
+
+```
+
+    "profile": {
+
+---
+
+      "avatar": null,Copy-Item .env.example .env
+
+## 📊 Metriche Sistema
+
+      "bio": null,
+
+### Codice
+
+      "settings": {}# Modifica .env con le tue credenziali  - Prod usa eBay Production per listing reali
+
+| Metrica | Valore |
+
+|---------|--------|    }
+
+| **LOC server.js** | 2,170 |
+
+| **LOC ShopifyMonitor.js** | 1,265 |  },
+
+| **Pagine Frontend** | 9 (dashboard, interessi, sport, etc.) |
+
+| **API Endpoints** | 15+ |  "message": "Registrazione completata con successo"
+
+| **Dependencies** | 10 core packages |
+
+}# 4. Avvia server di sviluppo- **Reverse Proxy**: Nginx + Let's Encrypt SSL- **Reverse Proxy**: Nginx + Let's Encrypt SSL
+
+### Performance
+
+
+
+| Metrica | Valore (intervallo 30min) |
+
+|---------|---------------------------|// Error (400 Bad Request)npm run dev
+
+| **Check Intensive/Ora** | ~20 check (2 finestre × 10 check) |
+
+| **Check Idle/Ora** | ~10 check (30 min gap × 2) |{
+
+| **Totale Check/Ora** | ~40 check |
+
+| **Uptime Production** | 99.9% |  "success": false,```### Dominio
+
+| **Tempo risposta API** | <200ms media |
+
+  "error": "Username già in uso"
+
+---
+
+}
+
+## 📚 Documentazione Completa
+
+```
+
+- 📖 **Setup Dettagliato**: [`SETUP.md`](./SETUP.md)
+
+- 🔍 **Code Audit**: [`docs/CODE_AUDIT.md`](./docs/CODE_AUDIT.md)Server disponibile su: `http://localhost:3000`- **Domain**: shapiro.ninja# Logs real-time
+
+- 🚀 **Deployment**: [`DEPLOYMENT_ROADMAP.md`](./DEPLOYMENT_ROADMAP.md)
 
 **Validazioni:**
 
+---
+
 - Username: 3-20 caratteri, lettere/numeri/underscore
+
+## 📞 Contatti & Support
 
 - Email: formato valido (regex)
 
-- Password: minimo 8 caratteri📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)- **DNS**: Puntato a 207.154.218.16
+**Maintainer**: Marco  
 
-- Username/Email unici nel database
+**GitHub**: [@shapironeil](https://github.com/shapironeil)  - Password: minimo 8 caratteri📖 **Per setup dettagliato vedi**: [`SETUP.md`](./SETUP.md)- **DNS**: Puntato a 207.154.218.16
+
+**Repository**: [shapironeil/shappa](https://github.com/shapironeil/shappa)  
+
+**Website**: https://shapiro.ninja- Username/Email unici nel database
 
 
 
-#### 2. POST `/api/auth/login`
+### Supporto
+
+
+
+- 🐛 **Bug Reports**: Apri issue su GitHub#### 2. POST `/api/auth/login`
+
+- 💡 **Feature Requests**: Discussioni GitHub
 
 ---- **SSL**: Let's Encrypt (auto-renew)ssh root@207.154.218.16 "pm2 logs shappa --lines 50"
 
+---
+
 **Autentica utente esistente**
 
+**Ultimo aggiornamento**: 9 Novembre 2025, 00:45 UTC  
 
+**Versione**: 2.4.0  
+
+**Status**: 🟢 Production Online - Monitor System Ottimizzato
 
 ```javascript
 

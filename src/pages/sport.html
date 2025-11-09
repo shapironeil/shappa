@@ -727,32 +727,10 @@
                             </div>
 
                             <div class="workouts-list" id="workoutsList">
-                                <div class="workout-item cardio">
-                                    <div class="workout-icon">❤️</div>
-                                    <div class="workout-details">
-                                        <h3 class="workout-title">Cardio Intenso</h3>
-                                        <p class="workout-meta">Oggi • Mattina</p>
-                                    </div>
-                                    <div class="workout-duration">45 min</div>
-                                </div>
-
-                                <div class="workout-item strength">
-                                    <div class="workout-icon">💪</div>
-                                    <div class="workout-details">
-                                        <h3 class="workout-title">Pesi - Upper Body</h3>
-                                        <p class="workout-meta">Ieri • Pomeriggio</p>
-                                    </div>
-                                    <div class="workout-duration">60 min</div>
-                                </div>
-
-                                <div class="workout-item running">
-                                    <div class="workout-icon">🏃</div>
-                                    <div class="workout-details">
-                                        <h3 class="workout-title">Corsa Mattutina</h3>
-                                        <p class="workout-meta">3 giorni fa • Mattina</p>
-                                    </div>
-                                    <div class="workout-duration">30 min</div>
-                                </div>
+                                <!-- Gli allenamenti verranno caricati dinamicamente -->
+                                <p style="text-align: center; color: var(--venus-text-muted); padding: 40px 20px;">
+                                    Nessun allenamento registrato. Clicca su "+ Aggiungi Allenamento" per iniziare!
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -762,11 +740,11 @@
                         <!-- Stats -->
                         <div class="stats-grid">
                             <div class="stat-card">
-                                <div class="stat-value">12</div>
+                                <div class="stat-value" id="monthlyWorkouts">0</div>
                                 <div class="stat-label">Allenamenti/Mese</div>
                             </div>
                             <div class="stat-card">
-                                <div class="stat-value">540</div>
+                                <div class="stat-value" id="totalMinutes">0</div>
                                 <div class="stat-label">Minuti Totali</div>
                             </div>
                         </div>
@@ -777,46 +755,10 @@
                                 <h2 class="card-title">📈 I Tuoi Progressi</h2>
                             </div>
 
-                            <div class="progress-section">
-                                <div class="progress-item">
-                                    <div class="progress-header">
-                                        <span class="progress-name">Obiettivo Settimanale</span>
-                                        <span class="progress-value">3/5</span>
-                                    </div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 60%;"></div>
-                                    </div>
-                                </div>
-
-                                <div class="progress-item">
-                                    <div class="progress-header">
-                                        <span class="progress-name">Cardio questo Mese</span>
-                                        <span class="progress-value">180 min</span>
-                                    </div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 75%;"></div>
-                                    </div>
-                                </div>
-
-                                <div class="progress-item">
-                                    <div class="progress-header">
-                                        <span class="progress-name">Forza questo Mese</span>
-                                        <span class="progress-value">200 min</span>
-                                    </div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 80%;"></div>
-                                    </div>
-                                </div>
-
-                                <div class="progress-item">
-                                    <div class="progress-header">
-                                        <span class="progress-name">Streak Corrente</span>
-                                        <span class="progress-value">7 giorni 🔥</span>
-                                    </div>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: 100%;"></div>
-                                    </div>
-                                </div>
+                            <div class="progress-section" id="progressSection">
+                                <p style="text-align: center; color: var(--venus-text-muted); padding: 20px;">
+                                    I progressi verranno visualizzati qui dopo aver registrato i tuoi allenamenti.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -914,24 +856,120 @@
             if (saved) {
                 workouts = JSON.parse(saved);
             } else {
-                workouts = [
-                    {
-                        id: 1,
-                        date: '2025-11-07',
-                        type: 'cardio',
-                        duration: 45,
-                        notes: 'HIIT session'
-                    },
-                    {
-                        id: 2,
-                        date: '2025-11-06',
-                        type: 'strength',
-                        duration: 60,
-                        notes: 'Upper body'
-                    }
-                ];
+                workouts = [];
                 saveWorkouts();
             }
+            renderWorkoutsList();
+            updateStats();
+        }
+
+        function renderWorkoutsList() {
+            const container = document.getElementById('workoutsList');
+            
+            if (workouts.length === 0) {
+                container.innerHTML = `
+                    <p style="text-align: center; color: var(--venus-text-muted); padding: 40px 20px;">
+                        Nessun allenamento registrato. Clicca su "+ Aggiungi Allenamento" per iniziare!
+                    </p>
+                `;
+                return;
+            }
+
+            // Ordina per data (più recenti prima)
+            const sorted = [...workouts].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const typeIcons = {
+                cardio: '❤️',
+                strength: '💪',
+                yoga: '🧘',
+                running: '🏃',
+                cycling: '🚴',
+                swimming: '🏊'
+            };
+
+            const html = sorted.map(workout => {
+                const date = new Date(workout.date);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const workoutDate = new Date(date);
+                workoutDate.setHours(0, 0, 0, 0);
+                
+                let dateLabel;
+                const daysDiff = Math.floor((today - workoutDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff === 0) dateLabel = 'Oggi';
+                else if (daysDiff === 1) dateLabel = 'Ieri';
+                else if (daysDiff < 7) dateLabel = `${daysDiff} giorni fa`;
+                else dateLabel = date.toLocaleDateString('it-IT');
+
+                return `
+                    <div class="workout-item ${workout.type}">
+                        <div class="workout-icon">${typeIcons[workout.type] || '💪'}</div>
+                        <div class="workout-details">
+                            <h3 class="workout-title">${workout.notes || workout.type.charAt(0).toUpperCase() + workout.type.slice(1)}</h3>
+                            <p class="workout-meta">${dateLabel}</p>
+                        </div>
+                        <div class="workout-duration">${workout.duration} min</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function updateStats() {
+            // Calcola stats mensili
+            const now = new Date();
+            const thisMonth = workouts.filter(w => {
+                const wDate = new Date(w.date);
+                return wDate.getMonth() === now.getMonth() && wDate.getFullYear() === now.getFullYear();
+            });
+
+            document.getElementById('monthlyWorkouts').textContent = thisMonth.length;
+            
+            const totalMinutes = thisMonth.reduce((sum, w) => sum + w.duration, 0);
+            document.getElementById('totalMinutes').textContent = totalMinutes;
+
+            // Aggiorna progressi
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progressSection = document.getElementById('progressSection');
+            
+            if (workouts.length === 0) {
+                progressSection.innerHTML = `
+                    <p style="text-align: center; color: var(--venus-text-muted); padding: 20px;">
+                        I progressi verranno visualizzati qui dopo aver registrato i tuoi allenamenti.
+                    </p>
+                `;
+                return;
+            }
+
+            // Calcola obiettivo settimanale (assumiamo 3 allenamenti/settimana)
+            const now = new Date();
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay() + 1);
+            
+            const thisWeek = workouts.filter(w => {
+                const wDate = new Date(w.date);
+                return wDate >= weekStart;
+            });
+
+            const weeklyGoal = 3;
+            const weeklyProgress = Math.min((thisWeek.length / weeklyGoal) * 100, 100);
+
+            progressSection.innerHTML = `
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-name">Obiettivo Settimanale</span>
+                        <span class="progress-value">${thisWeek.length}/${weeklyGoal}</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${weeklyProgress}%;"></div>
+                    </div>
+                </div>
+            `;
         }
 
         function saveWorkouts() {
@@ -1017,6 +1055,8 @@
 
             workouts.push(workout);
             saveWorkouts();
+            renderWorkoutsList();
+            updateStats();
             generateWeeklyCalendar();
             closeModal();
 
