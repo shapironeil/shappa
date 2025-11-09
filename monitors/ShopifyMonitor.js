@@ -102,8 +102,8 @@ class ShopifyMonitor {
                 this.allowIntensiveMode = true;
                 console.log(`[Shopify] 🔥 Finestra intensiva ${windowStart}-${windowStart + this.intensiveCheckDuration} raggiunta - attivo check rapidi`);
             }
-            // Check INTENSIVO ogni 25-30s random
-            const randomSeconds = Math.floor(Math.random() * 6) + 25; // 25-30s
+            // Check INTENSIVO ogni 20-25s random
+            const randomSeconds = Math.floor(Math.random() * 6) + 20; // 20-25s
             return randomSeconds * 1000;
         }
         
