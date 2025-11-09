@@ -615,6 +615,160 @@
             background: #e5e7eb;
         }
 
+        /* Profile Wizard */
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .wizard-progress::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 0;
+        }
+
+        .wizard-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .wizard-step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        .wizard-step.active .wizard-step-circle {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: white;
+        }
+
+        .wizard-step.completed .wizard-step-circle {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+        }
+
+        .wizard-step-label {
+            font-size: 12px;
+            color: var(--venus-text-muted);
+            font-weight: 500;
+        }
+
+        .wizard-question {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin-bottom: 32px;
+        }
+
+        .wizard-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .wizard-option {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: white;
+            border: 2px solid var(--venus-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wizard-option:hover {
+            border-color: var(--venus-primary);
+            background: #f0f9ff;
+        }
+
+        .wizard-option.selected {
+            border-color: var(--venus-primary);
+            background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%);
+        }
+
+        .wizard-option-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--venus-border);
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: white;
+        }
+
+        .wizard-option.selected .wizard-option-circle {
+            background: var(--venus-primary);
+            border-color: var(--venus-primary);
+            color: white;
+        }
+
+        .wizard-option-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        /* Workout Templates */
+        .template-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .template-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .template-desc {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+
+        .template-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
         @media (max-width: 1200px) {
             .sport-container {
                 grid-template-columns: 1fr;
@@ -723,20 +877,30 @@
                         <!-- Recent Workouts -->
                         <div class="sport-card">
                             <div class="card-header">
-                                <h2 class="card-title">🏃 Allenamenti Recenti</h2>
+                                <h2 class="card-title">💪 Schede Allenamento</h2>
                             </div>
 
-                            <div class="workouts-list" id="workoutsList">
-                                <!-- Gli allenamenti verranno caricati dinamicamente -->
-                                <p style="text-align: center; color: var(--venus-text-muted); padding: 40px 20px;">
-                                    Nessun allenamento registrato. Clicca su "+ Aggiungi Allenamento" per iniziare!
-                                </p>
+                            <div id="workoutTemplates" style="display: flex; flex-direction: column; gap: 12px;">
+                                <!-- Le schede verranno caricate dinamicamente -->
                             </div>
                         </div>
                     </div>
 
                     <!-- Sidebar -->
                     <div>
+                        <!-- Crea Scheda Personale -->
+                        <div class="sport-card" style="cursor: pointer; transition: all 0.2s;" onclick="openProfileWizard()">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; color: white;">
+                                    +
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: var(--venus-text-primary);">Aggiungi Scheda Personale</h3>
+                                    <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--venus-text-muted);" id="profileStatus">Configura il tuo profilo</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Stats -->
                         <div class="stats-grid">
                             <div class="stat-card">
@@ -760,6 +924,17 @@
                                     I progressi verranno visualizzati qui dopo aver registrato i tuoi allenamenti.
                                 </p>
                             </div>
+                        </div>
+
+                        <!-- Aggiungi Allenamento -->
+                        <div class="sport-card">
+                            <div class="card-header">
+                                <h2 class="card-title">➕ Aggiungi Allenamento</h2>
+                            </div>
+                            
+                            <button class="add-workout-btn" style="width: 100%; margin-top: 12px;" onclick="openWorkoutModal()">
+                                + Registra Allenamento
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -811,11 +986,226 @@
         </div>
     </div>
 
+    <!-- Profile Wizard Modal -->
+    <div class="modal-overlay" id="profileWizard">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Configura il tuo Profilo Sport</h2>
+                <button class="modal-close" onclick="closeProfileWizard()">&times;</button>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="wizard-progress">
+                <div class="wizard-step active" id="wizardStep1">
+                    <div class="wizard-step-circle">1</div>
+                    <div class="wizard-step-label">Dati Personali</div>
+                </div>
+                <div class="wizard-step" id="wizardStep2">
+                    <div class="wizard-step-circle">2</div>
+                    <div class="wizard-step-label">Obiettivi</div>
+                </div>
+                <div class="wizard-step" id="wizardStep3">
+                    <div class="wizard-step-circle">3</div>
+                    <div class="wizard-step-label">Preferenze</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Personal Info -->
+            <div id="wizardContent1" class="wizard-content">
+                <h3 class="wizard-question">📊 Dati Personali</h3>
+                
+                <div class="form-group">
+                    <label class="form-label" for="profileBirthdate">Data di Nascita *</label>
+                    <input type="date" class="form-input" id="profileBirthdate" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="profileHeight">Altezza (cm) *</label>
+                    <input type="number" class="form-input" id="profileHeight" required min="100" max="250" placeholder="175">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="profileWeight">Peso (kg) *</label>
+                    <input type="number" class="form-input" id="profileWeight" required min="30" max="300" placeholder="70">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProfileWizard()">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(2)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Training Goals -->
+            <div id="wizardContent2" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">🎯 Obiettivi di Allenamento</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Quante volte a settimana ti alleni? *</label>
+                    <div class="wizard-options">
+                        <div class="wizard-option" onclick="selectFrequency(1)">
+                            <div class="wizard-option-circle">1</div>
+                            <div class="wizard-option-text">1-2 volte a settimana</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectFrequency(3)">
+                            <div class="wizard-option-circle">3</div>
+                            <div class="wizard-option-text">3-4 volte a settimana</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectFrequency(5)">
+                            <div class="wizard-option-circle">5</div>
+                            <div class="wizard-option-text">5+ volte a settimana</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label">Che tipo di sport pratichi? *</label>
+                    <div class="wizard-options">
+                        <div class="wizard-option" onclick="toggleSport('palestra')">
+                            <div class="wizard-option-circle">💪</div>
+                            <div class="wizard-option-text">Palestra/Pesi</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('cardio')">
+                            <div class="wizard-option-circle">❤️</div>
+                            <div class="wizard-option-text">Cardio/Running</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('sport_squadra')">
+                            <div class="wizard-option-circle">⚽</div>
+                            <div class="wizard-option-text">Sport di Squadra</div>
+                        </div>
+                        <div class="wizard-option" onclick="toggleSport('yoga')">
+                            <div class="wizard-option-circle">🧘</div>
+                            <div class="wizard-option-text">Yoga/Pilates</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Avanti →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Preferences -->
+            <div id="wizardContent3" class="wizard-content" style="display: none;">
+                <h3 class="wizard-question">⏰ Preferenze di Allenamento</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Durata media delle sessioni *</label>
+                    <div class="wizard-options">
+                        <div class="wizard-option" onclick="selectDuration(30)">
+                            <div class="wizard-option-circle">30</div>
+                            <div class="wizard-option-text">30 minuti</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectDuration(60)">
+                            <div class="wizard-option-circle">60</div>
+                            <div class="wizard-option-text">60 minuti</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectDuration(90)">
+                            <div class="wizard-option-circle">90</div>
+                            <div class="wizard-option-text">90+ minuti</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label">Orario preferito *</label>
+                    <div class="wizard-options">
+                        <div class="wizard-option" onclick="selectTimePreference('mattina')">
+                            <div class="wizard-option-circle">🌅</div>
+                            <div class="wizard-option-text">Mattina (6-12)</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectTimePreference('pomeriggio')">
+                            <div class="wizard-option-circle">☀️</div>
+                            <div class="wizard-option-text">Pomeriggio (12-18)</div>
+                        </div>
+                        <div class="wizard-option" onclick="selectTimePreference('sera')">
+                            <div class="wizard-option-circle">🌙</div>
+                            <div class="wizard-option-text">Sera (18-23)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Indietro</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProfile()">Salva Profilo 🎉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="../utils/auth-v2.js"></script>
     <script>
         // Global variables
         let currentWeek = 0;
         let workouts = [];
+        let profileData = {
+            birthdate: '',
+            height: 0,
+            weight: 0,
+            frequency: 0,
+            sports: [],
+            duration: 0,
+            timePreference: ''
+        };
+
+        // Workout Templates
+        const workoutTemplates = [
+            {
+                id: 1,
+                name: 'Palestra Full Body',
+                type: 'strength',
+                difficulty: 'Principiante',
+                days: 3,
+                duration: 60,
+                description: 'Allenamento completo per tutto il corpo, 3 volte a settimana',
+                exercises: ['Squat', 'Panca piana', 'Lat machine', 'Military press', 'Curl bicipiti', 'French press'],
+                gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+            },
+            {
+                id: 2,
+                name: 'Split Routine',
+                type: 'strength',
+                difficulty: 'Intermedio',
+                days: 4,
+                duration: 75,
+                description: 'Allenamento diviso per gruppi muscolari, 4 volte a settimana',
+                exercises: ['Petto/Tricipiti', 'Dorso/Bicipiti', 'Gambe', 'Spalle/Addome'],
+                gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
+            },
+            {
+                id: 3,
+                name: 'HIIT Intensivo',
+                type: 'cardio',
+                difficulty: 'Avanzato',
+                days: 5,
+                duration: 45,
+                description: 'Alta intensità per massima combustione calorie',
+                exercises: ['Burpees', 'Mountain climbers', 'Jump squat', 'Sprint intervals', 'Battle rope'],
+                gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+            },
+            {
+                id: 4,
+                name: 'Cutter - Definizione',
+                type: 'mixed',
+                difficulty: 'Intermedio',
+                days: 5,
+                duration: 60,
+                description: 'Allenamento per definizione muscolare e perdita grasso',
+                exercises: ['Circuit training', 'Cardio LISS', 'Pesi moderati alto volume', 'Core workout'],
+                gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            },
+            {
+                id: 5,
+                name: 'Mantenimento Standard',
+                type: 'balanced',
+                difficulty: 'Principiante',
+                days: 3,
+                duration: 50,
+                description: 'Programma equilibrato per mantenere la forma',
+                exercises: ['Cardio leggero', 'Pesi base', 'Stretching', 'Yoga'],
+                gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+            }
+        ];
 
         // Auth Check
         document.addEventListener('DOMContentLoaded', () => {
@@ -839,11 +1229,182 @@
                 logoutBtn.addEventListener('click', handleLogout);
             }
 
-            // Load workouts and generate calendar
+            // Load data
+            loadProfile();
             loadWorkouts();
             generateWeeklyCalendar();
+            renderWorkoutTemplates();
         });
 
+        function loadProfile() {
+            const saved = localStorage.getItem('sport_profile');
+            if (saved) {
+                profileData = JSON.parse(saved);
+                updateProfileStatus();
+            }
+        }
+
+        function updateProfileStatus() {
+            const statusEl = document.getElementById('profileStatus');
+            if (profileData.birthdate) {
+                const age = calculateAge(profileData.birthdate);
+                statusEl.textContent = `${age} anni • ${profileData.weight}kg • ${profileData.frequency}x/settimana`;
+                statusEl.parentElement.parentElement.onclick = () => editProfile();
+            } else {
+                statusEl.textContent = 'Configura il tuo profilo';
+            }
+        }
+
+        function calculateAge(birthdate) {
+            const today = new Date();
+            const birth = new Date(birthdate);
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        }
+
+        function renderWorkoutTemplates() {
+            const container = document.getElementById('workoutTemplates');
+            
+            const html = workoutTemplates.map(template => `
+                <div class="template-card" style="background: ${template.gradient};" onclick="viewTemplate(${template.id})">
+                    <div class="template-name">${template.name}</div>
+                    <div class="template-desc">${template.description}</div>
+                    <div class="template-meta">
+                        <span>📊 ${template.difficulty}</span>
+                        <span>📅 ${template.days} giorni/sett</span>
+                        <span>⏱️ ${template.duration} min</span>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function viewTemplate(templateId) {
+            const template = workoutTemplates.find(t => t.id === templateId);
+            if (!template) return;
+
+            alert(`🏋️ ${template.name}\n\n${template.description}\n\n📋 Esercizi:\n${template.exercises.map(e => `• ${e}`).join('\n')}\n\n⏱️ Durata: ${template.duration} minuti\n📅 Frequenza: ${template.days} giorni/settimana\n📊 Livello: ${template.difficulty}`);
+        }
+
+        // Profile Wizard Functions
+        function openProfileWizard() {
+            // Pre-fill if data exists
+            if (profileData.birthdate) {
+                document.getElementById('profileBirthdate').value = profileData.birthdate;
+                document.getElementById('profileHeight').value = profileData.height;
+                document.getElementById('profileWeight').value = profileData.weight;
+            }
+            
+            document.getElementById('profileWizard').classList.add('active');
+            goToStep(1);
+        }
+
+        function closeProfileWizard() {
+            document.getElementById('profileWizard').classList.remove('active');
+        }
+
+        function editProfile() {
+            openProfileWizard();
+        }
+
+        function goToStep(step) {
+            // Hide all steps
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`wizardContent${i}`).style.display = 'none';
+                document.getElementById(`wizardStep${i}`).classList.remove('active', 'completed');
+            }
+
+            // Show current step
+            document.getElementById(`wizardContent${step}`).style.display = 'block';
+            document.getElementById(`wizardStep${step}`).classList.add('active');
+
+            // Mark completed steps
+            for (let i = 1; i < step; i++) {
+                document.getElementById(`wizardStep${i}`).classList.add('completed');
+            }
+        }
+
+        function selectFrequency(freq) {
+            profileData.frequency = freq;
+            document.querySelectorAll('#wizardContent2 .wizard-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            event.target.closest('.wizard-option').classList.add('selected');
+        }
+
+        function toggleSport(sport) {
+            const option = event.target.closest('.wizard-option');
+            
+            if (profileData.sports.includes(sport)) {
+                profileData.sports = profileData.sports.filter(s => s !== sport);
+                option.classList.remove('selected');
+            } else {
+                profileData.sports.push(sport);
+                option.classList.add('selected');
+            }
+        }
+
+        function selectDuration(duration) {
+            profileData.duration = duration;
+            document.querySelectorAll('#wizardContent3 .wizard-option').forEach((el, idx) => {
+                if (idx < 3) el.classList.remove('selected');
+            });
+            event.target.closest('.wizard-option').classList.add('selected');
+        }
+
+        function selectTimePreference(time) {
+            profileData.timePreference = time;
+            document.querySelectorAll('#wizardContent3 .wizard-option').forEach((el, idx) => {
+                if (idx >= 3) el.classList.remove('selected');
+            });
+            event.target.closest('.wizard-option').classList.add('selected');
+        }
+
+        function saveProfile() {
+            // Validate step 1
+            const birthdate = document.getElementById('profileBirthdate').value;
+            const height = parseInt(document.getElementById('profileHeight').value);
+            const weight = parseInt(document.getElementById('profileWeight').value);
+
+            if (!birthdate || !height || !weight) {
+                alert('❌ Compila tutti i campi obbligatori in Dati Personali');
+                goToStep(1);
+                return;
+            }
+
+            // Validate step 2
+            if (!profileData.frequency || profileData.sports.length === 0) {
+                alert('❌ Seleziona la frequenza e almeno uno sport');
+                goToStep(2);
+                return;
+            }
+
+            // Validate step 3
+            if (!profileData.duration || !profileData.timePreference) {
+                alert('❌ Seleziona durata e orario preferito');
+                goToStep(3);
+                return;
+            }
+
+            // Save data
+            profileData.birthdate = birthdate;
+            profileData.height = height;
+            profileData.weight = weight;
+
+            localStorage.setItem('sport_profile', JSON.stringify(profileData));
+            
+            updateProfileStatus();
+            closeProfileWizard();
+            
+            alert('✅ Profilo salvato con successo! 🎉');
+        }
+
+        // Workout Functions (existing code)
         function handleLogout() {
             if (confirm('Sei sicuro di voler uscire?')) {
                 AuthManager.logout();
@@ -1027,10 +1588,10 @@
 
         function selectDay(dateStr) {
             document.getElementById('workoutDate').value = dateStr;
-            openModal();
+            openWorkoutModal();
         }
 
-        function openModal() {
+        function openWorkoutModal() {
             document.getElementById('workoutModal').classList.add('active');
             document.getElementById('workoutForm').reset();
             const today = new Date().toISOString().split('T')[0];
@@ -1067,6 +1628,12 @@
         document.getElementById('workoutModal').addEventListener('click', (e) => {
             if (e.target.id === 'workoutModal') {
                 closeModal();
+            }
+        });
+
+        document.getElementById('profileWizard').addEventListener('click', (e) => {
+            if (e.target.id === 'profileWizard') {
+                closeProfileWizard();
             }
         });
     </script>
