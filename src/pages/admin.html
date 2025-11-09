@@ -432,6 +432,40 @@
             </div>
         </div>
 
+        <!-- Sport Profiles Table -->
+        <div class="section">
+            <h2 class="section-title">
+                🏋️ Profili Sport & Fitness
+            </h2>
+            
+            <div class="table-container">
+                <table id="sportTable">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Nome</th>
+                            <th>Età</th>
+                            <th>Peso</th>
+                            <th>Altezza</th>
+                            <th>Obiettivo</th>
+                            <th>Livello</th>
+                            <th>Programma</th>
+                            <th>Allenamenti</th>
+                            <th>Calorie</th>
+                            <th>Ultimo Salvataggio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sportTableBody">
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 3rem; color: #718096;">
+                                🔄 Caricamento dati sport...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Raw Database View -->
         <div class="section">
             <h2 class="section-title">🗃️ Database Raw (JSON)</h2>
@@ -475,6 +509,9 @@
                 
                 console.log('Loading users table...');
                 loadUsersTable();
+                
+                console.log('Loading sport profiles...');
+                loadSportProfiles();
                 
                 console.log('Loading raw database...');
                 loadRawDatabase();
@@ -718,6 +755,80 @@
                         </body>
                     </html>
                 `);
+            }
+        }
+
+        // Load Sport Profiles
+        async function loadSportProfiles() {
+            try {
+                console.log('🏋️ Loading sport profiles...');
+                
+                // Get list of sport profile files from server
+                const response = await fetch('/api/sport/profiles/all');
+                const tbody = document.getElementById('sportTableBody');
+                
+                if (!response.ok) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="11" style="text-align: center; color: #f87171;">
+                                ❌ Errore nel caricamento
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success || !data.profiles || data.profiles.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="11" style="text-align: center; color: #94a3b8;">
+                                📭 Nessun profilo sport trovato
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = data.profiles.map(profile => `
+                    <tr>
+                        <td>${profile.userId}</td>
+                        <td>${profile.profile.name || '-'}</td>
+                        <td>${profile.profile.age || '-'}</td>
+                        <td>${profile.profile.weight ? profile.profile.weight + ' kg' : '-'}</td>
+                        <td>${profile.profile.height ? profile.profile.height + ' cm' : '-'}</td>
+                        <td>
+                            <span style="background: #3b82f6; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">
+                                ${profile.profile.goal || '-'}
+                            </span>
+                        </td>
+                        <td>${profile.profile.level || '-'}</td>
+                        <td>
+                            ${profile.programTitle ? 
+                                `<strong>${profile.programTitle}</strong>` : 
+                                '<span style="color: #94a3b8;">Nessuno</span>'}
+                        </td>
+                        <td>
+                            <strong style="color: #34d399;">${profile.completedWorkouts || 0}</strong>
+                        </td>
+                        <td>
+                            <strong style="color: #f97316;">${profile.totalCalories || 0} kcal</strong>
+                        </td>
+                        <td>${profile.savedAt ? new Date(profile.savedAt).toLocaleDateString('it-IT') : '-'}</td>
+                    </tr>
+                `).join('');
+
+                console.log(`✅ Loaded ${data.profiles.length} sport profiles`);
+            } catch (error) {
+                console.error('❌ Error loading sport profiles:', error);
+                document.getElementById('sportTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="11" style="text-align: center; color: #f87171;">
+                            ❌ Errore: ${error.message}
+                        </td>
+                    </tr>
+                `;
             }
         }
 

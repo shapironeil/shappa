@@ -67,27 +67,101 @@ function handleLogout() {
     }
 }
 
-// ========== LOCAL STORAGE ==========
-function loadUserData() {
-    const saved = localStorage.getItem('userData');
-    if (saved) {
-        userData = JSON.parse(saved);
+// ========== DATA PERSISTENCE (Server API) ==========
+async function loadUserData() {
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) return;
+
+        const response = await fetch(`/api/sport/profile/${user.id}`);
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+                userData = result.data.profile || {};
+            }
+        }
+    } catch (error) {
+        console.error('Error loading user data:', error);
     }
 }
 
-function saveUserData() {
-    localStorage.setItem('userData', JSON.stringify(userData));
-}
+async function saveUserData() {
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            console.error('No user logged in');
+            return;
+        }
 
-function loadScheduledWorkouts() {
-    const saved = localStorage.getItem('scheduledWorkouts');
-    if (saved) {
-        scheduledWorkouts = JSON.parse(saved);
+        const response = await fetch('/api/sport/profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                profileData: userData
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('✅ Profile saved to server');
+        } else {
+            console.error('Failed to save profile:', result.error);
+        }
+    } catch (error) {
+        console.error('Error saving user data:', error);
     }
 }
 
-function saveScheduledWorkouts() {
-    localStorage.setItem('scheduledWorkouts', JSON.stringify(scheduledWorkouts));
+async function loadScheduledWorkouts() {
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) return;
+
+        const response = await fetch(`/api/sport/program/${user.id}`);
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+                scheduledWorkouts = result.data.weekSchedule || [];
+                selectedProgramId = result.data.programId || null;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading workouts:', error);
+    }
+}
+
+async function saveScheduledWorkouts() {
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id || !selectedProgramId) return;
+
+        const program = workoutPrograms.find(p => p.id === selectedProgramId);
+        
+        const response = await fetch('/api/sport/program', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                programId: selectedProgramId,
+                programData: {
+                    title: program?.title,
+                    description: program?.description,
+                    estimatedCalories: program?.estimatedCalories || 400,
+                    weekSchedule: scheduledWorkouts
+                }
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('✅ Program saved to server (webhook sent)');
+        } else {
+            console.error('Failed to save program:', result.error);
+        }
+    } catch (error) {
+        console.error('Error saving workouts:', error);
+    }
 }
 
 // ========== WEEKLY CALENDAR (WeeklyCalendar.tsx) ==========
@@ -434,48 +508,82 @@ function cancelProgram(programId) {
 }
 
 // ========== PROGRESS WIDGET (ProgressWidget.tsx) ==========
-function renderProgressWidget() {
+async function renderProgressWidget() {
     const container = document.getElementById('progressWidget');
     
-    // Calculate weekly goal
-    const weeklyGoal = 5;
-    const weeklyCompleted = scheduledWorkouts.length > 0 ? Math.floor(Math.random() * 3) : 0; // Mock data
-    const weeklyPercentage = Math.min((weeklyCompleted / weeklyGoal) * 100, 100);
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            container.innerHTML = '<p>Effettua il login per vedere i progressi</p>';
+            return;
+        }
 
-    // Calculate calories
-    const caloriesGoal = 2500;
-    const caloriesBurned = weeklyCompleted * 350; // Mock: 350 cal per workout
-    const caloriesPercentage = Math.min((caloriesBurned / caloriesGoal) * 100, 100);
+        // Get real stats from server
+        const response = await fetch(`/api/sport/stats/${user.id}`);
+        let stats = { totalWorkouts: 0, currentStreak: 0, estimatedCalories: 0 };
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                stats = result.stats;
+            }
+        }
 
-    container.innerHTML = `
-        <div class="progress-item">
-            <div class="progress-header">
-                <div class="progress-label">
-                    <i class="fas fa-target" style="color: #3b82f6;"></i>
-                    Obiettivo Settimanale
+        // Calculate from scheduled workouts
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const weeklyCompleted = stats.totalWorkouts || 0;
+        
+        // Weekly goal from user frequency
+        const weeklyGoal = parseInt(userData.frequency) || 5;
+        const weeklyPercentage = Math.min((weeklyCompleted / weeklyGoal) * 100, 100);
+
+        // Calories calculation
+        const caloriesGoal = 2500;
+        const caloriesBurned = stats.estimatedCalories || 0;
+        const caloriesPercentage = Math.min((caloriesBurned / caloriesGoal) * 100, 100);
+
+        container.innerHTML = `
+            <div class="progress-item">
+                <div class="progress-header">
+                    <div class="progress-label">
+                        <i class="fas fa-target" style="color: #3b82f6;"></i>
+                        Obiettivo Settimanale
+                    </div>
+                    <div class="progress-value">${weeklyCompleted} / ${weeklyGoal} allenamenti</div>
                 </div>
-                <div class="progress-value">${weeklyCompleted} / ${weeklyGoal} allenamenti</div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${weeklyPercentage}%;"></div>
-            </div>
-            <div class="progress-percent">${Math.round(weeklyPercentage)}% completato</div>
-        </div>
-
-        <div class="progress-item">
-            <div class="progress-header">
-                <div class="progress-label">
-                    <i class="fas fa-fire" style="color: #f97316;"></i>
-                    Calorie Bruciate
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${weeklyPercentage}%;"></div>
                 </div>
-                <div class="progress-value">${caloriesBurned} / ${caloriesGoal} kcal</div>
+                <div class="progress-percent">${Math.round(weeklyPercentage)}% completato</div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: ${caloriesPercentage}%;"></div>
+
+            <div class="progress-item">
+                <div class="progress-header">
+                    <div class="progress-label">
+                        <i class="fas fa-fire" style="color: #f97316;"></i>
+                        Calorie Bruciate
+                    </div>
+                    <div class="progress-value">${caloriesBurned} / ${caloriesGoal} kcal</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${caloriesPercentage}%;"></div>
+                </div>
+                <div class="progress-percent">${Math.round(caloriesPercentage)}% completato</div>
             </div>
-            <div class="progress-percent">${Math.round(caloriesPercentage)}% completato</div>
-        </div>
-    `;
+
+            ${stats.currentStreak > 0 ? `
+            <div class="progress-streak">
+                <i class="fas fa-fire-alt"></i>
+                <span>${stats.currentStreak} giorni consecutivi!</span>
+            </div>
+            ` : ''}
+        `;
+    } catch (error) {
+        console.error('Error rendering progress:', error);
+        container.innerHTML = '<p>Errore nel caricamento dei progressi</p>';
+    }
 }
 
 function showProgressInfo() {

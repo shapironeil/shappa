@@ -2103,6 +2103,281 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
     }
 });
 
+// ============================================
+// SPORT & FITNESS ENDPOINTS
+// ============================================
+
+const SPORT_DATA_DIR = path.join(__dirname, 'data', 'sport');
+if (!fs.existsSync(SPORT_DATA_DIR)) {
+    fs.mkdirSync(SPORT_DATA_DIR, { recursive: true });
+}
+
+// POST /api/sport/profile - Save user sport profile (quiz data)
+app.post('/api/sport/profile', async (req, res) => {
+    try {
+        const { userId, profileData } = req.body;
+        
+        if (!userId || !profileData) {
+            return res.status(400).json({ success: false, error: 'userId and profileData required' });
+        }
+
+        // Salva profilo sport dell'utente
+        const sportProfilePath = path.join(SPORT_DATA_DIR, `${userId}_profile.json`);
+        const dataToSave = {
+            userId,
+            profile: profileData,
+            savedAt: new Date().toISOString(),
+            version: '1.0'
+        };
+
+        fs.writeFileSync(sportProfilePath, JSON.stringify(dataToSave, null, 2), 'utf8');
+        console.log(`💪 Sport profile saved for user: ${userId}`);
+
+        return res.json({ success: true, message: 'Profile saved successfully' });
+    } catch (error) {
+        console.error('❌ Error saving sport profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/sport/profiles/all - Get all sport profiles for admin panel
+app.get('/api/sport/profiles/all', async (req, res) => {
+    try {
+        if (!fs.existsSync(SPORT_DATA_DIR)) {
+            return res.json({ success: true, profiles: [] });
+        }
+
+        const files = fs.readdirSync(SPORT_DATA_DIR);
+        const profiles = [];
+
+        for (const file of files) {
+            if (file.endsWith('_profile.json')) {
+                try {
+                    const filePath = path.join(SPORT_DATA_DIR, file);
+                    const profileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                    
+                    // Get program data if exists
+                    const userId = file.replace('_profile.json', '');
+                    const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+                    let programData = null;
+                    
+                    if (fs.existsSync(programPath)) {
+                        programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+                    }
+
+                    profiles.push({
+                        userId: profileData.userId,
+                        profile: profileData.profile,
+                        savedAt: profileData.savedAt,
+                        programTitle: programData?.programData?.title || null,
+                        completedWorkouts: programData?.completedWorkouts?.length || 0,
+                        totalCalories: (programData?.completedWorkouts?.length || 0) * 
+                                      (programData?.programData?.estimatedCalories || 400)
+                    });
+                } catch (err) {
+                    console.warn(`⚠️ Could not parse ${file}:`, err.message);
+                }
+            }
+        }
+
+        return res.json({ 
+            success: true, 
+            profiles: profiles.sort((a, b) => 
+                new Date(b.savedAt) - new Date(a.savedAt)
+            )
+        });
+    } catch (error) {
+        console.error('❌ Error getting all profiles:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/sport/profile/:userId - Get user sport profile
+app.get('/api/sport/profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const sportProfilePath = path.join(SPORT_DATA_DIR, `${userId}_profile.json`);
+
+        if (!fs.existsSync(sportProfilePath)) {
+            return res.status(404).json({ success: false, error: 'Profile not found' });
+        }
+
+        const data = JSON.parse(fs.readFileSync(sportProfilePath, 'utf8'));
+        return res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ Error loading sport profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /api/sport/program - Save selected workout program
+app.post('/api/sport/program', async (req, res) => {
+    try {
+        const { userId, programId, programData } = req.body;
+        
+        if (!userId || !programId) {
+            return res.status(400).json({ success: false, error: 'userId and programId required' });
+        }
+
+        // Salva programma scelto
+        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+        const dataToSave = {
+            userId,
+            programId,
+            programData,
+            startedAt: new Date().toISOString(),
+            completedWorkouts: [],
+            weekSchedule: [],
+            version: '1.0'
+        };
+
+        fs.writeFileSync(programPath, JSON.stringify(dataToSave, null, 2), 'utf8');
+        console.log(`🏋️ Program ${programId} saved for user: ${userId}`);
+
+        // Invia webhook notifica
+        try {
+            const webhookUrl = process.env.SPORT_WEBHOOK_URL || 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID';
+            if (webhookUrl && webhookUrl !== 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID') {
+                await axios.post(webhookUrl, {
+                    content: `🎯 **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
+                });
+                console.log('📢 Webhook inviato per nuovo programma');
+            }
+        } catch (webhookError) {
+            console.warn('⚠️ Webhook failed:', webhookError.message);
+        }
+
+        return res.json({ success: true, message: 'Program saved successfully' });
+    } catch (error) {
+        console.error('❌ Error saving program:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/sport/program/:userId - Get user's active program
+app.get('/api/sport/program/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+
+        if (!fs.existsSync(programPath)) {
+            return res.status(404).json({ success: false, error: 'Program not found' });
+        }
+
+        const data = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+        return res.json({ success: true, data });
+    } catch (error) {
+        console.error('❌ Error loading program:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /api/sport/workout-completed - Mark workout as completed
+app.post('/api/sport/workout-completed', async (req, res) => {
+    try {
+        const { userId, workoutDate, sessionData } = req.body;
+        
+        if (!userId || !workoutDate) {
+            return res.status(400).json({ success: false, error: 'userId and workoutDate required' });
+        }
+
+        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+        
+        if (!fs.existsSync(programPath)) {
+            return res.status(404).json({ success: false, error: 'Program not found' });
+        }
+
+        const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+        
+        // Aggiungi workout completato
+        if (!programData.completedWorkouts) {
+            programData.completedWorkouts = [];
+        }
+        
+        programData.completedWorkouts.push({
+            date: workoutDate,
+            sessionData,
+            completedAt: new Date().toISOString()
+        });
+
+        fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
+        console.log(`✅ Workout completed for user: ${userId}`);
+
+        return res.json({ 
+            success: true, 
+            totalCompleted: programData.completedWorkouts.length 
+        });
+    } catch (error) {
+        console.error('❌ Error marking workout completed:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// GET /api/sport/stats/:userId - Get user sport statistics
+app.get('/api/sport/stats/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+
+        if (!fs.existsSync(programPath)) {
+            return res.json({ 
+                success: true, 
+                stats: {
+                    totalWorkouts: 0,
+                    currentStreak: 0,
+                    estimatedCalories: 0
+                }
+            });
+        }
+
+        const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+        const completedCount = programData.completedWorkouts?.length || 0;
+        const estimatedCalories = completedCount * (programData.programData?.estimatedCalories || 400);
+
+        return res.json({ 
+            success: true, 
+            stats: {
+                totalWorkouts: completedCount,
+                currentStreak: calculateStreak(programData.completedWorkouts),
+                estimatedCalories,
+                programTitle: programData.programData?.title
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error getting stats:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Helper function to calculate workout streak
+function calculateStreak(completedWorkouts) {
+    if (!completedWorkouts || completedWorkouts.length === 0) return 0;
+    
+    // Sort by date descending
+    const sorted = [...completedWorkouts].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+    
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (const workout of sorted) {
+        const workoutDate = new Date(workout.date);
+        workoutDate.setHours(0, 0, 0, 0);
+        
+        const daysDiff = Math.floor((today - workoutDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === streak) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+    
+    return streak;
+}
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {

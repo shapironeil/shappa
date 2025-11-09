@@ -25,17 +25,28 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Workout A - Squat Focus",
+                duration: "60-75 min",
                 warmup: "10 min cardio + mobilità articolare dinamica",
                 exercises: [
                     { 
                         name: "Crunch", 
                         sets: "3", 
-                        reps: "10-15", 
+                        reps: "15-20", 
                         rest: "30 sec", 
                         notes: "Riscaldamento addominali",
                         image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
                         muscleGroup: "Addominali",
                         execution: "Fletti il tronco sul bacino mantenendo la tensione continua"
+                    },
+                    { 
+                        name: "Plank", 
+                        sets: "3", 
+                        reps: "45-60 sec", 
+                        rest: "45 sec", 
+                        notes: "Core stability",
+                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg",
+                        muscleGroup: "Core, Addominali",
+                        execution: "Mantieni corpo rigido come una tavola, addominali contratti"
                     },
                     { 
                         name: "Squat con bilanciere", 
@@ -48,6 +59,16 @@ const workoutPrograms = [
                         execution: "Leva di 3° tipo. Scendi controllato fino a coscie parallele, spinta esplosiva verso l'alto"
                     },
                     { 
+                        name: "Leg Press", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Complementare per quadricipiti",
+                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
+                        muscleGroup: "Quadricipiti, Glutei",
+                        execution: "Piedi larghezza spalle, scendi controllato fino a 90°"
+                    },
+                    { 
                         name: "Distensione bilanciere panca piana", 
                         sets: "5", 
                         reps: "5", 
@@ -58,6 +79,16 @@ const workoutPrograms = [
                         execution: "Movimento pluriarticolare. Abbassa il bilanciere al petto, premi verso l'alto contraendo il pettorale"
                     },
                     { 
+                        name: "Panca inclinata 30° manubri", 
+                        sets: "3", 
+                        reps: "8-10", 
+                        rest: "2 min", 
+                        notes: "Complementare per pettorale alto",
+                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
+                        muscleGroup: "Pettorale alto, Deltoidi",
+                        execution: "Movimento controllato, squeeze al picco di contrazione"
+                    },
+                    { 
                         name: "Rematore con bilanciere", 
                         sets: "5", 
                         reps: "5", 
@@ -66,9 +97,20 @@ const workoutPrograms = [
                         image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg",
                         muscleGroup: "Gran dorsale, Trapezio, Romboidi",
                         execution: "Busto inclinato 45°, tira il bilanciere verso l'ombelico contraendo dorsale e trapezio"
+                    },
+                    { 
+                        name: "Lat Machine", 
+                        sets: "3", 
+                        reps: "10-12", 
+                        rest: "90 sec", 
+                        notes: "Complementare dorsale",
+                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
+                        muscleGroup: "Gran dorsale, Bicipiti",
+                        execution: "Tira la sbarra al petto contraendo le scapole"
                     }
                 ],
-                cooldown: "Stretching leggero 5-10 min per tutti i gruppi muscolari allenati"
+                cooldown: "Stretching completo 10 min per tutti i gruppi muscolari",
+                estimatedCalories: 450
             },
             {
                 day: "Mercoledì",
