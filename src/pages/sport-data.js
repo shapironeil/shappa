@@ -1689,149 +1689,70 @@ const workoutPrograms = [
             {
                 day: "Lunedì",
                 focus: "Petto + Tricipiti - Metodo 21",
+                duration: "60-70 min",
+                estimatedCalories: 420,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Panca piana (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "90 sec", 
-                        notes: "7 reps parte bassa + 7 reps parte alta + 7 reps complete = 21 totali",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Pettorale",
-                        execution: "Prima metà movimento (7), seconda metà (7), complete (7)"
-                    },
-                    { 
-                        name: "Croci manubri (Standard)", 
-                        sets: "3", 
-                        reps: "12-15", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg"
-                    },
-                    { 
-                        name: "French Press (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/7KcPwbq/bench-press.jpg",
-                        muscleGroup: "Tricipiti"
-                    }
+                    { name: "Crunch", sets: "3", reps: "15", rest: "30 sec", notes: "Attivazione core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrai addome portando spalle verso bacino" },
+                    { name: "Panca piana (Metodo 21)", sets: "4", reps: "7+7+7", rest: "90 sec", notes: "7 reps parte bassa + 7 reps parte alta + 7 reps complete = 21 totali", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Prima metà movimento (7), seconda metà (7), complete (7)" },
+                    { name: "Panca inclinata manubri", sets: "3", reps: "10-12", rest: "90 sec", notes: "Focus pettorale alto", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale clavicolare", execution: "Inclinazione 30-45° per enfasi superiore" },
+                    { name: "Croci manubri (Standard)", sets: "3", reps: "12-15", rest: "60 sec", notes: "Massimo allungamento", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Monoarticolare, focus su stretch" },
+                    { name: "Pectoral machine", sets: "3", reps: "15", rest: "60 sec", notes: "Finisher", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Pettorale", execution: "Contrai al massimo al termine" },
+                    { name: "French Press (Metodo 21)", sets: "4", reps: "7+7+7", rest: "60 sec", notes: "21 totali", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Parziali basse + alte + complete" },
+                    { name: "Push down cavi", sets: "3", reps: "15", rest: "60 sec", notes: "Pump finale", image: "https://i.ibb.co/7KcPwbq/bench-press.jpg", muscleGroup: "Tricipiti", execution: "Estensione completa, contrazione picco" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Martedì",
                 focus: "Dorsali + Bicipiti - Metodo 21",
+                duration: "60-70 min",
+                estimatedCalories: 410,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch inverso", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Lat Machine (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "90 sec",
-                        image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg",
-                        muscleGroup: "Dorsale"
-                    },
-                    { 
-                        name: "Pulley (Standard)", 
-                        sets: "3", 
-                        reps: "12-15", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg"
-                    },
-                    { 
-                        name: "Curl bilanciere (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "60 sec", 
-                        notes: "Il metodo 21 più famoso! Perfetto per bicipiti",
-                        image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg",
-                        muscleGroup: "Bicipiti",
-                        execution: "7 bottom, 7 top, 7 full range"
-                    }
+                    { name: "Crunch inverso", sets: "3", reps: "15", rest: "30 sec", notes: "Core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Solleva bacino verso petto" },
+                    { name: "Trazioni", sets: "3", reps: "max", rest: "3 min", notes: "Esercizio base", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Completo fino al petto" },
+                    { name: "Lat Machine (Metodo 21)", sets: "4", reps: "7+7+7", rest: "90 sec", notes: "21 totali", image: "https://i.ibb.co/GVwBfxG/pull-ups.jpg", muscleGroup: "Dorsale", execution: "Parziali basse + alte + complete" },
+                    { name: "Rematore bilanciere", sets: "3", reps: "10-12", rest: "90 sec", notes: "Spessore dorsale", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale, Trapezio", execution: "Tira al petto, gomiti indietro" },
+                    { name: "Pulley (Standard)", sets: "3", reps: "12-15", rest: "60 sec", notes: "Finisher dorsale", image: "https://i.ibb.co/YcRkjqF/barbell-row.jpg", muscleGroup: "Dorsale", execution: "Tiraggio basso, scapole addotte" },
+                    { name: "Curl bilanciere (Metodo 21)", sets: "4", reps: "7+7+7", rest: "60 sec", notes: "Il metodo 21 più famoso! Perfetto per bicipiti", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "7 bottom, 7 top, 7 full range" },
+                    { name: "Curl manubri alternati", sets: "3", reps: "12 per braccio", rest: "60 sec", notes: "Pump finale", image: "https://i.ibb.co/k8vQNJK/barbell-curl.jpg", muscleGroup: "Bicipiti", execution: "Supinazione completa" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Giovedì",
                 focus: "Spalle - Metodo 21",
+                duration: "55-65 min",
+                estimatedCalories: 370,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Plank", 
-                        sets: "3", 
-                        reps: "60 sec", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Lento manubri (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "90 sec",
-                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg",
-                        muscleGroup: "Deltoidi"
-                    },
-                    { 
-                        name: "Alzate laterali (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg"
-                    }
+                    { name: "Plank", sets: "3", reps: "60 sec", rest: "60 sec", notes: "Core stability", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Core", execution: "Mantieni linea retta corpo" },
+                    { name: "Lento manubri (Metodo 21)", sets: "4", reps: "7+7+7", rest: "90 sec", notes: "21 totali", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Parziali basse + alte + complete" },
+                    { name: "Lento avanti bilanciere", sets: "3", reps: "8-10", rest: "90 sec", notes: "Fondamentale spalle", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoidi", execution: "Movimento completo" },
+                    { name: "Alzate laterali (Metodo 21)", sets: "4", reps: "7+7+7", rest: "60 sec", notes: "21 totali per deltoidi", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide laterale", execution: "Bottom + top + full range" },
+                    { name: "Alzate frontali", sets: "3", reps: "12", rest: "60 sec", notes: "Deltoide anteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide anteriore", execution: "Fino altezza occhi" },
+                    { name: "Rear delt fly", sets: "3", reps: "15", rest: "60 sec", notes: "Deltoide posteriore", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Deltoide posteriore", execution: "Busto a 90°, braccia aperte" },
+                    { name: "Shrugs", sets: "3", reps: "15", rest: "60 sec", notes: "Trapezio", image: "https://i.ibb.co/qNjvBnY/overhead-press.jpg", muscleGroup: "Trapezio", execution: "Solleva spalle verso orecchie" }
                 ],
                 cooldown: "Stretching 5 min"
             },
             {
                 day: "Sabato",
                 focus: "Gambe - Metodo 21",
+                duration: "70-80 min",
+                estimatedCalories: 530,
                 warmup: "10 min cardio",
                 exercises: [
-                    { 
-                        name: "Crunch", 
-                        sets: "3", 
-                        reps: "15", 
-                        rest: "30 sec",
-                        image: "https://i.ibb.co/ZMq4wJh/crunch.jpg"
-                    },
-                    { 
-                        name: "Leg Press (Metodo 21)", 
-                        sets: "4", 
-                        reps: "7+7+7", 
-                        rest: "2 min",
-                        image: "https://i.ibb.co/9GBPLFT/squat.jpg",
-                        muscleGroup: "Quadricipiti, Glutei"
-                    },
-                    { 
-                        name: "Leg Extension (Metodo 21)", 
-                        sets: "3", 
-                        reps: "7+7+7", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg"
-                    },
-                    { 
-                        name: "Leg Curl (Metodo 21)", 
-                        sets: "3", 
-                        reps: "7+7+7", 
-                        rest: "60 sec",
-                        image: "https://i.ibb.co/VqGhJdq/deadlift.jpg"
-                    }
+                    { name: "Crunch", sets: "3", reps: "15", rest: "30 sec", notes: "Warm up core", image: "https://i.ibb.co/ZMq4wJh/crunch.jpg", muscleGroup: "Addominali", execution: "Contrazione addome" },
+                    { name: "Squat", sets: "4", reps: "10-12", rest: "3 min", notes: "Re degli esercizi", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Parallelo, controllo discesa" },
+                    { name: "Leg Press (Metodo 21)", sets: "4", reps: "7+7+7", rest: "2 min", notes: "21 totali", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Quadricipiti, Glutei", execution: "Bottom + top + full range" },
+                    { name: "Leg Extension (Metodo 21)", sets: "3", reps: "7+7+7", rest: "60 sec", notes: "21 per quadricipiti", image: "https://i.ibb.co/SrYf0Bx/leg-extension.jpg", muscleGroup: "Quadricipiti", execution: "Parziali + complete" },
+                    { name: "Stacchi rumeni", sets: "3", reps: "10", rest: "2 min", notes: "Femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali, Glutei", execution: "Gambe tese, busto scende" },
+                    { name: "Leg curl", sets: "3", reps: "12-15", rest: "90 sec", notes: "Isolamento femorali", image: "https://i.ibb.co/VqGhJdq/deadlift.jpg", muscleGroup: "Femorali", execution: "Fletti portando talloni ai glutei" },
+                    { name: "Calf in piedi", sets: "4", reps: "20", rest: "60 sec", notes: "Polpacci", image: "https://i.ibb.co/9GBPLFT/squat.jpg", muscleGroup: "Gastrocnemio", execution: "Estensione caviglia completa" }
                 ],
-                cooldown: "Stretching 10 min"
+                cooldown: "Stretching gambe 10 min"
             }
         ]
     },
