@@ -319,6 +319,33 @@ class ShappaAuth {
             this.currentUser = data.user;
             this.saveCurrentUser(data.user);
 
+            // 🔄 CARICA TUTTI I DATI UTENTE DAL SERVER dopo login
+            console.log('📥 Loading user data from server...');
+            try {
+                if (window.DataManager) {
+                    // Inizializza DataManager con il nuovo utente
+                    window.DataManager.userId = data.user.id || data.user.username;
+                    window.DataManager.init();
+                    
+                    // Usa UserDataSyncManager per sincronizzare tutti i dati
+                    if (window.UserDataSyncManager) {
+                        await window.UserDataSyncManager.syncAllUserData(data.user.id || data.user.username);
+                    } else {
+                        // Fallback: pre-carica i dati principali
+                        await Promise.all([
+                            window.DataManager.getInterests().catch(e => console.warn('Failed to load interests:', e)),
+                            window.DataManager.getSportProfile().catch(e => console.warn('Failed to load sport profile:', e)),
+                            window.DataManager.getSportAutomations().catch(e => console.warn('Failed to load sport automations:', e))
+                        ]);
+                    }
+                    
+                    console.log('✅ User data loaded from server');
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to preload user data:', error);
+                // Non bloccare il login se il preload fallisce
+            }
+
             console.log('✅ Login successful for:', data.user.username);
             return { success: true, user: data.user };
 

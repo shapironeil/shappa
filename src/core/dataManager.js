@@ -30,16 +30,44 @@ class DataManager {
 
     /**
      * Inizializza il Data Manager con l'utente corrente
+     * Viene chiamato automaticamente al caricamento e dopo il login
      */
     init() {
         try {
+            // Prova prima con AuthManager (sistema nuovo)
             if (window.AuthManager && AuthManager.isLoggedIn()) {
                 const user = AuthManager.getCurrentUser();
-                this.userId = user.id || user.username;
-                console.log('✅ DataManager initialized for user:', this.userId);
-            } else {
-                console.warn('⚠️ DataManager: No user logged in');
+                if (user) {
+                    this.userId = user.id || user.username;
+                    console.log('✅ DataManager initialized for user:', this.userId);
+                    return;
+                }
             }
+            
+            // Fallback: prova con ShappaAuth (sistema vecchio)
+            if (window.ShappaAuth) {
+                try {
+                    const auth = new window.ShappaAuth();
+                    if (auth.isLoggedIn()) {
+                        const user = auth.getCurrentUser();
+                        if (user) {
+                            this.userId = user.id || user.username;
+                            console.log('✅ DataManager initialized for user (ShappaAuth):', this.userId);
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    // Ignora errori ShappaAuth
+                }
+            }
+            
+            // Se userId è già impostato manualmente, usa quello
+            if (this.userId) {
+                console.log('✅ DataManager using existing userId:', this.userId);
+                return;
+            }
+            
+            console.warn('⚠️ DataManager: No user logged in');
         } catch (error) {
             console.error('❌ DataManager init error:', error);
         }
