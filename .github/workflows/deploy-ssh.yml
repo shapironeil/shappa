@@ -19,44 +19,61 @@ jobs:
           
           MISSING_SECRETS=0
           
-          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+          # Check SSH_PRIVATE_KEY
+          SSH_KEY="${{ secrets.SSH_PRIVATE_KEY }}"
+          if [ -z "$SSH_KEY" ] || [ "$SSH_KEY" = "" ]; then
             echo "❌ ERROR: SSH_PRIVATE_KEY secret is missing!"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            KEY_LENGTH=$(echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -c)
+            KEY_LENGTH=$(echo "$SSH_KEY" | wc -c)
             echo "✅ SSH_PRIVATE_KEY: configured (length: $KEY_LENGTH chars)"
             if [ "$KEY_LENGTH" -lt 100 ]; then
               echo "   ⚠️  WARNING: Key seems too short. Make sure it includes BEGIN/END lines."
             fi
           fi
           
-          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+          # Check DEPLOY_HOST
+          DEPLOY_HOST="${{ secrets.DEPLOY_HOST }}"
+          if [ -z "$DEPLOY_HOST" ] || [ "$DEPLOY_HOST" = "" ]; then
             echo "❌ ERROR: DEPLOY_HOST secret is missing!"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            echo "✅ DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}"
+            echo "✅ DEPLOY_HOST: configured (value: ${DEPLOY_HOST:0:3}***)"
           fi
           
-          if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
+          # Check DEPLOY_USER
+          DEPLOY_USER="${{ secrets.DEPLOY_USER }}"
+          if [ -z "$DEPLOY_USER" ] || [ "$DEPLOY_USER" = "" ]; then
             echo "❌ ERROR: DEPLOY_USER secret is missing!"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            echo "✅ DEPLOY_USER: ${{ secrets.DEPLOY_USER }}"
+            echo "✅ DEPLOY_USER: configured (value: $DEPLOY_USER)"
           fi
           
-          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+          # Check DEPLOY_PATH
+          DEPLOY_PATH="${{ secrets.DEPLOY_PATH }}"
+          if [ -z "$DEPLOY_PATH" ] || [ "$DEPLOY_PATH" = "" ]; then
             echo "❌ ERROR: DEPLOY_PATH secret is missing!"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            echo "✅ DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}"
+            echo "✅ DEPLOY_PATH: configured (value: $DEPLOY_PATH)"
           fi
           
           echo ""
           if [ "$MISSING_SECRETS" -gt 0 ]; then
-            echo "❌ $MISSING_SECRETS secret(s) missing!"
+            echo "❌ $MISSING_SECRETS secret(s) missing or empty!"
             echo ""
-            echo "Configure missing secrets at:"
+            echo "⚠️  NOTE: If secrets are configured on GitHub but still showing as missing,"
+            echo "   they might be empty strings. Please verify the values are not empty."
+            echo ""
+            echo "Configure or update secrets at:"
             echo "https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo ""
+            echo "Required secrets:"
+            echo "  - SSH_PRIVATE_KEY (your SSH private key)"
+            echo "  - DEPLOY_HOST (server IP or hostname)"
+            echo "  - DEPLOY_USER (SSH username, e.g., 'deploy' or 'root')"
+            echo "  - DEPLOY_PATH (deployment path, e.g., '/var/www/shappa')"
             exit 1
           fi
           
