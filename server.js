@@ -50,6 +50,14 @@ const { coordinator } = initializeAgents({
     },
     notification: {
         priority: 7
+    },
+    ai: {
+        priority: 8,
+        openaiApiKey: process.env.OPENAI_API_KEY,
+        googleVisionApiKey: process.env.GOOGLE_VISION_API_KEY,
+        claudeApiKey: process.env.CLAUDE_API_KEY,
+        qwenApiKey: process.env.QWEN_API_KEY,
+        huggingfaceApiKey: process.env.HUGGINGFACE_API_KEY
     }
 });
 
@@ -3434,6 +3442,236 @@ app.get('/api/user-profile/:userId/history', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error getting user data history:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * ========== AI AGENT API ENDPOINTS ==========
+ * Estrazione dati da foto e testi
+ */
+
+/**
+ * POST /api/ai/extract-text-from-image
+ * Estrae testo da immagine (OCR)
+ */
+app.post('/api/ai/extract-text-from-image', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'extract_text_from_image',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error extracting text from image:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/analyze-image
+ * Analizza immagine e estrae informazioni
+ */
+app.post('/api/ai/analyze-image', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'analyze_image',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error analyzing image:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/extract-data-from-text
+ * Estrae dati strutturati da testo
+ */
+app.post('/api/ai/extract-data-from-text', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'extract_data_from_text',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error extracting data from text:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/extract-structured-data
+ * Estrae dati strutturati (generico - da immagine o testo)
+ */
+app.post('/api/ai/extract-structured-data', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'extract_structured_data',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error extracting structured data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/extract-entities
+ * Estrae entità da testo
+ */
+app.post('/api/ai/extract-entities', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'extract_entities',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error extracting entities:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/analyze-sentiment
+ * Analizza sentiment di un testo
+ */
+app.post('/api/ai/analyze-sentiment', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'analyze_sentiment',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error analyzing sentiment:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/ai/classify-text
+ * Classifica testo in categorie
+ */
+app.post('/api/ai/classify-text', async (req, res) => {
+    try {
+        const result = await coordinator.assignTask({
+            type: 'classify_text',
+            ...req.body
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error classifying text:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/figma/fetch-make-file
+ * Fetch Figma file da /make/ (community files)
+ */
+app.post('/api/figma/fetch-make-file', async (req, res) => {
+    try {
+        const { fileKey, nodeIds } = req.body;
+        
+        if (!fileKey) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'fileKey required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'fetch_figma_file',
+            fileKey,
+            nodeIds,
+            isMakeFile: true // Indica che è un file /make/
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching Figma make file:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/figma/generate-code
+ * Genera codice da design Figma
+ */
+app.post('/api/figma/generate-code', async (req, res) => {
+    try {
+        const { fileKey, nodeId, framework = 'html', outputPath, useTailwind = true } = req.body;
+        
+        if (!fileKey) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'fileKey required' 
+            });
+        }
+
+        // Prima recupera il file Figma
+        const fileResult = await coordinator.assignTask({
+            type: 'fetch_figma_file',
+            fileKey,
+            nodeIds: nodeId ? [nodeId] : null
+        });
+
+        // Poi genera codice
+        const FigmaToCodeGenerator = require('./lib/figma/figmaToCode');
+        const generator = new FigmaToCodeGenerator();
+        
+        const result = await generator.generateFromFigmaJSON(fileResult.fileData, {
+            outputPath,
+            framework,
+            useTailwind,
+            extractAssets: true
+        });
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        console.error('Error generating code from Figma:', error);
         res.status(500).json({ 
             success: false, 
             error: error.message 

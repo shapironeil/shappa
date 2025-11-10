@@ -110,21 +110,30 @@ class FigmaAgent extends AgentBase {
 
     /**
      * Recupera file Figma
+     * Supporta sia /file/ che /make/ (community files)
      */
     async fetchFigmaFile(task) {
-        const { fileKey, nodeIds } = task;
+        const { fileKey, nodeIds, isMakeFile = false } = task;
         
         if (!fileKey) {
             throw new Error('fileKey required');
         }
 
         try {
+            // Per file /make/, l'API è la stessa ma potrebbe richiedere permessi diversi
+            // L'API Figma funziona allo stesso modo per entrambi i tipi
             const url = `${this.figmaApiBase}/files/${fileKey}${nodeIds ? `?ids=${nodeIds.join(',')}` : ''}`;
-            const response = await axios.get(url, {
-                headers: {
-                    'X-Figma-Token': this.figmaApiKey
-                }
-            });
+            
+            const headers = {
+                'X-Figma-Token': this.figmaApiKey
+            };
+            
+            // Se è un file /make/, aggiungi header specifico se necessario
+            if (isMakeFile) {
+                headers['X-Figma-File-Type'] = 'community';
+            }
+            
+            const response = await axios.get(url, { headers });
 
             const fileData = response.data;
             

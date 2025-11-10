@@ -16,6 +16,7 @@ const SecurityAgent = require('./security/SecurityAgent');
 const NotificationAgent = require('./notification/NotificationAgent');
 const RecipeAgent = require('./recipe/RecipeAgent');
 const UserProfileAgent = require('./userprofile/UserProfileAgent');
+const AIAgent = require('./ai/AIAgent');
 
 /**
  * Inizializza il sistema di agenti
@@ -36,7 +37,8 @@ function initializeAgents(config = {}) {
         new DataAgent(config.data),
         new SecurityAgent(config.security),
         new NotificationAgent(config.notification),
-        new RecipeAgent(config.recipe)
+        new RecipeAgent(config.recipe),
+        new AIAgent(config.ai)
     ];
 
     // Registra agenti nel coordinatore e passa riferimento al coordinator per comunicazione
@@ -82,6 +84,7 @@ module.exports = {
     SecurityAgent,
     NotificationAgent,
     RecipeAgent,
-    UserProfileAgent
+    UserProfileAgent,
+    AIAgent
 };
 

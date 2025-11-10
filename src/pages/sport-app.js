@@ -440,7 +440,7 @@ function renderPrograms(tab) {
         const diffLabel = getDifficultyLabel(program.level);
 
         return `
-            <div class="program-card ${isSelected ? 'selected' : ''}" data-program-id="${program.id}">
+            <div class="program-card${isSelected ? ' selected' : ''}" data-program-id="${program.id}">
                 <div class="program-card-top">
                     <div class="program-icon ${program.icon}">
                         ${icon}

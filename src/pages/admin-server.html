@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shappa - Admin Server Panel</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖥️</text></svg>">
+    <title>Shappa - Gran Consiglio Agenti</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
     <style>
         * {
             margin: 0;
@@ -91,16 +91,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-2px);
-        }
-
         /* Main Content */
         .admin-main {
             max-width: 1800px;
@@ -108,204 +98,329 @@
             padding: 2rem;
         }
 
-        /* Stats Grid */
-        .stats-grid {
+        /* Council Grid - Widget Agenti */
+        .council-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
             gap: 1.5rem;
             margin-bottom: 3rem;
         }
 
-        .stat-card {
+        .agent-widget {
             background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
             border: 2px solid rgba(139, 92, 246, 0.2);
             border-radius: 20px;
-            padding: 2rem;
+            padding: 1.5rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-card:hover {
+        .agent-widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #60a5fa);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .agent-widget:hover {
             transform: translateY(-5px);
             border-color: rgba(139, 92, 246, 0.5);
             box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
         }
 
-        .stat-header {
+        .agent-widget:hover::before {
+            transform: scaleX(1);
+        }
+
+        .agent-widget.active {
+            border-color: rgba(139, 92, 246, 0.8);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+        }
+
+        .agent-widget.active::before {
+            transform: scaleX(1);
+        }
+
+        .agent-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 1rem;
         }
 
-        .stat-icon {
-            font-size: 3rem;
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-        }
-
-        .stat-value {
-            font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, #a78bfa, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .stat-label {
-            color: #cbd5e1;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            font-size: 0.85rem;
-        }
-
-        /* Section Cards */
-        .section {
-            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
-            border: 2px solid rgba(139, 92, 246, 0.2);
-            border-radius: 20px;
-            padding: 2.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .section-title {
-            font-size: 2rem;
+        .agent-name {
+            font-size: 1.5rem;
             font-weight: 800;
             background: linear-gradient(135deg, #a78bfa, #60a5fa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
         }
 
-        /* User Cards Grid */
-        .users-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .user-card {
-            background: linear-gradient(135deg, #334155 0%, #312e81 100%);
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-
-        .user-card:hover {
-            border-color: rgba(139, 92, 246, 0.6);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 24px rgba(139, 92, 246, 0.2);
-        }
-
-        .user-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-        }
-
-        .user-info h3 {
-            font-size: 1.5rem;
-            color: #a78bfa;
-            margin-bottom: 0.5rem;
-        }
-
-        .user-id {
-            font-family: 'JetBrains Mono', monospace;
+        .agent-status {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
             font-size: 0.75rem;
-            color: #64748b;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-            display: inline-block;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .user-stats {
+        .status-idle {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-processing {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .agent-stats {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 0.75rem;
             margin-bottom: 1rem;
         }
 
-        .user-stat {
+        .stat-item {
             background: rgba(0, 0, 0, 0.2);
             padding: 0.75rem;
             border-radius: 8px;
             text-align: center;
         }
 
-        .user-stat-value {
+        .stat-value {
             font-size: 1.5rem;
             font-weight: 700;
             color: #60a5fa;
             margin-bottom: 0.25rem;
         }
 
-        .user-stat-label {
-            font-size: 0.75rem;
+        .stat-label {
+            font-size: 0.7rem;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        .user-actions {
+        .agent-capabilities {
+            margin-bottom: 1rem;
+        }
+
+        .capabilities-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #8b5cf6;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .capabilities-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .capability-badge {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .agent-actions {
             display: flex;
             gap: 0.5rem;
             margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(139, 92, 246, 0.2);
         }
 
-        .btn-small {
-            padding: 0.5rem 1rem;
+        .btn-action {
+            flex: 1;
+            padding: 0.5rem;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 0.85rem;
             transition: all 0.3s ease;
-            flex: 1;
-        }
-
-        .btn-view {
             background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
         }
 
-        .btn-delete {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-        }
-
-        .btn-small:hover {
+        .btn-action:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        /* JSON Viewer */
-        .json-viewer {
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.875rem;
-            background: #0d1117;
-            border: 2px solid #21262d;
-            border-radius: 12px;
+        /* Modal per dettagli agente */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            overflow-y: auto;
             padding: 2rem;
-            overflow-x: auto;
-            color: #c9d1d9;
-            line-height: 1.8;
-            max-height: 600px;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
-        .json-key { color: #79c0ff; font-weight: 600; }
-        .json-string { color: #a5d6ff; }
-        .json-number { color: #ffa657; font-weight: 700; }
-        .json-boolean { color: #ff7b72; font-weight: 700; }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-close {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .action-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .action-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .action-item:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateX(5px);
+        }
+
+        .action-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #a78bfa;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-description {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 0.75rem;
+        }
+
+        .action-execute {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-execute:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Stats Overview */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
 
         /* Loading */
         .loading {
@@ -372,7 +487,7 @@
                 gap: 1rem;
             }
 
-            .users-grid {
+            .council-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -386,19 +501,16 @@
     <header class="admin-header">
         <div class="header-content">
             <div class="header-title">
-                <h1>Server Admin Panel</h1>
-                <p>Visualizzazione LIVE dei dati server - Filesystem & Monitors</p>
+                <h1>🤖 Gran Consiglio Agenti</h1>
+                <p>Sistema di Verifica H24 - Comitato Agenti AI</p>
             </div>
             
             <div class="header-actions">
                 <a href="../../index.html" class="btn btn-primary">
-                    Home
+                    🏠 Home
                 </a>
-                <button class="btn btn-danger" onclick="stopAllMonitorsAdmin()" style="background: #dc2626; border-color: #dc2626;">
-                    🛑 Stop All Monitors
-                </button>
-                <button class="btn btn-success" onclick="loadServerData()">
-                    Ricarica Dati
+                <button class="btn btn-success" onclick="refreshAllAgents()">
+                    🔄 Refresh Tutti
                 </button>
             </div>
         </div>
@@ -406,616 +518,118 @@
 
     <!-- Main Content -->
     <main class="admin-main">
-        <!-- Data Export Section -->
-        <div class="section">
-            <h2 class="section-title">� Visualizza Dati Utente Completi</h2>
-            <div style="background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.2);">
-                <p style="margin-bottom: 1.5rem; color: #94a3b8;">
-                    Visualizza ed esporta un report completo con TUTTI i dati di un utente usando l'API unificata.
-                </p>
-                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-                    <input 
-                        type="text" 
-                        id="exportUserId" 
-                        placeholder="User ID o Username" 
-                        style="flex: 1; min-width: 200px; padding: 0.75rem; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; border-radius: 8px; font-size: 1rem;"
-                    />
-                    <button class="btn btn-primary" onclick="loadUserData()">
-                        � Carica Dati
-                    </button>
-                    <button class="btn btn-success" onclick="downloadUserData()">
-                        💾 Download JSON
-                    </button>
-                </div>
-                
-                <!-- User Data Display (Structured View) -->
-                <div id="userDataView" style="margin-top: 1.5rem; display: none;">
-                    <!-- Account Info -->
-                    <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; margin-bottom: 1rem;">
-                        <h3 style="color: #a78bfa; margin-bottom: 1rem; font-size: 1.2rem;">👤 Account Info</h3>
-                        <div id="accountInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                    </div>
-
-                    <!-- Sport Data -->
-                    <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; margin-bottom: 1rem;">
-                        <h3 style="color: #60a5fa; margin-bottom: 1rem; font-size: 1.2rem;">💪 Sport & Fitness</h3>
-                        <div id="sportInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                    </div>
-
-                    <!-- Interests & Webhook -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155;">
-                            <h3 style="color: #f59e0b; margin-bottom: 1rem; font-size: 1.2rem;">⭐ Interests</h3>
-                            <div id="interestsInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                        </div>
-                        <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155;">
-                            <h3 style="color: #10b981; margin-bottom: 1rem; font-size: 1.2rem;">🔔 Webhook</h3>
-                            <div id="webhookInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                        </div>
-                    </div>
-
-                    <!-- Automations -->
-                    <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; margin-bottom: 1rem;">
-                        <h3 style="color: #ec4899; margin-bottom: 1rem; font-size: 1.2rem;">⚙️ Automations</h3>
-                        <div id="automationsInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                    </div>
-
-                    <!-- eBay Connection -->
-                    <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; margin-bottom: 1rem;">
-                        <h3 style="color: #f59e0b; margin-bottom: 1rem; font-size: 1.2rem;">🔗 eBay Connection</h3>
-                        <div id="ebayInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
-                    </div>
-
-                    <!-- Raw JSON (Collapsible) -->
-                    <details style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155;">
-                        <summary style="color: #94a3b8; cursor: pointer; font-weight: 600; margin-bottom: 1rem;">📄 Mostra JSON Completo</summary>
-                        <pre id="exportDataDisplay" style="margin: 0; color: #a5b4fc; max-height: 400px; overflow-y: auto; font-size: 0.9rem; background: #020617; padding: 1rem; border-radius: 6px;"></pre>
-                    </details>
-                </div>
-            </div>
-        </div>
-
         <!-- Stats Overview -->
-        <div class="stats-grid">
+        <div class="stats-overview">
             <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">👥</span>
-                    <span class="stat-value" id="totalUsers">-</span>
-                </div>
-                <div class="stat-label">Utenti Registrati</div>
+                <div class="stat-icon">🤖</div>
+                <div class="stat-value" id="totalAgents">-</div>
+                <div class="stat-label">Agenti Attivi</div>
             </div>
             
             <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">⭐</span>
-                    <span class="stat-value" id="totalInterests">-</span>
-                </div>
-                <div class="stat-label">File Interests</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">🔗</span>
-                    <span class="stat-value" id="totalWebhooks">-</span>
-                </div>
-                <div class="stat-label">File Webhooks</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">🤖</span>
-                    <span class="stat-value" id="activeMonitors">-</span>
-                </div>
-                <div class="stat-label">Monitor Attivi</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">🤖</span>
-                    <span class="stat-value" id="totalAgents">-</span>
-                </div>
-                <div class="stat-label">Agenti AI Attivi</div>
-            </div>
-            
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-icon">📋</span>
-                    <span class="stat-value" id="queueSize">-</span>
-                </div>
+                <div class="stat-icon">📋</div>
+                <div class="stat-value" id="queueSize">-</div>
                 <div class="stat-label">Task in Coda</div>
             </div>
-        </div>
-
-        <!-- Agent AI Committee Section -->
-        <div class="section">
-            <h2 class="section-title">🤖 Agent AI Committee System</h2>
-            <div style="margin-bottom: 1.5rem;">
-                <button class="btn btn-primary" onclick="loadAgentStats()" style="margin-right: 0.5rem;">
-                    🔄 Aggiorna Statistiche Agenti
-                </button>
-                <button class="btn btn-success" onclick="refreshAllAgents()">
-                    ⚡ Refresh Tutti gli Agenti
-                </button>
+            
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="tasksProcessed">-</div>
+                <div class="stat-label">Task Processati</div>
             </div>
             
-            <div id="agentsContainer" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Caricamento agenti...</p>
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-value" id="totalErrors">-</div>
+                <div class="stat-label">Errori Totali</div>
             </div>
         </div>
 
-        <!-- Users Section -->
-        <div class="section">
-            <h2 class="section-title">Utenti Server (Filesystem)</h2>
-            <div id="usersContainer" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Caricamento dati server...</p>
-            </div>
-        </div>
-
-        <!-- Sport Profiles Section -->
-        <div class="section">
-            <h2 class="section-title">🏋️ Sport & Fitness Profiles</h2>
-            <div id="sportContainer" class="loading">
-                <div class="loading-spinner"></div>
-                <p>Caricamento profili sport...</p>
-            </div>
-        </div>
-
-        <!-- Raw Data Section -->
-        <div class="section">
-            <h2 class="section-title">Database Completo (JSON)</h2>
-            <div class="json-viewer" id="rawData">
-                Caricamento...
-            </div>
+        <!-- Council Grid - Widget Agenti -->
+        <div id="councilContainer" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Caricamento Gran Consiglio...</p>
         </div>
     </main>
 
-    <!-- Load DataManager -->
-    <script src="../core/dataManager.js"></script>
-    <script src="../utils/auth-v2.js"></script>
+    <!-- Modal Dettagli Agente -->
+    <div id="agentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalAgentName">Agente</h2>
+                <button class="modal-close" onclick="closeAgentModal()">✖️ Chiudi</button>
+            </div>
+            <div id="modalAgentContent">
+                <!-- Contenuto dinamico -->
+            </div>
+        </div>
+    </div>
 
     <script>
-        let serverData = null;
-        let exportedUserData = null;
+        let agentsData = null;
+        let selectedAgent = null;
 
-        // Load data on page load
+        // Carica dati al caricamento pagina
         document.addEventListener('DOMContentLoaded', () => {
-            loadServerData();
+            loadAgentStats();
+            // Auto-refresh ogni 30 secondi
+            setInterval(loadAgentStats, 30000);
         });
 
-        // ========================================
-        // DATA EXPORT FUNCTIONS (UNIFIED API)
-        // ========================================
-
-        async function loadUserData() {
-            const userId = document.getElementById('exportUserId').value.trim();
-            
-            if (!userId) {
-                alert('⚠️ Inserisci un User ID');
-                return;
-            }
-
-            try {
-                showStatus('🔄 Caricamento dati utente...', '#f59e0b');
-                
-                // Call UNIFIED API
-                const response = await fetch(`https://shapiro.ninja/api/admin/user-data/${userId}`);
-                const result = await response.json();
-                
-                if (!result.success) {
-                    throw new Error(result.error || 'Failed to load data');
-                }
-                
-                exportedUserData = result;
-                
-                // Display structured view
-                displayUserData(result);
-                
-                // Show raw JSON
-                document.getElementById('exportDataDisplay').textContent = JSON.stringify(result, null, 2);
-                
-                showStatus('✅ Dati caricati con successo!', '#10b981');
-                
-            } catch (error) {
-                console.error('❌ Load error:', error);
-                showStatus('❌ Errore caricamento: ' + error.message, '#ef4444');
-            }
-        }
-
-        function displayUserData(data) {
-            const userDataView = document.getElementById('userDataView');
-            userDataView.style.display = 'block';
-            
-            const d = data.data;
-            
-            // Account Info - Enhanced
-            let accountHtml = '';
-            if (d.account) {
-                accountHtml = `
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Username</strong>
-                            <p style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">${d.account.username || 'N/A'}</p>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Email</strong>
-                            <p style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">${d.account.email || 'N/A'}</p>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">User ID</strong>
-                            <p style="font-size: 0.9rem; color: #64748b; margin-top: 0.25rem; font-family: monospace;">${data.userId || 'N/A'}</p>
-                        </div>
-                        <div>
-                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Registrato</strong>
-                            <p style="font-size: 0.9rem; margin-top: 0.25rem;">${d.account.createdAt ? new Date(d.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}</p>
-                        </div>
-                    </div>
-                    ${d.account.lastLogin ? `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);"><strong style="color: #94a3b8; font-size: 0.75rem;">Ultimo Accesso:</strong> ${new Date(d.account.lastLogin).toLocaleString('it-IT')}</div>` : ''}
-                `;
-            } else {
-                accountHtml = '<em style="color: #94a3b8;">Nessun dato account disponibile</em>';
-            }
-            document.getElementById('accountInfo').innerHTML = accountHtml;
-            
-            // Sport Data - Enhanced
-            let sportHtml = '';
-            if (d.sport && Object.keys(d.sport).length > 0) {
-                sportHtml = `
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Età:</strong> <span style="font-weight: 600;">${d.sport.age || 'N/A'}</span></div>
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Altezza:</strong> <span style="font-weight: 600;">${d.sport.height ? d.sport.height + ' cm' : 'N/A'}</span></div>
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Peso:</strong> <span style="font-weight: 600;">${d.sport.weight ? d.sport.weight + ' kg' : 'N/A'}</span></div>
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Obiettivo:</strong> <span style="color: #3b82f6; font-weight: 600;">${d.sport.goal || 'N/A'}</span></div>
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Livello:</strong> <span style="font-weight: 600;">${d.sport.level || 'N/A'}</span></div>
-                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Impegno:</strong> <span style="font-weight: 600;">${d.sport.weeklyCommitment || 'N/A'}</span></div>
-                    </div>
-                `;
-                if (d.sport.program) {
-                    sportHtml += `<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);"><strong style="color: #10b981;">Programma:</strong> ${d.sport.program.programName || 'Attivo'}</div>`;
-                }
-                if (d.sport.stats) {
-                    const completedWorkouts = d.sport.stats.completedWorkouts?.length || 0;
-                    const totalCalories = d.sport.stats.totalCalories || 0;
-                    sportHtml += `
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-                            <div><strong style="color: #34d399; font-size: 1.25rem;">${completedWorkouts}</strong><br><span style="font-size: 0.75rem; color: #94a3b8;">Allenamenti</span></div>
-                            <div><strong style="color: #f97316; font-size: 1.25rem;">${totalCalories}</strong><br><span style="font-size: 0.75rem; color: #94a3b8;">Calorie</span></div>
-                        </div>
-                    `;
-                }
-            } else {
-                sportHtml = '<em style="color: #94a3b8;">Nessun dato sport disponibile</em>';
-            }
-            document.getElementById('sportInfo').innerHTML = sportHtml;
-            
-            // Interests - Enhanced
-            let interestsHtml = '';
-            if (d.interests && d.interests.length > 0) {
-                interestsHtml = `<div style="margin-bottom: 1rem;"><strong style="color: #10b981; font-size: 1.1rem;">${d.interests.length}</strong> <span style="color: #94a3b8;">interessi totali</span></div>`;
-                interestsHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                d.interests.slice(0, 10).forEach(interest => {
-                    const name = interest.query || interest.name || 'Unknown';
-                    const status = interest.status ? `<span style="color: #10b981; font-size: 0.75rem;">[${interest.status}]</span>` : '';
-                    interestsHtml += `<div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">• ${name} ${status}</div>`;
-                });
-                interestsHtml += '</div>';
-                if (d.interests.length > 10) {
-                    interestsHtml += `<div style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.85rem;">... e altri ${d.interests.length - 10} interessi</div>`;
-                }
-            } else {
-                interestsHtml = '<em style="color: #94a3b8;">Nessun interesse configurato</em>';
-            }
-            document.getElementById('interestsInfo').innerHTML = interestsHtml;
-            
-            // Webhook - Enhanced (show all pages)
-            let webhookHtml = '';
-            if (d.webhook) {
-                // Check if new format (multiple pages)
-                if (typeof d.webhook === 'object' && d.webhook.webhooks) {
-                    const pages = Object.keys(d.webhook.webhooks);
-                    if (pages.length > 0) {
-                        webhookHtml = `<div style="margin-bottom: 0.5rem;"><strong style="color: #10b981;">✅ Configurato</strong> per ${pages.length} pagina/e</div>`;
-                        webhookHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
-                        pages.forEach(page => {
-                            const url = d.webhook.webhooks[page].url || '';
-                            webhookHtml += `
-                                <div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                    <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: capitalize;">${page}:</strong><br>
-                                    <span style="color: #64748b; font-size: 0.8rem; font-family: monospace; word-break: break-all;">${url.substring(0, 60)}...</span>
-                                </div>
-                            `;
-                        });
-                        webhookHtml += '</div>';
-                    } else {
-                        webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
-                    }
-                } else {
-                    // Old format (single webhook)
-                    const webhookUrl = typeof d.webhook === 'string' ? d.webhook : d.webhook.url || d.webhook.webhook;
-                    if (webhookUrl) {
-                        webhookHtml = `
-                            <div style="margin-bottom: 0.5rem;"><strong style="color: #10b981;">✅ Configurato</strong></div>
-                            <div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                <span style="color: #64748b; font-size: 0.85rem; font-family: monospace; word-break: break-all;">${webhookUrl.substring(0, 60)}...</span>
-                            </div>
-                        `;
-                    } else {
-                        webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
-                    }
-                }
-            } else {
-                webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
-            }
-            document.getElementById('webhookInfo').innerHTML = webhookHtml;
-            
-            // Automations - Enhanced
-            let automationsHtml = '';
-            if (d.automations) {
-                if (d.automations.sport) {
-                    automationsHtml += `
-                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border-left: 3px solid #3b82f6;">
-                            <strong style="color: #3b82f6;">💪 Sport</strong>
-                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
-                                <div>Notifiche: ${d.automations.sport.enableNotifications ? '✅' : '❌'}</div>
-                                <div>Avviso: ${d.automations.sport.notifyBefore || 30} min</div>
-                                <div>Esercizi Discord: ${d.automations.sport.sendExercisesDiscord ? '✅' : '❌'}</div>
-                                <div>Fascia: ${d.automations.sport.preferredTimeSlot || 'N/A'}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-                if (d.automations.habits) {
-                    automationsHtml += `
-                        <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 3px solid #10b981;">
-                            <strong style="color: #10b981;">🔄 Abitudini</strong>
-                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
-                                <div>Auto-tracking: ${d.automations.habits.autoTracking ? '✅' : '❌'}</div>
-                                <div>Reminder: ${d.automations.habits.dailyReminder || 'Nessuno'}</div>
-                                <div>Streak: ${d.automations.habits.streakNotifications ? '✅' : '❌'}</div>
-                                <div>Obiettivo: ${d.automations.habits.weeklyGoal || 5} giorni</div>
-                            </div>
-                        </div>
-                    `;
-                }
-                if (d.automations.notifications) {
-                    automationsHtml += `
-                        <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid #8b5cf6;">
-                            <strong style="color: #8b5cf6;">🔔 Notifiche Discord</strong>
-                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
-                                <div>Monitor: ${d.automations.notifications.notifyMonitorProducts ? '✅' : '❌'}</div>
-                                <div>Workout: ${d.automations.notifications.notifyWorkouts ? '✅' : '❌'}</div>
-                                <div>Abitudini: ${d.automations.notifications.notifyHabits ? '✅' : '❌'}</div>
-                                <div>eBay: ${d.automations.notifications.notifyEbay ? '✅' : '❌'}</div>
-                                <div colspan="2" style="grid-column: 1 / -1; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                                    Frequenza: <strong>${d.automations.notifications.frequency || 'realtime'}</strong>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            } else {
-                automationsHtml = '<em style="color: #94a3b8;">Nessuna automazione configurata</em>';
-            }
-            document.getElementById('automationsInfo').innerHTML = automationsHtml;
-            
-            // eBay Connection - Enhanced
-            let ebayHtml = '';
-            if (d.ebay) {
-                if (d.ebay.connected) {
-                    ebayHtml = `
-                        <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 3px solid #10b981;">
-                            <strong style="color: #10b981;">✅ Connesso</strong>
-                            <div style="margin-top: 0.5rem; font-size: 0.85rem;">
-                                <div>Scope: <span style="color: #94a3b8;">${d.ebay.scope || 'N/A'}</span></div>
-                                ${d.ebay.expiresAt ? `<div>Scade: <span style="color: #94a3b8;">${new Date(d.ebay.expiresAt).toLocaleDateString('it-IT')}</span></div>` : ''}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    ebayHtml = '<div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border-left: 3px solid #ef4444;"><strong style="color: #ef4444;">❌ Non connesso</strong></div>';
-                }
-            } else {
-                ebayHtml = '<em style="color: #94a3b8;">Nessuna connessione eBay</em>';
-            }
-            document.getElementById('ebayInfo').innerHTML = ebayHtml;
-        }
-
-        async function exportUserData() {
-            // Deprecated - now using loadUserData
-            await loadUserData();
-        }
-
-        function downloadUserData() {
-            if (!exportedUserData) {
-                alert('⚠️ Carica prima i dati di un utente');
-                return;
-            }
-            
-            const blob = new Blob([JSON.stringify(exportedUserData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `shappa-userdata-${exportedUserData.userId}-${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showStatus('📥 Download completato!', '#10b981');
-        }
-
-        // ========================================
-        // SERVER DATA FUNCTIONS
-        // ========================================
-
-        async function loadServerData() {
-            try {
-                showStatus('Caricamento dati server...', '#f59e0b');
-                
-                const response = await fetch('https://shapiro.ninja/api/admin/server-data');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                serverData = await response.json();
-                
-                if (!serverData.success) {
-                    throw new Error(serverData.error || 'Errore sconosciuto');
-                }
-                
-                // Update UI
-                updateStats();
-                renderUsers();
-                renderRawData();
-                
-                showStatus('Dati caricati con successo!', '#10b981');
-                
-            } catch (error) {
-                console.error('Error loading server data:', error);
-                showStatus('Errore: ' + error.message, '#ef4444');
-                
-                document.getElementById('usersContainer').innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: #ef4444;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
-                        <strong>Errore caricamento dati</strong>
-                        <p style="margin-top: 1rem; color: #94a3b8;">${error.message}</p>
-                        <button class="btn btn-primary" onclick="loadServerData()" style="margin-top: 2rem;">
-                            Riprova
-                        </button>
-                    </div>
-                `;
-            }
-            
-            // Carica profili sport
-            loadSportProfiles();
-        }
-
-        async function loadSportProfiles() {
-            try {
-                const response = await fetch('/api/sport/profiles/all');
-                if (!response.ok) throw new Error('Sport API error');
-                
-                const data = await response.json();
-                renderSportProfiles(data.profiles || []);
-            } catch (error) {
-                console.error('Error loading sport profiles:', error);
-                document.getElementById('sportContainer').innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: #94a3b8;">
-                        <p>Nessun profilo sport disponibile</p>
-                    </div>
-                `;
-            }
-        }
-
-        function renderSportProfiles(profiles) {
-            const container = document.getElementById('sportContainer');
-            
-            if (profiles.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: #94a3b8;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">🏋️</div>
-                        <strong>Nessun profilo sport</strong>
-                        <p style="margin-top: 0.5rem;">Gli utenti non hanno ancora creato profili fitness</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '<div class="users-grid">' + 
-                profiles.map(profile => `
-                    <div class="user-card">
-                        <div class="user-header">
-                            <div class="user-info">
-                                <h3>${profile.profile.name || 'Anonimo'}</h3>
-                                <span class="user-id">${profile.userId}</span>
-                            </div>
-                        </div>
-                        <div class="user-meta" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0;">
-                            <div>
-                                <strong style="color: #94a3b8; font-size: 0.75rem;">Età</strong>
-                                <p>${profile.profile.age || '-'} anni</p>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8; font-size: 0.75rem;">Peso</strong>
-                                <p>${profile.profile.weight || '-'} kg</p>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8; font-size: 0.75rem;">Obiettivo</strong>
-                                <p style="color: #3b82f6;">${profile.profile.goal || '-'}</p>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8; font-size: 0.75rem;">Livello</strong>
-                                <p>${profile.profile.level || '-'}</p>
-                            </div>
-                        </div>
-                        <div class="user-data" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <div style="margin-bottom: 0.5rem;">
-                                <strong style="color: #94a3b8; font-size: 0.75rem;">Programma</strong>
-                                <p style="color: #10b981;">${profile.programTitle || 'Nessuno'}</p>
-                            </div>
-                            <div style="display: flex; gap: 1rem; margin-top: 0.75rem;">
-                                <div>
-                                    <strong style="color: #34d399; font-size: 1.25rem;">${profile.completedWorkouts}</strong>
-                                    <p style="font-size: 0.75rem; color: #94a3b8;">Allenamenti</p>
-                                </div>
-                                <div>
-                                    <strong style="color: #f97316; font-size: 1.25rem;">${profile.totalCalories}</strong>
-                                    <p style="font-size: 0.75rem; color: #94a3b8;">Calorie</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `).join('') +
-            '</div>';
-        }
-
-        function updateStats() {
-            if (!serverData || !serverData.counts) return;
-            
-            const counts = serverData.counts;
-            
-            document.getElementById('totalUsers').textContent = counts.totalUsers || 0;
-            document.getElementById('totalInterests').textContent = counts.totalInterests || 0;
-            document.getElementById('totalWebhooks').textContent = counts.totalWebhooks || 0;
-            document.getElementById('activeMonitors').textContent = counts.activeMonitors || 0;
-            
-            // Carica statistiche agenti
-            loadAgentStats();
-        }
-        
-        // ========================================
-        // AGENT AI COMMITTEE FUNCTIONS
-        // ========================================
-        
+        /**
+         * Carica statistiche agenti
+         */
         async function loadAgentStats() {
             try {
                 const response = await fetch('https://shapiro.ninja/api/agents/stats');
                 const result = await response.json();
                 
                 if (result.success && result.stats) {
-                    const stats = result.stats;
-                    
-                    // Aggiorna statistiche generali
-                    document.getElementById('totalAgents').textContent = stats.agents || 0;
-                    document.getElementById('queueSize').textContent = stats.queueSize || 0;
-                    
-                    // Render agenti
-                    renderAgents(stats);
+                    agentsData = result.stats;
+                    updateStats(agentsData);
+                    renderAgentWidgets(agentsData);
                 }
             } catch (error) {
                 console.error('Error loading agent stats:', error);
-                document.getElementById('agentsContainer').innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: #ef4444;">
-                        <p>Errore caricamento statistiche agenti: ${error.message}</p>
+                document.getElementById('councilContainer').innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #ef4444;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                        <strong>Errore caricamento agenti</strong>
+                        <p style="margin-top: 1rem; color: #94a3b8;">${error.message}</p>
+                        <button class="btn btn-primary" onclick="loadAgentStats()" style="margin-top: 2rem;">
+                            🔄 Riprova
+                        </button>
                     </div>
                 `;
             }
         }
-        
-        function renderAgents(stats) {
-            const container = document.getElementById('agentsContainer');
+
+        /**
+         * Aggiorna statistiche generali
+         */
+        function updateStats(stats) {
+            document.getElementById('totalAgents').textContent = stats.agents || 0;
+            document.getElementById('queueSize').textContent = stats.queueSize || 0;
+            
+            let totalProcessed = 0;
+            let totalErrors = 0;
+            
+            if (stats.agentStats) {
+                Object.values(stats.agentStats).forEach(agent => {
+                    totalProcessed += agent.tasksProcessed || 0;
+                    totalErrors += agent.errors || 0;
+                });
+            }
+            
+            document.getElementById('tasksProcessed').textContent = totalProcessed;
+            document.getElementById('totalErrors').textContent = totalErrors;
+        }
+
+        /**
+         * Renderizza widget agenti
+         */
+        function renderAgentWidgets(stats) {
+            const container = document.getElementById('councilContainer');
             
             if (!stats.agentStats || Object.keys(stats.agentStats).length === 0) {
                 container.innerHTML = `
@@ -1027,108 +641,375 @@
                 return;
             }
             
-            const agentsGrid = document.createElement('div');
-            agentsGrid.className = 'users-grid';
-            agentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+            const grid = document.createElement('div');
+            grid.className = 'council-grid';
             
-            for (const [agentName, agentData] of Object.entries(stats.agentStats)) {
-                const agentCard = document.createElement('div');
-                agentCard.className = 'user-card';
-                
-                const statusColor = agentData.status === 'idle' ? '#10b981' : 
-                                   agentData.status === 'processing' ? '#f59e0b' : '#ef4444';
-                const statusIcon = agentData.status === 'idle' ? '✅' : 
-                                  agentData.status === 'processing' ? '⚙️' : '❌';
-                
-                agentCard.innerHTML = `
-                    <div class="user-header">
-                        <div class="user-info">
-                            <h3 style="color: #a78bfa;">${agentName}</h3>
-                            <span class="user-id" style="background: ${statusColor}20; color: ${statusColor};">
-                                ${statusIcon} ${agentData.status.toUpperCase()}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem; color: #e2e8f0; line-height: 1.6;">
-                            <div>
-                                <strong style="color: #94a3b8;">Task Processati:</strong><br>
-                                <span style="color: #60a5fa; font-size: 1.25rem; font-weight: 700;">${agentData.tasksProcessed || 0}</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">Errori:</strong><br>
-                                <span style="color: ${agentData.errors > 0 ? '#ef4444' : '#10b981'}; font-size: 1.25rem; font-weight: 700;">${agentData.errors || 0}</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">Priorità:</strong><br>
-                                <span style="color: #f59e0b; font-size: 1.25rem; font-weight: 700;">${agentData.priority || 5}/10</span>
-                            </div>
-                            <div>
-                                <strong style="color: #94a3b8;">Capabilities:</strong><br>
-                                <span style="color: #94a3b8; font-size: 0.7rem;">${(agentData.capabilities || []).length} disponibili</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${agentData.capabilities && agentData.capabilities.length > 0 ? `
-                        <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                            <div style="font-size: 0.7rem; font-weight: 700; color: #8b5cf6; margin-bottom: 0.5rem; text-transform: uppercase;">
-                                Capabilities
-                            </div>
-                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
-                                ${agentData.capabilities.slice(0, 6).map(cap => `
-                                    <span style="background: #0f172a; color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem;">
-                                        ${cap}
-                                    </span>
-                                `).join('')}
-                                ${agentData.capabilities.length > 6 ? `<span style="color: #64748b; font-size: 0.65rem;">+${agentData.capabilities.length - 6} altri</span>` : ''}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    ${agentData.lastError ? `
-                        <div style="background: #1e293b; padding: 1rem; border-radius: 6px; border: 1px solid #ef4444;">
-                            <div style="font-size: 0.7rem; font-weight: 700; color: #ef4444; margin-bottom: 0.5rem;">
-                                Ultimo Errore
-                            </div>
-                            <div style="font-size: 0.7rem; color: #e2e8f0;">
-                                ${agentData.lastError.error || 'Unknown error'}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="user-actions">
-                        <button class="btn-small btn-view" onclick="viewAgentDetails('${agentName}')">
-                            📊 Dettagli
-                        </button>
-                        <button class="btn-small" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white;" onclick="refreshAgent('${agentName}')">
-                            🔄 Refresh
-                        </button>
-                    </div>
-                `;
-                
-                agentsGrid.appendChild(agentCard);
-            }
+            // Ordina agenti per priorità (più alta prima)
+            const agents = Object.entries(stats.agentStats).sort((a, b) => {
+                return (b[1].priority || 5) - (a[1].priority || 5);
+            });
+            
+            agents.forEach(([agentName, agentData]) => {
+                const widget = createAgentWidget(agentName, agentData);
+                grid.appendChild(widget);
+            });
             
             container.innerHTML = '';
-            container.appendChild(agentsGrid);
+            container.appendChild(grid);
         }
-        
-        async function refreshAgent(agentName) {
+
+        /**
+         * Crea widget agente
+         */
+        function createAgentWidget(agentName, agentData) {
+            const widget = document.createElement('div');
+            widget.className = 'agent-widget';
+            widget.onclick = () => openAgentModal(agentName, agentData);
+            
+            const statusClass = agentData.status === 'idle' ? 'status-idle' :
+                               agentData.status === 'processing' ? 'status-processing' : 'status-error';
+            const statusIcon = agentData.status === 'idle' ? '✅' :
+                              agentData.status === 'processing' ? '⚙️' : '❌';
+            
+            widget.innerHTML = `
+                <div class="agent-header">
+                    <div class="agent-name">${agentName}</div>
+                    <div class="agent-status ${statusClass}">
+                        ${statusIcon} ${agentData.status?.toUpperCase() || 'UNKNOWN'}
+                    </div>
+                </div>
+                
+                <div class="agent-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">${agentData.tasksProcessed || 0}</div>
+                        <div class="stat-label">Task</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: ${agentData.errors > 0 ? '#ef4444' : '#10b981'}">
+                            ${agentData.errors || 0}
+                        </div>
+                        <div class="stat-label">Errori</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #f59e0b">${agentData.priority || 5}</div>
+                        <div class="stat-label">Priorità</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #a78bfa">${(agentData.capabilities || []).length}</div>
+                        <div class="stat-label">Capabilities</div>
+                    </div>
+                </div>
+                
+                ${agentData.capabilities && agentData.capabilities.length > 0 ? `
+                    <div class="agent-capabilities">
+                        <div class="capabilities-title">Capabilities</div>
+                        <div class="capabilities-list">
+                            ${agentData.capabilities.slice(0, 4).map(cap => `
+                                <span class="capability-badge">${cap}</span>
+                            `).join('')}
+                            ${agentData.capabilities.length > 4 ? `
+                                <span class="capability-badge">+${agentData.capabilities.length - 4}</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div class="agent-actions">
+                    <button class="btn-action" onclick="event.stopPropagation(); openAgentModal('${agentName}', ${JSON.stringify(agentData).replace(/"/g, '&quot;')})">
+                        📊 Azioni
+                    </button>
+                    <button class="btn-action" onclick="event.stopPropagation(); refreshAgent('${agentName}')">
+                        🔄 Refresh
+                    </button>
+                </div>
+            `;
+            
+            return widget;
+        }
+
+        /**
+         * Apre modal con dettagli agente e azioni
+         */
+        function openAgentModal(agentName, agentData) {
+            selectedAgent = { name: agentName, data: agentData };
+            
+            document.getElementById('modalAgentName').textContent = agentName;
+            
+            const content = document.getElementById('modalAgentContent');
+            
+            // Genera lista azioni basata sulle capabilities
+            const actions = generateAgentActions(agentName, agentData);
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: #a78bfa; margin-bottom: 1rem;">📊 Statistiche</h3>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                        <div style="background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 8px;">
+                            <div style="color: #94a3b8; font-size: 0.75rem; margin-bottom: 0.5rem;">Status</div>
+                            <div style="color: ${agentData.status === 'idle' ? '#10b981' : agentData.status === 'processing' ? '#f59e0b' : '#ef4444'}; font-weight: 700;">
+                                ${agentData.status?.toUpperCase() || 'UNKNOWN'}
+                            </div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 8px;">
+                            <div style="color: #94a3b8; font-size: 0.75rem; margin-bottom: 0.5rem;">Task Processati</div>
+                            <div style="color: #60a5fa; font-size: 1.5rem; font-weight: 700;">${agentData.tasksProcessed || 0}</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); padding: 1rem; border-radius: 8px;">
+                            <div style="color: #94a3b8; font-size: 0.75rem; margin-bottom: 0.5rem;">Priorità</div>
+                            <div style="color: #f59e0b; font-size: 1.5rem; font-weight: 700;">${agentData.priority || 5}/10</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="color: #a78bfa; margin-bottom: 1rem;">🎯 Capabilities</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                        ${(agentData.capabilities || []).map(cap => `
+                            <span class="capability-badge" style="font-size: 0.8rem; padding: 0.5rem 0.75rem;">${cap}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="color: #a78bfa; margin-bottom: 1rem;">⚡ Azioni Disponibili</h3>
+                    <div class="action-list">
+                        ${actions.map(action => `
+                            <div class="action-item">
+                                <div class="action-name">${action.name}</div>
+                                <div class="action-description">${action.description}</div>
+                                <button class="action-execute" onclick="executeAgentAction('${agentName}', '${action.type}', ${JSON.stringify(action.params || {}).replace(/"/g, '&quot;')})">
+                                    ▶️ Esegui
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('agentModal').classList.add('active');
+        }
+
+        /**
+         * Genera azioni disponibili per agente
+         */
+        function generateAgentActions(agentName, agentData) {
+            const actions = [];
+            const capabilities = agentData.capabilities || [];
+            
+            // Azioni comuni per tutti gli agenti
+            actions.push({
+                name: '📊 Visualizza Dettagli',
+                description: 'Mostra informazioni complete sull\'agente',
+                type: 'view_details'
+            });
+            
+            actions.push({
+                name: '🔄 Refresh Status',
+                description: 'Aggiorna lo stato e le statistiche dell\'agente',
+                type: 'refresh'
+            });
+            
+            // Azioni specifiche per agente
+            if (agentName === 'UserProfileAgent') {
+                actions.push({
+                    name: '👤 Unifica Dati Utente',
+                    description: 'Unifica tutti i dati di un utente in un profilo completo',
+                    type: 'unify_user_data',
+                    params: { userId: 'shappa' }
+                });
+                actions.push({
+                    name: '✅ Verifica Dati',
+                    description: 'Verifica la consistenza dei dati utente',
+                    type: 'verify_user_data',
+                    params: { userId: 'shappa' }
+                });
+            }
+            
+            if (agentName === 'MonitorAgent') {
+                actions.push({
+                    name: '📊 Lista Monitor',
+                    description: 'Mostra tutti i monitor attivi',
+                    type: 'list_monitors'
+                });
+                actions.push({
+                    name: '🛑 Stop Tutti Monitor',
+                    description: 'Ferma tutti i monitor attivi',
+                    type: 'stop_all_monitors'
+                });
+            }
+            
+            if (agentName === 'FigmaAgent') {
+                actions.push({
+                    name: '🎨 Fetch File Figma',
+                    description: 'Recupera un file Figma da /file/ o /make/',
+                    type: 'fetch_figma_file',
+                    params: { fileKey: 'rvmn64S4Tj8xmpGzBd6a6T', isMakeFile: true }
+                });
+                actions.push({
+                    name: '💻 Genera Codice',
+                    description: 'Genera codice HTML/CSS/JS da design Figma',
+                    type: 'generate_code',
+                    params: { fileKey: 'rvmn64S4Tj8xmpGzBd6a6T', framework: 'html' }
+                });
+            }
+            
+            if (agentName === 'AIAgent') {
+                actions.push({
+                    name: '📸 Estrai Testo da Immagine',
+                    description: 'Estrae testo da un\'immagine usando OCR',
+                    type: 'extract_text_from_image',
+                    params: { provider: 'openai' }
+                });
+                actions.push({
+                    name: '🔍 Analizza Immagine',
+                    description: 'Analizza un\'immagine e estrae informazioni',
+                    type: 'analyze_image',
+                    params: { provider: 'openai' }
+                });
+                actions.push({
+                    name: '📝 Estrai Dati da Testo',
+                    description: 'Estrae dati strutturati da un testo',
+                    type: 'extract_data_from_text',
+                    params: { format: 'json' }
+                });
+            }
+            
+            if (agentName === 'SportAgent') {
+                actions.push({
+                    name: '💪 Lista Profili Sport',
+                    description: 'Mostra tutti i profili sport degli utenti',
+                    type: 'list_sport_profiles'
+                });
+            }
+            
+            if (agentName === 'RecipeAgent') {
+                actions.push({
+                    name: '🍝 Cerca Ricette',
+                    description: 'Cerca ricette su GialloZafferano',
+                    type: 'search_recipes',
+                    params: { query: 'pasta' }
+                });
+            }
+            
+            return actions;
+        }
+
+        /**
+         * Esegue azione agente
+         */
+        async function executeAgentAction(agentName, actionType, params = {}) {
             try {
-                showStatus(`🔄 Refresh agente ${agentName}...`, '#f59e0b');
+                showStatus(`⚡ Esecuzione: ${actionType}...`, '#f59e0b');
                 
-                // Ricarica statistiche agenti
-                await loadAgentStats();
+                let result;
                 
-                showStatus(`✅ Agente ${agentName} aggiornato!`, '#10b981');
+                switch (actionType) {
+                    case 'view_details':
+                        // Già aperto nel modal
+                        showStatus('✅ Dettagli già visualizzati', '#10b981');
+                        return;
+                    
+                    case 'refresh':
+                        await refreshAgent(agentName);
+                        return;
+                    
+                    case 'unify_user_data':
+                        result = await fetch(`https://shapiro.ninja/api/user-profile/${params.userId}/unify`, {
+                            method: 'POST'
+                        });
+                        break;
+                    
+                    case 'verify_user_data':
+                        result = await fetch(`https://shapiro.ninja/api/user-profile/${params.userId}/verify`, {
+                            method: 'POST'
+                        });
+                        break;
+                    
+                    case 'fetch_figma_file':
+                        result = await fetch('https://shapiro.ninja/api/figma/fetch-make-file', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(params)
+                        });
+                        break;
+                    
+                    case 'generate_code':
+                        result = await fetch('https://shapiro.ninja/api/figma/generate-code', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(params)
+                        });
+                        break;
+                    
+                    case 'extract_text_from_image':
+                    case 'analyze_image':
+                    case 'extract_data_from_text':
+                        result = await fetch(`https://shapiro.ninja/api/ai/${actionType}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(params)
+                        });
+                        break;
+                    
+                    default:
+                        // Usa API generica agenti
+                        result = await fetch('https://shapiro.ninja/api/agents/task', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: actionType,
+                                agent: agentName,
+                                ...params
+                            })
+                        });
+                }
+                
+                if (result) {
+                    const data = await result.json();
+                    if (data.success) {
+                        showStatus('✅ Azione completata con successo!', '#10b981');
+                        // Mostra risultato in alert o console
+                        console.log('Result:', data);
+                        if (data.data) {
+                            alert(`✅ Successo!\n\n${JSON.stringify(data.data, null, 2).substring(0, 500)}...`);
+                        }
+                    } else {
+                        throw new Error(data.error || 'Azione fallita');
+                    }
+                }
+                
             } catch (error) {
-                console.error('Error refreshing agent:', error);
-                showStatus('❌ Errore refresh agente', '#ef4444');
+                console.error('Error executing action:', error);
+                showStatus('❌ Errore: ' + error.message, '#ef4444');
+                alert('❌ Errore: ' + error.message);
             }
         }
-        
+
+        /**
+         * Chiude modal
+         */
+        function closeAgentModal() {
+            document.getElementById('agentModal').classList.remove('active');
+            selectedAgent = null;
+        }
+
+        /**
+         * Refresh agente
+         */
+        async function refreshAgent(agentName) {
+            try {
+                showStatus(`🔄 Refresh ${agentName}...`, '#f59e0b');
+                await loadAgentStats();
+                showStatus(`✅ ${agentName} aggiornato!`, '#10b981');
+            } catch (error) {
+                console.error('Error refreshing agent:', error);
+                showStatus('❌ Errore refresh', '#ef4444');
+            }
+        }
+
+        /**
+         * Refresh tutti gli agenti
+         */
         async function refreshAllAgents() {
             try {
                 showStatus('🔄 Refresh tutti gli agenti...', '#f59e0b');
@@ -1136,371 +1017,13 @@
                 showStatus('✅ Tutti gli agenti aggiornati!', '#10b981');
             } catch (error) {
                 console.error('Error refreshing agents:', error);
-                showStatus('❌ Errore refresh agenti', '#ef4444');
-            }
-        }
-        
-        async function viewAgentDetails(agentName) {
-            try {
-                const response = await fetch(`https://shapiro.ninja/api/agents/agent/${agentName}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    const detailsWindow = window.open('', '_blank', 'width=1000,height=800');
-                    detailsWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <title>Shappa Admin - ${agentName}</title>
-                            <style>
-                                body {
-                                    font-family: 'JetBrains Mono', monospace;
-                                    background: #0d1117;
-                                    color: #c9d1d9;
-                                    padding: 2rem;
-                                    line-height: 1.6;
-                                }
-                                h1 { color: #58a6ff; margin-bottom: 2rem; }
-                                pre {
-                                    background: #161b22;
-                                    padding: 1.5rem;
-                                    border-radius: 8px;
-                                    overflow: auto;
-                                    border: 1px solid #30363d;
-                                }
-                                .json-key { color: #79c0ff; }
-                                .json-string { color: #a5d6ff; }
-                                .json-number { color: #ffa657; }
-                                .json-boolean { color: #ff7b72; }
-                                button {
-                                    margin-top: 2rem;
-                                    padding: 0.75rem 1.5rem;
-                                    background: #21262d;
-                                    color: #c9d1d9;
-                                    border: 1px solid #30363d;
-                                    border-radius: 6px;
-                                    cursor: pointer;
-                                    font-family: inherit;
-                                    font-weight: 600;
-                                }
-                                button:hover {
-                                    background: #30363d;
-                                }
-                            </style>
-                        </head>
-                        <body>
-                            <h1>🤖 Dettagli Agente: ${agentName}</h1>
-                            <pre>${syntaxHighlight(JSON.stringify(result.agent, null, 2))}</pre>
-                            <button onclick="window.close()">✖️ Chiudi</button>
-                        </body>
-                        </html>
-                    `);
-                }
-            } catch (error) {
-                console.error('Error viewing agent details:', error);
-                alert('❌ Errore caricamento dettagli agente: ' + error.message);
+                showStatus('❌ Errore refresh', '#ef4444');
             }
         }
 
-        async function renderUsers() {
-            if (!serverData || !serverData.data) return;
-            
-            const users = serverData.data.users;
-            const container = document.getElementById('usersContainer');
-            
-            if (Object.keys(users).length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 3rem; color: #94a3b8;">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
-                        <strong>Nessun utente trovato</strong>
-                        <p style="margin-top: 0.5rem;">Il server non ha utenti registrati</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Mostra loading
-            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Caricamento dati completi...</p></div>';
-            
-            // Carica dati completi per ogni utente usando l'API unificata
-            const usersWithData = [];
-            for (const [filename, userData] of Object.entries(users)) {
-                const userId = filename.replace('.json', '');
-                try {
-                    const response = await fetch(`https://shapiro.ninja/api/admin/user-data/${userId}`);
-                    const fullData = await response.json();
-                    if (fullData.success) {
-                        usersWithData.push({
-                            userId,
-                            account: userData,
-                            ...fullData.data
-                        });
-                    } else {
-                        usersWithData.push({ userId, account: userData });
-                    }
-                } catch (error) {
-                    console.error(`Error loading data for ${userId}:`, error);
-                    usersWithData.push({ userId, account: userData });
-                }
-            }
-            
-            // Render con dati completi
-            container.innerHTML = '<div class="users-grid">' + 
-                usersWithData.map(user => {
-                    const interestsCount = user.interests?.length || 0;
-                    
-                    // Webhook data (new format with multiple pages)
-                    let webhookDisplay = '❌ Non configurato';
-                    let webhookPages = [];
-                    if (user.webhook) {
-                        if (typeof user.webhook === 'object' && user.webhook.webhooks) {
-                            webhookPages = Object.keys(user.webhook.webhooks);
-                            if (webhookPages.length > 0) {
-                                webhookDisplay = `✅ Configurato (${webhookPages.length} pagina/e)`;
-                            }
-                        } else {
-                            const webhookUrl = typeof user.webhook === 'string' ? user.webhook : user.webhook.url || user.webhook.webhook || user.webhook.default;
-                            if (webhookUrl) {
-                                webhookDisplay = '✅ Configurato';
-                            }
-                        }
-                    }
-                    
-                    // Sport data
-                    const sportAge = user.sport?.age || 'N/A';
-                    const sportHeight = user.sport?.height ? user.sport.height + ' cm' : 'N/A';
-                    const sportWeight = user.sport?.weight ? user.sport.weight + ' kg' : 'N/A';
-                    const sportGoal = user.sport?.goal || 'N/A';
-                    const sportLevel = user.sport?.level || 'N/A';
-                    const weeklyCommitment = user.sport?.weeklyCommitment || 'N/A';
-                    const completedWorkouts = user.sport?.stats?.completedWorkouts?.length || 0;
-                    const totalCalories = user.sport?.stats?.totalCalories || 0;
-                    
-                    return `
-                        <div class="user-card" style="border: 2px solid rgba(139, 92, 246, 0.3);">
-                            <div class="user-header">
-                                <div class="user-info">
-                                    <h3>${user.account.username || user.userId}</h3>
-                                    <span class="user-id">${user.userId}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Account Info -->
-                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                                <div style="font-size: 0.7rem; font-weight: 700; color: #a78bfa; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    👤 Account
-                                </div>
-                                <div style="font-size: 0.8rem; color: #e2e8f0; line-height: 1.6;">
-                                    <strong>Email:</strong> ${user.account.email || 'N/A'}<br>
-                                    <strong>Registrato:</strong> ${user.account.createdAt ? new Date(user.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}
-                                </div>
-                            </div>
-                            
-                            <!-- Sport Data -->
-                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                                <div style="font-size: 0.7rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    💪 Sport & Fitness
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem; color: #e2e8f0; line-height: 1.6;">
-                                    <div><strong>Età:</strong> ${sportAge}</div>
-                                    <div><strong>Altezza:</strong> ${sportHeight}</div>
-                                    <div><strong>Peso:</strong> ${sportWeight}</div>
-                                    <div><strong>Livello:</strong> ${sportLevel}</div>
-                                    <div style="grid-column: 1 / -1;"><strong>Obiettivo:</strong> ${sportGoal}</div>
-                                    <div style="grid-column: 1 / -1;"><strong>Impegno:</strong> ${weeklyCommitment}</div>
-                                    <div><strong>Allenamenti:</strong> ${completedWorkouts}</div>
-                                    <div><strong>Calorie:</strong> ${totalCalories} kcal</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Interests -->
-                            ${interestsCount > 0 ? `
-                                <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                                    <div style="font-size: 0.7rem; font-weight: 700; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                        ⭐ Interests (${interestsCount})
-                                    </div>
-                                    ${user.interests.slice(0, 3).map(interest => `
-                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: #0f172a; border-radius: 4px; margin-bottom: 0.25rem; font-size: 0.7rem;">
-                                            <span style="color: #e2e8f0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                ${interest.productName || interest.query || interest.name || 'N/A'}
-                                            </span>
-                                            <button 
-                                                onclick="stopMonitorAdmin('${interest.id}', '${user.userId}')" 
-                                                style="padding: 0.25rem 0.5rem; background: #dc2626; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.65rem; margin-left: 0.5rem; white-space: nowrap;"
-                                                title="Stop monitor">
-                                                STOP
-                                            </button>
-                                        </div>
-                                    `).join('')}
-                                    ${interestsCount > 3 ? `<div style="font-size: 0.65rem; color: #64748b; text-align: center; margin-top: 0.5rem;">+${interestsCount - 3} altri...</div>` : ''}
-                                </div>
-                            ` : ''}
-                            
-                            <!-- Webhook -->
-                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
-                                <div style="font-size: 0.7rem; font-weight: 700; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    🔔 Webhook
-                                </div>
-                                <div style="font-size: 0.7rem; color: ${webhookPages.length > 0 || webhookDisplay.includes('✅') ? '#10b981' : '#64748b'};">
-                                    ${webhookDisplay}
-                                    ${webhookPages.length > 0 ? `
-                                        <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.25rem;">
-                                            ${webhookPages.map(page => `<span style="background: #0f172a; color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem; text-transform: capitalize;">${page}</span>`).join('')}
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            
-                            <!-- Automations -->
-                            ${user.automations ? `
-                                <div style="background: #1e293b; padding: 1rem; border-radius: 6px;">
-                                    <div style="font-size: 0.7rem; font-weight: 700; color: #ec4899; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                                        ⚙️ Automations
-                                    </div>
-                                    <div style="font-size: 0.7rem; color: #e2e8f0; line-height: 1.8;">
-                                        ${user.automations.sport ? `
-                                            <strong>Sport:</strong><br>
-                                            • Notifiche: ${user.automations.sport.enableNotifications ? '✅' : '❌'}<br>
-                                            • Fascia: ${user.automations.sport.preferredTimeSlot || 'N/A'}<br>
-                                        ` : ''}
-                                        ${user.automations.habits ? `
-                                            <strong>Abitudini:</strong><br>
-                                            • Obiettivo: ${user.automations.habits.weeklyGoal || 5} giorni/sett
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }).join('') + '</div>';
-        }
-
-        function renderRawData() {
-            if (!serverData) return;
-            
-            const formatted = JSON.stringify(serverData, null, 2);
-            const highlighted = syntaxHighlight(formatted);
-            
-            document.getElementById('rawData').innerHTML = highlighted;
-        }
-
-        function syntaxHighlight(json) {
-            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                let cls = 'json-number';
-                if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                }
-                return '<span class="' + cls + '">' + match + '</span>';
-            });
-        }
-
-        function viewUserDetails(userId) {
-            if (!serverData || !serverData.data) return;
-            
-            const userData = serverData.data.users[`${userId}.json`];
-            const interests = serverData.data.interests[`interests_${userId}.json`] || [];
-            const webhooks = serverData.data.webhooks[`webhooks_${userId}.json`] || [];
-            
-            const details = {
-                userId,
-                userData,
-                interests,
-                webhooks
-            };
-            
-            const detailsWindow = window.open('', '_blank', 'width=1000,height=800');
-            detailsWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Shappa Admin - ${userId}</title>
-                    <style>
-                        body {
-                            font-family: 'JetBrains Mono', monospace;
-                            background: #0d1117;
-                            color: #c9d1d9;
-                            padding: 2rem;
-                            line-height: 1.6;
-                        }
-                        h1 { color: #58a6ff; margin-bottom: 2rem; }
-                        pre {
-                            background: #161b22;
-                            padding: 1.5rem;
-                            border-radius: 8px;
-                            overflow: auto;
-                            border: 1px solid #30363d;
-                        }
-                        .json-key { color: #79c0ff; }
-                        .json-string { color: #a5d6ff; }
-                        .json-number { color: #ffa657; }
-                        .json-boolean { color: #ff7b72; }
-                        button {
-                            margin-top: 2rem;
-                            padding: 0.75rem 1.5rem;
-                            background: #21262d;
-                            color: #c9d1d9;
-                            border: 1px solid #30363d;
-                            border-radius: 6px;
-                            cursor: pointer;
-                            font-family: inherit;
-                            font-weight: 600;
-                        }
-                        button:hover {
-                            background: #30363d;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <h1>👤 Dettagli Utente: ${userId}</h1>
-                    <pre>${syntaxHighlight(JSON.stringify(details, null, 2))}</pre>
-                    <button onclick="window.close()">✖️ Chiudi</button>
-                </body>
-                </html>
-            `);
-        }
-
-        async function deleteUser(userId) {
-            if (!confirm(`⚠️ ATTENZIONE!\n\nEliminare completamente l'utente "${userId}"?\n\nVerranno eliminati:\n- File user\n- File interests\n- File webhooks\n- Monitor attivi\n\nQuesta azione è IRREVERSIBILE!`)) {
-                return;
-            }
-            
-            if (!confirm(`🚨 CONFERMA FINALE\n\nSei ASSOLUTAMENTE SICURO di voler eliminare "${userId}"?`)) {
-                return;
-            }
-            
-            try {
-                showStatus('🗑️ Eliminazione in corso...', '#f59e0b');
-                
-                const response = await fetch(`https://shapiro.ninja/api/admin/user/${userId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatus(`✅ Utente ${userId} eliminato!`, '#10b981');
-                    
-                    // Ricarica dati dopo 2 secondi
-                    setTimeout(() => {
-                        loadServerData();
-                    }, 2000);
-                } else {
-                    throw new Error(result.error || 'Errore eliminazione');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error deleting user:', error);
-                showStatus('❌ Errore: ' + error.message, '#ef4444');
-            }
-        }
-
+        /**
+         * Mostra status
+         */
         function showStatus(message, color) {
             const indicator = document.getElementById('statusIndicator');
             indicator.textContent = message;
@@ -1512,71 +1035,12 @@
             }, 3000);
         }
 
-        async function stopMonitorAdmin(interestId, userId) {
-            if (!confirm(`Fermare il monitor ${interestId}?`)) {
-                return;
+        // Chiudi modal cliccando fuori
+        document.getElementById('agentModal').addEventListener('click', (e) => {
+            if (e.target.id === 'agentModal') {
+                closeAgentModal();
             }
-            
-            try {
-                showStatus(`🛑 Stopping monitor ${interestId}...`, '#f59e0b');
-                
-                const response = await fetch(`https://shapiro.ninja/api/monitors/stop/${interestId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: userId })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatus(`✅ Monitor ${interestId} fermato!`, '#10b981');
-                    
-                    // Ricarica dati dopo 1 secondo
-                    setTimeout(() => {
-                        loadServerData();
-                    }, 1000);
-                } else {
-                    throw new Error(result.error || 'Errore stop monitor');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error stopping monitor:', error);
-                showStatus('❌ Errore: ' + error.message, '#ef4444');
-            }
-        }
-
-        async function stopAllMonitorsAdmin() {
-            if (!confirm(`⚠️ ATTENZIONE!\n\nFermare TUTTI i monitor attivi?\n\nQuesta azione fermerà tutti i monitor di tutti gli utenti!`)) {
-                return;
-            }
-            
-            try {
-                showStatus('🛑 Stopping ALL monitors...', '#f59e0b');
-                
-                const response = await fetch(`https://shapiro.ninja/api/monitors/stop-all`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatus(`✅ Tutti i monitor fermati! (${result.stopped} stopped)`, '#10b981');
-                    
-                    // Ricarica dati dopo 2 secondi
-                    setTimeout(() => {
-                        loadServerData();
-                    }, 2000);
-                } else {
-                    throw new Error(result.error || 'Errore stop all monitors');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error stopping all monitors:', error);
-                showStatus('❌ Errore: ' + error.message, '#ef4444');
-            }
-        }
+        });
     </script>
 </body>
 </html>
-
