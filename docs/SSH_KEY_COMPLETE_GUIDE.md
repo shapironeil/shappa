@@ -32,7 +32,8 @@ AAAEASmqXtuxeV1ot+QO1zYs9TNpVQjTH2ui4kLq4FHqb/A53RhdMOSRIu5hakjKROqwy3
 ### Sul Server, esegui:
 
 ```bash
-ssh root@207.154.218.16
+# Connettiti al server (sostituisci YOUR_SERVER_IP con l'IP del tuo server)
+ssh root@YOUR_SERVER_IP
 su - deploy
 
 # Elimina chiave vecchia
@@ -93,8 +94,8 @@ Una chiave ed25519 corretta:
 Dopo aver configurato, testa:
 
 ```bash
-# Sul server
-ssh -i ~/.ssh/github_deploy_key deploy@207.154.218.16 "echo 'Funziona!'"
+# Sul server (sostituisci YOUR_SERVER_IP con l'IP del tuo server)
+ssh -i ~/.ssh/github_deploy_key deploy@YOUR_SERVER_IP "echo 'Funziona!'"
 ```
 
 Se funziona, la chiave è corretta!
@@ -102,4 +103,5 @@ Se funziona, la chiave è corretta!
 ---
 
 **Rigenera la chiave sul server e copiala COMPLETA (inclusi BEGIN/END) su GitHub!** 🔑
+
 

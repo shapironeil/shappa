@@ -25,8 +25,8 @@ Questo errore significa che la chiave SSH non è valida o è in un formato non s
 ### Connettiti al server e genera una nuova chiave:
 
 ```bash
-# Connettiti al server
-ssh root@207.154.218.16
+# Connettiti al server (sostituisci YOUR_SERVER_IP con l'IP del tuo server)
+ssh root@YOUR_SERVER_IP
 
 # Passa all'utente deploy
 su - deploy
@@ -98,8 +98,8 @@ ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... github-actions-deploy
 Dopo aver configurato, testa la connessione:
 
 ```bash
-# Sul server, come utente deploy
-ssh -i ~/.ssh/github_deploy_key deploy@207.154.218.16 "echo 'SSH funziona!'"
+# Sul server, come utente deploy (sostituisci YOUR_SERVER_IP con l'IP del tuo server)
+ssh -i ~/.ssh/github_deploy_key deploy@YOUR_SERVER_IP "echo 'SSH funziona!'"
 ```
 
 Se funziona, la chiave è corretta.
@@ -141,4 +141,5 @@ cat ~/.ssh/github_deploy_key
 ---
 
 **Dopo aver configurato la chiave corretta, il deploy funzionerà!** 🚀
+
 
