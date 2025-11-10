@@ -406,6 +406,33 @@
 
     <!-- Main Content -->
     <main class="admin-main">
+        <!-- Data Export Section -->
+        <div class="section">
+            <h2 class="section-title">📦 Esporta Tutti i Dati Utente</h2>
+            <div style="background: #1e293b; padding: 2rem; border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.2);">
+                <p style="margin-bottom: 1.5rem; color: #94a3b8;">
+                    Esporta un report completo con tutti i dati di un utente: Sport, Dieta, Calendario, Obiettivi, Progetti, Interessi, Automazioni.
+                </p>
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <input 
+                        type="text" 
+                        id="exportUserId" 
+                        placeholder="User ID o Username" 
+                        style="flex: 1; min-width: 200px; padding: 0.75rem; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; border-radius: 8px; font-size: 1rem;"
+                    />
+                    <button class="btn btn-primary" onclick="exportUserData()">
+                        📥 Esporta Dati
+                    </button>
+                    <button class="btn btn-success" onclick="downloadUserData()">
+                        💾 Download JSON
+                    </button>
+                </div>
+                <div id="exportResult" style="margin-top: 1.5rem; padding: 1rem; background: #0f172a; border-radius: 8px; border: 1px solid #334155; display: none;">
+                    <pre id="exportDataDisplay" style="margin: 0; color: #a5b4fc; max-height: 400px; overflow-y: auto; font-size: 0.9rem;"></pre>
+                </div>
+            </div>
+        </div>
+
         <!-- Stats Overview -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -468,13 +495,98 @@
         </div>
     </main>
 
+    <!-- Load DataManager -->
+    <script src="../core/dataManager.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+
     <script>
         let serverData = null;
+        let exportedUserData = null;
 
         // Load data on page load
         document.addEventListener('DOMContentLoaded', () => {
             loadServerData();
         });
+
+        // ========================================
+        // DATA EXPORT FUNCTIONS
+        // ========================================
+
+        async function exportUserData() {
+            const userId = document.getElementById('exportUserId').value.trim();
+            
+            if (!userId) {
+                alert('⚠️ Inserisci un User ID');
+                return;
+            }
+
+            try {
+                showStatus('🔄 Esportazione dati in corso...', '#f59e0b');
+                
+                // Temporarily override DataManager userId
+                const originalUserId = window.DataManager.userId;
+                window.DataManager.userId = userId;
+                
+                // Export all data
+                exportedUserData = await window.DataManager.exportAllData();
+                
+                // Restore original userId
+                window.DataManager.userId = originalUserId;
+                
+                if (exportedUserData.success === false) {
+                    throw new Error(exportedUserData.error || 'Export failed');
+                }
+                
+                // Display in UI
+                const exportResult = document.getElementById('exportResult');
+                const exportDisplay = document.getElementById('exportDataDisplay');
+                
+                exportDisplay.textContent = JSON.stringify(exportedUserData, null, 2);
+                exportResult.style.display = 'block';
+                
+                showStatus('✅ Dati esportati con successo!', '#10b981');
+                
+                // Show summary
+                const summary = {
+                    userId: exportedUserData.userId,
+                    exportDate: exportedUserData.exportDate,
+                    modules: {
+                        sport: exportedUserData.data.sport?.profile ? '✅' : '❌',
+                        interests: exportedUserData.data.interests?.length || 0,
+                        automations: exportedUserData.data.automations ? '✅' : '❌'
+                    }
+                };
+                
+                console.log('📊 Export Summary:', summary);
+                
+            } catch (error) {
+                console.error('❌ Export error:', error);
+                showStatus('❌ Errore esportazione: ' + error.message, '#ef4444');
+            }
+        }
+
+        function downloadUserData() {
+            if (!exportedUserData) {
+                alert('⚠️ Esporta prima i dati di un utente');
+                return;
+            }
+            
+            const blob = new Blob([JSON.stringify(exportedUserData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `shappa-export-${exportedUserData.userId}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showStatus('📥 Download completato!', '#10b981');
+        }
+
+        // ========================================
+        // SERVER DATA FUNCTIONS
+        // ========================================
 
         async function loadServerData() {
             try {

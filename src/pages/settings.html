@@ -764,33 +764,49 @@
                     <div class="venus-settings-grid">
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Regole di Prezzo</h3>
+                                <h3 class="venus-widget-title">🏋️ Notifiche Sport</h3>
                                 
                                 <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Aggiornamento Automatico Prezzi</span>
+                                    <span class="venus-switch-label">Abilita Notifiche Pre-Allenamento</span>
                                     <label class="venus-switch">
-                                        <input type="checkbox" id="autoPriceUpdate">
+                                        <input type="checkbox" id="enableSportNotifications" checked>
                                         <span class="venus-switch-slider"></span>
                                     </label>
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Margine Minimo (%)</label>
-                                    <input type="number" class="venus-form-input" id="minMargin" placeholder="15" min="0" max="100">
+                                    <label class="venus-form-label">Notifica Prima di (minuti)</label>
+                                    <select class="venus-form-select" id="notifyBeforeWorkout">
+                                        <option value="15">15 minuti</option>
+                                        <option value="30" selected>30 minuti</option>
+                                        <option value="60">1 ora</option>
+                                        <option value="120">2 ore</option>
+                                    </select>
+                                    <div class="venus-form-help">Ricevi promemoria Discord prima dell'allenamento</div>
+                                </div>
+                                
+                                <div class="venus-switch-group">
+                                    <span class="venus-switch-label">Invia Esercizi su Discord (1 ogni 10min)</span>
+                                    <label class="venus-switch">
+                                        <input type="checkbox" id="sendExercisesDiscord">
+                                        <span class="venus-switch-slider"></span>
+                                    </label>
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Frequenza Controllo</label>
-                                    <select class="venus-form-select" id="priceCheckFrequency">
-                                        <option value="hourly">Ogni ora</option>
-                                        <option value="daily" selected>Giornaliera</option>
-                                        <option value="weekly">Settimanale</option>
+                                    <label class="venus-form-label">Fascia Oraria Preferita</label>
+                                    <select class="venus-form-select" id="preferredTimeSlot">
+                                        <option value="06:00-09:00">Mattina (06:00-09:00)</option>
+                                        <option value="12:00-14:00">Pranzo (12:00-14:00)</option>
+                                        <option value="18:00-20:00" selected>Sera (18:00-20:00)</option>
+                                        <option value="20:00-22:00">Tardi (20:00-22:00)</option>
                                     </select>
+                                    <div class="venus-form-help">Il calendario suggerirà orari in questa fascia</div>
                                 </div>
                                 
                                 <div class="venus-btn-group">
-                                    <button type="button" class="venus-btn venus-btn-primary" onclick="savePricingRules()">
-                                        Salva Regole
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveSportAutomations()">
+                                        Salva Automazioni Sport
                                     </button>
                                 </div>
                             </div>
@@ -798,32 +814,43 @@
                         
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Gestione Inventario</h3>
+                                <h3 class="venus-widget-title">🎯 Abitudini</h3>
                                 
                                 <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Gestione Stock Automatica</span>
+                                    <span class="venus-switch-label">Tracciamento Automatico Abitudini</span>
                                     <label class="venus-switch">
-                                        <input type="checkbox" id="autoStockManagement">
+                                        <input type="checkbox" id="autoHabitTracking" checked>
                                         <span class="venus-switch-slider"></span>
                                     </label>
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Soglia Scorte Basse</label>
-                                    <input type="number" class="venus-form-input" id="lowStockThreshold" placeholder="5" min="0">
+                                    <label class="venus-form-label">Reminder Giornalieri</label>
+                                    <select class="venus-form-select" id="dailyHabitReminder">
+                                        <option value="none">Nessuno</option>
+                                        <option value="morning">Mattina (08:00)</option>
+                                        <option value="evening" selected>Sera (20:00)</option>
+                                        <option value="both">Mattina e Sera</option>
+                                    </select>
                                 </div>
                                 
                                 <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Pausa Automatica se Esaurito</span>
+                                    <span class="venus-switch-label">Notifica Streak (serie consecutive)</span>
                                     <label class="venus-switch">
-                                        <input type="checkbox" id="autoPauseOutOfStock" checked>
+                                        <input type="checkbox" id="streakNotifications" checked>
                                         <span class="venus-switch-slider"></span>
                                     </label>
                                 </div>
                                 
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Obiettivo Settimanale</label>
+                                    <input type="number" class="venus-form-input" id="weeklyHabitGoal" placeholder="5" min="1" max="7" value="5">
+                                    <div class="venus-form-help">Giorni a settimana per completare le abitudini</div>
+                                </div>
+                                
                                 <div class="venus-btn-group">
-                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveInventoryRules()">
-                                        Salva Regole
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveHabitAutomations()">
+                                        Salva Abitudini
                                     </button>
                                 </div>
                             </div>
@@ -968,6 +995,7 @@
     <script src="../core/apiClient.js"></script>
     <script src="../core/eventBus.js"></script>
     <script src="../core/store.js"></script>
+    <script src="../core/dataManager.js"></script>
     <script src="../utils/auth-v2.js"></script>
     <script>
         // Enforce login for protected page
@@ -1046,32 +1074,130 @@
             console.log('General settings saved:', { language, currency, timezone });
         }
 
+        // ========== SPORT AUTOMATIONS ==========
+        async function saveSportAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                alert('❌ Devi essere autenticato');
+                return;
+            }
+
+            const automations = {
+                enableNotifications: document.getElementById('enableSportNotifications').checked,
+                notifyBefore: parseInt(document.getElementById('notifyBeforeWorkout').value),
+                sendExercisesDiscord: document.getElementById('sendExercisesDiscord').checked,
+                preferredTimeSlot: document.getElementById('preferredTimeSlot').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/automations/sport`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        automations
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Automazioni Sport salvate con successo!');
+                    console.log('Sport automations saved:', automations);
+                } else {
+                    alert('❌ Errore nel salvataggio: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving sport automations:', error);
+                alert('❌ Errore durante il salvataggio.');
+            }
+        }
+
+        async function loadSportAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/automations/sport/${user.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.automations) {
+                    const auto = data.automations;
+                    document.getElementById('enableSportNotifications').checked = auto.enableNotifications || false;
+                    document.getElementById('notifyBeforeWorkout').value = auto.notifyBefore || 30;
+                    document.getElementById('sendExercisesDiscord').checked = auto.sendExercisesDiscord || false;
+                    document.getElementById('preferredTimeSlot').value = auto.preferredTimeSlot || '18:00-20:00';
+                }
+            } catch (error) {
+                console.error('Error loading sport automations:', error);
+            }
+        }
+
+        // ========== HABIT AUTOMATIONS ==========
+        async function saveHabitAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                alert('❌ Devi essere autenticato');
+                return;
+            }
+
+            const habitSettings = {
+                autoTracking: document.getElementById('autoHabitTracking').checked,
+                dailyReminder: document.getElementById('dailyHabitReminder').value,
+                streakNotifications: document.getElementById('streakNotifications').checked,
+                weeklyGoal: parseInt(document.getElementById('weeklyHabitGoal').value) || 5
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/automations/habits`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        settings: habitSettings
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Impostazioni Abitudini salvate!');
+                    console.log('Habit settings saved:', habitSettings);
+                } else {
+                    alert('❌ Errore nel salvataggio: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving habit settings:', error);
+                alert('❌ Errore durante il salvataggio.');
+            }
+        }
+
+        async function loadHabitAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/automations/habits/${user.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.settings) {
+                    const settings = data.settings;
+                    document.getElementById('autoHabitTracking').checked = settings.autoTracking !== false;
+                    document.getElementById('dailyHabitReminder').value = settings.dailyReminder || 'evening';
+                    document.getElementById('streakNotifications').checked = settings.streakNotifications !== false;
+                    document.getElementById('weeklyHabitGoal').value = settings.weeklyGoal || 5;
+                }
+            } catch (error) {
+                console.error('Error loading habit settings:', error);
+            }
+        }
+
         function savePricingRules() {
-            const autoPriceUpdate = document.getElementById('autoPriceUpdate').checked;
-            const minMargin = document.getElementById('minMargin').value;
-            const priceCheckFrequency = document.getElementById('priceCheckFrequency').value;
-            
-            localStorage.setItem('pricing_rules', JSON.stringify({
-                autoPriceUpdate,
-                minMargin: parseFloat(minMargin) || 15,
-                priceCheckFrequency
-            }));
-            
-            console.log('Pricing rules saved');
+            // Deprecated - kept for backward compatibility
+            console.log('Pricing rules deprecated');
         }
 
         function saveInventoryRules() {
-            const autoStockManagement = document.getElementById('autoStockManagement').checked;
-            const lowStockThreshold = document.getElementById('lowStockThreshold').value;
-            const autoPauseOutOfStock = document.getElementById('autoPauseOutOfStock').checked;
-            
-            localStorage.setItem('inventory_rules', JSON.stringify({
-                autoStockManagement,
-                lowStockThreshold: parseInt(lowStockThreshold) || 5,
-                autoPauseOutOfStock
-            }));
-            
-            console.log('Inventory rules saved');
+            // Deprecated - kept for backward compatibility
+            console.log('Inventory rules deprecated');
         }
 
         function requestDataDeletion() {
@@ -1435,6 +1561,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateEbayStatusUI();
             loadDiscordStatus();
+            loadSportAutomations();
+            loadHabitAutomations();
         });
 
         // Search functionality

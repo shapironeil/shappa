@@ -2438,6 +2438,170 @@ app.get('/api/sport/webhook', async (req, res) => {
     }
 });
 
+// ========================================
+// AUTOMATIONS API
+// ========================================
+
+/**
+ * POST /api/automations/sport
+ * Save sport automation settings
+ */
+app.post('/api/automations/sport', async (req, res) => {
+    try {
+        const { userId, automations } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'Missing userId' });
+        }
+
+        const automationsDir = path.join(DATA_DIR, 'automations');
+        if (!fs.existsSync(automationsDir)) {
+            fs.mkdirSync(automationsDir, { recursive: true });
+        }
+
+        const automationsPath = path.join(automationsDir, `${userId}.json`);
+        let existingData = {};
+        
+        if (fs.existsSync(automationsPath)) {
+            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        }
+
+        existingData.sport = {
+            ...automations,
+            lastUpdated: new Date().toISOString()
+        };
+
+        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
+        console.log(`✅ Sport automations saved for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'Sport automations saved',
+            automations: existingData.sport
+        });
+    } catch (error) {
+        console.error('Error saving sport automations:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/automations/sport/:userId
+ * Get sport automation settings
+ */
+app.get('/api/automations/sport/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+
+        if (!fs.existsSync(automationsPath)) {
+            return res.json({
+                success: true,
+                automations: {
+                    enableNotifications: false,
+                    notifyBefore: 30,
+                    sendExercisesDiscord: false,
+                    preferredTimeSlot: '18:00-20:00'
+                }
+            });
+        }
+
+        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        res.json({
+            success: true,
+            automations: data.sport || {
+                enableNotifications: false,
+                notifyBefore: 30,
+                sendExercisesDiscord: false,
+                preferredTimeSlot: '18:00-20:00'
+            }
+        });
+    } catch (error) {
+        console.error('Error getting sport automations:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/automations/habits
+ * Save habit automation settings
+ */
+app.post('/api/automations/habits', async (req, res) => {
+    try {
+        const { userId, settings } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'Missing userId' });
+        }
+
+        const automationsDir = path.join(DATA_DIR, 'automations');
+        if (!fs.existsSync(automationsDir)) {
+            fs.mkdirSync(automationsDir, { recursive: true });
+        }
+
+        const automationsPath = path.join(automationsDir, `${userId}.json`);
+        let existingData = {};
+        
+        if (fs.existsSync(automationsPath)) {
+            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        }
+
+        existingData.habits = {
+            ...settings,
+            lastUpdated: new Date().toISOString()
+        };
+
+        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
+        console.log(`✅ Habit settings saved for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'Habit settings saved',
+            settings: existingData.habits
+        });
+    } catch (error) {
+        console.error('Error saving habit settings:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/automations/habits/:userId
+ * Get habit automation settings
+ */
+app.get('/api/automations/habits/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+
+        if (!fs.existsSync(automationsPath)) {
+            return res.json({
+                success: true,
+                settings: {
+                    autoTracking: true,
+                    dailyReminder: 'evening',
+                    streakNotifications: true,
+                    weeklyGoal: 5
+                }
+            });
+        }
+
+        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        res.json({
+            success: true,
+            settings: data.habits || {
+                autoTracking: true,
+                dailyReminder: 'evening',
+                streakNotifications: true,
+                weeklyGoal: 5
+            }
+        });
+    } catch (error) {
+        console.error('Error getting habit settings:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
