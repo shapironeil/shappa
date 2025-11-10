@@ -3361,6 +3361,7 @@ app.get('/api/agents/communication-stats', async (req, res) => {
  * Get unified user profile (profilo unificato)
  */
 app.get('/api/user-profile/:userId', async (req, res) => {
+    console.log(`📥 GET /api/user-profile/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { forceRefresh } = req.query;
@@ -3462,11 +3463,14 @@ if (!fs.existsSync(DIET_DATA_DIR)) {
     fs.mkdirSync(DIET_DATA_DIR, { recursive: true });
 }
 
+console.log('✅ Diet API endpoints directory initialized:', DIET_DATA_DIR);
+
 /**
  * GET /api/diet/data/:userId
  * Ottiene tutti i dati dieta per un utente
  */
 app.get('/api/diet/data/:userId', async (req, res) => {
+    console.log(`📥 GET /api/diet/data/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
@@ -3539,6 +3543,7 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
  * Salva preferenze alimentari
  */
 app.post('/api/diet/preferences/:userId', async (req, res) => {
+    console.log(`📥 POST /api/diet/preferences/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const preferences = req.body;
