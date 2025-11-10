@@ -6,11 +6,23 @@
  */
 
 const axios = require('axios');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-// Usa stealth plugin per bypassare detection
-puppeteer.use(StealthPlugin());
+// Puppeteer opzionale - se non installato, il monitor userà solo axios
+let puppeteer = null;
+let StealthPlugin = null;
+let puppeteerAvailable = false;
+
+try {
+    puppeteer = require('puppeteer-extra');
+    StealthPlugin = require('puppeteer-extra-plugin-stealth');
+    // Usa stealth plugin per bypassare detection
+    puppeteer.use(StealthPlugin());
+    puppeteerAvailable = true;
+    console.log('✅ Puppeteer-extra loaded for ShopifyMonitor');
+} catch (error) {
+    console.warn('⚠️ Puppeteer-extra not available. ShopifyMonitor will use axios only (limited functionality).');
+    console.warn('   Install with: npm install puppeteer-extra puppeteer-extra-plugin-stealth');
+}
 
 class ShopifyMonitor {
     constructor(config) {
@@ -268,6 +280,12 @@ class ShopifyMonitor {
         try {
             console.log(`[Shopify] 🔍 Check #${this.checksCount} - ${this.productName}`);
 
+            // Se puppeteer non è disponibile, usa axios come fallback
+            if (!puppeteerAvailable) {
+                console.warn(`[Shopify] ⚠️ Puppeteer not available, using axios fallback (limited functionality)`);
+                return await this.checkWithAxios();
+            }
+
             // Inizializza browser se non esiste (riutilizzabile)
             if (!this.browser) {
                 console.log(`[Shopify] 🚀 Avvio browser headless...`);
@@ -329,6 +347,38 @@ class ShopifyMonitor {
                 console.log(`[Shopify] ⏳ Prossimo tentativo tra ${secondsUntilNext}s...`);
                 await this.updateMonitorStatus(`⏳ Waiting...`, 'monitoring', this.nextCheckInterval);
             }
+        }
+    }
+
+    /**
+     * Fallback check usando solo axios (quando puppeteer non è disponibile)
+     */
+    async checkWithAxios() {
+        try {
+            console.log(`[Shopify] 📡 Check con axios (fallback mode) - ${this.productName}`);
+            
+            // Prova a fare una richiesta semplice alla Shopify JSON API
+            const productUrl = this.productHandle 
+                ? `${this.baseUrl}/products/${this.productHandle}.js`
+                : `${this.baseUrl}/products.json`;
+            
+            const response = await axios.get(productUrl, {
+                timeout: 10000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                }
+            });
+            
+            // Se la richiesta funziona, aggiorna lo status
+            if (response.data) {
+                this.lastStatus = true;
+                console.log(`[Shopify] ✅ Check axios completato (status: disponibile)`);
+                return;
+            }
+        } catch (error) {
+            // Se fallisce (es. Cloudflare), logga e continua
+            console.warn(`[Shopify] ⚠️ Check axios fallito: ${error.message}`);
+            this.lastStatus = false;
         }
     }
 
