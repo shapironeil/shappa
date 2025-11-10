@@ -21,9 +21,13 @@ const { coordinator } = initializeAgents({
     figma: {
         figmaApiKey: process.env.FIGMA_API_KEY
     },
+    userProfile: {
+        priority: 10,
+        verificationIntervalMs: 60000 // Verifica ogni minuto H24
+    },
     security: {
         sessionTTL: 3600000, // 1 hour
-        priority: 10
+        priority: 9
     },
     monitor: {
         priority: 8
@@ -1499,6 +1503,20 @@ app.post('/api/interests/:userId', async (req, res) => {
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
         console.log(`💾 Saved ${interests.length} interests for user ${userId}`);
+        
+        // Notifica UserProfileAgent del cambiamento
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'interests',
+                data: interests,
+                source: 'interests_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
         return res.json({ success: true, count: interests.length });
     } catch (error) {
         console.error('❌ Error saving interests:', error);
@@ -1612,12 +1630,27 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         const filePath = getUserWebhookPath(userId);
         const webhookData = {
             url: webhook,
+            savedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
         await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
         
         console.log(`💾 Saved Discord webhook for user ${userId}`);
+        
+        // Notifica UserProfileAgent del cambiamento
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'webhooks',
+                data: webhookData,
+                source: 'webhooks_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
         return res.json({ success: true });
     } catch (error) {
         console.error('❌ Error saving webhook:', error);
@@ -2186,6 +2219,19 @@ app.post('/api/sport/profile', async (req, res) => {
         fs.writeFileSync(sportProfilePath, JSON.stringify(dataToSave, null, 2), 'utf8');
         console.log(`💪 Sport profile saved for user: ${userId}`);
 
+        // Notifica UserProfileAgent del cambiamento
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'sport',
+                data: dataToSave,
+                source: 'sport_profile_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+
         return res.json({ success: true, message: 'Profile saved successfully' });
     } catch (error) {
         console.error('❌ Error saving sport profile:', error);
@@ -2684,6 +2730,19 @@ app.post('/api/automations/sport', async (req, res) => {
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
         console.log(`✅ Sport automations saved for user ${userId}`);
+        
+        // Notifica UserProfileAgent del cambiamento
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'automations',
+                data: existingData,
+                source: 'automations_sport_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
 
         res.json({
             success: true,

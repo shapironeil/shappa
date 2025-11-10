@@ -15,6 +15,7 @@ const DataAgent = require('./data/DataAgent');
 const SecurityAgent = require('./security/SecurityAgent');
 const NotificationAgent = require('./notification/NotificationAgent');
 const RecipeAgent = require('./recipe/RecipeAgent');
+const UserProfileAgent = require('./userprofile/UserProfileAgent');
 
 /**
  * Inizializza il sistema di agenti
@@ -23,7 +24,9 @@ function initializeAgents(config = {}) {
     const coordinator = getCoordinator();
 
     // Registra tutti gli agenti
+    // IMPORTANTE: UserProfileAgent ha priorità massima (10) - deve essere registrato per primo
     const agents = [
+        new UserProfileAgent(config.userProfile), // Priorità massima - unifica tutti i dati utente
         new MonitorAgent(config.monitor),
         new SportAgent(config.sport),
         new AutomationAgent(config.automation),
@@ -43,6 +46,11 @@ function initializeAgents(config = {}) {
             agent.setCoordinator(coordinator);
         }
         coordinator.registerAgent(agent);
+        
+        // Avvia verifica continua se l'agente lo supporta
+        if (typeof agent.onRegistered === 'function') {
+            agent.onRegistered();
+        }
     });
 
     console.log(`✅ Agent AI Committee System initialized with ${agents.length} agents`);
@@ -73,6 +81,7 @@ module.exports = {
     DataAgent,
     SecurityAgent,
     NotificationAgent,
-    RecipeAgent
+    RecipeAgent,
+    UserProfileAgent
 };
 
