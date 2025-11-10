@@ -904,13 +904,6 @@
                                 </button>
                             </div>
                             <div id="dinnerAlternativesContent">
-                                ${availableIngredients.length === 0 ? `
-                                    <div class="mb-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
-                                        <p class="text-xs" style="color: #1e40af;">
-                                            💡 Aggiungi ingredienti nel Frigorifero per vedere quali ricette puoi preparare
-                                        </p>
-                                    </div>
-                                ` : ''}
                                 <div id="dinnerAlternativesEmpty" class="empty-state" style="display: none;">
                                     <p class="empty-state-text">Nessuna ricetta disponibile</p>
                                 </div>
@@ -953,19 +946,22 @@
                     <!-- Right Column -->
                     <div class="right-column">
                         <!-- Personal Card -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    <div class="personal-card-avatar" id="userAvatar">U</div>
-                                    <div>
-                                        <h2>Profilo Personale</h2>
-                                        <div class="card-subtitle" id="userName">Utente</div>
+                        <div class="card" style="padding: 0.75rem;">
+                            <div class="card-header" style="padding: 0; margin-bottom: 0.75rem;">
+                                <div class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div class="personal-card-avatar" id="userAvatar" style="width: 2.5rem; height: 2.5rem; font-size: 1rem; background: linear-gradient(to bottom right, #a855f7, #ec4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">👤</div>
+                                    <div style="flex: 1;">
+                                        <h2 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Preferenze Alimentari</h2>
+                                        <div class="card-subtitle" id="userName" style="font-size: 0.75rem; color: #6b7280;">Imposta preferenze</div>
                                     </div>
+                                    <button onclick="openPersonalCardDialog()" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid #e5e7eb; background: white; border-radius: 0.25rem; cursor: pointer;">
+                                        Configura
+                                    </button>
                                 </div>
                             </div>
-                            <div id="personalCardContent">
-                                <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
-                                <button onclick="openPersonalCardDialog()" class="btn btn-primary" style="width: 100%;">Configura Preferenze</button>
+                            <div id="personalCardContent" style="font-size: 0.75rem;">
+                                <p style="color: #4b5563; font-size: 0.75rem; margin-bottom: 0.5rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+                                <button onclick="openPersonalCardDialog()" class="btn btn-primary" style="width: 100%; padding: 0.375rem; font-size: 0.75rem;">Configura Preferenze</button>
                             </div>
                         </div>
 
@@ -1449,6 +1445,24 @@
         async function loadDietData() {
             try {
                 const response = await fetch(`/api/diet/data/${userId}`);
+                
+                if (!response.ok) {
+                    // Se 404, crea dati vuoti (prima volta)
+                    if (response.status === 404) {
+                        console.log('Diet data not found, using empty data');
+                        dietData = {
+                            fridge: [],
+                            preferences: null,
+                            weight: [],
+                            calories: [],
+                            shoppingList: [],
+                            selectedDiet: null
+                        };
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const result = await response.json();
                 
                 if (result.success && result.data) {
@@ -1462,9 +1476,19 @@
                     // Aggiorna UI
                     renderUrgentItems();
                     renderFridgeDialog();
+                    renderPersonalCard();
                 }
             } catch (error) {
                 console.error('Error loading diet data:', error);
+                // Fallback: usa dati vuoti
+                dietData = {
+                    fridge: [],
+                    preferences: null,
+                    weight: [],
+                    calories: [],
+                    shoppingList: [],
+                    selectedDiet: null
+                };
             }
         }
 
@@ -1476,6 +1500,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: fridgeItems })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const result = await response.json();
                 if (result.success) {
                     updateAvailableIngredients();
@@ -1483,7 +1512,11 @@
                 }
             } catch (error) {
                 console.error('Error saving fridge:', error);
-                alert('Errore nel salvare il frigo');
+                // Fallback: salva localmente
+                dietData.fridge = fridgeItems;
+                updateAvailableIngredients();
+                renderUrgentItems();
+                console.log('Fridge saved locally (API not available)');
             }
         }
 
@@ -1765,17 +1798,17 @@
                 name: 'Dieta Iperproteica',
                 description: 'Alta in proteine, ideale per chi non mangia frutta e verdura',
                 duration: '4-8 settimane',
-                difficulty: 'Facile',
+                difficulty: 'Media',
                 targetCalories: 2000,
                 benefits: ['Aumento massa muscolare', 'Maggiore sazietà', 'Metabolismo accelerato', 'Recupero muscolare'],
                 weekPlan: {
                     'Lunedì': { breakfast: '4 uova strapazzate + 2 fette pancetta + caffè', snack1: 'Frullato proteico 30g + latte intero', lunch: 'Petto pollo 200g + riso basmati 80g + brodo vegetale', snack2: 'Yogurt greco 200g + mandorle 30g', dinner: 'Salmone 180g + patate 150g + dado vegetale', calories: 2050 },
-                    'Martedì': { breakfast: 'Frittata 3 uova + formaggio + pane proteico', snack1: 'Barretta proteica + noci 20g', lunch: 'Tacchino 200g + quinoa 80g + ceci frullati', snack2: 'Frullato ceci 100g + banana', dinner: 'Bistecca 180g + patate dolci + brodo', calories: 2100 },
+                    'Martedì': { breakfast: 'Frittata 3 uova + formaggio + pane proteico', snack1: 'Barretta proteica + noci 20g', lunch: 'Tacchino 200g + quinoa 80g + ceci frullati', snack2: 'Frullato ceci 100g + mandorle', dinner: 'Bistecca 180g + patate dolci + brodo', calories: 2100 },
                     'Mercoledì': { breakfast: 'Yogurt greco 250g + burro arachidi + avena 50g', snack1: 'Prosciutto crudo 80g + formaggio', lunch: 'Pollo curry 200g + riso 80g + dado vegetale', snack2: 'Frullato proteico + semi chia', dinner: 'Tonno 200g + pasta 80g + olio oliva', calories: 1980 },
                     'Giovedì': { breakfast: '3 uova + avocado + pancetta', snack1: 'Yogurt + proteine in polvere', lunch: 'Manzo 200g + legumi frullati + riso', snack2: 'Mandorle 40g + cioccolato fondente', dinner: 'Salmone 200g + brodo + patate', calories: 2020 },
-                    'Venerdì': { breakfast: 'Pancake proteici + sciroppo senza zucchero', snack1: 'Frullato proteico + latte', lunch: 'Pollo 200g + pasta integrale 80g', snack2: 'Yogurt greco + noci', dinner: 'Pesce spada 180g + verdure frullate', calories: 1950 },
-                    'Sabato': { breakfast: 'Uova in camicia + salmone affumicato', snack1: 'Barretta proteica', lunch: 'Tacchino 250g + riso + brodo', snack2: 'Frullato ceci + banana', dinner: 'Bistecca 200g + patate + dado', calories: 2150 },
-                    'Domenica': { breakfast: 'French toast proteico + mirtilli', snack1: 'Yogurt + semi', lunch: 'Pollo arrosto 250g + legumi frullati', snack2: 'Frutta secca mix 40g', dinner: 'Salmone 200g + patate dolci + brodo', calories: 2080 }
+                    'Venerdì': { breakfast: 'Pancake proteici + sciroppo senza zucchero', snack1: 'Frullato proteico + latte', lunch: 'Pollo 200g + pasta integrale 80g', snack2: 'Yogurt greco + noci', dinner: 'Pesce spada 180g + legumi frullati', calories: 1950 },
+                    'Sabato': { breakfast: 'Uova in camicia + salmone affumicato', snack1: 'Barretta proteica', lunch: 'Tacchino 250g + riso + brodo', snack2: 'Frullato ceci + mandorle', dinner: 'Bistecca 200g + patate + dado', calories: 2150 },
+                    'Domenica': { breakfast: 'French toast proteico + burro arachidi', snack1: 'Yogurt + semi', lunch: 'Pollo arrosto 250g + legumi frullati', snack2: 'Frutta secca mix 40g', dinner: 'Salmone 200g + patate dolci + brodo', calories: 2080 }
                 },
                 supplements: ['Multivitaminico completo', 'Vitamina C 1000mg/giorno', 'Fibre solubili 10-15g/giorno', 'Omega-3 da olio pesce 2-3g/giorno', 'Probiotici 20+ miliardi CFU', 'Magnesio 400mg', 'Vitamina D3 2000-4000 UI'],
                 warnings: ['Bere MINIMO 3L acqua al giorno', 'Monitorare funzione renale con esami ogni 2-3 mesi', 'Assumere fibre quotidianamente', 'Se creatinina alta, ridurre proteine e consultare medico'],
@@ -1846,44 +1879,170 @@
                     userProfile = dietData.preferences;
                 }
                 
-                // Prova anche a caricare da user-profile API
+                // Prova anche a caricare da user-profile API (non critico se fallisce)
                 try {
                     const response = await fetch(`/api/user-profile/${userId}`);
-                    const result = await response.json();
-                    if (result.success && result.data && result.data.diet) {
-                        if (result.data.diet.preferences) {
-                            userProfile = result.data.diet.preferences;
-                            dietData.preferences = userProfile;
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data && result.data.diet) {
+                            if (result.data.diet.preferences) {
+                                userProfile = result.data.diet.preferences;
+                                dietData.preferences = userProfile;
+                            }
                         }
                     }
                 } catch (error) {
+                    // Non critico, continua senza errori
                     console.log('User profile API not available, using local data');
                 }
                 
                 renderDietProposals();
+                renderPersonalCard();
             } catch (error) {
                 console.error('Error loading profile:', error);
                 renderDietProposals();
+                renderPersonalCard();
             }
+        }
+
+        // Render Personal Card with user profile data
+        function renderPersonalCard() {
+            const content = document.getElementById('personalCardContent');
+            const userName = document.getElementById('userName');
+            const cardHeader = document.querySelector('#personalCardContent')?.closest('.card')?.querySelector('.card-header');
+            if (!content) return;
+
+            if (userName) {
+                userName.textContent = userProfile ? 'Configurato' : 'Imposta preferenze';
+            }
+
+            // Aggiorna bottone nell'header
+            if (cardHeader) {
+                const btn = cardHeader.querySelector('button[onclick="openPersonalCardDialog()"]');
+                if (btn) {
+                    btn.innerHTML = userProfile ? '✏️' : 'Configura';
+                }
+            }
+
+            if (userProfile) {
+                content.innerHTML = `
+                    <div style="space-y: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; border-top: 1px solid #e5e7eb; padding-top: 0.5rem;">
+                            <span style="color: #6b7280; font-size: 0.75rem;">Dieta:</span>
+                            <span style="text-transform: capitalize; font-size: 0.75rem;">${userProfile.dietaryPreference || 'Non impostata'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.25rem 0; border-top: 1px solid #e5e7eb; margin-top: 0.5rem; padding-top: 0.5rem;">
+                            <span style="color: #6b7280; font-size: 0.75rem;">Corporatura:</span>
+                            <span style="text-transform: capitalize; font-size: 0.75rem;">${userProfile.bodyType || 'Non impostata'}</span>
+                        </div>
+                        ${userProfile.allergies && userProfile.allergies.length > 0 ? `
+                            <div style="border-top: 1px solid #e5e7eb; margin-top: 0.5rem; padding-top: 0.5rem;">
+                                <p style="font-size: 0.625rem; color: #6b7280; margin-bottom: 0.25rem;">Allergie:</p>
+                                <div style="display: flex; flex-wrap: gap: 0.25rem;">
+                                    ${userProfile.allergies.map(allergy => `
+                                        <span style="font-size: 0.625rem; padding: 0.125rem 0.375rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; border-radius: 0.75rem;">${allergy}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <p style="color: #4b5563; font-size: 0.75rem; margin-bottom: 0.5rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+                    <button onclick="openPersonalCardDialog()" class="btn btn-primary" style="width: 100%; padding: 0.375rem; font-size: 0.75rem;">Configura Preferenze</button>
+                `;
+            }
+        }
+
+        // Check if diet contains excluded foods
+        function dietContainsExcludedFoods(diet, excludeList) {
+            if (!excludeList || excludeList.length === 0) return false;
+            
+            // Mapping degli esclusioni a parole chiave da cercare nei pasti
+            const exclusionKeywords = {
+                'Frutta': ['mela', 'banana', 'fragole', 'mirtilli', 'frutti', 'frutta', 'kiwi', 'arancia', 'mirtilli', 'fragole', 'frutti bosco'],
+                'Verdura': ['spinaci', 'broccoli', 'zucchine', 'pomodori', 'insalata', 'verdure', 'carote', 'peperoni', 'cavolfiore', 'asparagi', 'pomodoro', 'verdura', 'verdure miste', 'verdure grigliate', 'verdure saltate', 'cetrioli'],
+                'Carne': ['pollo', 'manzo', 'bistecca', 'tacchino', 'maiale', 'pancetta', 'prosciutto', 'salame'],
+                'Carne rossa': ['manzo', 'bistecca', 'maiale'],
+                'Pesce': ['salmone', 'tonno', 'orata', 'pesce', 'branzino', 'merluzzo', 'gamberi'],
+                'Latticini': ['yogurt', 'formaggio', 'latte', 'mozzarella', 'parmigiano', 'ricotta'],
+                'Legumi': ['ceci', 'lenticchie', 'fagioli', 'legumi'],
+                'Carboidrati': ['pasta', 'riso', 'pane', 'quinoa', 'farro', 'avena', 'patate'],
+                'Zuccheri raffinati': ['zucchero', 'miele', 'sciroppo'],
+                'Glutine': ['pasta', 'pane', 'farro', 'avena'],
+                'Lattosio': ['yogurt', 'latte', 'formaggio', 'mozzarella', 'parmigiano']
+            };
+            
+            // Controlla tutti i pasti della dieta
+            for (const day in diet.weekPlan) {
+                const meals = diet.weekPlan[day];
+                const mealText = Object.values(meals).join(' ').toLowerCase();
+                
+                for (const exclusion of excludeList) {
+                    const keywords = exclusionKeywords[exclusion] || [exclusion.toLowerCase()];
+                    for (const keyword of keywords) {
+                        if (mealText.includes(keyword)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false;
         }
 
         function getRecommendedDiets(profile) {
             if (!profile) return [];
-            const scored = allDietPlans.map(diet => {
+            
+            // Filtra le diete che contengono cibi esclusi
+            let filteredDiets = allDietPlans.filter(diet => {
+                if (profile.excludeFromDiet && profile.excludeFromDiet.length > 0) {
+                    return !dietContainsExcludedFoods(diet, profile.excludeFromDiet);
+                }
+                return true;
+            });
+            
+            // Se dopo il filtro non ci sono diete, mostra tutte (fallback)
+            if (filteredDiets.length === 0) {
+                filteredDiets = allDietPlans;
+            }
+            
+            // Calcola score per ogni dieta
+            const scored = filteredDiets.map(diet => {
                 let score = 0;
+                
+                // Score per esclusioni compatibili
                 if (diet.suitableFor.excludes) {
-                    const matching = diet.suitableFor.excludes.filter(exc => profile.excludeFromDiet && profile.excludeFromDiet.includes(exc));
+                    const matching = diet.suitableFor.excludes.filter(exc => 
+                        profile.excludeFromDiet && profile.excludeFromDiet.includes(exc)
+                    );
                     score += matching.length * 10;
                 }
+                
+                // Score per body type
                 if (diet.suitableFor.bodyTypes) {
-                    if (diet.suitableFor.bodyTypes.includes('tutti') || diet.suitableFor.bodyTypes.includes(profile.bodyType)) {
+                    if (diet.suitableFor.bodyTypes.includes('tutti') || 
+                        diet.suitableFor.bodyTypes.includes(profile.bodyType)) {
                         score += 5;
                     }
                 }
+                
+                // Score per preferenza dietetica
+                if (profile.dietaryPreference) {
+                    if (profile.dietaryPreference === 'vegetariano' && diet.name.toLowerCase().includes('vegetariano')) {
+                        score += 3;
+                    }
+                    if (profile.dietaryPreference === 'vegano' && diet.name.toLowerCase().includes('vegano')) {
+                        score += 3;
+                    }
+                }
+                
                 return { diet, score };
             });
+            
             scored.sort((a, b) => b.score - a.score);
-            return scored.slice(0, 3).map(s => s.diet);
+            return scored.map(s => s.diet).slice(0, 3);
         }
 
         function renderDietProposals() {
@@ -1906,38 +2065,56 @@
                 return;
             }
 
+            const difficultyColors = {
+                'Facile': { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+                'Media': { bg: '#fef3c7', text: '#854d0e', border: '#fde047' },
+                'Difficile': { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' }
+            };
+
             container.innerHTML = `
-                ${showRecommendation ? `
-                    <div class="mb-4 p-3" style="background: linear-gradient(to right, #faf5ff, #fef3c7); border-radius: 0.5rem; border: 1px solid #e9d5ff;">
-                        <p class="text-xs" style="color: #6b21a8;">✨ Basate sulle tue preferenze: ${dietsToShow.length} diete consigliate</p>
-                    </div>
-                ` : `
-                    <div class="mb-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
-                        <p class="text-xs" style="color: #1e40af;">💡 Configura le tue preferenze per ricevere diete personalizzate</p>
-                        <button class="btn btn-primary mt-2" onclick="openPersonalCardDialog()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">Configura Preferenze</button>
-                    </div>
-                `}
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                    <span style="font-size: 1.25rem;">💡</span>
+                    <h2 style="font-size: 1rem; font-weight: 600; margin: 0;">Diete Personalizzate</h2>
+                </div>
                 <div class="space-y-3">
-                    ${dietsToShow.map((plan, index) => `
-                        <div class="p-4 rounded-lg border-2 transition-all cursor-pointer ${index === 0 && showRecommendation ? 'bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300' : 'bg-white border-gray-200'}" onclick="openDietDialog('${plan.id}')">
-                            <div class="flex items-start justify-between mb-2">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <h3 class="text-sm font-medium">${plan.name}</h3>
-                                        ${index === 0 && showRecommendation ? '<span class="badge" style="background: #ea580c; color: white; font-size: 0.75rem;">⭐ Consigliata</span>' : ''}
+                    ${dietsToShow.map((plan, index) => {
+                        const isRecommended = index === 0 && showRecommendation;
+                        const diffColor = difficultyColors[plan.difficulty] || difficultyColors['Facile'];
+                        const avgCalories = Math.round(
+                            Object.values(plan.weekPlan).reduce((sum, day) => sum + day.calories, 0) / 7
+                        );
+                        
+                        return `
+                            <div class="p-4 rounded-lg border-2 transition-all cursor-pointer" 
+                                style="background: ${isRecommended ? '#fefce8' : 'white'}; border-color: ${isRecommended ? '#fcd34d' : '#e5e7eb'};"
+                                onclick="openDietDialog('${plan.id}')">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <h3 class="text-sm font-semibold" style="color: #1f2937; margin: 0;">${plan.name}</h3>
+                                            ${isRecommended ? `
+                                                <span style="background: #ea580c; color: white; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap;">
+                                                    ⭐ Consigliata
+                                                </span>
+                                            ` : ''}
+                                        </div>
+                                        <p class="text-xs" style="color: #6b7280; margin-bottom: 0.75rem; margin-top: 0.25rem;">${plan.description}</p>
                                     </div>
-                                    <p class="text-xs text-gray-600">${plan.description}</p>
+                                </div>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs px-2 py-1 rounded" style="background: ${diffColor.bg}; color: ${diffColor.text}; border: 1px solid ${diffColor.border};">
+                                        ${plan.difficulty}
+                                    </span>
+                                    <span class="text-xs px-2 py-1 rounded" style="background: #f9fafb; color: #374151; border: 1px solid #e5e7eb;">
+                                        ${plan.duration}
+                                    </span>
+                                    <span class="text-xs px-2 py-1 rounded" style="background: #f9fafb; color: #374151; border: 1px solid #e5e7eb;">
+                                        ~${avgCalories} cal/giorno
+                                    </span>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <span class="badge ${plan.difficulty === 'Facile' ? 'bg-green-100 text-green-700' : plan.difficulty === 'Media' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'} text-xs">${plan.difficulty}</span>
-                                <span class="badge text-xs">${plan.duration}</span>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="mt-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
-                    <p class="text-xs" style="color: #1e40af;">💡 Clicca su una dieta per vedere il piano settimanale completo</p>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
@@ -2252,19 +2429,31 @@
                     body: JSON.stringify(personalCardFormData)
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const result = await response.json();
                 if (result.success) {
                     dietData.preferences = personalCardFormData;
+                    userProfile = personalCardFormData;
                     closePersonalCardDialog();
                     alert('✅ Preferenze salvate con successo!');
                     // Reload diet proposals to update recommendations
                     loadUserProfile();
+                    renderPersonalCard();
                 } else {
                     alert('❌ Errore nel salvare le preferenze');
                 }
             } catch (error) {
                 console.error('Error saving preferences:', error);
-                alert('❌ Errore nel salvare le preferenze');
+                // Fallback: salva localmente se API non disponibile
+                dietData.preferences = personalCardFormData;
+                userProfile = personalCardFormData;
+                closePersonalCardDialog();
+                alert('✅ Preferenze salvate localmente! (API non disponibile)');
+                renderPersonalCard();
+                renderDietProposals();
             }
         }
 
@@ -2288,17 +2477,29 @@
             const urgentItems = getUrgentItems();
             const freezeSuggestions = getSuggestedToFreeze();
 
+            // Categorizza gli ingredienti
+            const categorizeItems = (items) => {
+                const categories = {};
+                items.forEach(item => {
+                    const food = foodDatabase.find(f => f.id === item.foodId);
+                    if (food) {
+                        const cat = food.category;
+                        if (!categories[cat]) {
+                            categories[cat] = [];
+                        }
+                        categories[cat].push(item);
+                    }
+                });
+                return categories;
+            };
+
             if (urgentItems.length === 0 && freezeSuggestions.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 3rem; height: 3rem; margin: 0 auto 0.75rem; color: #9ca3af;">
+                    <div class="empty-state" style="padding: 1.5rem 1rem;">
+                        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 2rem; height: 2rem; margin: 0 auto 0.5rem; color: #9ca3af;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
-                        <p class="empty-state-text">Frigorifero vuoto</p>
-                        <button onclick="openFridgeDialog()" class="btn btn-primary mt-4" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <span>+</span>
-                            Aggiungi ingredienti
-                        </button>
+                        <p class="empty-state-text" style="font-size: 0.75rem;">Frigorifero vuoto</p>
                     </div>
                 `;
                 return;
@@ -2307,41 +2508,23 @@
             let html = '';
             
             if (urgentItems.length > 0) {
-                html += '<div class="mb-4">';
-                html += '<h3 class="text-sm font-semibold mb-2" style="color: #dc2626;">⚠️ Da consumare entro 3 giorni</h3>';
-                html += '<div class="space-y-2">';
-                urgentItems.forEach(item => {
-                    const food = foodDatabase.find(f => f.id === item.foodId);
-                    if (food) {
-                        html += `
-                            <div class="p-2 rounded" style="background: #fee2e2; border: 1px solid #fca5a5;">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm">${food.name}</span>
-                                    <span class="text-xs" style="color: #991b1b;">${item.expiryDays} giorni</span>
-                                </div>
-                            </div>
-                        `;
-                    }
+                const categorized = categorizeItems(urgentItems);
+                html += '<div class="mb-3">';
+                html += '<h3 class="text-xs font-semibold mb-2" style="color: #dc2626;">⚠️ Da consumare (≤3 giorni)</h3>';
+                html += '<div class="flex flex-wrap gap-1">';
+                Object.keys(categorized).forEach(cat => {
+                    html += `<span class="text-xs px-2 py-1 rounded" style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;">${categoryIcons[cat]} ${categoryLabels[cat]} (${categorized[cat].length})</span>`;
                 });
                 html += '</div></div>';
             }
 
             if (freezeSuggestions.length > 0) {
+                const categorized = categorizeItems(freezeSuggestions);
                 html += '<div>';
-                html += '<h3 class="text-sm font-semibold mb-2" style="color: #2563eb;">🧊 Suggerito: congela</h3>';
-                html += '<div class="space-y-2">';
-                freezeSuggestions.forEach(item => {
-                    const food = foodDatabase.find(f => f.id === item.foodId);
-                    if (food) {
-                        html += `
-                            <div class="p-2 rounded" style="background: #dbeafe; border: 1px solid #93c5fd;">
-                                <div class="flex justify-between items-center">
-                                    <span class="text-sm">${food.name}</span>
-                                    <span class="text-xs" style="color: #1e40af;">${item.expiryDays} giorni</span>
-                                </div>
-                            </div>
-                        `;
-                    }
+                html += '<h3 class="text-xs font-semibold mb-2" style="color: #2563eb;">🧊 Suggerito: congela (4-7 giorni)</h3>';
+                html += '<div class="flex flex-wrap gap-1">';
+                Object.keys(categorized).forEach(cat => {
+                    html += `<span class="text-xs px-2 py-1 rounded" style="background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;">${categoryIcons[cat]} ${categoryLabels[cat]} (${categorized[cat].length})</span>`;
                 });
                 html += '</div></div>';
             }
