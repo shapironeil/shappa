@@ -1559,16 +1559,19 @@
                 
                 const result = await response.json();
                 if (result.success) {
+                    // Aggiorna solo dopo conferma salvataggio sul server
+                    dietData.fridge = fridgeItems;
                     updateAvailableIngredients();
                     renderUrgentItems();
+                } else {
+                    throw new Error('Failed to save fridge');
                 }
             } catch (error) {
-                console.error('Error saving fridge:', error);
-                // Fallback: salva localmente
-                dietData.fridge = fridgeItems;
-                updateAvailableIngredients();
-                renderUrgentItems();
-                console.log('Fridge saved locally (API not available)');
+                console.error('❌ Error saving fridge to server:', error);
+                // NON aggiornare dati in memoria se API fallisce
+                // Ricarica dati dal server per evitare inconsistenze
+                loadDietData();
+                alert('❌ Errore nel salvare il frigo sul server. I dati sono stati ripristinati. Riprova più tardi.');
             }
         }
 
@@ -1580,12 +1583,24 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ items: shoppingList })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const result = await response.json();
                 if (result.success) {
-                    console.log('Shopping list saved');
+                    // Aggiorna solo dopo conferma salvataggio sul server
+                    dietData.shoppingList = shoppingList;
+                } else {
+                    throw new Error('Failed to save shopping list');
                 }
             } catch (error) {
-                console.error('Error saving shopping list:', error);
+                console.error('❌ Error saving shopping list to server:', error);
+                // NON aggiornare dati in memoria se API fallisce
+                // Ricarica dati dal server per evitare inconsistenze
+                loadDietData();
+                alert('❌ Errore nel salvare la lista della spesa sul server. I dati sono stati ripristinati. Riprova più tardi.');
             }
         }
 
