@@ -137,6 +137,19 @@ jobs:
           echo "Destination: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
           echo ""
           
+          # Verifica permessi directory destinazione
+          echo "🔍 Verifying destination directory permissions..."
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+              "mkdir -p ${{ secrets.DEPLOY_PATH }} && chmod 755 ${{ secrets.DEPLOY_PATH }} && ls -ld ${{ secrets.DEPLOY_PATH }}" || {
+            echo "⚠️ Warning: Could not verify destination directory"
+          }
+          echo ""
+          
+          # Sync con opzioni più robuste
+          echo "🔄 Starting rsync..."
           rsync -avz --delete \
             --exclude='.git' \
             --exclude='node_modules' \
@@ -147,11 +160,55 @@ jobs:
             --exclude='ssl/' \
             --exclude='*.log' \
             --exclude='.DS_Store' \
+            --exclude='.cursor/' \
+            --exclude='.vscode/' \
+            --exclude='*.swp' \
+            --exclude='*.swo' \
+            --exclude='*~' \
+            --no-perms \
+            --no-owner \
+            --no-group \
+            --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+            --partial \
+            --progress \
+            --human-readable \
             -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/deploy_key" \
-            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }} || {
+            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }} 2>&1 | tee /tmp/rsync.log || {
+            RSYNC_EXIT=$?
             echo ""
-            echo "❌ File sync failed!"
-            exit 1
+            echo "⚠️ rsync completed with exit code: $RSYNC_EXIT"
+            
+            # Analizza log per errori critici
+            if grep -q "Permission denied" /tmp/rsync.log; then
+              echo "❌ Permission denied errors detected!"
+              echo "This usually means the deploy user doesn't have write access."
+              echo "Fix: Run 'sudo chown -R ${{ secrets.DEPLOY_USER }}:${{ secrets.DEPLOY_USER }} ${{ secrets.DEPLOY_PATH }}' on server"
+              exit 1
+            elif grep -q "No space left on device" /tmp/rsync.log; then
+              echo "❌ No space left on device!"
+              exit 1
+            elif [ "$RSYNC_EXIT" -eq 23 ]; then
+              echo "⚠️ rsync code 23: Some files/attrs were not transferred"
+              echo "This is often non-critical (e.g., extended attributes, permissions)"
+              echo "Checking if critical files were transferred..."
+              
+              # Verifica che file critici siano presenti
+              ssh -o StrictHostKeyChecking=no \
+                  -o UserKnownHostsFile=/dev/null \
+                  -i ~/.ssh/deploy_key \
+                  ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+                  "cd ${{ secrets.DEPLOY_PATH }} && test -f server.js && test -f package.json && echo '✅ Critical files present'" || {
+                echo "❌ Critical files missing! Deploy failed."
+                exit 1
+              }
+              
+              echo "✅ Critical files are present. Continuing with deploy..."
+            else
+              echo "❌ rsync failed with exit code: $RSYNC_EXIT"
+              echo "Last 20 lines of rsync output:"
+              tail -20 /tmp/rsync.log
+              exit 1
+            fi
           }
           
           echo ""
