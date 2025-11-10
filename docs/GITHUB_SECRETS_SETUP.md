@@ -197,3 +197,4 @@ sudo chown -R deploy:deploy /var/www/shappa
 - [ ] Test connessione SSH manuale riuscito
 - [ ] Workflow GitHub Actions eseguito con successo
 
+

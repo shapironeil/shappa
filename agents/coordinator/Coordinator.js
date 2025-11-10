@@ -20,6 +20,17 @@ class Coordinator extends EventEmitter {
         this.maxConcurrentTasks = 10;
         this.taskHistory = [];
         this.maxHistorySize = 1000;
+        
+        // Comunicazione inter-agente
+        this.communicationLog = []; // Log di tutte le comunicazioni
+        this.maxCommunicationLogSize = 500;
+        this.eventSubscriptions = new Map(); // eventType -> Set of agent names
+        this.heartbeatInterval = null;
+        this.heartbeatIntervalMs = 30000; // 30 secondi
+        this.agentLastHeartbeat = new Map(); // agentName -> lastHeartbeat timestamp
+        
+        // Avvia heartbeat system
+        this.startHeartbeat();
     }
 
     /**
@@ -31,19 +42,41 @@ class Coordinator extends EventEmitter {
         }
 
         this.agents.set(agent.name, agent);
+        this.agentLastHeartbeat.set(agent.name, Date.now());
         
         // Ascolta eventi dall'agente
         agent.on('taskCompleted', (data) => {
             this.emit('agentTaskCompleted', data);
             this.onTaskCompleted(data);
+            this.logCommunication('taskCompleted', agent.name, data);
         });
         
         agent.on('taskFailed', (data) => {
             this.emit('agentTaskFailed', data);
             this.onTaskFailed(data);
+            this.logCommunication('taskFailed', agent.name, data);
         });
 
+        // Ascolta eventi di comunicazione dall'agente
+        agent.on('agentCommunication', (data) => {
+            this.handleAgentCommunication(agent.name, data);
+        });
+
+        // Ascolta eventi di verifica dati
+        agent.on('dataVerification', (data) => {
+            this.handleDataVerification(agent.name, data);
+        });
+
+        // Se l'agente ha un metodo per ricevere comunicazioni, registralo
+        if (typeof agent.onCommunication === 'function') {
+            // L'agente può ricevere comunicazioni via questo metodo
+            this.on(`broadcast:${agent.name}`, (message) => {
+                agent.onCommunication(message);
+            });
+        }
+
         console.log(`✅ Agent registered: ${agent.name} (capabilities: ${agent.getCapabilities().join(', ')})`);
+        this.broadcast('agentRegistered', { agentName: agent.name, capabilities: agent.getCapabilities() });
     }
 
     /**
@@ -209,7 +242,9 @@ class Coordinator extends EventEmitter {
             queueSize: this.taskQueue.length,
             processingTasks: this.processingTasks.size,
             taskHistorySize: this.taskHistory.length,
-            recentTasks: this.taskHistory.slice(-10)
+            recentTasks: this.taskHistory.slice(-10),
+            communicationStats: this.getCommunicationStats(),
+            heartbeatStatus: this.getHeartbeatStatus()
         };
     }
 
@@ -282,6 +317,280 @@ class Coordinator extends EventEmitter {
             success: results.some(r => r.success),
             results,
             agents: involvedAgents.map(a => a.name)
+        };
+    }
+
+    /**
+     * Broadcast messaggio a tutti gli agenti
+     */
+    broadcast(eventType, data, excludeAgent = null) {
+        const message = {
+            eventType,
+            data,
+            timestamp: new Date().toISOString(),
+            source: 'coordinator'
+        };
+
+        this.logCommunication('broadcast', 'coordinator', message);
+
+        // Emetti evento globale
+        this.emit('broadcast', message);
+        this.emit(`broadcast:${eventType}`, message);
+
+        // Invia a tutti gli agenti (tranne quello escluso)
+        for (const [name, agent] of this.agents.entries()) {
+            if (excludeAgent && name === excludeAgent) continue;
+
+            // Se l'agente ha un metodo onCommunication, usalo
+            if (typeof agent.onCommunication === 'function') {
+                try {
+                    agent.onCommunication(message);
+                } catch (error) {
+                    console.error(`Error sending broadcast to ${name}:`, error);
+                }
+            }
+
+            // Emetti evento specifico per l'agente
+            this.emit(`broadcast:${name}`, message);
+        }
+
+        return { success: true, recipients: this.agents.size - (excludeAgent ? 1 : 0) };
+    }
+
+    /**
+     * Iscrivi un agente a un tipo di evento
+     */
+    subscribe(agentName, eventType) {
+        if (!this.eventSubscriptions.has(eventType)) {
+            this.eventSubscriptions.set(eventType, new Set());
+        }
+        this.eventSubscriptions.get(eventType).add(agentName);
+        this.logCommunication('subscribe', agentName, { eventType });
+    }
+
+    /**
+     * Disiscrivi un agente da un tipo di evento
+     */
+    unsubscribe(agentName, eventType) {
+        if (this.eventSubscriptions.has(eventType)) {
+            this.eventSubscriptions.get(eventType).delete(agentName);
+        }
+        this.logCommunication('unsubscribe', agentName, { eventType });
+    }
+
+    /**
+     * Log comunicazione
+     */
+    logCommunication(type, agentName, data) {
+        const logEntry = {
+            type,
+            agentName,
+            data,
+            timestamp: new Date().toISOString()
+        };
+
+        this.communicationLog.push(logEntry);
+
+        // Mantieni solo ultimi N log
+        if (this.communicationLog.length > this.maxCommunicationLogSize) {
+            this.communicationLog = this.communicationLog.slice(-this.maxCommunicationLogSize);
+        }
+
+        // Emetti evento per logging esterno
+        this.emit('communication', logEntry);
+    }
+
+    /**
+     * Ottieni log comunicazioni
+     */
+    getCommunicationLog(limit = 100) {
+        return this.communicationLog.slice(-limit);
+    }
+
+    /**
+     * Gestisci comunicazione da agente
+     */
+    handleAgentCommunication(agentName, data) {
+        this.logCommunication('agentCommunication', agentName, data);
+        
+        // Se la comunicazione è per un altro agente, inoltra
+        if (data.targetAgent) {
+            const targetAgent = this.agents.get(data.targetAgent);
+            if (targetAgent && typeof targetAgent.onCommunication === 'function') {
+                targetAgent.onCommunication({
+                    eventType: 'agentCommunication',
+                    data: data.message || data,
+                    source: agentName,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        } else {
+            // Broadcast a tutti gli agenti interessati
+            this.broadcast('agentCommunication', { from: agentName, message: data.message || data });
+        }
+    }
+
+    /**
+     * Gestisci verifica dati da agente
+     */
+    handleDataVerification(agentName, data) {
+        this.logCommunication('dataVerification', agentName, data);
+        
+        // Verifica dati condivisi con altri agenti
+        if (data.dataType && data.verifyWith) {
+            const verifyWithAgents = Array.isArray(data.verifyWith) ? data.verifyWith : [data.verifyWith];
+            
+            for (const otherAgentName of verifyWithAgents) {
+                const otherAgent = this.agents.get(otherAgentName);
+                if (otherAgent && typeof otherAgent.verifyData === 'function') {
+                    otherAgent.verifyData(data.dataType, data.data, agentName);
+                }
+            }
+        }
+
+        // Emetti evento per altri agenti interessati
+        this.emit('dataVerification', { agent: agentName, data });
+    }
+
+    /**
+     * Avvia sistema heartbeat
+     */
+    startHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+
+        this.heartbeatInterval = setInterval(() => {
+            this.performHeartbeat();
+        }, this.heartbeatIntervalMs);
+
+        console.log('💓 Heartbeat system started');
+    }
+
+    /**
+     * Ferma sistema heartbeat
+     */
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+        console.log('💓 Heartbeat system stopped');
+    }
+
+    /**
+     * Esegui heartbeat check
+     */
+    async performHeartbeat() {
+        const now = Date.now();
+        const heartbeatResults = {};
+
+        // Invia heartbeat a tutti gli agenti
+        for (const [name, agent] of this.agents.entries()) {
+            try {
+                // Se l'agente ha un metodo heartbeat, chiamalo
+                if (typeof agent.heartbeat === 'function') {
+                    const result = await agent.heartbeat();
+                    heartbeatResults[name] = { status: 'ok', result, timestamp: now };
+                    this.agentLastHeartbeat.set(name, now);
+                } else {
+                    // Altrimenti, verifica solo che l'agente risponda
+                    const stats = agent.getStats();
+                    heartbeatResults[name] = { status: stats.status, timestamp: now };
+                    this.agentLastHeartbeat.set(name, now);
+                }
+
+                // Broadcast stato agente
+                this.broadcast('agentHeartbeat', { agentName: name, status: heartbeatResults[name].status }, name);
+            } catch (error) {
+                heartbeatResults[name] = { status: 'error', error: error.message, timestamp: now };
+                console.error(`Heartbeat failed for ${name}:`, error);
+            }
+        }
+
+        // Verifica agenti non rispondenti
+        const timeout = 60000; // 60 secondi
+        for (const [name, lastHeartbeat] of this.agentLastHeartbeat.entries()) {
+            if (now - lastHeartbeat > timeout) {
+                console.warn(`⚠️ Agent ${name} has not responded for ${Math.round((now - lastHeartbeat) / 1000)}s`);
+                this.broadcast('agentTimeout', { agentName: name, lastHeartbeat }, name);
+            }
+        }
+
+        this.emit('heartbeat', heartbeatResults);
+    }
+
+    /**
+     * Ottieni stato heartbeat
+     */
+    getHeartbeatStatus() {
+        const now = Date.now();
+        const status = {};
+
+        for (const [name, lastHeartbeat] of this.agentLastHeartbeat.entries()) {
+            const timeSinceLastHeartbeat = now - lastHeartbeat;
+            status[name] = {
+                lastHeartbeat: new Date(lastHeartbeat).toISOString(),
+                timeSinceLastHeartbeat,
+                isAlive: timeSinceLastHeartbeat < 60000 // 60 secondi
+            };
+        }
+
+        return status;
+    }
+
+    /**
+     * Verifica dati condivisi tra agenti
+     */
+    async verifySharedData(dataType, data) {
+        const verificationResults = {};
+        
+        // Chiedi a tutti gli agenti di verificare i dati
+        for (const [name, agent] of this.agents.entries()) {
+            if (typeof agent.verifyData === 'function') {
+                try {
+                    const result = await agent.verifyData(dataType, data);
+                    verificationResults[name] = { status: 'ok', result };
+                } catch (error) {
+                    verificationResults[name] = { status: 'error', error: error.message };
+                }
+            }
+        }
+
+        this.logCommunication('dataVerification', 'coordinator', { dataType, verificationResults });
+        return verificationResults;
+    }
+
+    /**
+     * Ottieni statistiche comunicazioni
+     */
+    getCommunicationStats() {
+        const statsByAgent = {};
+        const statsByType = {};
+
+        for (const log of this.communicationLog) {
+            // Stats per agente
+            if (!statsByAgent[log.agentName]) {
+                statsByAgent[log.agentName] = { count: 0, types: {} };
+            }
+            statsByAgent[log.agentName].count++;
+            statsByAgent[log.agentName].types[log.type] = (statsByAgent[log.agentName].types[log.type] || 0) + 1;
+
+            // Stats per tipo
+            statsByType[log.type] = (statsByType[log.type] || 0) + 1;
+        }
+
+        return {
+            totalCommunications: this.communicationLog.length,
+            statsByAgent,
+            statsByType,
+            subscriptions: Object.fromEntries(
+                Array.from(this.eventSubscriptions.entries()).map(([eventType, agents]) => [
+                    eventType,
+                    Array.from(agents)
+                ])
+            ),
+            heartbeatStatus: this.getHeartbeatStatus()
         };
     }
 }

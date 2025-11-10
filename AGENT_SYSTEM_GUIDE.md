@@ -4,6 +4,26 @@
 
 Il sistema Agent AI Committee è un sistema modulare di agenti AI coordinati che gestisce tutte le funzionalità del LifeManager. Ogni agente è specializzato in un dominio specifico e collabora con gli altri attraverso il Coordinator.
 
+## 🔄 Comunicazione Inter-Agente
+
+### Sistema di Comunicazione Continua
+
+Il sistema supporta comunicazione continua tra agenti attraverso:
+- **Broadcast**: Messaggi globali a tutti gli agenti
+- **Comunicazione Diretta**: Messaggi tra agenti specifici
+- **Event Subscriptions**: Iscrizione a tipi di eventi specifici
+- **Heartbeat System**: Verifica continua dello stato degli agenti
+- **Data Verification**: Verifica dati condivisi tra agenti
+
+### API Endpoints Comunicazione
+
+- `POST /api/agents/broadcast` - Broadcast messaggio a tutti gli agenti
+- `POST /api/agents/subscribe` - Iscrivi agente a tipo di evento
+- `GET /api/agents/communications` - Ottieni log comunicazioni
+- `POST /api/agents/verify-data` - Verifica dati condivisi
+- `GET /api/agents/heartbeat` - Stato heartbeat agenti
+- `GET /api/agents/communication-stats` - Statistiche comunicazioni
+
 ## 🎯 Workflow Figma -> Frontend
 
 ### Come Funziona

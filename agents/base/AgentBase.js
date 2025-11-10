@@ -19,6 +19,26 @@ class AgentBase extends EventEmitter {
         this.errors = [];
         this.capabilities = [];
         this.priority = config.priority || 5; // 1-10, 10 = highest priority
+        this.coordinator = null; // Riferimento al coordinator per comunicazione inter-agente
+    }
+
+    /**
+     * Imposta il riferimento al coordinator
+     */
+    setCoordinator(coordinator) {
+        this.coordinator = coordinator;
+        
+        // Ascolta eventi broadcast dal coordinator
+        if (coordinator) {
+            coordinator.on('broadcast', (message) => {
+                this.onCommunication(message);
+            });
+            
+            // Ascolta eventi specifici per questo agente
+            coordinator.on(`broadcast:${this.name}`, (message) => {
+                this.onCommunication(message);
+            });
+        }
     }
 
     /**
@@ -105,6 +125,96 @@ class AgentBase extends EventEmitter {
         // Default: ritorna la priorità dell'agente
         // Gli agenti possono sovrascrivere questo metodo
         return this.priority;
+    }
+
+    /**
+     * Metodo per ricevere comunicazioni da altri agenti
+     * Gli agenti possono sovrascrivere questo metodo per gestire comunicazioni specifiche
+     */
+    onCommunication(message) {
+        // Default: emetti evento per logging
+        this.emit('agentCommunication', {
+            agent: this.name,
+            message,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Metodo per comunicare con altri agenti
+     * Gli agenti possono usare questo metodo per inviare messaggi ad altri agenti
+     */
+    communicate(targetAgent, message) {
+        const communication = {
+            from: this.name,
+            targetAgent,
+            message,
+            timestamp: new Date().toISOString()
+        };
+
+        // Emetti evento per il coordinator
+        this.emit('agentCommunication', communication);
+
+        // Se il coordinator è disponibile, usalo per inoltrare
+        if (this.coordinator && typeof this.coordinator.handleAgentCommunication === 'function') {
+            this.coordinator.handleAgentCommunication(this.name, communication);
+        }
+
+        return communication;
+    }
+
+    /**
+     * Metodo per heartbeat
+     * Gli agenti possono sovrascrivere questo metodo per implementare heartbeat specifico
+     */
+    async heartbeat() {
+        // Default: ritorna stats dell'agente
+        return {
+            status: this.status,
+            tasksProcessed: this.tasksProcessed,
+            errors: this.errors.length,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Metodo per verificare dati condivisi
+     * Gli agenti possono sovrascrivere questo metodo per verificare dati specifici
+     */
+    async verifyData(dataType, data, sourceAgent = null) {
+        // Default: verifica base
+        this.emit('dataVerification', {
+            agent: this.name,
+            dataType,
+            data,
+            sourceAgent,
+            timestamp: new Date().toISOString()
+        });
+
+        return {
+            verified: true,
+            agent: this.name,
+            dataType,
+            timestamp: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Metodo per notificare altri agenti di cambiamenti dati
+     */
+    notifyDataChange(dataType, data, targetAgents = null) {
+        const notification = {
+            from: this.name,
+            dataType,
+            data,
+            targetAgents,
+            timestamp: new Date().toISOString()
+        };
+
+        // Emetti evento per il coordinator
+        this.emit('dataVerification', notification);
+
+        return notification;
     }
 }
 

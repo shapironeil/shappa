@@ -144,3 +144,4 @@ rsync -avz -e "ssh -i test_key -o StrictHostKeyChecking=no" \
 
 **Dopo aver verificato tutto, riprova il deploy!** 🚀
 
+

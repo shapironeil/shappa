@@ -36,8 +36,12 @@ function initializeAgents(config = {}) {
         new RecipeAgent(config.recipe)
     ];
 
-    // Registra agenti nel coordinatore
+    // Registra agenti nel coordinatore e passa riferimento al coordinator per comunicazione
     agents.forEach(agent => {
+        // Passa riferimento al coordinator agli agenti per comunicazione inter-agente
+        if (typeof agent.setCoordinator === 'function') {
+            agent.setCoordinator(coordinator);
+        }
         coordinator.registerAgent(agent);
     });
 

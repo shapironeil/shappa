@@ -3132,6 +3132,155 @@ app.post('/api/agents/communicate', async (req, res) => {
     }
 });
 
+/**
+ * POST /api/agents/broadcast
+ * Broadcast message to all agents
+ */
+app.post('/api/agents/broadcast', async (req, res) => {
+    try {
+        const { eventType, data, excludeAgent } = req.body;
+        
+        if (!eventType) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'eventType required' 
+            });
+        }
+
+        const result = coordinator.broadcast(eventType, data || {}, excludeAgent || null);
+        res.json({ 
+            success: true, 
+            result 
+        });
+    } catch (error) {
+        console.error('Error broadcasting message:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/agents/subscribe
+ * Subscribe agent to event type
+ */
+app.post('/api/agents/subscribe', async (req, res) => {
+    try {
+        const { agentName, eventType } = req.body;
+        
+        if (!agentName || !eventType) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'agentName and eventType required' 
+            });
+        }
+
+        coordinator.subscribe(agentName, eventType);
+        res.json({ 
+            success: true, 
+            message: `Agent ${agentName} subscribed to ${eventType}` 
+        });
+    } catch (error) {
+        console.error('Error subscribing agent:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/agents/communications
+ * Get communication log
+ */
+app.get('/api/agents/communications', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 100;
+        const log = coordinator.getCommunicationLog(limit);
+        res.json({ 
+            success: true, 
+            log,
+            total: log.length
+        });
+    } catch (error) {
+        console.error('Error getting communication log:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/agents/verify-data
+ * Verify shared data across agents
+ */
+app.post('/api/agents/verify-data', async (req, res) => {
+    try {
+        const { dataType, data } = req.body;
+        
+        if (!dataType) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'dataType required' 
+            });
+        }
+
+        const results = await coordinator.verifySharedData(dataType, data || {});
+        res.json({ 
+            success: true, 
+            results 
+        });
+    } catch (error) {
+        console.error('Error verifying data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/agents/heartbeat
+ * Get heartbeat status
+ */
+app.get('/api/agents/heartbeat', async (req, res) => {
+    try {
+        const status = coordinator.getHeartbeatStatus();
+        res.json({ 
+            success: true, 
+            status 
+        });
+    } catch (error) {
+        console.error('Error getting heartbeat status:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/agents/communication-stats
+ * Get communication statistics
+ */
+app.get('/api/agents/communication-stats', async (req, res) => {
+    try {
+        const stats = coordinator.getCommunicationStats();
+        res.json({ 
+            success: true, 
+            stats 
+        });
+    } catch (error) {
+        console.error('Error getting communication stats:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {

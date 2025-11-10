@@ -134,6 +134,9 @@ class FigmaAgent extends AgentBase {
             
             this.emit('figmaFileFetched', { fileKey, fileData });
             
+            // Notifica altri agenti (es. FrontendAgent) che un file Figma è stato recuperato
+            this.notifyDataChange('figmaFile', { fileKey, action: 'fetched' }, ['FrontendAgent']);
+            
             return {
                 success: true,
                 fileKey,

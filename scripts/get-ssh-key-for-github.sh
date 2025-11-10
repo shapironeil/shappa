@@ -75,3 +75,4 @@ echo "   3. Incolla la chiave COMPLETA mostrata sopra"
 echo "   4. Salva"
 echo ""
 
+

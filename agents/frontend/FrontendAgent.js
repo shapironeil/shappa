@@ -199,6 +199,9 @@ class FrontendAgent extends AgentBase {
         // Salva file aggiornato
         fs.writeFileSync(fullPath, updatedContent, 'utf8');
         
+        // Notifica altri agenti (es. DataAgent) che una pagina è stata integrata
+        this.notifyDataChange('pageIntegration', { pagePath, apiEndpoints }, ['DataAgent']);
+        
         return {
             success: true,
             pagePath,

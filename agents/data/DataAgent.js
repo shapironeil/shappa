@@ -131,6 +131,9 @@ class DataAgent extends AgentBase {
 
         this.emit('dataCached', { key, timestamp: cacheEntry.timestamp });
         
+        // Notifica altri agenti del cambiamento dati
+        this.notifyDataChange('cache', { key, action: 'cached' }, null);
+        
         return {
             success: true,
             key,
