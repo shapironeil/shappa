@@ -60,6 +60,8 @@ LifeManager/
 - **MongoDB Atlas** per metadati
 - **Object Storage** (DigitalOcean Spaces/S3) per immagini
 - **Redis** (opzionale) per cache e code
+- **❌ NO localStorage/sessionStorage** - Tutto deve essere salvato SOLO sul server via API
+- **❌ NO fallback a storage client-side** - Se l'API fallisce, mostra errore ma NON salvare localmente
 
 ### 4. Naming Conventions
 

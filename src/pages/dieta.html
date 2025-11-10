@@ -1078,16 +1078,8 @@
                 window.location.href = '/src/pages/login.html';
             });
 
-            // Load saved diet
-            const savedDiet = localStorage.getItem('selected_diet');
-            if (savedDiet) {
-                try {
-                    selectedDiet = JSON.parse(savedDiet);
-                    updateDietName();
-                } catch (e) {
-                    console.error('Error loading diet:', e);
-                }
-            }
+            // Dieta selezionata viene caricata solo dal server via API (loadDietData)
+            // NON usare localStorage - tutto viene salvato sul server (server-first workflow)
 
             // Setup calendar
             setupCalendar();
@@ -1508,26 +1500,6 @@
                         shoppingList: shoppingList.length
                     });
                     
-                    // Carica preferenze da localStorage come fallback/backup se non presenti nei dati API
-                    // localStorage ha priorità se contiene preferenze più recenti
-                    try {
-                        const savedPrefs = localStorage.getItem(`diet_preferences_${userId}`);
-                        if (savedPrefs) {
-                            const prefs = JSON.parse(savedPrefs);
-                            // Usa localStorage se API non ha preferenze O se localStorage è più recente
-                            if (!dietData.preferences || (prefs.updatedAt && (!dietData.preferences.updatedAt || prefs.updatedAt > dietData.preferences.updatedAt))) {
-                                dietData.preferences = prefs;
-                                console.log('✅ Preferenze caricate da localStorage (priorità)');
-                            } else {
-                                console.log('✅ Preferenze caricate da API');
-                            }
-                        } else if (dietData.preferences) {
-                            console.log('✅ Preferenze caricate da API');
-                        }
-                    } catch (e) {
-                        console.error('Error loading preferences from localStorage:', e);
-                    }
-                    
                     // Carica dieta selezionata
                     if (dietData.selectedDiet) {
                         selectedDiet = allDietPlans.find(d => d.id === dietData.selectedDiet.id) || dietData.selectedDiet;
@@ -1545,47 +1517,9 @@
                     renderFridgeDialog();
                     renderPersonalCard();
                     renderDietProposals();
-                }
-            } catch (error) {
-                console.error('Error loading diet data:', error);
-                // Fallback: prova a caricare da localStorage
-                try {
-                    const savedData = localStorage.getItem(`diet_data_${userId}`);
-                    if (savedData) {
-                        const parsed = JSON.parse(savedData);
-                        dietData = {
-                            fridge: parsed.fridge || [],
-                            preferences: parsed.preferences || null,
-                            weight: parsed.weight || [],
-                            calories: parsed.calories || [],
-                            shoppingList: parsed.shoppingList || [],
-                            selectedDiet: parsed.selectedDiet || null
-                        };
-                        
-                        fridgeItems = dietData.fridge || [];
-                        shoppingList = dietData.shoppingList || [];
-                        
-                        // Carica preferenze anche dal localStorage specifico
-                        if (!dietData.preferences) {
-                            const savedPrefs = localStorage.getItem(`diet_preferences_${userId}`);
-                            if (savedPrefs) {
-                                dietData.preferences = JSON.parse(savedPrefs);
-                            }
-                        }
-                        
-                        console.log('✅ Dati dieta caricati da localStorage');
-                    } else {
-                        dietData = {
-                            fridge: [],
-                            preferences: null,
-                            weight: [],
-                            calories: [],
-                            shoppingList: [],
-                            selectedDiet: null
-                        };
-                    }
-                } catch (e) {
-                    console.error('Error loading from localStorage:', e);
+                } else {
+                    // Se l'API non restituisce dati, inizializza con dati vuoti
+                    console.log('⚠️ API restituisce dati vuoti, inizializzazione dati vuoti');
                     dietData = {
                         fridge: [],
                         preferences: null,
@@ -1595,6 +1529,18 @@
                         selectedDiet: null
                     };
                 }
+            } catch (error) {
+                console.error('❌ Error loading diet data from API:', error);
+                // In caso di errore API, inizializza con dati vuoti (NON usare localStorage)
+                dietData = {
+                    fridge: [],
+                    preferences: null,
+                    weight: [],
+                    calories: [],
+                    shoppingList: [],
+                    selectedDiet: null
+                };
+                console.log('ℹ️ Inizializzati dati vuoti (server-first workflow)');
             }
         }
 
@@ -1977,29 +1923,17 @@
         let selectedDietForDialog = null;
         let selectedDayInDialog = 'Lunedì';
 
-        // Load user profile from API (online-first)
+        // Load user profile from API (online-first, NO localStorage)
         async function loadUserProfile() {
             try {
                 // Carica preferenze da dietData (già caricato da loadDietData)
+                // Tutte le preferenze vengono caricate SOLO dal server via API
                 if (dietData.preferences) {
                     userProfile = dietData.preferences;
-                    console.log('✅ Preferenze caricate da dietData:', Object.keys(userProfile));
+                    console.log('✅ Preferenze caricate da API (dietData):', Object.keys(userProfile));
                 } else {
-                    // Se non ci sono preferenze in dietData, prova localStorage
-                    try {
-                        const savedPrefs = localStorage.getItem(`diet_preferences_${userId}`);
-                        if (savedPrefs) {
-                            userProfile = JSON.parse(savedPrefs);
-                            dietData.preferences = userProfile;
-                            console.log('✅ Preferenze caricate da localStorage:', Object.keys(userProfile));
-                        } else {
-                            userProfile = null;
-                            console.log('ℹ️ Nessuna preferenza trovata');
-                        }
-                    } catch (e) {
-                        console.error('Error loading preferences from localStorage:', e);
-                        userProfile = null;
-                    }
+                    userProfile = null;
+                    console.log('ℹ️ Nessuna preferenza trovata sul server');
                 }
                 
                 // Prova anche a caricare da user-profile API (non critico se fallisce)
@@ -2017,13 +1951,13 @@
                     }
                 } catch (error) {
                     // Non critico, continua senza errori
-                    console.log('User profile API not available, using local data');
+                    console.log('ℹ️ User profile API not available');
                 }
                 
                 renderDietProposals();
                 renderPersonalCard();
             } catch (error) {
-                console.error('Error loading profile:', error);
+                console.error('❌ Error loading profile:', error);
                 renderDietProposals();
                 renderPersonalCard();
             }
@@ -2474,15 +2408,10 @@
                         throw new Error('Failed to save diet');
                     }
                 } catch (error) {
-                    console.error('Error saving diet to API:', error);
-                    // Fallback to localStorage if API fails
-                    localStorage.setItem('selected_diet', JSON.stringify(dietToSave));
-                    dietData.selectedDiet = dietToSave;
-                    selectedDiet = diet;
-                    updateDietName();
-                    renderCalendar();
-                    renderDietProposals();
-                    console.log('Diet saved locally (API not available)');
+                    console.error('❌ Error saving diet to server:', error);
+                    // In caso di errore, mostra messaggio ma NON salvare localmente
+                    alert('❌ Errore nel salvare la dieta sul server. Riprova più tardi.');
+                    console.log('ℹ️ Dieta NON salvata (server-first workflow: tutto deve essere salvato sul server)');
                 }
             } catch (error) {
                 console.error('Errore salvataggio dieta:', error);
@@ -2507,9 +2436,11 @@
                         throw new Error(`HTTP ${response.status}`);
                     }
                 } catch (error) {
-                    console.error('Error removing diet from API:', error);
-                    // Fallback: remove from localStorage
-                    localStorage.removeItem('selected_diet');
+                    console.error('❌ Error removing diet from server:', error);
+                    // In caso di errore, mostra messaggio
+                    alert('❌ Errore nel rimuovere la dieta dal server. Riprova più tardi.');
+                    console.log('ℹ️ Dieta NON rimossa (server-first workflow: tutto deve essere salvato sul server)');
+                    return; // Non continuare se l'API fallisce
                 }
                 
                 // Clear selected diet
@@ -2704,53 +2635,21 @@
                     dietData.preferences = prefsWithTimestamp;
                     userProfile = prefsWithTimestamp;
                     
-                    console.log('✅ Preferenze salvate su API:', Object.keys(prefsWithTimestamp));
-                    
-                    // Salva anche in localStorage come backup (sempre, anche se API funziona)
-                    try {
-                        localStorage.setItem(`diet_preferences_${userId}`, JSON.stringify(prefsWithTimestamp));
-                        // Salva anche i dati completi
-                        const fullData = { ...dietData, preferences: prefsWithTimestamp };
-                        localStorage.setItem(`diet_data_${userId}`, JSON.stringify(fullData));
-                        console.log('✅ Preferenze salvate anche in localStorage');
-                    } catch (e) {
-                        console.error('Error saving to localStorage:', e);
-                    }
+                    console.log('✅ Preferenze salvate sul server via API:', Object.keys(prefsWithTimestamp));
                     
                     closePersonalCardDialog();
                     // Aggiorna UI
                     renderPersonalCard();
                     renderDietProposals(); // Aggiorna le raccomandazioni
-                    alert('✅ Preferenze salvate con successo!');
+                    alert('✅ Preferenze salvate con successo sul server!');
                 } else {
                     throw new Error('Failed to save preferences');
                 }
             } catch (error) {
-                console.error('Error saving preferences:', error);
-                // Fallback: salva localmente se API non disponibile
-                const prefsWithTimestamp = {
-                    ...personalCardFormData,
-                    updatedAt: new Date().toISOString()
-                };
-                
-                dietData.preferences = prefsWithTimestamp;
-                userProfile = prefsWithTimestamp;
-                
-                // Salva in localStorage
-                try {
-                    localStorage.setItem(`diet_preferences_${userId}`, JSON.stringify(prefsWithTimestamp));
-                    const fullData = { ...dietData, preferences: prefsWithTimestamp };
-                    localStorage.setItem(`diet_data_${userId}`, JSON.stringify(fullData));
-                    console.log('✅ Preferenze salvate in localStorage (fallback)');
-                } catch (e) {
-                    console.error('Error saving to localStorage:', e);
-                }
-                
-                closePersonalCardDialog();
-                // Aggiorna UI
-                renderPersonalCard();
-                renderDietProposals(); // Aggiorna le raccomandazioni
-                alert('✅ Preferenze salvate localmente! (API non disponibile)');
+                console.error('❌ Error saving preferences to server:', error);
+                // In caso di errore, mostra messaggio all'utente ma NON salvare localmente
+                alert('❌ Errore nel salvare le preferenze sul server. Riprova più tardi.');
+                console.log('ℹ️ Dati NON salvati (server-first workflow: tutto deve essere salvato sul server)');
             }
         }
 

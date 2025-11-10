@@ -4,6 +4,52 @@ Ultimo aggiornamento: 6 novembre 2025
 
 Obiettivo: tutto il runtime e i dati dell'app devono essere conservati online (DB, object storage, cache). Nessun secret o dati runtime salvati localmente sul client.
 
+## ⚠️ REGOLA CRITICA: NO localStorage
+
+**IMPORTANTE:** Questa applicazione è completamente server-first. 
+
+### ❌ NON USARE MAI:
+- `localStorage.setItem()` - NON salvare dati sul client
+- `localStorage.getItem()` - NON caricare dati dal client
+- `sessionStorage` - NON usare storage lato client
+- Qualsiasi storage lato client per dati runtime
+
+### ✅ USA SEMPRE:
+- API endpoints sul server (`/api/*`) per salvare/caricare dati
+- Database (MongoDB Atlas) per persistenza
+- File system sul server per dati temporanei (se necessario)
+
+### 📋 Esempi:
+
+**❌ SBAGLIATO:**
+```javascript
+// NON fare così
+localStorage.setItem('preferences', JSON.stringify(data));
+const data = localStorage.getItem('preferences');
+```
+
+**✅ CORRETTO:**
+```javascript
+// Fai così invece
+await fetch('/api/diet/preferences/${userId}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+});
+const response = await fetch('/api/diet/data/${userId}');
+const result = await response.json();
+```
+
+### 🔄 Gestione Errori:
+
+Se l'API fallisce:
+- ✅ Mostra messaggio di errore all'utente
+- ✅ Logga l'errore per debug
+- ❌ NON salvare in localStorage come fallback
+- ❌ NON usare dati locali come backup
+
+**Tutto deve essere salvato SOLO sul server.**
+
 ## Flusso utente (UI)
 
 1. Login (autenticazione via sessione sul server)
