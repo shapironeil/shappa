@@ -1065,11 +1065,16 @@
             const user = AuthManager.getCurrentUser();
             if (user) {
                 const userName = user.username || user.email || 'Utente';
-                document.getElementById('userName').textContent = userName;
-                document.getElementById('sidebarUserName').textContent = userName;
+                const userNameEl = document.getElementById('userName');
+                const sidebarUserNameEl = document.getElementById('sidebarUserName');
+                if (userNameEl) userNameEl.textContent = userName;
+                if (sidebarUserNameEl) sidebarUserNameEl.textContent = userName;
+                
                 const initial = userName[0].toUpperCase();
-                document.getElementById('userAvatar').textContent = initial;
-                document.getElementById('sidebarUserAvatar').textContent = initial;
+                const userAvatarEl = document.getElementById('userAvatar');
+                const sidebarUserAvatarEl = document.getElementById('sidebarUserAvatar');
+                if (userAvatarEl) userAvatarEl.textContent = initial;
+                if (sidebarUserAvatarEl) sidebarUserAvatarEl.textContent = initial;
             }
 
             // Logout handler
@@ -1129,7 +1134,9 @@
 
             // Update week range
             const weekRange = document.getElementById('weekRange');
-            weekRange.textContent = `${dates[0].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${dates[6].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
+            if (weekRange) {
+                weekRange.textContent = `${dates[0].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${dates[6].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
+            }
 
             if (!selectedDiet) {
                 calendarDays.style.display = 'none';
@@ -1180,8 +1187,8 @@
             const mealsGrid = document.getElementById('mealsGrid');
 
             mealsSection.style.display = 'block';
-            selectedDayName.textContent = selectedDay;
-            dayCalories.textContent = `${dayPlan.calories} cal`;
+            if (selectedDayName) selectedDayName.textContent = selectedDay;
+            if (dayCalories) dayCalories.textContent = `${dayPlan.calories} cal`;
 
             mealsGrid.innerHTML = `
                 <div class="meal-card breakfast" onclick="showMealDetails('breakfast', '${dayPlan.breakfast.replace(/'/g, "\\'")}')">
@@ -1214,7 +1221,10 @@
 
         function updateDietName() {
             if (selectedDiet) {
-                document.getElementById('selectedDietName').textContent = `Dieta: ${selectedDiet.name}`;
+                const selectedDietNameEl = document.getElementById('selectedDietName');
+                if (selectedDietNameEl) {
+                    selectedDietNameEl.textContent = `Dieta: ${selectedDiet.name}`;
+                }
             }
         }
 
