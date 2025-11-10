@@ -502,6 +502,40 @@
                 </div>
                 <div class="stat-label">Monitor Attivi</div>
             </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">🤖</span>
+                    <span class="stat-value" id="totalAgents">-</span>
+                </div>
+                <div class="stat-label">Agenti AI Attivi</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-header">
+                    <span class="stat-icon">📋</span>
+                    <span class="stat-value" id="queueSize">-</span>
+                </div>
+                <div class="stat-label">Task in Coda</div>
+            </div>
+        </div>
+
+        <!-- Agent AI Committee Section -->
+        <div class="section">
+            <h2 class="section-title">🤖 Agent AI Committee System</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <button class="btn btn-primary" onclick="loadAgentStats()" style="margin-right: 0.5rem;">
+                    🔄 Aggiorna Statistiche Agenti
+                </button>
+                <button class="btn btn-success" onclick="refreshAllAgents()">
+                    ⚡ Refresh Tutti gli Agenti
+                </button>
+            </div>
+            
+            <div id="agentsContainer" class="loading">
+                <div class="loading-spinner"></div>
+                <p>Caricamento agenti...</p>
+            </div>
         </div>
 
         <!-- Users Section -->
@@ -842,6 +876,226 @@
             document.getElementById('totalInterests').textContent = counts.totalInterests || 0;
             document.getElementById('totalWebhooks').textContent = counts.totalWebhooks || 0;
             document.getElementById('activeMonitors').textContent = counts.activeMonitors || 0;
+            
+            // Carica statistiche agenti
+            loadAgentStats();
+        }
+        
+        // ========================================
+        // AGENT AI COMMITTEE FUNCTIONS
+        // ========================================
+        
+        async function loadAgentStats() {
+            try {
+                const response = await fetch('https://shapiro.ninja/api/agents/stats');
+                const result = await response.json();
+                
+                if (result.success && result.stats) {
+                    const stats = result.stats;
+                    
+                    // Aggiorna statistiche generali
+                    document.getElementById('totalAgents').textContent = stats.agents || 0;
+                    document.getElementById('queueSize').textContent = stats.queueSize || 0;
+                    
+                    // Render agenti
+                    renderAgents(stats);
+                }
+            } catch (error) {
+                console.error('Error loading agent stats:', error);
+                document.getElementById('agentsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #ef4444;">
+                        <p>Errore caricamento statistiche agenti: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderAgents(stats) {
+            const container = document.getElementById('agentsContainer');
+            
+            if (!stats.agentStats || Object.keys(stats.agentStats).length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #94a3b8;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🤖</div>
+                        <strong>Nessun agente disponibile</strong>
+                    </div>
+                `;
+                return;
+            }
+            
+            const agentsGrid = document.createElement('div');
+            agentsGrid.className = 'users-grid';
+            agentsGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+            
+            for (const [agentName, agentData] of Object.entries(stats.agentStats)) {
+                const agentCard = document.createElement('div');
+                agentCard.className = 'user-card';
+                
+                const statusColor = agentData.status === 'idle' ? '#10b981' : 
+                                   agentData.status === 'processing' ? '#f59e0b' : '#ef4444';
+                const statusIcon = agentData.status === 'idle' ? '✅' : 
+                                  agentData.status === 'processing' ? '⚙️' : '❌';
+                
+                agentCard.innerHTML = `
+                    <div class="user-header">
+                        <div class="user-info">
+                            <h3 style="color: #a78bfa;">${agentName}</h3>
+                            <span class="user-id" style="background: ${statusColor}20; color: ${statusColor};">
+                                ${statusIcon} ${agentData.status.toUpperCase()}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem; color: #e2e8f0; line-height: 1.6;">
+                            <div>
+                                <strong style="color: #94a3b8;">Task Processati:</strong><br>
+                                <span style="color: #60a5fa; font-size: 1.25rem; font-weight: 700;">${agentData.tasksProcessed || 0}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">Errori:</strong><br>
+                                <span style="color: ${agentData.errors > 0 ? '#ef4444' : '#10b981'}; font-size: 1.25rem; font-weight: 700;">${agentData.errors || 0}</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">Priorità:</strong><br>
+                                <span style="color: #f59e0b; font-size: 1.25rem; font-weight: 700;">${agentData.priority || 5}/10</span>
+                            </div>
+                            <div>
+                                <strong style="color: #94a3b8;">Capabilities:</strong><br>
+                                <span style="color: #94a3b8; font-size: 0.7rem;">${(agentData.capabilities || []).length} disponibili</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${agentData.capabilities && agentData.capabilities.length > 0 ? `
+                        <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #8b5cf6; margin-bottom: 0.5rem; text-transform: uppercase;">
+                                Capabilities
+                            </div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                                ${agentData.capabilities.slice(0, 6).map(cap => `
+                                    <span style="background: #0f172a; color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem;">
+                                        ${cap}
+                                    </span>
+                                `).join('')}
+                                ${agentData.capabilities.length > 6 ? `<span style="color: #64748b; font-size: 0.65rem;">+${agentData.capabilities.length - 6} altri</span>` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${agentData.lastError ? `
+                        <div style="background: #1e293b; padding: 1rem; border-radius: 6px; border: 1px solid #ef4444;">
+                            <div style="font-size: 0.7rem; font-weight: 700; color: #ef4444; margin-bottom: 0.5rem;">
+                                Ultimo Errore
+                            </div>
+                            <div style="font-size: 0.7rem; color: #e2e8f0;">
+                                ${agentData.lastError.error || 'Unknown error'}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="user-actions">
+                        <button class="btn-small btn-view" onclick="viewAgentDetails('${agentName}')">
+                            📊 Dettagli
+                        </button>
+                        <button class="btn-small" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white;" onclick="refreshAgent('${agentName}')">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                `;
+                
+                agentsGrid.appendChild(agentCard);
+            }
+            
+            container.innerHTML = '';
+            container.appendChild(agentsGrid);
+        }
+        
+        async function refreshAgent(agentName) {
+            try {
+                showStatus(`🔄 Refresh agente ${agentName}...`, '#f59e0b');
+                
+                // Ricarica statistiche agenti
+                await loadAgentStats();
+                
+                showStatus(`✅ Agente ${agentName} aggiornato!`, '#10b981');
+            } catch (error) {
+                console.error('Error refreshing agent:', error);
+                showStatus('❌ Errore refresh agente', '#ef4444');
+            }
+        }
+        
+        async function refreshAllAgents() {
+            try {
+                showStatus('🔄 Refresh tutti gli agenti...', '#f59e0b');
+                await loadAgentStats();
+                showStatus('✅ Tutti gli agenti aggiornati!', '#10b981');
+            } catch (error) {
+                console.error('Error refreshing agents:', error);
+                showStatus('❌ Errore refresh agenti', '#ef4444');
+            }
+        }
+        
+        async function viewAgentDetails(agentName) {
+            try {
+                const response = await fetch(`https://shapiro.ninja/api/agents/agent/${agentName}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const detailsWindow = window.open('', '_blank', 'width=1000,height=800');
+                    detailsWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Shappa Admin - ${agentName}</title>
+                            <style>
+                                body {
+                                    font-family: 'JetBrains Mono', monospace;
+                                    background: #0d1117;
+                                    color: #c9d1d9;
+                                    padding: 2rem;
+                                    line-height: 1.6;
+                                }
+                                h1 { color: #58a6ff; margin-bottom: 2rem; }
+                                pre {
+                                    background: #161b22;
+                                    padding: 1.5rem;
+                                    border-radius: 8px;
+                                    overflow: auto;
+                                    border: 1px solid #30363d;
+                                }
+                                .json-key { color: #79c0ff; }
+                                .json-string { color: #a5d6ff; }
+                                .json-number { color: #ffa657; }
+                                .json-boolean { color: #ff7b72; }
+                                button {
+                                    margin-top: 2rem;
+                                    padding: 0.75rem 1.5rem;
+                                    background: #21262d;
+                                    color: #c9d1d9;
+                                    border: 1px solid #30363d;
+                                    border-radius: 6px;
+                                    cursor: pointer;
+                                    font-family: inherit;
+                                    font-weight: 600;
+                                }
+                                button:hover {
+                                    background: #30363d;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>🤖 Dettagli Agente: ${agentName}</h1>
+                            <pre>${syntaxHighlight(JSON.stringify(result.agent, null, 2))}</pre>
+                            <button onclick="window.close()">✖️ Chiudi</button>
+                        </body>
+                        </html>
+                    `);
+                }
+            } catch (error) {
+                console.error('Error viewing agent details:', error);
+                alert('❌ Errore caricamento dettagli agente: ' + error.message);
+            }
         }
 
         async function renderUsers() {
@@ -1000,23 +1254,6 @@
                         </div>
                     `;
                 }).join('') + '</div>';
-        }
-                                    </div>
-                                ` : ''}
-                            </div>
-                            
-                            <div class="user-actions">
-                                <button class="btn-small btn-view" onclick="viewUserDetails('${userId}')">
-                                    Dettagli
-                                </button>
-                                <button class="btn-small btn-delete" onclick="deleteUser('${userId}')">
-                                    Elimina
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('') +
-            '</div>';
         }
 
         function renderRawData() {

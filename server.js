@@ -13,6 +13,44 @@ const { promises: fsPromises } = require('fs');
 // Import Monitor System
 const monitorManager = require('./monitors/MonitorManager');
 
+// Import Agent AI Committee System
+const { initializeAgents, getAgentCoordinator } = require('./agents');
+
+// Initialize Agent AI Committee System
+const { coordinator } = initializeAgents({
+    figma: {
+        figmaApiKey: process.env.FIGMA_API_KEY
+    },
+    security: {
+        sessionTTL: 3600000, // 1 hour
+        priority: 10
+    },
+    monitor: {
+        priority: 8
+    },
+    sport: {
+        priority: 7
+    },
+    automation: {
+        priority: 6
+    },
+    integration: {
+        priority: 7
+    },
+    frontend: {
+        priority: 7
+    },
+    data: {
+        cacheTTL: 3600000, // 1 hour
+        priority: 6
+    },
+    notification: {
+        priority: 7
+    }
+});
+
+console.log('🤖 Agent AI Committee System initialized');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -2735,6 +2773,325 @@ app.get('/api/automations/habits/:userId', async (req, res) => {
     } catch (error) {
         console.error('Error getting habit settings:', error);
         res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/automations/notifications
+ * Save Discord notification settings
+ */
+app.post('/api/automations/notifications', async (req, res) => {
+    try {
+        const { userId, settings } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'Missing userId' });
+        }
+
+        const automationsDir = path.join(DATA_DIR, 'automations');
+        if (!fs.existsSync(automationsDir)) {
+            fs.mkdirSync(automationsDir, { recursive: true });
+        }
+
+        const automationsPath = path.join(automationsDir, `${userId}.json`);
+        let existingData = {};
+        
+        if (fs.existsSync(automationsPath)) {
+            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        }
+
+        existingData.notifications = {
+            ...settings,
+            lastUpdated: new Date().toISOString()
+        };
+
+        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
+        console.log(`✅ Notification settings saved for user ${userId}`);
+
+        res.json({
+            success: true,
+            message: 'Notification settings saved',
+            settings: existingData.notifications
+        });
+    } catch (error) {
+        console.error('Error saving notification settings:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/automations/notifications/:userId
+ * Get Discord notification settings
+ */
+app.get('/api/automations/notifications/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+
+        if (!fs.existsSync(automationsPath)) {
+            return res.json({
+                success: true,
+                settings: {
+                    notifyMonitorProducts: true,
+                    notifyWorkouts: true,
+                    notifyHabits: true,
+                    notifyEbay: false,
+                    frequency: 'realtime'
+                }
+            });
+        }
+
+        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+        res.json({
+            success: true,
+            settings: data.notifications || {
+                notifyMonitorProducts: true,
+                notifyWorkouts: true,
+                notifyHabits: true,
+                notifyEbay: false,
+                frequency: 'realtime'
+            }
+        });
+    } catch (error) {
+        console.error('Error getting notification settings:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// ============================================
+// AGENT AI COMMITTEE ENDPOINTS
+// ============================================
+
+/**
+ * POST /api/agents/task
+ * Assign a task to the agent system
+ */
+app.post('/api/agents/task', async (req, res) => {
+    try {
+        const task = req.body;
+        
+        if (!task || !task.type) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Task type required' 
+            });
+        }
+
+        const result = await coordinator.assignTask(task);
+        res.json(result);
+    } catch (error) {
+        console.error('Error assigning task:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/agents/queue
+ * Queue a task to the agent system
+ */
+app.post('/api/agents/queue', async (req, res) => {
+    try {
+        const { task, preferredAgent } = req.body;
+        
+        if (!task || !task.type) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Task type required' 
+            });
+        }
+
+        const taskId = await coordinator.queueTask(task, preferredAgent);
+        res.json({ 
+            success: true, 
+            taskId,
+            message: 'Task queued successfully' 
+        });
+    } catch (error) {
+        console.error('Error queueing task:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/agents/stats
+ * Get agent system statistics
+ */
+app.get('/api/agents/stats', async (req, res) => {
+    try {
+        const stats = coordinator.getStats();
+        res.json({ 
+            success: true, 
+            stats 
+        });
+    } catch (error) {
+        console.error('Error getting agent stats:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/agents/agent/:agentName
+ * Get specific agent status
+ */
+app.get('/api/agents/agent/:agentName', async (req, res) => {
+    try {
+        const { agentName } = req.params;
+        const agentStats = coordinator.getAgentStatus(agentName);
+        
+        if (!agentStats) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Agent not found' 
+            });
+        }
+
+        res.json({ 
+            success: true, 
+            agent: agentStats 
+        });
+    } catch (error) {
+        console.error('Error getting agent status:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/figma/create-page
+ * Create a page from Figma design
+ */
+app.post('/api/figma/create-page', async (req, res) => {
+    try {
+        const { fileKey, nodeId, pageName, pagePath, backendConfig, exportAssets, assetNodeIds } = req.body;
+        
+        if (!fileKey || !pageName) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'fileKey and pageName required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'create_page_from_figma',
+            fileKey,
+            nodeId,
+            pageName,
+            pagePath,
+            backendConfig,
+            exportAssets,
+            assetNodeIds,
+            assetFormat: req.body.assetFormat || 'png'
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error creating page from Figma:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/figma/sync
+ * Sync Figma design
+ */
+app.post('/api/figma/sync', async (req, res) => {
+    try {
+        const { fileKey, nodeId } = req.body;
+        
+        if (!fileKey) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'fileKey required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'sync_figma_design',
+            fileKey,
+            nodeId
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error syncing Figma design:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/frontend/link-page
+ * Link a page to backend APIs
+ */
+app.post('/api/frontend/link-page', async (req, res) => {
+    try {
+        const { pagePath, apiConfig } = req.body;
+        
+        if (!pagePath || !apiConfig) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'pagePath and apiConfig required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'link_page_to_api',
+            pagePath,
+            apiConfig
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error linking page to API:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/agents/communicate
+ * Communicate with a specific agent
+ */
+app.post('/api/agents/communicate', async (req, res) => {
+    try {
+        const { agentName, message } = req.body;
+        
+        if (!agentName || !message) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'agentName and message required' 
+            });
+        }
+
+        const result = await coordinator.communicateWithAgent(agentName, message);
+        res.json({ 
+            success: true, 
+            result 
+        });
+    } catch (error) {
+        console.error('Error communicating with agent:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
     }
 });
 

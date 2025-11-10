@@ -7,7 +7,10 @@
     "dev": "node server.js",
     "start": "node server.js",
     "build": "echo 'No build step required'",
-    "test": "echo 'Tests not configured yet'"
+    "test": "echo 'Tests not configured yet'",
+    "deploy:railway": "railway up",
+    "deploy:vercel": "vercel --prod",
+    "deploy:render": "echo 'Deploy su Render tramite GitHub integration'"
   },
   "keywords": [
     "webapp",

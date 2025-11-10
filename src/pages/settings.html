@@ -855,6 +855,99 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Discord Webhook Configuration -->
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">🔔 Discord Webhook - Notifiche</h3>
+                                
+                                <div class="venus-integration-card" style="margin-bottom: var(--venus-space-md);">
+                                    <div class="venus-integration-info">
+                                        <div class="venus-integration-icon" style="background: #5865F2;">Dc</div>
+                                        <div>
+                                            <div class="venus-integration-name">Discord</div>
+                                            <div class="venus-integration-status" id="discord-status-badge">Non configurato</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Webhook URL</label>
+                                    <input type="text" class="venus-form-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN">
+                                    <div class="venus-form-help">
+                                        Copia l'URL webhook dal tuo server Discord. Vai su Impostazioni Server → Integrazioni → Webhook → Nuovo Webhook
+                                    </div>
+                                </div>
+                                
+                                <div class="venus-btn-group" style="display: flex; gap: 8px; margin-top: var(--venus-space-md);">
+                                    <button class="venus-btn venus-btn-primary" onclick="saveDiscordWebhook()">
+                                        💾 Salva Webhook
+                                    </button>
+                                    <button class="venus-btn" onclick="testDiscordWebhook()">
+                                        🧪 Test Notifica
+                                    </button>
+                                </div>
+                                
+                                <!-- Notification Settings -->
+                                <div style="margin-top: var(--venus-space-xl); padding-top: var(--venus-space-lg); border-top: 1px solid var(--venus-border);">
+                                    <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--venus-text-primary); margin-bottom: var(--venus-space-md);">
+                                        📬 Impostazioni Notifiche Discord
+                                    </h4>
+                                    
+                                    <div class="venus-switch-group">
+                                        <span class="venus-switch-label">Notifiche Monitor Prodotti</span>
+                                        <label class="venus-switch">
+                                            <input type="checkbox" id="notifyMonitorProducts" checked>
+                                            <span class="venus-switch-slider"></span>
+                                        </label>
+                                        <div class="venus-form-help" style="margin-top: 0.25rem;">Ricevi notifiche quando prodotti monitorati diventano disponibili</div>
+                                    </div>
+                                    
+                                    <div class="venus-switch-group" style="margin-top: var(--venus-space-sm);">
+                                        <span class="venus-switch-label">Notifiche Workout</span>
+                                        <label class="venus-switch">
+                                            <input type="checkbox" id="notifyWorkouts" checked>
+                                            <span class="venus-switch-slider"></span>
+                                        </label>
+                                        <div class="venus-form-help" style="margin-top: 0.25rem;">Ricevi promemoria e notifiche per i tuoi allenamenti</div>
+                                    </div>
+                                    
+                                    <div class="venus-switch-group" style="margin-top: var(--venus-space-sm);">
+                                        <span class="venus-switch-label">Notifiche Abitudini</span>
+                                        <label class="venus-switch">
+                                            <input type="checkbox" id="notifyHabits" checked>
+                                            <span class="venus-switch-slider"></span>
+                                        </label>
+                                        <div class="venus-form-help" style="margin-top: 0.25rem;">Ricevi reminder e notifiche per le tue abitudini</div>
+                                    </div>
+                                    
+                                    <div class="venus-switch-group" style="margin-top: var(--venus-space-sm);">
+                                        <span class="venus-switch-label">Notifiche eBay</span>
+                                        <label class="venus-switch">
+                                            <input type="checkbox" id="notifyEbay">
+                                            <span class="venus-switch-slider"></span>
+                                        </label>
+                                        <div class="venus-form-help" style="margin-top: 0.25rem;">Ricevi notifiche per eventi eBay (vendite, messaggi, etc.)</div>
+                                    </div>
+                                    
+                                    <div class="venus-form-group" style="margin-top: var(--venus-space-md);">
+                                        <label class="venus-form-label">Frequenza Notifiche</label>
+                                        <select class="venus-form-select" id="notificationFrequency">
+                                            <option value="realtime" selected>In tempo reale</option>
+                                            <option value="hourly">Ogni ora (raggruppate)</option>
+                                            <option value="daily">Giornaliere (raggruppate)</option>
+                                        </select>
+                                        <div class="venus-form-help">Scegli quando ricevere le notifiche</div>
+                                    </div>
+                                    
+                                    <div class="venus-btn-group" style="margin-top: var(--venus-space-md);">
+                                        <button type="button" class="venus-btn venus-btn-primary" onclick="saveDiscordNotificationSettings()">
+                                            💾 Salva Impostazioni Notifiche
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -960,31 +1053,6 @@
                             </div>
                         </div>
                         
-                        <div class="venus-widget">
-                            <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Discord Webhook</h3>
-                                
-                                <div class="venus-integration-card">
-                                    <div class="venus-integration-info">
-                                        <div class="venus-integration-icon" style="background: #5865F2;">Dc</div>
-                                        <div>
-                                            <div class="venus-integration-name">Discord</div>
-                                            <div class="venus-integration-status" id="discord-status-badge">Non connesso</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="venus-form-group" style="margin-top: var(--venus-space-md);">
-                                    <label class="venus-form-label">Webhook URL</label>
-                                    <input type="text" class="venus-form-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
-                                </div>
-                                
-                                <div class="venus-btn-group" style="display: flex; gap: 8px;">
-                                    <button class="venus-btn venus-btn-primary" onclick="saveDiscordWebhook()">Salva</button>
-                                    <button class="venus-btn" onclick="testDiscordWebhook()">Test</button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -1527,8 +1595,81 @@
                         statusBadge.className = 'venus-integration-status venus-status-connected';
                     }
                 }
+                
+                // Carica impostazioni notifiche
+                await loadDiscordNotificationSettings();
             } catch (error) {
                 console.error('Error loading webhook status:', error);
+            }
+        }
+        
+        async function saveDiscordNotificationSettings() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                alert('❌ Devi essere autenticato');
+                return;
+            }
+            
+            const notificationSettings = {
+                notifyMonitorProducts: document.getElementById('notifyMonitorProducts').checked,
+                notifyWorkouts: document.getElementById('notifyWorkouts').checked,
+                notifyHabits: document.getElementById('notifyHabits').checked,
+                notifyEbay: document.getElementById('notifyEbay').checked,
+                frequency: document.getElementById('notificationFrequency').value
+            };
+            
+            try {
+                // Salva le impostazioni notifiche insieme alle automazioni
+                const response = await fetch(`${API_BASE}/api/automations/notifications`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        settings: notificationSettings
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    alert('✅ Impostazioni notifiche Discord salvate!');
+                    console.log('Notification settings saved:', notificationSettings);
+                } else {
+                    alert('❌ Errore nel salvataggio: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error saving notification settings:', error);
+                alert('❌ Errore durante il salvataggio.');
+            }
+        }
+        
+        async function loadDiscordNotificationSettings() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/automations/notifications/${user.id}`);
+                const data = await response.json();
+                
+                if (data.success && data.settings) {
+                    const settings = data.settings;
+                    if (document.getElementById('notifyMonitorProducts')) {
+                        document.getElementById('notifyMonitorProducts').checked = settings.notifyMonitorProducts !== false;
+                    }
+                    if (document.getElementById('notifyWorkouts')) {
+                        document.getElementById('notifyWorkouts').checked = settings.notifyWorkouts !== false;
+                    }
+                    if (document.getElementById('notifyHabits')) {
+                        document.getElementById('notifyHabits').checked = settings.notifyHabits !== false;
+                    }
+                    if (document.getElementById('notifyEbay')) {
+                        document.getElementById('notifyEbay').checked = settings.notifyEbay || false;
+                    }
+                    if (document.getElementById('notificationFrequency')) {
+                        document.getElementById('notificationFrequency').value = settings.frequency || 'realtime';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading notification settings:', error);
             }
         }
 

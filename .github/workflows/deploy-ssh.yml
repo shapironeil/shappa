@@ -1,14 +1,15 @@
-name: Deploy to Server via SSH
+name: Deploy to DigitalOcean via SSH
 
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch: # Permette deploy manuale
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup SSH
@@ -16,18 +17,70 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Test SSH connection
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo 'SSH connection successful'"
+
       - name: Sync files to server
         run: |
-          rsync -av --delete --exclude='.git' --exclude='node_modules' ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
+          echo "📦 Syncing files to server..."
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='data/' \
+            --exclude='ssl/' \
+            --exclude='*.log' \
+            --exclude='.DS_Store' \
+            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
         env:
           RSYNC_RSH: 'ssh -o StrictHostKeyChecking=no'
 
-      - name: Remote post-deploy (optional)
+      - name: Remote post-deploy
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "cd ${{ secrets.DEPLOY_PATH }} && if [ -f package.json ]; then npm ci --production || true; fi && if [ -f ./restart.sh ]; then ./restart.sh; fi"
+          echo "🚀 Running post-deploy tasks..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            # Installa dipendenze
+            if [ -f package.json ]; then
+              echo "📦 Installing dependencies..."
+              npm ci --production
+            fi
+            
+            # Esegui restart script se esiste
+            if [ -f restart.sh ]; then
+              echo "🔄 Running restart script..."
+              chmod +x restart.sh
+              ./restart.sh
+            else
+              # Fallback: restart con PM2
+              if command -v pm2 &> /dev/null; then
+                echo "🚀 Restarting with PM2..."
+                pm2 restart shappa || pm2 start server.js --name shappa
+                pm2 save
+              else
+                echo "⚠️ PM2 not found. Please restart manually."
+              fi
+            fi
+            
+            echo "✅ Deploy completed!"
+          ENDSSH
 
-# Secrets required:
-# SSH_PRIVATE_KEY - private key for the deploy user (no passphrase or use ssh-agent)
-# DEPLOY_HOST - e.g. 1.2.3.4 or myserver.example.com
-# DEPLOY_USER - user on remote server
-# DEPLOY_PATH - target folder on remote server
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
+            cd ${{ secrets.DEPLOY_PATH }}
+            if command -v pm2 &> /dev/null; then
+              pm2 status
+            fi
+            echo "✅ Verification complete"
+          ENDSSH
+
+# Secrets required in GitHub repository:
+# SSH_PRIVATE_KEY - Private SSH key for deploy user (no passphrase recommended)
+# DEPLOY_HOST - Server IP or hostname (e.g., 164.90.x.x or shapiro.ninja)
+# DEPLOY_USER - SSH username (e.g., deploy or root)
+# DEPLOY_PATH - Target directory on server (e.g., /var/www/shappa)

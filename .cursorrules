@@ -1,0 +1,255 @@
+# LifeManager - Cursor Rules
+
+## 🏗️ Architettura del Progetto
+
+### Stack Tecnologico
+- **Frontend Moderno:** React + TypeScript in `frontend/` (Vite)
+- **Frontend Legacy:** Vanilla JS in `src/` (pagine HTML)
+- **Backend:** Node.js + Express in `server.js`
+- **Database:** MongoDB Atlas (online-first, no local storage)
+- **Sistema Agenti:** Coordinator pattern in `agents/`
+
+### Struttura Directory
+```
+LifeManager/
+├── agents/          # Sistema agenti AI coordinati
+│   ├── figma/      # FigmaAgent - design → codice
+│   ├── frontend/   # FrontendAgent - integrazione UI
+│   ├── data/       # DataAgent - cache e storage
+│   └── coordinator/# Coordinator - orchestrazione
+├── frontend/        # React/TypeScript app
+├── src/            # Vanilla JS pages
+├── docs/           # Documentazione
+└── data/           # Dati temporanei (non committare)
+```
+
+---
+
+## 📋 Regole Fondamentali
+
+### 1. File Protetti (NON MODIFICARE senza consenso)
+- `.env.private` - Credenziali e configurazioni
+- File con credenziali in `docs/`
+- Configurazioni funzionanti
+
+**Operazioni CONSENTITE:**
+- ✅ Leggere per capire configurazione
+- ✅ Aggiungere NUOVE variabili (senza toccare esistenti)
+- ✅ Suggerire modifiche (attendere conferma)
+
+**Operazioni VIETATE:**
+- ❌ Modificare valori esistenti
+- ❌ Rimuovere credenziali
+- ❌ Cambiare configurazioni funzionanti
+
+### 2. Sistema Agenti
+- **Sempre usare Coordinator** per task complessi
+- **Agenti disponibili:** Vedi `AGENT_SYSTEM_GUIDE.md`
+- **Workflow:** Task → Coordinator → Agente appropriato → Risultato
+
+**Agenti Principali:**
+- `FigmaAgent`: Design Figma → Codice frontend
+- `FrontendAgent`: Integrazione UI con backend
+- `DataAgent`: Cache e gestione dati
+- `SecurityAgent`: Autenticazione e validazione
+- `MonitorAgent`: Monitoraggio prodotti
+- `SportAgent`: Workout e fitness
+
+### 3. Workflow Online-First
+- **Nessun dato runtime locale** (solo online: DB, object storage)
+- **MongoDB Atlas** per metadati
+- **Object Storage** (DigitalOcean Spaces/S3) per immagini
+- **Redis** (opzionale) per cache e code
+
+### 4. Naming Conventions
+
+**File e Directory:**
+- Componenti React: `PascalCase.tsx` (es: `DashboardCard.tsx`)
+- File HTML: `kebab-case.html` (es: `dashboard.html`)
+- File JS: `camelCase.js` (es: `dashboard.js`)
+- Directory: `kebab-case` (es: `user-profile/`)
+
+**Codice:**
+- Funzioni: `camelCase` (es: `getUserProfile()`)
+- Classi: `PascalCase` (es: `FigmaAgent`)
+- Costanti: `UPPER_SNAKE_CASE` (es: `API_BASE_URL`)
+- Variabili: `camelCase` (es: `userData`)
+
+**Figma:**
+- Componenti: `PascalCase` (es: `DashboardCard`)
+- Frame: `kebab-case` (es: `dashboard-page`)
+- Varianti: `descriptive` (es: `button-primary`)
+
+---
+
+## 🎨 Integrazione Figma
+
+### Workflow Design → Codice
+1. **Design in Figma** con naming consistente
+2. **Analisi con Cursor Chat** per identificare componenti/API
+3. **Implementazione con Composer** per modifiche multi-file
+4. **Integrazione automatica** via agenti
+
+### Usa FigmaAgent per:
+- Creare pagine da design Figma
+- Sincronizzare design con codice
+- Esportare assets
+- Analizzare componenti
+
+### Configurazione
+- `FIGMA_API_KEY` in `.env.private`
+- File Key: estrai da URL Figma (`figma.com/file/[KEY]/...`)
+
+---
+
+## 🔄 Workflow Standard
+
+### Per Ogni Task
+
+1. **Analisi** (Cursor Chat)
+   - Leggi `CONFIGURATION_RULES.md`
+   - Leggi `AGENT_SYSTEM_GUIDE.md`
+   - Leggi `WORKFLOW.md`
+   - Identifica file da modificare
+
+2. **Implementazione** (Cursor Composer)
+   - Modifiche multi-file
+   - Segui naming conventions
+   - Mantieni coerenza architettura
+
+3. **Integrazione** (Agenti)
+   - Usa Coordinator per task complessi
+   - Verifica compatibilità agenti esistenti
+
+4. **Documentazione**
+   - Aggiorna CHANGELOG se necessario
+   - Commenta codice complesso
+   - Documenta fileKey Figma
+
+---
+
+## 🧠 Memoria e Coerenza
+
+### File di Riferimento
+Cursor deve sempre consultare:
+- `CONFIGURATION_RULES.md` - Regole configurazione
+- `AGENT_SYSTEM_GUIDE.md` - Sistema agenti
+- `WORKFLOW.md` - Architettura
+- `CURSOR_PRO_STRATEGY.md` - Workflow Cursor
+- `README.md` - Panoramica progetto
+
+### Prima di Modificare
+- [ ] Ho letto le regole rilevanti?
+- [ ] Ho verificato pattern esistenti?
+- [ ] Ho identificato file da modificare?
+- [ ] Ho verificato compatibilità?
+
+### Dopo Modifiche
+- [ ] Codice segue naming conventions?
+- [ ] Ho aggiornato documentazione?
+- [ ] Ho testato integrazioni?
+- [ ] Non ho rotto funzionalità esistenti?
+
+---
+
+## 💻 Best Practices Codice
+
+### React/TypeScript (frontend/)
+- Usa TypeScript strict mode
+- Componenti funzionali con hooks
+- Props tipizzate con interfacce
+- Separazione logica/presentazione
+
+### Vanilla JS (src/)
+- Moduli ES6 quando possibile
+- Event delegation per performance
+- Gestione errori esplicita
+- Commenti per logica complessa
+
+### Backend (server.js, agents/)
+- Async/await per operazioni asincrone
+- Error handling centralizzato
+- Logging strutturato
+- Validazione input
+
+---
+
+## 🐛 Debug e Troubleshooting
+
+### Quando qualcosa non funziona:
+1. Controlla log server
+2. Verifica configurazione (`.env.private`)
+3. Testa agenti via API endpoints
+4. Verifica connessioni (MongoDB, Figma API)
+5. Controlla documentazione rilevante
+
+### Errori Comuni
+- **Figma API:** Verifica `FIGMA_API_KEY` in `.env.private`
+- **Agenti:** Verifica che Coordinator abbia registrato l'agente
+- **Database:** Verifica connection string MongoDB
+- **CORS:** Verifica configurazione server
+
+---
+
+## 📝 Documentazione
+
+### Quando Documentare
+- Nuove feature principali
+- Modifiche architetturali
+- Configurazioni complesse
+- Decisioni importanti
+- Pattern riutilizzabili
+
+### Formato
+- **Inline:** Commenti per logica complessa
+- **File MD:** Guide per feature principali
+- **README:** Setup e panoramica
+- **CHANGELOG:** Modifiche importanti
+
+---
+
+## 🚀 Comandi Utili
+
+### Test Agenti
+```bash
+# Test FigmaAgent
+curl -X POST http://localhost:3000/api/figma/create-page \
+  -H "Content-Type: application/json" \
+  -d '{"fileKey": "KEY", "pageName": "test"}'
+
+# Statistiche agenti
+curl http://localhost:3000/api/agents/stats
+```
+
+### Development
+```bash
+# Frontend
+cd frontend && npm run dev
+
+# Backend
+node server.js
+```
+
+---
+
+## ⚠️ Avvertenze
+
+1. **Mai modificare `.env.private`** senza consenso esplicito
+2. **Sempre verificare compatibilità** prima di modifiche grandi
+3. **Testare integrazioni** dopo modifiche agenti
+4. **Mantenere coerenza** con architettura esistente
+5. **Documentare decisioni** importanti
+
+---
+
+## 🔗 Riferimenti
+
+- `CURSOR_PRO_STRATEGY.md` - Strategia completa Cursor Pro
+- `AGENT_SYSTEM_GUIDE.md` - Guida sistema agenti
+- `WORKFLOW.md` - Architettura e flussi
+- `CONFIGURATION_RULES.md` - Regole configurazione
+
+---
+
+**Ricorda:** Cursor è più efficace con contesto. Mantieni file chiave aperti, documenta decisioni, e consulta sempre le guide prima di implementare.
+
