@@ -45,12 +45,15 @@
         /* Venus Sidebar */
         .venus-sidebar {
             width: 240px;
+            min-width: 240px;
             background: var(--venus-bg-card);
             border-right: 1px solid var(--venus-border);
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             height: 100vh;
             position: relative;
+            z-index: 100;
+            flex-shrink: 0;
         }
 
         .venus-sidebar-header {
