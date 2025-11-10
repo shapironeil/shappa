@@ -237,6 +237,38 @@
         }
 
         /* Card Base - Match Figma Design */
+        /* Diet Card Selected Style (like workout programs) */
+        .diet-card {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .diet-card.selected {
+            border-color: #3b82f6 !important;
+            border-width: 2px !important;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .diet-card.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
         .card {
             background: white;
             border-radius: 0.75rem;
@@ -949,7 +981,6 @@
                         <div class="card" style="padding: 0.75rem;">
                             <div class="card-header" style="padding: 0; margin-bottom: 0.75rem;">
                                 <div class="card-title" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div class="personal-card-avatar" id="userAvatar" style="width: 2.5rem; height: 2.5rem; font-size: 1rem; background: linear-gradient(to bottom right, #a855f7, #ec4899); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">👤</div>
                                     <div style="flex: 1;">
                                         <h2 style="font-size: 0.875rem; font-weight: 600; margin: 0;">Preferenze Alimentari</h2>
                                         <div class="card-subtitle" id="userName" style="font-size: 0.75rem; color: #6b7280;">Imposta preferenze</div>
@@ -1470,6 +1501,14 @@
                     fridgeItems = dietData.fridge || [];
                     shoppingList = dietData.shoppingList || [];
                     
+                    // Carica dieta selezionata
+                    if (dietData.selectedDiet) {
+                        selectedDiet = allDietPlans.find(d => d.id === dietData.selectedDiet.id) || dietData.selectedDiet;
+                        // Aggiorna il calendario con la dieta selezionata
+                        updateDietName();
+                        renderCalendar();
+                    }
+                    
                     // Aggiorna availableIngredients dal frigo
                     updateAvailableIngredients();
                     
@@ -1477,6 +1516,7 @@
                     renderUrgentItems();
                     renderFridgeDialog();
                     renderPersonalCard();
+                    renderDietProposals();
                 }
             } catch (error) {
                 console.error('Error loading diet data:', error);
@@ -2071,6 +2111,9 @@
                 'Difficile': { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' }
             };
 
+            // Determina quale dieta è selezionata
+            const selectedDietId = selectedDiet ? selectedDiet.id : null;
+            
             container.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                     <span style="font-size: 1.25rem;">💡</span>
@@ -2078,23 +2121,45 @@
                 </div>
                 <div class="space-y-3">
                     ${dietsToShow.map((plan, index) => {
-                        const isRecommended = index === 0 && showRecommendation;
+                        const isRecommended = index === 0 && showRecommendation && !selectedDietId;
+                        const isSelected = selectedDietId === plan.id;
                         const diffColor = difficultyColors[plan.difficulty] || difficultyColors['Facile'];
                         const avgCalories = Math.round(
                             Object.values(plan.weekPlan).reduce((sum, day) => sum + day.calories, 0) / 7
                         );
                         
+                        // Se è selezionata, usa lo stile selected, altrimenti usa lo stile normale o recommended
+                        const cardStyle = isSelected 
+                            ? 'diet-card selected'
+                            : 'diet-card';
+                        
+                        const bgColor = isSelected 
+                            ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
+                            : (isRecommended ? '#fefce8' : 'white');
+                        
+                        const borderColor = isSelected 
+                            ? '#3b82f6'
+                            : (isRecommended ? '#fcd34d' : '#e5e7eb');
+                        
                         return `
-                            <div class="p-4 rounded-lg border-2 transition-all cursor-pointer" 
-                                style="background: ${isRecommended ? '#fefce8' : 'white'}; border-color: ${isRecommended ? '#fcd34d' : '#e5e7eb'};"
-                                onclick="openDietDialog('${plan.id}')">
+                            <div class="${cardStyle} p-4 rounded-lg border-2 transition-all cursor-pointer" 
+                                style="background: ${bgColor}; border-color: ${borderColor};"
+                                onclick="selectDiet('${plan.id}')"
+                                data-diet-id="${plan.id}">
                                 <div class="flex items-start justify-between mb-2">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2 mb-1">
-                                            <h3 class="text-sm font-semibold" style="color: #1f2937; margin: 0;">${plan.name}</h3>
-                                            ${isRecommended ? `
+                                            <h3 class="text-sm font-semibold" style="color: #1f2937; margin: 0;">
+                                                ${isSelected ? '✓ ' : ''}${plan.name}
+                                            </h3>
+                                            ${isRecommended && !isSelected ? `
                                                 <span style="background: #ea580c; color: white; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap;">
                                                     ⭐ Consigliata
+                                                </span>
+                                            ` : ''}
+                                            ${isSelected ? `
+                                                <span style="background: #3b82f6; color: white; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem; white-space: nowrap;">
+                                                    Attiva
                                                 </span>
                                             ` : ''}
                                         </div>
@@ -2112,11 +2177,43 @@
                                         ~${avgCalories} cal/giorno
                                     </span>
                                 </div>
+                                ${isSelected ? `
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                                        <button onclick="event.stopPropagation(); openDietDialog('${plan.id}')" 
+                                            class="btn btn-sm" 
+                                            style="background: white; border: 1px solid #3b82f6; color: #3b82f6; padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; cursor: pointer; margin-right: 0.5rem;">
+                                            Dettagli
+                                        </button>
+                                        <button onclick="event.stopPropagation(); cancelDiet()" 
+                                            class="btn btn-sm" 
+                                            style="background: white; border: 1px solid #ef4444; color: #ef4444; padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; cursor: pointer;">
+                                            Annulla
+                                        </button>
+                                    </div>
+                                ` : `
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(0, 0, 0, 0.05);">
+                                        <button onclick="event.stopPropagation(); openDietDialog('${plan.id}')" 
+                                            class="btn btn-sm" 
+                                            style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; cursor: pointer; border: none;">
+                                            Segui Dieta
+                                        </button>
+                                    </div>
+                                `}
                             </div>
                         `;
                     }).join('')}
                 </div>
             `;
+            
+            // Scroll automatico alla dieta selezionata se presente
+            if (selectedDietId) {
+                setTimeout(() => {
+                    const selectedCard = container.querySelector(`[data-diet-id="${selectedDietId}"]`);
+                    if (selectedCard) {
+                        selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 100);
+            }
         }
 
         function openDietDialog(dietId) {
@@ -2228,12 +2325,21 @@
             renderDietDialogContent();
         }
 
-        async function handleFollowDiet() {
-            if (!selectedDietForDialog) return;
+        // Select diet (single selection, like workout programs but only one at a time)
+        async function selectDiet(dietId) {
+            const diet = allDietPlans.find(d => d.id === dietId);
+            if (!diet) return;
+            
+            // Se la dieta è già selezionata, apri il dialog invece di deselezionare
+            if (selectedDiet && selectedDiet.id === dietId) {
+                openDietDialog(dietId);
+                return;
+            }
+            
             try {
                 // Save selected diet to API (online-first)
                 const dietToSave = {
-                    ...selectedDietForDialog,
+                    ...diet,
                     startedAt: new Date().toISOString()
                 };
 
@@ -2244,14 +2350,17 @@
                         body: JSON.stringify({ diet: dietToSave })
                     });
                     
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
                     const result = await response.json();
                     if (result.success) {
                         dietData.selectedDiet = dietToSave;
-                        selectedDiet = selectedDietForDialog;
+                        selectedDiet = diet;
                         updateDietName();
                         renderCalendar();
-                        closeDietDialog();
-                        alert(`✅ Hai iniziato la ${selectedDietForDialog.name}! Il calendario è stato aggiornato.`);
+                        renderDietProposals(); // Re-render per mostrare lo stato selezionato
                     } else {
                         throw new Error('Failed to save diet');
                     }
@@ -2259,16 +2368,58 @@
                     console.error('Error saving diet to API:', error);
                     // Fallback to localStorage if API fails
                     localStorage.setItem('selected_diet', JSON.stringify(dietToSave));
-                    selectedDiet = selectedDietForDialog;
+                    dietData.selectedDiet = dietToSave;
+                    selectedDiet = diet;
                     updateDietName();
                     renderCalendar();
-                    closeDietDialog();
-                    alert(`✅ Hai iniziato la ${selectedDietForDialog.name}! Il calendario è stato aggiornato.`);
+                    renderDietProposals();
+                    console.log('Diet saved locally (API not available)');
                 }
             } catch (error) {
                 console.error('Errore salvataggio dieta:', error);
                 alert('❌ Errore nel salvare la dieta');
             }
+        }
+
+        // Cancel diet (deselect)
+        async function cancelDiet() {
+            if (!selectedDiet) return;
+            
+            try {
+                // Remove selected diet from API
+                try {
+                    const response = await fetch(`/api/diet/selected-diet/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ diet: null })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('Error removing diet from API:', error);
+                    // Fallback: remove from localStorage
+                    localStorage.removeItem('selected_diet');
+                }
+                
+                // Clear selected diet
+                dietData.selectedDiet = null;
+                selectedDiet = null;
+                updateDietName();
+                renderCalendar();
+                renderDietProposals(); // Re-render per rimuovere lo stato selezionato
+            } catch (error) {
+                console.error('Errore rimozione dieta:', error);
+                alert('❌ Errore nel rimuovere la dieta');
+            }
+        }
+
+        async function handleFollowDiet() {
+            if (!selectedDietForDialog) return;
+            // Use selectDiet instead
+            await selectDiet(selectedDietForDialog.id);
+            closeDietDialog();
         }
 
         // ========== PERSONAL CARD DIALOG ==========
@@ -2438,10 +2589,10 @@
                     dietData.preferences = personalCardFormData;
                     userProfile = personalCardFormData;
                     closePersonalCardDialog();
-                    alert('✅ Preferenze salvate con successo!');
-                    // Reload diet proposals to update recommendations
-                    loadUserProfile();
+                    // Aggiorna UI
                     renderPersonalCard();
+                    renderDietProposals(); // Aggiorna le raccomandazioni
+                    alert('✅ Preferenze salvate con successo!');
                 } else {
                     alert('❌ Errore nel salvare le preferenze');
                 }
@@ -2451,9 +2602,10 @@
                 dietData.preferences = personalCardFormData;
                 userProfile = personalCardFormData;
                 closePersonalCardDialog();
-                alert('✅ Preferenze salvate localmente! (API non disponibile)');
+                // Aggiorna UI
                 renderPersonalCard();
-                renderDietProposals();
+                renderDietProposals(); // Aggiorna le raccomandazioni
+                alert('✅ Preferenze salvate localmente! (API non disponibile)');
             }
         }
 
