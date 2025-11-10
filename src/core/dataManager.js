@@ -59,6 +59,41 @@ class DataManager {
     }
 
     // ========================================
+    // UNIFIED API - Get ALL user data in one call
+    // ========================================
+
+    /**
+     * Ottiene TUTTI i dati dell'utente con una singola chiamata API
+     * Restituisce: account, sport, interests, webhooks, automations, ebay
+     */
+    async getAllUserData(userId = null) {
+        try {
+            const targetUserId = userId || this.ensureAuth();
+            const response = await fetch(`${this.API_BASE}/api/admin/user-data/${targetUserId}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                // Cache the data
+                this.cache = {
+                    sport: data.data.sport || null,
+                    interests: data.data.interests || null,
+                    automations: data.data.automations || null,
+                    webhook: data.data.webhook || null,
+                    account: data.data.account || null,
+                    ebay: data.data.ebay || null
+                };
+                
+                console.log('✅ All user data loaded:', Object.keys(data.data).length, 'modules');
+                return data;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error getting all user data:', error);
+            return null;
+        }
+    }
+
+    // ========================================
     // SPORT DATA
     // ========================================
 
@@ -354,66 +389,30 @@ class DataManager {
 
     /**
      * Esporta tutti i dati dell'utente per l'admin panel
+     * USA LA NUOVA API UNIFICATA per ottenere tutto in un colpo solo
      */
     async exportAllData() {
         try {
             const userId = this.ensureAuth();
             
-            console.log('🔄 Exporting all data for user:', userId);
+            console.log('🔄 Exporting all data for user (UNIFIED API):', userId);
             
-            // Carica tutti i dati in parallelo
-            const [
-                sportProfile,
-                sportProgram,
-                sportStats,
-                interests,
-                sportAutomations,
-                habitSettings
-            ] = await Promise.all([
-                this.getSportProfile(),
-                this.getSportProgram(),
-                this.getSportStats(),
-                this.getInterests(),
-                this.getSportAutomations(),
-                this.getHabitSettings()
-            ]);
+            // Usa la nuova API unificata invece di multiple chiamate
+            const unifiedData = await this.getAllUserData(userId);
+            
+            if (!unifiedData || !unifiedData.success) {
+                throw new Error('Failed to fetch unified data');
+            }
 
             const exportData = {
                 userId: userId,
                 exportDate: new Date().toISOString(),
-                version: '1.0.0',
-                data: {
-                    sport: {
-                        profile: sportProfile,
-                        program: sportProgram,
-                        stats: sportStats
-                    },
-                    diet: {
-                        // TODO: Add diet data when implemented
-                        plan: null,
-                        meals: []
-                    },
-                    calendar: {
-                        // TODO: Add calendar data when implemented
-                        events: []
-                    },
-                    goals: {
-                        // TODO: Add goals data when implemented
-                        list: []
-                    },
-                    projects: {
-                        // TODO: Add projects data when implemented
-                        list: []
-                    },
-                    interests: interests || [],
-                    automations: {
-                        sport: sportAutomations,
-                        habits: habitSettings
-                    }
-                }
+                version: '2.0.0', // Updated version with unified API
+                source: 'unified-api',
+                data: unifiedData.data
             };
 
-            console.log('✅ Data export completed:', Object.keys(exportData.data).length, 'modules');
+            console.log('✅ Data export completed (unified):', Object.keys(exportData.data).length, 'modules');
             return exportData;
         } catch (error) {
             console.error('❌ Error exporting all data:', error);

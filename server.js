@@ -2443,6 +2443,142 @@ app.get('/api/sport/webhook', async (req, res) => {
 // ========================================
 
 /**
+ * GET /api/admin/user-data/:userId
+ * UNIFIED API - Get ALL user data in one call
+ * Returns: user account, sport data, interests, webhooks, automations
+ */
+app.get('/api/admin/user-data/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        const userData = {
+            userId,
+            timestamp: new Date().toISOString(),
+            data: {}
+        };
+
+        // 1. User Account (from users/)
+        try {
+            const userPath = path.join(USERS_DIR, `${userId}.json`);
+            if (fs.existsSync(userPath)) {
+                userData.data.account = JSON.parse(fs.readFileSync(userPath, 'utf8'));
+            }
+        } catch (err) {
+            console.log(`No user account for ${userId}`);
+        }
+
+        // 2. Sport Data (profile, program, stats)
+        userData.data.sport = {};
+        try {
+            const sportProfilePath = path.join(SPORT_DATA_DIR, `${userId}_profile.json`);
+            if (fs.existsSync(sportProfilePath)) {
+                const sportData = JSON.parse(fs.readFileSync(sportProfilePath, 'utf8'));
+                userData.data.sport.profile = sportData.profile || sportData;
+                
+                // Extract key info
+                if (sportData.profile) {
+                    userData.data.sport.age = sportData.profile.age;
+                    userData.data.sport.height = sportData.profile.height;
+                    userData.data.sport.weight = sportData.profile.weight;
+                    userData.data.sport.goal = sportData.profile.goal;
+                    userData.data.sport.level = sportData.profile.level;
+                }
+            }
+        } catch (err) {
+            console.log(`No sport profile for ${userId}`);
+        }
+
+        try {
+            const sportProgramPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+            if (fs.existsSync(sportProgramPath)) {
+                const programData = JSON.parse(fs.readFileSync(sportProgramPath, 'utf8'));
+                userData.data.sport.program = programData;
+                
+                // Extract weekly schedule
+                if (programData.weekSchedule) {
+                    userData.data.sport.weeklyCommitment = programData.weekSchedule.length + ' giorni/settimana';
+                }
+            }
+        } catch (err) {
+            console.log(`No sport program for ${userId}`);
+        }
+
+        try {
+            const sportStatsPath = path.join(SPORT_DATA_DIR, `${userId}_stats.json`);
+            if (fs.existsSync(sportStatsPath)) {
+                userData.data.sport.stats = JSON.parse(fs.readFileSync(sportStatsPath, 'utf8'));
+            }
+        } catch (err) {
+            console.log(`No sport stats for ${userId}`);
+        }
+
+        // 3. Interests
+        try {
+            const interestsPath = path.join(INTERESTS_DIR, `${userId}.json`);
+            if (fs.existsSync(interestsPath)) {
+                const interestsData = JSON.parse(fs.readFileSync(interestsPath, 'utf8'));
+                userData.data.interests = interestsData.interests || interestsData;
+            }
+        } catch (err) {
+            console.log(`No interests for ${userId}`);
+        }
+
+        // 4. Webhooks
+        try {
+            const webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
+            if (fs.existsSync(webhookPath)) {
+                const webhookData = JSON.parse(fs.readFileSync(webhookPath, 'utf8'));
+                userData.data.webhook = webhookData.webhook || webhookData;
+            }
+        } catch (err) {
+            console.log(`No webhook for ${userId}`);
+        }
+
+        // 5. Automations
+        try {
+            const automationsPath = path.join(__dirname, 'data', 'automations', `${userId}.json`);
+            if (fs.existsSync(automationsPath)) {
+                userData.data.automations = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
+            }
+        } catch (err) {
+            console.log(`No automations for ${userId}`);
+        }
+
+        // 6. eBay Connection Status
+        try {
+            const ebayTokenPath = path.join(__dirname, 'data', 'ebay', userId, 'tokens.json');
+            if (fs.existsSync(ebayTokenPath)) {
+                const tokenData = JSON.parse(fs.readFileSync(ebayTokenPath, 'utf8'));
+                userData.data.ebay = {
+                    connected: true,
+                    scope: tokenData.scope,
+                    expiresAt: tokenData.expires_at
+                };
+            } else {
+                userData.data.ebay = { connected: false };
+            }
+        } catch (err) {
+            userData.data.ebay = { connected: false };
+        }
+
+        console.log(`✅ Unified user data retrieved for: ${userId}`);
+        
+        return res.json({
+            success: true,
+            ...userData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error getting unified user data:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * POST /api/automations/sport
  * Save sport automation settings
  */
