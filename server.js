@@ -3340,6 +3340,107 @@ app.get('/api/agents/communication-stats', async (req, res) => {
     }
 });
 
+/**
+ * ========== USER PROFILE AGENT API ENDPOINTS ==========
+ * Sistema di memorizzazione e unione dati utente H24
+ */
+
+/**
+ * GET /api/user-profile/:userId
+ * Get unified user profile (profilo unificato)
+ */
+app.get('/api/user-profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { forceRefresh } = req.query;
+        
+        const result = await coordinator.assignTask({
+            type: 'get_unified_profile',
+            userId,
+            forceRefresh: forceRefresh === 'true'
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error getting unified profile:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/user-profile/:userId/unify
+ * Unify all user data into single profile
+ */
+app.post('/api/user-profile/:userId/unify', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const result = await coordinator.assignTask({
+            type: 'unify_user_data',
+            userId
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error unifying user data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/user-profile/:userId/verify
+ * Verify user data consistency (verifica continua H24)
+ */
+app.post('/api/user-profile/:userId/verify', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        const result = await coordinator.assignTask({
+            type: 'verify_user_data',
+            userId
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error verifying user data:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * GET /api/user-profile/:userId/history
+ * Get user data change history
+ */
+app.get('/api/user-profile/:userId/history', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { limit } = req.query;
+        
+        const result = await coordinator.assignTask({
+            type: 'get_user_data_history',
+            userId,
+            limit: limit ? parseInt(limit) : 50
+        });
+        
+        res.json(result);
+    } catch (error) {
+        console.error('Error getting user data history:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
