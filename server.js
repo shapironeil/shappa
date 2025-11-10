@@ -2603,6 +2603,38 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
             userData.data.ebay = { connected: false };
         }
 
+        // 7. Diet Data (dieta, peso, calorie)
+        userData.data.diet = {};
+        try {
+            // Cerca dati dieta salvati (potrebbero essere in localStorage lato client, 
+            // ma se salvati sul server saranno qui)
+            const dietDataPath = path.join(__dirname, 'data', 'diet', `${userId}.json`);
+            if (fs.existsSync(dietDataPath)) {
+                const dietData = JSON.parse(fs.readFileSync(dietDataPath, 'utf8'));
+                userData.data.diet = {
+                    selectedDiet: dietData.selectedDiet || null,
+                    weightHistory: dietData.weightHistory || [],
+                    calorieHistory: dietData.calorieHistory || [],
+                    currentWeight: dietData.currentWeight || null,
+                    currentCalories: dietData.currentCalories || null,
+                    lastUpdated: dietData.lastUpdated || null
+                };
+            }
+        } catch (err) {
+            console.log(`No diet data for ${userId}`);
+        }
+
+        // 8. Monitor Data (se presente)
+        try {
+            const monitorPath = path.join(__dirname, 'data', 'monitors', `${userId}.json`);
+            if (fs.existsSync(monitorPath)) {
+                const monitorData = JSON.parse(fs.readFileSync(monitorPath, 'utf8'));
+                userData.data.monitors = monitorData.monitors || [];
+            }
+        } catch (err) {
+            console.log(`No monitor data for ${userId}`);
+        }
+
         console.log(`✅ Unified user data retrieved for: ${userId}`);
         
         return res.json({

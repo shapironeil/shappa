@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profilo Utente - Admin</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
+    <style>
+        body {
+            font-family: var(--venus-font-family);
+            background: #fafbfc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+            background: #fafbfc;
+        }
+
+        /* Sidebar */
+        .venus-sidebar {
+            width: 240px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--venus-space-xl) var(--venus-space-2xl);
+            background: var(--venus-bg-card);
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-page-title {
+            font-size: var(--venus-font-size-2xl);
+            font-weight: var(--venus-font-weight-bold);
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .back-btn {
+            padding: 0.5rem 1rem;
+            background: var(--venus-bg-gray);
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-primary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+        }
+
+        .back-btn:hover {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+            border-color: var(--venus-primary);
+        }
+
+        .venus-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--venus-space-xl);
+        }
+
+        /* Profile Sections */
+        .profile-section {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            padding: 0.75rem;
+            background: var(--venus-bg-gray);
+            border-radius: 6px;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--venus-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+        }
+
+        .info-value.empty {
+            color: var(--venus-text-muted);
+            font-style: italic;
+        }
+
+        .data-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .data-list-item {
+            padding: 0.75rem;
+            background: var(--venus-bg-gray);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--venus-text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--venus-border);
+            border-top-color: var(--venus-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="admin-users.html" class="venus-menu-item venus-active">
+                    👥 Utenti
+                </a>
+                <a href="admin-server.html" class="venus-menu-item">
+                    Server
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="userAvatar">A</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="userName">Admin</div>
+                        <div class="venus-user-role">Administrator</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <div class="venus-main-header">
+                <h1 class="venus-page-title" id="pageTitle">Profilo Utente</h1>
+                <a href="admin-users.html" class="back-btn">← Torna agli Utenti</a>
+            </div>
+
+            <div class="venus-content-area">
+                <div id="profileContainer" class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Caricamento profilo utente...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Auth check
+        if (!AuthManager.isLoggedIn()) {
+            window.location.href = '/src/pages/login.html';
+        }
+
+        // Load user info
+        const user = AuthManager.getCurrentUser();
+        if (user) {
+            const userName = user.username || user.email || 'Admin';
+            document.getElementById('userName').textContent = userName;
+            const initial = userName[0].toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            AuthManager.logout();
+            window.location.href = '/src/pages/login.html';
+        });
+
+        // Get userId from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+
+        if (!userId) {
+            document.getElementById('profileContainer').innerHTML = `
+                <div class="profile-section">
+                    <p style="color: var(--venus-danger);">❌ ID utente non specificato</p>
+                </div>
+            `;
+        } else {
+            loadUserProfile(userId);
+        }
+
+        async function loadUserProfile(userId) {
+            const container = document.getElementById('profileContainer');
+            
+            try {
+                const response = await fetch(`/api/admin/user-data/${userId}`);
+                const userData = await response.json();
+                
+                if (!userData.success) {
+                    container.innerHTML = `
+                        <div class="profile-section">
+                            <p style="color: var(--venus-danger);">❌ Errore nel caricamento: ${userData.error || 'Unknown error'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const data = userData.data;
+                const username = data.account?.username || userId;
+                document.getElementById('pageTitle').textContent = `Profilo: ${username}`;
+
+                // Render profile
+                container.innerHTML = `
+                    <!-- Account Info -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">👤</span>
+                            <h2 class="section-title">Account</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Username</div>
+                                <div class="info-value">${data.account?.username || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">${data.account?.email || 'N/A'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">User ID</div>
+                                <div class="info-value" style="font-family: monospace; font-size: 0.75rem;">${userId}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Registrato</div>
+                                <div class="info-value">${data.account?.createdAt ? new Date(data.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sport Profile -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">💪</span>
+                            <h2 class="section-title">Sport & Fitness</h2>
+                        </div>
+                        ${data.sport?.profile ? `
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Età</div>
+                                    <div class="info-value">${data.sport.age || data.sport.profile.age || 'N/A'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Altezza</div>
+                                    <div class="info-value">${data.sport.height || data.sport.profile.height || 'N/A'}${data.sport.height ? ' cm' : ''}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Peso</div>
+                                    <div class="info-value">${data.sport.weight || data.sport.profile.weight || 'N/A'}${data.sport.weight ? ' kg' : ''}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Obiettivo</div>
+                                    <div class="info-value">${data.sport.goal || data.sport.profile.goal || 'N/A'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Livello</div>
+                                    <div class="info-value">${data.sport.level || data.sport.profile.level || 'N/A'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Impegno Settimanale</div>
+                                    <div class="info-value">${data.sport.weeklyCommitment || 'N/A'}</div>
+                                </div>
+                                ${data.sport.stats ? `
+                                    <div class="info-item">
+                                        <div class="info-label">Allenamenti Completati</div>
+                                        <div class="info-value">${data.sport.stats.completedWorkouts?.length || 0}</div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Calorie Totali</div>
+                                        <div class="info-value">${data.sport.stats.totalCalories || 0} kcal</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : '<p style="color: var(--venus-text-muted);">Nessun profilo sport configurato</p>'}
+                    </div>
+
+                    <!-- Diet Data -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">🥗</span>
+                            <h2 class="section-title">Dieta & Nutrizione</h2>
+                        </div>
+                        ${data.diet?.selectedDiet ? `
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Dieta Selezionata</div>
+                                    <div class="info-value">${data.diet.selectedDiet.name || 'N/A'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Peso Attuale</div>
+                                    <div class="info-value">${data.diet.currentWeight || data.sport?.weight || 'N/A'}${data.diet.currentWeight ? ' kg' : ''}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Calorie Attuali</div>
+                                    <div class="info-value">${data.diet.currentCalories || 'N/A'}${data.diet.currentCalories ? ' kcal' : ''}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Ultimo Aggiornamento</div>
+                                    <div class="info-value">${data.diet.lastUpdated ? new Date(data.diet.lastUpdated).toLocaleDateString('it-IT') : 'N/A'}</div>
+                                </div>
+                            </div>
+                            ${data.diet.weightHistory && data.diet.weightHistory.length > 0 ? `
+                                <div style="margin-top: 1rem;">
+                                    <div class="info-label">Storico Peso (ultimi ${Math.min(5, data.diet.weightHistory.length)})</div>
+                                    <ul class="data-list">
+                                        ${data.diet.weightHistory.slice(-5).reverse().map(entry => `
+                                            <li class="data-list-item">
+                                                ${entry.date || 'N/A'}: ${entry.weight || 'N/A'} kg
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        ` : '<p style="color: var(--venus-text-muted);">Nessuna dieta configurata</p>'}
+                    </div>
+
+                    <!-- Webhooks -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">🔔</span>
+                            <h2 class="section-title">Webhook Discord</h2>
+                        </div>
+                        ${data.webhook ? `
+                            ${typeof data.webhook === 'object' && data.webhook.webhooks ? `
+                                <div class="info-grid">
+                                    ${Object.entries(data.webhook.webhooks).map(([page, url]) => `
+                                        <div class="info-item">
+                                            <div class="info-label">${page.charAt(0).toUpperCase() + page.slice(1)}</div>
+                                            <div class="info-value" style="font-size: 0.75rem; font-family: monospace; word-break: break-all;">
+                                                ${url || 'N/A'}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : `
+                                <div class="info-item">
+                                    <div class="info-label">Webhook URL</div>
+                                    <div class="info-value" style="font-size: 0.75rem; font-family: monospace; word-break: break-all;">
+                                        ${typeof data.webhook === 'string' ? data.webhook : data.webhook.url || data.webhook.webhook || 'N/A'}
+                                    </div>
+                                </div>
+                            `}
+                        ` : '<p style="color: var(--venus-text-muted);">Nessun webhook configurato</p>'}
+                    </div>
+
+                    <!-- Interests -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">⭐</span>
+                            <h2 class="section-title">Interessi (${data.interests?.length || 0})</h2>
+                        </div>
+                        ${data.interests && data.interests.length > 0 ? `
+                            <ul class="data-list">
+                                ${data.interests.map(interest => `
+                                    <li class="data-list-item">
+                                        <strong>${interest.productName || interest.query || interest.name || 'N/A'}</strong>
+                                        ${interest.discordWebhook ? `<span class="badge badge-info" style="margin-left: 0.5rem;">Webhook</span>` : ''}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<p style="color: var(--venus-text-muted);">Nessun interesse configurato</p>'}
+                    </div>
+
+                    <!-- Automations -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">⚙️</span>
+                            <h2 class="section-title">Automazioni</h2>
+                        </div>
+                        ${data.automations ? `
+                            <div class="info-grid">
+                                ${data.automations.sport ? `
+                                    <div class="info-item">
+                                        <div class="info-label">Sport - Notifiche</div>
+                                        <div class="info-value">
+                                            <span class="badge ${data.automations.sport.enableNotifications ? 'badge-success' : 'badge-danger'}">
+                                                ${data.automations.sport.enableNotifications ? '✅ Abilitate' : '❌ Disabilitate'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="info-item">
+                                        <div class="info-label">Sport - Fascia Oraria</div>
+                                        <div class="info-value">${data.automations.sport.preferredTimeSlot || 'N/A'}</div>
+                                    </div>
+                                ` : ''}
+                                ${data.automations.habits ? `
+                                    <div class="info-item">
+                                        <div class="info-label">Abitudini - Obiettivo Settimanale</div>
+                                        <div class="info-value">${data.automations.habits.weeklyGoal || 5} giorni/settimana</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : '<p style="color: var(--venus-text-muted);">Nessuna automazione configurata</p>'}
+                    </div>
+
+                    <!-- eBay Connection -->
+                    <div class="profile-section">
+                        <div class="section-header">
+                            <span class="section-icon">🛒</span>
+                            <h2 class="section-title">Connessioni</h2>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">eBay</div>
+                                <div class="info-value">
+                                    <span class="badge ${data.ebay?.connected ? 'badge-success' : 'badge-danger'}">
+                                        ${data.ebay?.connected ? '✅ Connesso' : '❌ Non connesso'}
+                                    </span>
+                                </div>
+                            </div>
+                            ${data.ebay?.connected ? `
+                                <div class="info-item">
+                                    <div class="info-label">Scope</div>
+                                    <div class="info-value" style="font-size: 0.75rem;">${data.ebay.scope || 'N/A'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Scade il</div>
+                                    <div class="info-value">${data.ebay.expiresAt ? new Date(data.ebay.expiresAt).toLocaleDateString('it-IT') : 'N/A'}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Monitors -->
+                    ${data.monitors && data.monitors.length > 0 ? `
+                        <div class="profile-section">
+                            <div class="section-header">
+                                <span class="section-icon">👁️</span>
+                                <h2 class="section-title">Monitor Prodotti (${data.monitors.length})</h2>
+                            </div>
+                            <ul class="data-list">
+                                ${data.monitors.map(monitor => `
+                                    <li class="data-list-item">
+                                        <strong>${monitor.productName || monitor.url || 'N/A'}</strong>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                `;
+                
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                container.innerHTML = `
+                    <div class="profile-section">
+                        <p style="color: var(--venus-danger);">❌ Errore nel caricamento: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+
