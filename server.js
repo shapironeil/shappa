@@ -16,6 +16,12 @@ const monitorManager = require('./monitors/MonitorManager');
 // Import Agent AI Committee System
 const { initializeAgents, getAgentCoordinator } = require('./agents');
 
+// Import Utility Modules
+const fileUtils = require('./lib/utils/fileUtils');
+const pathUtils = require('./lib/utils/pathUtils');
+const responseUtils = require('./lib/utils/responseUtils');
+const validationUtils = require('./lib/utils/validationUtils');
+
 // Initialize Agent AI Committee System
 const { coordinator } = initializeAgents({
     figma: {
@@ -45,6 +51,9 @@ const { coordinator } = initializeAgents({
         priority: 6
     },
     notification: {
+        priority: 7
+    },
+    recipe: {
         priority: 7
     }
 });
@@ -1427,245 +1436,189 @@ app.post('/api/admin/clear-cache', (req, res) => {
 // INTERESTS API - User-specific product monitoring
 // ============================================
 
-const INTERESTS_DIR = path.join(__dirname, 'data', 'interests');
-const WEBHOOKS_DIR = path.join(__dirname, 'data', 'webhooks');
-const USERS_DIR = path.join(__dirname, 'data', 'users');
-
-// Ensure directories exist
-if (!fs.existsSync(INTERESTS_DIR)) {
-    fs.mkdirSync(INTERESTS_DIR, { recursive: true });
-    console.log('📁 Created interests directory');
-}
-
-if (!fs.existsSync(WEBHOOKS_DIR)) {
-    fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
-    console.log('📁 Created webhooks directory');
-}
-
-if (!fs.existsSync(USERS_DIR)) {
-    fs.mkdirSync(USERS_DIR, { recursive: true });
-    console.log('📁 Created users directory');
-}
-
-// Get user interests file path
-function getUserInterestsPath(userId) {
-    return path.join(INTERESTS_DIR, `interests_${userId}.json`);
-}
-
-// Get user webhook file path
-function getUserWebhookPath(userId) {
-    return path.join(WEBHOOKS_DIR, `webhook_${userId}.json`);
-}
+// Ensure data directories exist (using utility modules)
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('interests'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('webhooks'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('users'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('automations'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('sport'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('sport', 'profiles'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('sport', 'programs'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('sport', 'stats'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('ebay'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('saved-products'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('product-images'));
+fileUtils.ensureDirectorySync(pathUtils.getDataDirPath('recipe-images'));
 
 // GET - Retrieve user interests
-app.get('/api/interests/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        const filePath = getUserInterestsPath(userId);
-        
-        if (!fs.existsSync(filePath)) {
-            return res.json({ success: true, interests: [] });
-        }
-
-        const data = await fsPromises.readFile(filePath, 'utf8');
-        const interests = JSON.parse(data);
-        
-        return res.json({ success: true, interests });
-    } catch (error) {
-        console.error('❌ Error reading interests:', error);
-        return res.status(500).json({ success: false, error: 'Failed to read interests' });
+app.get('/api/interests/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const filePath = pathUtils.getUserInterestsPath(userId);
+    const interests = await fileUtils.readJSONFile(filePath, []);
+    
+    return responseUtils.sendSuccess(res, { interests });
+}));
 
 // POST - Save user interests (full replacement)
-app.post('/api/interests/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { interests } = req.body;
+app.post('/api/interests/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { interests } = req.body;
 
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        if (!Array.isArray(interests)) {
-            return res.status(400).json({ success: false, error: 'interests must be an array' });
-        }
-
-        const filePath = getUserInterestsPath(userId);
-        await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
-        
-        console.log(`💾 Saved ${interests.length} interests for user ${userId}`);
-        return res.json({ success: true, count: interests.length });
-    } catch (error) {
-        console.error('❌ Error saving interests:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save interests' });
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    if (!Array.isArray(interests)) {
+        return responseUtils.sendValidationError(res, 'interests must be an array');
+    }
+
+    const filePath = pathUtils.getUserInterestsPath(userId);
+    const success = await fileUtils.writeJSONFile(filePath, interests);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to save interests', 500);
+    }
+    
+    console.log(`💾 Saved ${interests.length} interests for user ${userId}`);
+    return responseUtils.sendSuccess(res, { count: interests.length });
+}));
 
 // POST - Add single interest
-app.post('/api/interests/:userId/add', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const interest = req.body;
+app.post('/api/interests/:userId/add', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const interest = req.body;
 
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        const filePath = getUserInterestsPath(userId);
-        let interests = [];
-
-        if (fs.existsSync(filePath)) {
-            const data = await fsPromises.readFile(filePath, 'utf8');
-            interests = JSON.parse(data);
-        }
-
-        interests.push(interest);
-        await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
-        
-        console.log(`✅ Added interest "${interest.name}" for user ${userId}`);
-        return res.json({ success: true, interest, total: interests.length });
-    } catch (error) {
-        console.error('❌ Error adding interest:', error);
-        return res.status(500).json({ success: false, error: 'Failed to add interest' });
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const filePath = pathUtils.getUserInterestsPath(userId);
+    let interests = await fileUtils.readJSONFile(filePath, []);
+
+    interests.push(interest);
+    const success = await fileUtils.writeJSONFile(filePath, interests);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to add interest', 500);
+    }
+    
+    console.log(`✅ Added interest "${interest.name}" for user ${userId}`);
+    return responseUtils.sendSuccess(res, { interest, total: interests.length });
+}));
 
 // DELETE - Remove interest by ID
-app.delete('/api/interests/:userId/:interestId', async (req, res) => {
-    try {
-        const { userId, interestId } = req.params;
+app.delete('/api/interests/:userId/:interestId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId, interestId } = req.params;
 
-        if (!userId || !interestId) {
-            return res.status(400).json({ success: false, error: 'userId and interestId required' });
-        }
-
-        const filePath = getUserInterestsPath(userId);
-        
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ success: false, error: 'No interests found' });
-        }
-
-        const data = await fsPromises.readFile(filePath, 'utf8');
-        const interests = JSON.parse(data);
-        const filtered = interests.filter(i => i.id != interestId);
-
-        await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
-        
-        // 🛑 FERMA IL MONITOR se attivo
-        monitorManager.stopMonitor(interestId);
-        
-        console.log(`🗑️ Deleted interest ${interestId} for user ${userId}`);
-        return res.json({ success: true, remaining: filtered.length });
-    } catch (error) {
-        console.error('❌ Error deleting interest:', error);
-        return res.status(500).json({ success: false, error: 'Failed to delete interest' });
+    if (!validationUtils.isValidUserId(userId) || !interestId) {
+        return responseUtils.sendValidationError(res, 'userId and interestId are required');
     }
-});
+
+    const filePath = pathUtils.getUserInterestsPath(userId);
+    let interests = await fileUtils.readJSONFile(filePath, null);
+    
+    if (interests === null) {
+        return responseUtils.sendNotFound(res, 'No interests found');
+    }
+
+    const filtered = interests.filter(i => i.id != interestId);
+    const success = await fileUtils.writeJSONFile(filePath, filtered);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to delete interest', 500);
+    }
+    
+    // 🛑 FERMA IL MONITOR se attivo
+    monitorManager.stopMonitor(interestId);
+    
+    console.log(`🗑️ Deleted interest ${interestId} for user ${userId}`);
+    return responseUtils.sendSuccess(res, { remaining: filtered.length });
+}));
 
 // ============================================
 // DISCORD WEBHOOK ENDPOINTS (SERVER-SIDE)
 // ============================================
 
 // POST - Save user Discord webhook (with page context support)
-app.post('/api/webhooks/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { webhook, page = 'generale' } = req.body;
+app.post('/api/webhooks/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { webhook, page = 'generale' } = req.body;
 
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        if (!webhook || !webhook.includes('discord.com/api/webhooks/')) {
-            return res.status(400).json({ success: false, error: 'Invalid webhook URL' });
-        }
-
-        const filePath = getUserWebhookPath(userId);
-        let webhookData = {};
-        
-        // Load existing webhooks if file exists
-        if (fs.existsSync(filePath)) {
-            try {
-                webhookData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-            } catch (e) {
-                // If old format (just URL string), convert to new format
-                const oldData = fs.readFileSync(filePath, 'utf8');
-                if (oldData.startsWith('http')) {
-                    webhookData = { generale: oldData };
-                }
-            }
-        }
-        
-        // Save webhook for specific page
-        if (!webhookData.webhooks) {
-            webhookData.webhooks = {};
-        }
-        webhookData.webhooks[page] = {
-            url: webhook,
-            updatedAt: new Date().toISOString()
-        };
-        webhookData.default = webhook; // Keep default for backward compatibility
-        webhookData.updatedAt = new Date().toISOString();
-
-        await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
-        
-        console.log(`💾 Saved Discord webhook for user ${userId}, page: ${page}`);
-        return res.json({ success: true, page });
-    } catch (error) {
-        console.error('❌ Error saving webhook:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    if (!validationUtils.isValidDiscordWebhook(webhook)) {
+        return responseUtils.sendValidationError(res, 'Invalid webhook URL');
+    }
+
+    const filePath = pathUtils.getUserWebhookPath(userId);
+    let webhookData = fileUtils.readJSONFileSync(filePath, {});
+    
+    // If old format (just URL string), convert to new format
+    if (typeof webhookData === 'string' && webhookData.startsWith('http')) {
+        webhookData = { generale: webhookData };
+    }
+    
+    // Save webhook for specific page
+    if (!webhookData.webhooks) {
+        webhookData.webhooks = {};
+    }
+    webhookData.webhooks[page] = {
+        url: webhook,
+        updatedAt: new Date().toISOString()
+    };
+    webhookData.default = webhook; // Keep default for backward compatibility
+    webhookData.updatedAt = new Date().toISOString();
+
+    const success = fileUtils.writeJSONFileSync(filePath, webhookData);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to save webhook', 500);
+    }
+    
+    console.log(`💾 Saved Discord webhook for user ${userId}, page: ${page}`);
+    return responseUtils.sendSuccess(res, { page });
+}));
 
 // GET - Get user Discord webhook (with page context support)
-app.get('/api/webhooks/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { page = 'generale' } = req.query;
+app.get('/api/webhooks/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { page = 'generale' } = req.query;
 
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        const filePath = getUserWebhookPath(userId);
-        
-        if (!fs.existsSync(filePath)) {
-            return res.json({ success: true, webhook: null });
-        }
-
-        const data = await fsPromises.readFile(filePath, 'utf8');
-        let webhookData;
-        
-        try {
-            webhookData = JSON.parse(data);
-        } catch (e) {
-            // Old format (just URL string)
-            return res.json({ success: true, webhook: data.trim() });
-        }
-        
-        // New format: get webhook for specific page
-        if (webhookData.webhooks && webhookData.webhooks[page]) {
-            return res.json({ 
-                success: true, 
-                webhook: webhookData.webhooks[page].url || webhookData.default 
-            });
-        }
-        
-        // Fallback to default
-        return res.json({ 
-            success: true, 
-            webhook: webhookData.default || webhookData.webhook || null 
-        });
-    } catch (error) {
-        console.error('❌ Error reading webhook:', error);
-        return res.status(500).json({ success: false, error: 'Failed to read webhook' });
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const filePath = pathUtils.getUserWebhookPath(userId);
+    let webhookData = fileUtils.readJSONFileSync(filePath, null);
+    
+    if (webhookData === null) {
+        return responseUtils.sendSuccess(res, { webhook: null });
+    }
+    
+    // Old format (just URL string)
+    if (typeof webhookData === 'string') {
+        return responseUtils.sendSuccess(res, { webhook: webhookData.trim() });
+    }
+    
+    // New format: get webhook for specific page
+    if (webhookData.webhooks && webhookData.webhooks[page]) {
+        return responseUtils.sendSuccess(res, { 
+            webhook: webhookData.webhooks[page].url || webhookData.default 
+        });
+    }
+    
+    // Fallback to default
+    return responseUtils.sendSuccess(res, { 
+        webhook: webhookData.default || webhookData.webhook || null 
+    });
+}));
 
 // ============================================
 // AUTHENTICATION ENDPOINTS (SERVER-SIDE)
@@ -1928,13 +1881,12 @@ app.post('/api/monitors/start', async (req, res) => {
         }
 
         // Carica interesse dal database
-        const filePath = getUserInterestsPath(userId);
-        if (!fs.existsSync(filePath)) {
+        const filePath = pathUtils.getUserInterestsPath(userId);
+        const interests = await fileUtils.readJSONFile(filePath, null);
+        
+        if (interests === null) {
             return res.status(404).json({ success: false, error: 'User interests not found' });
         }
-
-        const data = await fsPromises.readFile(filePath, 'utf8');
-        const interests = JSON.parse(data);
         const interest = interests.find(i => i.id == interestId);
 
         if (!interest) {
@@ -1978,14 +1930,16 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
 
         if (result.success) {
             // Aggiorna status nel database
-            const filePath = getUserInterestsPath(userId);
-            const data = await fsPromises.readFile(filePath, 'utf8');
-            const interests = JSON.parse(data);
-            const interest = interests.find(i => i.id == interestId);
+            const filePath = pathUtils.getUserInterestsPath(userId);
+            const interests = await fileUtils.readJSONFile(filePath, null);
             
-            if (interest) {
-                interest.status = 'stopped';
-                await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
+            if (interests !== null) {
+                const interest = interests.find(i => i.id == interestId);
+                
+                if (interest) {
+                    interest.status = 'stopped';
+                    await fileUtils.writeJSONFile(filePath, interests);
+                }
             }
         }
 
@@ -2663,94 +2617,69 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 // AUTOMATIONS API
 // ============================================
 
-const DATA_DIR = path.join(__dirname, 'data');
-const AUTOMATIONS_DIR = path.join(DATA_DIR, 'automations');
-
-// Ensure automations directory exists
-if (!fs.existsSync(AUTOMATIONS_DIR)) {
-    fs.mkdirSync(AUTOMATIONS_DIR, { recursive: true });
-    console.log('📁 Created automations directory');
-}
+// AUTOMATIONS_DIR è già stato creato sopra con fileUtils.ensureDirectorySync
 
 /**
  * POST /api/automations/sport
  * Save sport automation settings
  */
-app.post('/api/automations/sport', async (req, res) => {
-    try {
-        const { userId, automations } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'Missing userId' });
-        }
-
-        const automationsDir = AUTOMATIONS_DIR;
-        if (!fs.existsSync(automationsDir)) {
-            fs.mkdirSync(automationsDir, { recursive: true });
-        }
-
-        const automationsPath = path.join(automationsDir, `${userId}.json`);
-        let existingData = {};
-        
-        if (fs.existsSync(automationsPath)) {
-            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        }
-
-        existingData.sport = {
-            ...automations,
-            lastUpdated: new Date().toISOString()
-        };
-
-        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`✅ Sport automations saved for user ${userId}`);
-
-        res.json({
-            success: true,
-            message: 'Sport automations saved',
-            automations: existingData.sport
-        });
-    } catch (error) {
-        console.error('Error saving sport automations:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.post('/api/automations/sport', responseUtils.asyncHandler(async (req, res) => {
+    const { userId, automations } = req.body;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'Missing userId');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    let existingData = fileUtils.readJSONFileSync(automationsPath, {});
+
+    existingData.sport = {
+        ...automations,
+        lastUpdated: new Date().toISOString()
+    };
+
+    const success = fileUtils.writeJSONFileSync(automationsPath, existingData);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to save sport automations', 500);
+    }
+    
+    console.log(`✅ Sport automations saved for user ${userId}`);
+    return responseUtils.sendSuccess(res, {
+        message: 'Sport automations saved',
+        automations: existingData.sport
+    });
+}));
 
 /**
  * GET /api/automations/sport/:userId
  * Get sport automation settings
  */
-app.get('/api/automations/sport/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
-
-        if (!fs.existsSync(automationsPath)) {
-            return res.json({
-                success: true,
-                automations: {
-                    enableNotifications: false,
-                    notifyBefore: 30,
-                    sendExercisesDiscord: false,
-                    preferredTimeSlot: '18:00-20:00'
-                }
-            });
-        }
-
-        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        res.json({
-            success: true,
-            automations: data.sport || {
-                enableNotifications: false,
-                notifyBefore: 30,
-                sendExercisesDiscord: false,
-                preferredTimeSlot: '18:00-20:00'
-            }
-        });
-    } catch (error) {
-        console.error('Error getting sport automations:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.get('/api/automations/sport/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    const data = fileUtils.readJSONFileSync(automationsPath, null);
+    
+    const defaultAutomations = {
+        enableNotifications: false,
+        notifyBefore: 30,
+        sendExercisesDiscord: false,
+        preferredTimeSlot: '18:00-20:00'
+    };
+
+    if (data === null || !data.sport) {
+        return responseUtils.sendSuccess(res, { automations: defaultAutomations });
+    }
+
+    return responseUtils.sendSuccess(res, {
+        automations: data.sport || defaultAutomations
+    });
+}));
 
 /**
  * POST /api/automations/habits
@@ -2799,38 +2728,31 @@ app.post('/api/automations/habits', async (req, res) => {
  * GET /api/automations/habits/:userId
  * Get habit automation settings
  */
-app.get('/api/automations/habits/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
-
-        if (!fs.existsSync(automationsPath)) {
-            return res.json({
-                success: true,
-                settings: {
-                    autoTracking: true,
-                    dailyReminder: 'evening',
-                    streakNotifications: true,
-                    weeklyGoal: 5
-                }
-            });
-        }
-
-        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        res.json({
-            success: true,
-            settings: data.habits || {
-                autoTracking: true,
-                dailyReminder: 'evening',
-                streakNotifications: true,
-                weeklyGoal: 5
-            }
-        });
-    } catch (error) {
-        console.error('Error getting habit settings:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.get('/api/automations/habits/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    const data = fileUtils.readJSONFileSync(automationsPath, null);
+    
+    const defaultSettings = {
+        autoTracking: true,
+        dailyReminder: 'evening',
+        streakNotifications: true,
+        weeklyGoal: 5
+    };
+
+    if (data === null || !data.habits) {
+        return responseUtils.sendSuccess(res, { settings: defaultSettings });
+    }
+
+    return responseUtils.sendSuccess(res, {
+        settings: data.habits || defaultSettings
+    });
+}));
 
 /**
  * POST /api/automations/notifications
@@ -2879,40 +2801,32 @@ app.post('/api/automations/notifications', async (req, res) => {
  * GET /api/automations/notifications/:userId
  * Get Discord notification settings
  */
-app.get('/api/automations/notifications/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
-
-        if (!fs.existsSync(automationsPath)) {
-            return res.json({
-                success: true,
-                settings: {
-                    notifyMonitorProducts: true,
-                    notifyWorkouts: true,
-                    notifyHabits: true,
-                    notifyEbay: false,
-                    frequency: 'realtime'
-                }
-            });
-        }
-
-        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        res.json({
-            success: true,
-            settings: data.notifications || {
-                notifyMonitorProducts: true,
-                notifyWorkouts: true,
-                notifyHabits: true,
-                notifyEbay: false,
-                frequency: 'realtime'
-            }
-        });
-    } catch (error) {
-        console.error('Error getting notification settings:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.get('/api/automations/notifications/:userId', responseUtils.asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'userId is required');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    const data = fileUtils.readJSONFileSync(automationsPath, null);
+    
+    const defaultSettings = {
+        notifyMonitorProducts: true,
+        notifyWorkouts: true,
+        notifyHabits: true,
+        notifyEbay: false,
+        frequency: 'realtime'
+    };
+
+    if (data === null || !data.notifications) {
+        return responseUtils.sendSuccess(res, { settings: defaultSettings });
+    }
+
+    return responseUtils.sendSuccess(res, {
+        settings: data.notifications || defaultSettings
+    });
+}));
 
 // ============================================
 // AGENT AI COMMITTEE ENDPOINTS
@@ -3088,6 +3002,138 @@ app.post('/api/figma/sync', async (req, res) => {
             success: false, 
             error: error.message 
         });
+    }
+});
+
+// ========== Recipe API Endpoints (GialloZafferano Integration) ==========
+
+// Cerca ricette su GialloZafferano
+app.post('/api/recipes/search', async (req, res) => {
+    try {
+        const { query, limit } = req.body;
+        
+        if (!query) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Query is required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'search_giallozafferano_recipes',
+            query,
+            limit: limit || 20
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error searching recipes:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Scraping ricetta da GialloZafferano
+app.post('/api/recipes/fetch', async (req, res) => {
+    try {
+        const { url, saveToDatabase, downloadImage } = req.body;
+        
+        if (!url) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Recipe URL is required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'fetch_recipe_from_giallozafferano',
+            url,
+            saveToDatabase: saveToDatabase !== false, // default true
+            downloadImage: downloadImage !== false // default true
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error fetching recipe:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Import batch di ricette
+app.post('/api/recipes/batch-import', async (req, res) => {
+    try {
+        const { urls, saveToDatabase, downloadImages } = req.body;
+        
+        if (!urls || !Array.isArray(urls) || urls.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'URLs array is required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'batch_import_recipes',
+            urls,
+            saveToDatabase: saveToDatabase !== false,
+            downloadImages: downloadImages !== false
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error batch importing recipes:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Servi immagini ricette
+app.get('/api/recipes/images/:recipeId/:filename', async (req, res) => {
+    try {
+        const { recipeId, filename } = req.params;
+        const imagePath = path.join(__dirname, 'data', 'recipe-images', recipeId, filename);
+        
+        if (!fs.existsSync(imagePath)) {
+            return res.status(404).json({ error: 'Image not found' });
+        }
+
+        res.sendFile(imagePath);
+    } catch (error) {
+        console.error('Error serving recipe image:', error);
+        res.status(500).json({ error: 'Error serving image' });
+    }
+});
+
+// Recupera ricetta dal database
+app.get('/api/recipes/:recipeId', async (req, res) => {
+    try {
+        const { recipeId } = req.params;
+        
+        const result = await coordinator.assignTask({
+            type: 'get_recipe_from_database',
+            recipeId
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error getting recipe:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Cerca ricette nel database
+app.get('/api/recipes', async (req, res) => {
+    try {
+        const { q, limit, skip } = req.query;
+        
+        const result = await coordinator.assignTask({
+            type: 'search_recipes_in_database',
+            query: q,
+            limit: limit ? parseInt(limit) : 20,
+            skip: skip ? parseInt(skip) : 0
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error searching recipes:', error);
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 
