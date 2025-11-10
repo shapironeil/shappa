@@ -1624,7 +1624,7 @@ app.get('/api/webhooks/:userId', responseUtils.asyncHandler(async (req, res) => 
 // AUTHENTICATION ENDPOINTS (SERVER-SIDE)
 // ============================================
 
-const USERS_DB_FILE = path.join(USERS_DIR, 'users_db.json');
+const USERS_DB_FILE = path.join(pathUtils.getDataDirPath('users'), 'users_db.json');
 
 // Initialize users database
 function initUsersDatabase() {
@@ -2497,7 +2497,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 
         // 1. User Account (from users/)
         try {
-            const userPath = path.join(USERS_DIR, `${userId}.json`);
+            const userPath = pathUtils.getUserPath(userId);
             if (fs.existsSync(userPath)) {
                 userData.data.account = JSON.parse(fs.readFileSync(userPath, 'utf8'));
             }
@@ -2552,7 +2552,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 
         // 3. Interests
         try {
-            const interestsPath = path.join(INTERESTS_DIR, `${userId}.json`);
+            const interestsPath = pathUtils.getUserInterestsPath(userId);
             if (fs.existsSync(interestsPath)) {
                 const interestsData = JSON.parse(fs.readFileSync(interestsPath, 'utf8'));
                 userData.data.interests = interestsData.interests || interestsData;
@@ -2563,7 +2563,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 
         // 4. Webhooks (new format with multiple pages)
         try {
-            const webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
+            const webhookPath = pathUtils.getUserWebhookPath(userId);
             if (fs.existsSync(webhookPath)) {
                 const webhookData = JSON.parse(fs.readFileSync(webhookPath, 'utf8'));
                 // Return full webhook data (supports both old and new format)
@@ -2685,44 +2685,33 @@ app.get('/api/automations/sport/:userId', responseUtils.asyncHandler(async (req,
  * POST /api/automations/habits
  * Save habit automation settings
  */
-app.post('/api/automations/habits', async (req, res) => {
-    try {
-        const { userId, settings } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'Missing userId' });
-        }
-
-        const automationsDir = AUTOMATIONS_DIR;
-        if (!fs.existsSync(automationsDir)) {
-            fs.mkdirSync(automationsDir, { recursive: true });
-        }
-
-        const automationsPath = path.join(automationsDir, `${userId}.json`);
-        let existingData = {};
-        
-        if (fs.existsSync(automationsPath)) {
-            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        }
-
-        existingData.habits = {
-            ...settings,
-            lastUpdated: new Date().toISOString()
-        };
-
-        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`✅ Habit settings saved for user ${userId}`);
-
-        res.json({
-            success: true,
-            message: 'Habit settings saved',
-            settings: existingData.habits
-        });
-    } catch (error) {
-        console.error('Error saving habit settings:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.post('/api/automations/habits', responseUtils.asyncHandler(async (req, res) => {
+    const { userId, settings } = req.body;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'Missing userId');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    let existingData = fileUtils.readJSONFileSync(automationsPath, {});
+
+    existingData.habits = {
+        ...settings,
+        lastUpdated: new Date().toISOString()
+    };
+
+    const success = fileUtils.writeJSONFileSync(automationsPath, existingData);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to save habit settings', 500);
+    }
+    
+    console.log(`✅ Habit settings saved for user ${userId}`);
+    return responseUtils.sendSuccess(res, {
+        message: 'Habit settings saved',
+        settings: existingData.habits
+    });
+}));
 
 /**
  * GET /api/automations/habits/:userId
@@ -2758,44 +2747,33 @@ app.get('/api/automations/habits/:userId', responseUtils.asyncHandler(async (req
  * POST /api/automations/notifications
  * Save Discord notification settings
  */
-app.post('/api/automations/notifications', async (req, res) => {
-    try {
-        const { userId, settings } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'Missing userId' });
-        }
-
-        const automationsDir = AUTOMATIONS_DIR;
-        if (!fs.existsSync(automationsDir)) {
-            fs.mkdirSync(automationsDir, { recursive: true });
-        }
-
-        const automationsPath = path.join(automationsDir, `${userId}.json`);
-        let existingData = {};
-        
-        if (fs.existsSync(automationsPath)) {
-            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        }
-
-        existingData.notifications = {
-            ...settings,
-            lastUpdated: new Date().toISOString()
-        };
-
-        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`✅ Notification settings saved for user ${userId}`);
-
-        res.json({
-            success: true,
-            message: 'Notification settings saved',
-            settings: existingData.notifications
-        });
-    } catch (error) {
-        console.error('Error saving notification settings:', error);
-        res.status(500).json({ success: false, error: error.message });
+app.post('/api/automations/notifications', responseUtils.asyncHandler(async (req, res) => {
+    const { userId, settings } = req.body;
+    
+    if (!validationUtils.isValidUserId(userId)) {
+        return responseUtils.sendValidationError(res, 'Missing userId');
     }
-});
+
+    const automationsPath = pathUtils.getUserAutomationsPath(userId);
+    let existingData = fileUtils.readJSONFileSync(automationsPath, {});
+
+    existingData.notifications = {
+        ...settings,
+        lastUpdated: new Date().toISOString()
+    };
+
+    const success = fileUtils.writeJSONFileSync(automationsPath, existingData);
+    
+    if (!success) {
+        return responseUtils.sendError(res, 'Failed to save notification settings', 500);
+    }
+    
+    console.log(`✅ Notification settings saved for user ${userId}`);
+    return responseUtils.sendSuccess(res, {
+        message: 'Notification settings saved',
+        settings: existingData.notifications
+    });
+}));
 
 /**
  * GET /api/automations/notifications/:userId
