@@ -4,13 +4,13 @@
 Write-Host "🚀 Setup Automatico Deploy GitHub Actions" -ForegroundColor Cyan
 Write-Host ""
 
-$HOST = "207.154.218.16"
+$DEPLOY_HOST = "207.154.218.16"
 $DEPLOY_USER = "deploy"
 $DEPLOY_PATH = "/var/www/shappa"
 $REPO = "shapironeil/shappa"
 
 Write-Host "📋 Configurazione:" -ForegroundColor Yellow
-Write-Host "   Host: $HOST"
+Write-Host "   Host: $DEPLOY_HOST"
 Write-Host "   User: $DEPLOY_USER"
 Write-Host "   Path: $DEPLOY_PATH"
 Write-Host ""
@@ -56,7 +56,7 @@ if (-not $hasGh) {
         
         # DEPLOY_HOST
         Write-Host "   Configurando DEPLOY_HOST..." -ForegroundColor Gray
-        gh secret set DEPLOY_HOST --repo $REPO --body $HOST 2>&1 | Out-Null
+        gh secret set DEPLOY_HOST --repo $REPO --body $DEPLOY_HOST 2>&1 | Out-Null
         
         # DEPLOY_USER
         Write-Host "   Configurando DEPLOY_USER..." -ForegroundColor Gray
@@ -85,7 +85,7 @@ Write-Host "📋 PROSSIMI PASSI MANUALI (necessari):" -ForegroundColor Cyan
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 Write-Host ""
 Write-Host "1️⃣  Setup Server (esegui sul server):" -ForegroundColor Yellow
-Write-Host "   ssh root@$HOST" -ForegroundColor White
+Write-Host "   ssh root@$DEPLOY_HOST" -ForegroundColor White
 Write-Host "   bash scripts/verify-server-setup.sh" -ForegroundColor White
 Write-Host "   # Copia la chiave PRIVATA mostrata" -ForegroundColor Gray
 Write-Host ""
