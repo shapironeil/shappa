@@ -12,6 +12,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate secrets
+        run: |
+          echo "🔍 Validating required secrets..."
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "❌ ERROR: SSH_PRIVATE_KEY secret is missing!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "❌ ERROR: DEPLOY_HOST secret is missing!"
+            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
+            echo "❌ ERROR: DEPLOY_USER secret is missing!"
+            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+            echo "❌ ERROR: DEPLOY_PATH secret is missing!"
+            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            exit 1
+          fi
+          echo "✅ All secrets are configured"
+          echo "   Host: ${{ secrets.DEPLOY_HOST }}"
+          echo "   User: ${{ secrets.DEPLOY_USER }}"
+          echo "   Path: ${{ secrets.DEPLOY_PATH }}"
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
@@ -20,7 +47,8 @@ jobs:
 
       - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo 'SSH connection successful'"
+          echo "🔌 Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}..."
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo 'SSH connection successful'"
 
       - name: Sync files to server
         run: |
@@ -39,10 +67,12 @@ jobs:
           RSYNC_RSH: 'ssh -o StrictHostKeyChecking=no'
 
       - name: Remote post-deploy
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           echo "🚀 Running post-deploy tasks..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
-            cd ${{ secrets.DEPLOY_PATH }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
+            cd $DEPLOY_PATH
             
             # Installa dipendenze
             if [ -f package.json ]; then
@@ -70,10 +100,12 @@ jobs:
           ENDSSH
 
       - name: Verify deployment
+        env:
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           echo "🔍 Verifying deployment..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << 'ENDSSH'
-            cd ${{ secrets.DEPLOY_PATH }}
+          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
+            cd $DEPLOY_PATH
             if command -v pm2 &> /dev/null; then
               pm2 status
             fi
