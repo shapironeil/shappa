@@ -192,29 +192,71 @@ class FigmaAgent extends AgentBase {
 
     /**
      * Estrae componenti dal file Figma
+     * MIGLIORATO: Estrae TUTTI i nodi (FRAME, TEXT, RECTANGLE, etc.) preservando gerarchia
      */
     extractComponents(fileData, targetNodeId = null) {
-        const components = [];
+        const allNodes = [];
         
-        const traverse = (node) => {
-            if (node.type === 'COMPONENT' || node.type === 'INSTANCE') {
-                components.push({
-                    id: node.id,
-                    name: node.name,
-                    type: node.type,
-                    properties: node.componentProperties || {},
-                    styles: this.extractStyles(node),
-                    children: node.children ? node.children.map(child => traverse(child)).filter(Boolean) : []
+        const traverse = (node, parent = null, depth = 0) => {
+            // Estrai informazioni complete del nodo
+            const nodeData = {
+                id: node.id,
+                name: node.name,
+                type: node.type,
+                parent: parent ? parent.id : null,
+                depth: depth,
+                styles: this.extractStyles(node),
+                properties: this.extractNodeProperties(node),
+                children: []
+            };
+
+            // Estrai contenuto testo se presente
+            if (node.type === 'TEXT' && node.characters) {
+                nodeData.text = node.characters;
+                nodeData.textStyle = this.extractTextStyle(node);
+            }
+
+            // Estrai immagini se presenti
+            if (node.type === 'RECTANGLE' || node.type === 'VECTOR' || node.type === 'IMAGE') {
+                nodeData.fills = node.fills || [];
+                nodeData.strokes = node.strokes || [];
+                nodeData.effects = node.effects || [];
+            }
+
+            // Estrai constraints per layout responsive
+            if (node.constraints) {
+                nodeData.constraints = node.constraints;
+            }
+
+            // Estrai auto-layout se presente
+            if (node.layoutMode) {
+                nodeData.layoutMode = node.layoutMode;
+                nodeData.paddingLeft = node.paddingLeft || 0;
+                nodeData.paddingRight = node.paddingRight || 0;
+                nodeData.paddingTop = node.paddingTop || 0;
+                nodeData.paddingBottom = node.paddingBottom || 0;
+                nodeData.itemSpacing = node.itemSpacing || 0;
+                nodeData.layoutAlign = node.layoutAlign || 'MIN';
+                nodeData.layoutGrow = node.layoutGrow || 0;
+            }
+
+            // Traversa figli e preserva gerarchia
+            if (node.children && Array.isArray(node.children)) {
+                node.children.forEach(child => {
+                    const childData = traverse(child, nodeData, depth + 1);
+                    if (childData) {
+                        nodeData.children.push(childData);
+                    }
                 });
             }
-            
-            if (node.children) {
-                node.children.forEach(child => traverse(child));
-            }
+
+            allNodes.push(nodeData);
+            return nodeData;
         };
 
+        // Trova nodo target se specificato
+        let rootNode = fileData.document;
         if (targetNodeId) {
-            // Cerca nodo specifico
             const findNode = (node, id) => {
                 if (node.id === id) return node;
                 if (node.children) {
@@ -228,17 +270,167 @@ class FigmaAgent extends AgentBase {
             
             const targetNode = findNode(fileData.document, targetNodeId);
             if (targetNode) {
-                traverse(targetNode);
+                rootNode = targetNode;
             }
-        } else {
-            traverse(fileData.document);
         }
 
-        return components;
+        // Traversa da root
+        if (rootNode.children) {
+            rootNode.children.forEach(child => traverse(child, null, 0));
+        } else {
+            traverse(rootNode, null, 0);
+        }
+
+        return allNodes;
     }
 
     /**
-     * Estrae stili da un nodo Figma
+     * Estrae proprietà complete del nodo
+     */
+    extractNodeProperties(node) {
+        const props = {
+            visible: node.visible !== false,
+            locked: node.locked || false,
+            opacity: node.opacity !== undefined ? node.opacity : 1
+        };
+
+        // Bounding box
+        if (node.absoluteBoundingBox) {
+            props.x = node.absoluteBoundingBox.x;
+            props.y = node.absoluteBoundingBox.y;
+            props.width = node.absoluteBoundingBox.width;
+            props.height = node.absoluteBoundingBox.height;
+        }
+
+        // Corner radius
+        if (node.cornerRadius !== undefined) {
+            props.cornerRadius = node.cornerRadius;
+        }
+
+        // Fills
+        if (node.fills && Array.isArray(node.fills)) {
+            props.fills = node.fills.map(fill => this.extractFill(fill));
+        }
+
+        // Strokes
+        if (node.strokes && Array.isArray(node.strokes)) {
+            props.strokes = node.strokes.map(stroke => this.extractStroke(stroke));
+            props.strokeWeight = node.strokeWeight || 0;
+            props.strokeAlign = node.strokeAlign || 'INSIDE';
+        }
+
+        // Effects (shadows, blurs)
+        if (node.effects && Array.isArray(node.effects)) {
+            props.effects = node.effects.map(effect => this.extractEffect(effect));
+        }
+
+        return props;
+    }
+
+    /**
+     * Estrae fill (colore/sfondo)
+     */
+    extractFill(fill) {
+        if (fill.type === 'SOLID' && fill.color) {
+            return {
+                type: 'solid',
+                color: this.rgbaToHex(fill.color, fill.opacity !== undefined ? fill.opacity : 1)
+            };
+        } else if (fill.type === 'GRADIENT_LINEAR') {
+            return {
+                type: 'gradient',
+                gradientStops: fill.gradientStops || []
+            };
+        } else if (fill.type === 'IMAGE') {
+            return {
+                type: 'image',
+                imageRef: fill.imageRef,
+                scaleMode: fill.scaleMode
+            };
+        }
+        return null;
+    }
+
+    /**
+     * Estrae stroke (bordo)
+     */
+    extractStroke(stroke) {
+        if (stroke.type === 'SOLID' && stroke.color) {
+            return {
+                type: 'solid',
+                color: this.rgbaToHex(stroke.color, stroke.opacity !== undefined ? stroke.opacity : 1)
+            };
+        }
+        return null;
+    }
+
+    /**
+     * Estrae effect (ombra, blur)
+     */
+    extractEffect(effect) {
+        if (effect.type === 'DROP_SHADOW' || effect.type === 'INNER_SHADOW') {
+            return {
+                type: effect.type.toLowerCase().replace('_', '-'),
+                color: this.rgbaToHex(effect.color, effect.color.a !== undefined ? effect.color.a : 1),
+                offset: {
+                    x: effect.offset?.x || 0,
+                    y: effect.offset?.y || 0
+                },
+                radius: effect.radius || 0,
+                spread: effect.spread || 0
+            };
+        } else if (effect.type === 'LAYER_BLUR' || effect.type === 'BACKGROUND_BLUR') {
+            return {
+                type: 'blur',
+                radius: effect.radius || 0
+            };
+        }
+        return null;
+    }
+
+    /**
+     * Estrae stile testo
+     */
+    extractTextStyle(node) {
+        if (node.type !== 'TEXT' || !node.style) {
+            return null;
+        }
+
+        return {
+            fontFamily: node.style.fontFamily,
+            fontSize: node.style.fontSize,
+            fontWeight: node.style.fontWeight,
+            lineHeight: node.style.lineHeightPx || node.style.lineHeightPercentFontSize,
+            letterSpacing: node.style.letterSpacing,
+            textAlign: node.style.textAlign,
+            textDecoration: node.style.textDecoration,
+            textCase: node.style.textCase
+        };
+    }
+
+    /**
+     * Converte RGBA a HEX/RGBA CSS
+     */
+    rgbaToHex(color, opacity = 1) {
+        if (!color) return '#000000';
+        
+        const r = Math.round(color.r * 255);
+        const g = Math.round(color.g * 255);
+        const b = Math.round(color.b * 255);
+        const a = opacity !== undefined ? opacity : (color.a !== undefined ? color.a : 1);
+        
+        if (a < 1) {
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        
+        return `#${[r, g, b].map(x => {
+            const hex = x.toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('')}`;
+    }
+
+    /**
+     * Estrae stili da un nodo Figma (mantenuto per compatibilità)
      */
     extractStyles(node) {
         const styles = {
@@ -256,6 +448,8 @@ class FigmaAgent extends AgentBase {
         if (node.absoluteBoundingBox) {
             styles.width = node.absoluteBoundingBox.width;
             styles.height = node.absoluteBoundingBox.height;
+            styles.x = node.absoluteBoundingBox.x;
+            styles.y = node.absoluteBoundingBox.y;
         }
 
         // Estrai typography
@@ -264,9 +458,15 @@ class FigmaAgent extends AgentBase {
                 fontFamily: node.style.fontFamily,
                 fontSize: node.style.fontSize,
                 fontWeight: node.style.fontWeight,
-                lineHeight: node.style.lineHeightPx,
-                textAlign: node.style.textAlign
+                lineHeight: node.style.lineHeightPx || node.style.lineHeightPercentFontSize,
+                textAlign: node.style.textAlign,
+                letterSpacing: node.style.letterSpacing
             };
+        }
+
+        // Estrai constraints
+        if (node.constraints) {
+            styles.constraints = node.constraints;
         }
 
         return styles;
@@ -426,32 +626,60 @@ class FigmaAgent extends AgentBase {
 
     /**
      * Genera codice da componenti
+     * MIGLIORATO: Genera HTML/CSS preservando gerarchia e struttura completa
      */
     generateCodeFromComponents(components, analysis, pageName = 'page') {
         const htmlParts = [];
         const cssParts = [];
         const jsParts = [];
+        const cssClasses = new Set();
 
-        // Genera HTML
+        // Genera HTML base
         htmlParts.push('<!DOCTYPE html>');
         htmlParts.push('<html lang="it">');
         htmlParts.push('<head>');
         htmlParts.push('    <meta charset="UTF-8">');
         htmlParts.push('    <meta name="viewport" content="width=device-width, initial-scale=1.0">');
         htmlParts.push(`    <title>${pageName}</title>`);
-        htmlParts.push(`    <link rel="stylesheet" href="${pageName}.css">`);
+        htmlParts.push(`    <style>`);
+        htmlParts.push('        /* Figma Generated Styles */');
+        htmlParts.push('        * { box-sizing: border-box; margin: 0; padding: 0; }');
+        htmlParts.push('        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }');
+        htmlParts.push('    </style>');
         htmlParts.push('</head>');
         htmlParts.push('<body>');
 
-        // Genera componenti
-        components.forEach(component => {
-            const componentCode = this.generateComponentCode(component);
-            htmlParts.push(componentCode.html);
-            cssParts.push(componentCode.css);
-            jsParts.push(componentCode.js);
+        // Trova nodi root (senza parent)
+        const rootNodes = components.filter(node => !node.parent);
+        
+        // Genera HTML per ogni nodo root preservando gerarchia
+        rootNodes.forEach(rootNode => {
+            const nodeCode = this.generateNodeHTML(rootNode, components, cssClasses, 1);
+            htmlParts.push(nodeCode.html);
+            cssParts.push(nodeCode.css);
+            jsParts.push(nodeCode.js);
         });
 
-        htmlParts.push(`    <script src="${pageName}.js"></script>`);
+        // Aggiungi CSS completo
+        htmlParts.push('    <style>');
+        htmlParts.push('        /* Component Styles */');
+        Array.from(cssClasses).sort().forEach(className => {
+            const node = components.find(c => this.sanitizeClassName(c.name) === className);
+            if (node) {
+                const css = this.generateNodeCSS(node);
+                if (css) {
+                    htmlParts.push(css);
+                }
+            }
+        });
+        htmlParts.push('    </style>');
+
+        htmlParts.push('    <script>');
+        htmlParts.push('        // Component Scripts');
+        jsParts.forEach(js => {
+            if (js) htmlParts.push(js);
+        });
+        htmlParts.push('    </script>');
         htmlParts.push('</body>');
         htmlParts.push('</html>');
 
@@ -460,6 +688,208 @@ class FigmaAgent extends AgentBase {
             css: cssParts.join('\n'),
             js: jsParts.join('\n')
         };
+    }
+
+    /**
+     * Genera HTML per un nodo e i suoi figli (ricorsivo)
+     */
+    generateNodeHTML(node, allNodes, cssClasses, indent = 0) {
+        const indentStr = '    '.repeat(indent);
+        const className = this.sanitizeClassName(node.name);
+        cssClasses.add(className);
+        
+        let html = '';
+        let css = '';
+        let js = '';
+
+        // Determina tag HTML appropriato
+        const tagName = this.getHTMLTag(node);
+        
+        // Apri tag
+        html += `${indentStr}<${tagName} class="${className}" data-figma-id="${node.id}" data-figma-type="${node.type}">\n`;
+
+        // Aggiungi testo se presente
+        if (node.text) {
+            html += `${indentStr}    ${this.escapeHTML(node.text)}\n`;
+        }
+
+        // Genera figli
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(child => {
+                const childCode = this.generateNodeHTML(child, allNodes, cssClasses, indent + 1);
+                html += childCode.html;
+                css += childCode.css;
+                js += childCode.js;
+            });
+        }
+
+        // Chiudi tag
+        html += `${indentStr}</${tagName}>\n`;
+
+        // Genera CSS per questo nodo
+        css = this.generateNodeCSS(node, className) + '\n' + css;
+
+        // Genera JS se necessario
+        if (node.type === 'COMPONENT' && node.name.toLowerCase().includes('button')) {
+            js += `document.querySelector('[data-figma-id="${node.id}"]')?.addEventListener('click', function() {\n`;
+            js += `    console.log('${node.name} clicked');\n`;
+            js += `});\n`;
+        }
+
+        return { html, css, js };
+    }
+
+    /**
+     * Determina tag HTML appropriato per tipo nodo
+     */
+    getHTMLTag(node) {
+        const name = node.name.toLowerCase();
+        const type = node.type;
+
+        if (type === 'TEXT') return 'p';
+        if (type === 'RECTANGLE' || type === 'FRAME') {
+            if (name.includes('button') || name.includes('btn')) return 'button';
+            if (name.includes('input') || name.includes('textfield')) return 'input';
+            if (name.includes('img') || name.includes('image')) return 'img';
+            return 'div';
+        }
+        if (type === 'VECTOR' || type === 'ELLIPSE') return 'div';
+        if (type === 'COMPONENT') {
+            if (name.includes('button')) return 'button';
+            if (name.includes('input')) return 'input';
+            if (name.includes('card')) return 'div';
+            return 'div';
+        }
+        return 'div';
+    }
+
+    /**
+     * Genera CSS completo per un nodo
+     */
+    generateNodeCSS(node, className = null) {
+        if (!className) {
+            className = this.sanitizeClassName(node.name);
+        }
+
+        const cssParts = [];
+        const props = node.properties || {};
+        const styles = node.styles || {};
+
+        cssParts.push(`.${className} {`);
+
+        // Position e dimensioni
+        if (props.width) {
+            cssParts.push(`    width: ${props.width}px;`);
+        }
+        if (props.height) {
+            cssParts.push(`    height: ${props.height}px;`);
+        }
+
+        // Layout
+        if (node.layoutMode === 'HORIZONTAL') {
+            cssParts.push('    display: flex;');
+            cssParts.push('    flex-direction: row;');
+        } else if (node.layoutMode === 'VERTICAL') {
+            cssParts.push('    display: flex;');
+            cssParts.push('    flex-direction: column;');
+        }
+
+        // Padding
+        if (node.paddingLeft || node.paddingRight || node.paddingTop || node.paddingBottom) {
+            const padding = [
+                node.paddingTop || 0,
+                node.paddingRight || 0,
+                node.paddingBottom || 0,
+                node.paddingLeft || 0
+            ].join('px ') + 'px';
+            cssParts.push(`    padding: ${padding};`);
+        }
+
+        // Gap
+        if (node.itemSpacing) {
+            cssParts.push(`    gap: ${node.itemSpacing}px;`);
+        }
+
+        // Border radius
+        if (props.cornerRadius) {
+            cssParts.push(`    border-radius: ${props.cornerRadius}px;`);
+        }
+
+        // Background (fills)
+        if (props.fills && props.fills.length > 0) {
+            const fill = props.fills[0];
+            if (fill && fill.color) {
+                cssParts.push(`    background: ${fill.color};`);
+            }
+        }
+
+        // Border (strokes)
+        if (props.strokes && props.strokes.length > 0 && props.strokeWeight) {
+            const stroke = props.strokes[0];
+            if (stroke && stroke.color) {
+                cssParts.push(`    border: ${props.strokeWeight}px solid ${stroke.color};`);
+            }
+        }
+
+        // Box shadow (effects)
+        if (props.effects && props.effects.length > 0) {
+            const shadows = props.effects
+                .filter(e => e.type === 'drop-shadow' || e.type === 'inner-shadow')
+                .map(e => {
+                    const offset = e.offset || { x: 0, y: 0 };
+                    return `${offset.x}px ${offset.y}px ${e.radius}px ${e.spread || 0}px ${e.color}`;
+                });
+            if (shadows.length > 0) {
+                cssParts.push(`    box-shadow: ${shadows.join(', ')};`);
+            }
+        }
+
+        // Typography
+        if (node.textStyle || styles.typography) {
+            const textStyle = node.textStyle || styles.typography;
+            if (textStyle) {
+                if (textStyle.fontFamily) {
+                    cssParts.push(`    font-family: ${textStyle.fontFamily};`);
+                }
+                if (textStyle.fontSize) {
+                    cssParts.push(`    font-size: ${textStyle.fontSize}px;`);
+                }
+                if (textStyle.fontWeight) {
+                    cssParts.push(`    font-weight: ${textStyle.fontWeight};`);
+                }
+                if (textStyle.lineHeight) {
+                    cssParts.push(`    line-height: ${textStyle.lineHeight}px;`);
+                }
+                if (textStyle.textAlign) {
+                    cssParts.push(`    text-align: ${textStyle.textAlign.toLowerCase()};`);
+                }
+                if (textStyle.letterSpacing) {
+                    cssParts.push(`    letter-spacing: ${textStyle.letterSpacing}px;`);
+                }
+            }
+        }
+
+        // Opacity
+        if (props.opacity !== undefined && props.opacity < 1) {
+            cssParts.push(`    opacity: ${props.opacity};`);
+        }
+
+        cssParts.push('}');
+
+        return cssParts.join('\n');
+    }
+
+    /**
+     * Escape HTML per testo
+     */
+    escapeHTML(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     /**

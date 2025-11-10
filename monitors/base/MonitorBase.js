@@ -192,9 +192,31 @@ class MonitorBase {
                 inline: false
             });
 
+            // Aggiungi bottoni per interagire con l'alert
+            const components = [{
+                type: 1, // ACTION_ROW
+                components: [
+                    {
+                        type: 2, // BUTTON
+                        style: 3, // SUCCESS (green)
+                        label: 'Vedi Prodotto',
+                        custom_id: `view_product:${this.productId || this.interestId}`,
+                        emoji: { name: '🔗' }
+                    },
+                    {
+                        type: 2, // BUTTON
+                        style: 4, // DANGER (red)
+                        label: 'Ferma Monitor',
+                        custom_id: `stop_monitor:${this.interestId || this.productId}`,
+                        emoji: { name: '🛑' }
+                    }
+                ]
+            }];
+
             await axios.post(webhook, {
                 content: `<@${this.userId}> ALERT!`,
-                embeds: [embed]
+                embeds: [embed],
+                components
             });
 
             console.log(`[${this.productName}] ✅ Notifica Discord inviata`);

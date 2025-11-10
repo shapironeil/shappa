@@ -126,6 +126,7 @@ class NotificationAgent extends AgentBase {
         }
 
         try {
+            // Se ci sono componenti (buttons, select menus), includili
             const payload = {
                 content: message || null,
                 embeds: embeds || []

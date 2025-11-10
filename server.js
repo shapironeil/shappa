@@ -58,6 +58,9 @@ const { coordinator } = initializeAgents({
         claudeApiKey: process.env.CLAUDE_API_KEY,
         qwenApiKey: process.env.QWEN_API_KEY,
         huggingfaceApiKey: process.env.HUGGINGFACE_API_KEY
+    },
+    bot: {
+        priority: 7
     }
 });
 
@@ -3602,6 +3605,200 @@ app.post('/api/ai/classify-text', async (req, res) => {
 });
 
 /**
+ * POST /api/figma/apply-to-dieta
+ * Applica design Figma alla pagina dieta mantenendo tutte le funzioni
+ */
+app.post('/api/figma/apply-to-dieta', async (req, res) => {
+    try {
+        const { fileKey = 'qEikXdYIE1SPArKu66qw0m', nodeId = '0-1' } = req.body;
+        
+        console.log(`🎨 Applicando design Figma alla pagina dieta...`);
+        console.log(`📋 File Key: ${fileKey}`);
+        console.log(`📍 Node ID: ${nodeId}`);
+
+        // Step 1: Recupera file Figma
+        const fileResult = await coordinator.assignTask({
+            type: 'fetch_figma_file',
+            fileKey,
+            nodeIds: nodeId ? [nodeId] : null,
+            isMakeFile: true
+        });
+
+        if (!fileResult.success) {
+            throw new Error('Failed to fetch Figma file: ' + fileResult.error);
+        }
+
+        // Step 2: Analizza componenti
+        const analysisResult = await coordinator.assignTask({
+            type: 'analyze_figma_components',
+            fileKey,
+            nodeId
+        });
+
+        // Step 3: Genera codice
+        const codeResult = await coordinator.assignTask({
+            type: 'generate_frontend_code',
+            fileKey,
+            nodeId,
+            pageName: 'dieta'
+        });
+
+        // Step 4: Leggi pagina esistente
+        const dietaPath = path.join(__dirname, 'src', 'pages', 'dieta.html');
+        const existingContent = fs.readFileSync(dietaPath, 'utf8');
+
+        // Estrai funzioni JavaScript
+        const jsMatches = existingContent.match(/<script>([\s\S]*?)<\/script>/g);
+        const existingJS = jsMatches ? jsMatches.map(m => m.replace(/<\/?script>/g, '')).join('\n\n') : '';
+
+        // Estrai sidebar
+        const sidebarMatch = existingContent.match(/(<aside class="venus-sidebar"[\s\S]*?<\/aside>)/);
+        const sidebar = sidebarMatch ? sidebarMatch[1] : '';
+
+        // Estrai stili esistenti (funzionalità specifiche)
+        const existingStyles = extractDietaStyles(existingContent);
+
+        // Step 5: Costruisci nuova pagina
+        const figmaHTML = codeResult.code.html;
+        const figmaCSS = codeResult.code.css;
+        
+        const bodyMatch = figmaHTML.match(/<body>([\s\S]*?)<\/body>/);
+        let figmaBodyContent = bodyMatch ? bodyMatch[1] : '';
+        figmaBodyContent = figmaBodyContent
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?<\/style>/gi, '');
+
+        const newPage = buildDietaPage(figmaBodyContent, figmaCSS, existingJS, sidebar, existingStyles, fileKey, nodeId);
+
+        // Step 6: Salva
+        fs.writeFileSync(dietaPath, newPage, 'utf8');
+
+        res.json({
+            success: true,
+            message: 'Design Figma applicato alla pagina dieta',
+            components: codeResult.components,
+            fileKey,
+            nodeId
+        });
+
+    } catch (error) {
+        console.error('Error applying Figma to dieta:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * Estrae stili funzionalità specifiche dalla pagina dieta
+ */
+function extractDietaStyles(content) {
+    const styleMatches = content.match(/<style>([\s\S]*?)<\/style>/g);
+    if (!styleMatches) return '';
+    
+    let styles = '';
+    styleMatches.forEach(match => {
+        const styleContent = match.replace(/<\/?style>/g, '');
+        // Mantieni solo stili per funzionalità (calendario, ricette, tracker)
+        if (styleContent.includes('calendar') || 
+            styleContent.includes('recipe') || 
+            styleContent.includes('tracker') ||
+            styleContent.includes('meal') ||
+            styleContent.includes('dinner')) {
+            styles += styleContent + '\n';
+        }
+    });
+    
+    return styles;
+}
+
+/**
+ * Costruisce pagina dieta combinando design Figma + funzioni esistenti
+ */
+function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles, fileKey, nodeId) {
+    return `<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookin'Shappa - Dieta & Salute</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
+    <!-- 
+        Figma Design Reference:
+        File: Health-Diet-Dashboard--Copy-
+        File Key: ${fileKey}
+        URL: https://www.figma.com/make/${fileKey}/Health-Diet-Dashboard--Copy-?node-id=${nodeId}
+        Design applicato da FigmaAgent - ${new Date().toISOString()}
+    -->
+    <style>
+        /* Reset e Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--venus-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
+            min-height: 100vh;
+            color: var(--venus-text-primary, #1f2937);
+            line-height: 1.5;
+        }
+
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .venus-main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* Figma Generated Styles */
+        ${figmaCSS}
+
+        /* Existing Functionality Styles */
+        ${existingStyles}
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        ${sidebar}
+        
+        <main class="venus-main-content">
+            ${figmaBody}
+        </main>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        ${existingJS}
+        
+        // Inizializza funzioni dopo caricamento
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎨 Pagina dieta caricata con design Figma');
+            
+            if (typeof setupCalendar === 'function') {
+                setupCalendar();
+                renderCalendar();
+            }
+            
+            if (typeof loadDinnerRecipes === 'function') {
+                setTimeout(() => loadDinnerRecipes(), 1000);
+            }
+        });
+    </script>
+</body>
+</html>`;
+}
+
+/**
  * POST /api/figma/fetch-make-file
  * Fetch Figma file da /make/ (community files)
  */
@@ -3626,6 +3823,212 @@ app.post('/api/figma/fetch-make-file', async (req, res) => {
         res.json(result);
     } catch (error) {
         console.error('Error fetching Figma make file:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * ========== BOT AGENT API ENDPOINTS ==========
+ * Gestione comandi e interazioni bot Discord
+ */
+
+/**
+ * POST /api/bot/command
+ * Gestisce comando bot Discord
+ */
+app.post('/api/bot/command', async (req, res) => {
+    try {
+        const { command, userId, discordUserId, options } = req.body;
+        
+        if (!command) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'command required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'handle_discord_command',
+            command,
+            userId,
+            discordUserId,
+            options
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error handling bot command:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/bot/interaction
+ * Gestisce interazione Discord (button, select, modal)
+ */
+app.post('/api/bot/interaction', async (req, res) => {
+    try {
+        const { interactionType, customId, userId, discordUserId, values, data } = req.body;
+        
+        if (!interactionType || !customId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'interactionType and customId required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'handle_discord_interaction',
+            interactionType,
+            customId,
+            userId,
+            discordUserId,
+            values,
+            data
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error handling bot interaction:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/bot/workout-confirm
+ * Conferma workout da Discord
+ */
+app.post('/api/bot/workout-confirm', async (req, res) => {
+    try {
+        const { userId, workoutId, workoutDate, confirmed } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'userId required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'handle_workout_confirmation',
+            userId,
+            workoutId,
+            workoutDate,
+            confirmed: confirmed !== false
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error confirming workout:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/bot/product-alert-response
+ * Gestisce risposta a alert prodotto
+ */
+app.post('/api/bot/product-alert-response', async (req, res) => {
+    try {
+        const { userId, productId, action, interestId, productUrl } = req.body;
+        
+        if (!userId || !action) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'userId and action required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'handle_product_alert_response',
+            userId,
+            productId,
+            action,
+            interestId,
+            productUrl
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error handling product alert response:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/bot/send-response
+ * Invia risposta bot a Discord
+ */
+app.post('/api/bot/send-response', async (req, res) => {
+    try {
+        const { userId, webhookUrl, message, embeds, components } = req.body;
+        
+        if (!webhookUrl && !userId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'webhookUrl or userId required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'send_bot_response',
+            userId,
+            webhookUrl,
+            message,
+            embeds,
+            components
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error sending bot response:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+/**
+ * POST /api/bot/process-message
+ * Processa messaggio bot (text command)
+ */
+app.post('/api/bot/process-message', async (req, res) => {
+    try {
+        const { message, userId, discordUserId } = req.body;
+        
+        if (!message) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'message required' 
+            });
+        }
+
+        const result = await coordinator.assignTask({
+            type: 'process_bot_message',
+            message,
+            userId,
+            discordUserId
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error processing bot message:', error);
         res.status(500).json({ 
             success: false, 
             error: error.message 
