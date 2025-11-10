@@ -6,7 +6,7 @@
     <title>Cookin'Shappa - Dieta & Salute</title>
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/venus.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
     <!-- 
         Figma Design Reference:
         File: Health-Diet-Dashboard
@@ -24,18 +24,164 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: var(--venus-font-family);
             background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
             min-height: 100vh;
-            color: #030213;
+            color: var(--venus-text-primary);
             line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        /* Layout Container */
-        .app-container {
-            min-height: 100vh;
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
+        }
+
+        /* Venus Sidebar */
+        .venus-sidebar {
+            width: 240px;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
             display: flex;
             flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
+        .venus-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--venus-space-xl);
         }
 
         /* Header */
@@ -43,11 +189,6 @@
             background: white;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            max-width: 1280px;
-            margin: 0 auto;
             padding: 1rem 1.5rem;
         }
 
@@ -63,18 +204,13 @@
             margin-top: 0.25rem;
         }
 
-        /* Main Content */
-        .main-content {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem;
-            flex: 1;
-        }
-
+        /* Main Content Grid */
         .content-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 1.5rem;
+            max-width: 1280px;
+            margin: 0 auto;
         }
 
         @media (min-width: 1024px) {
@@ -443,6 +579,11 @@
         /* Recipe Cards */
         .recipe-card-item {
             transition: all 0.2s;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
         }
 
         .recipe-card-item:hover {
@@ -612,170 +753,223 @@
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Header -->
-        <header class="header">
-            <div class="header-content">
-                <div class="header-title">Cookin'Shappa</div>
-                <div class="header-subtitle">Pianifica la tua alimentazione settimanale</div>
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
             </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <div class="content-grid">
-                <!-- Left Column -->
-                <div class="left-column">
-                    <!-- Weekly Calendar -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">
-                                    <svg class="card-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                    <h2>Calendario Settimanale</h2>
-                                </div>
-                                <div class="card-subtitle" id="selectedDietName"></div>
-                            </div>
-                            <div class="calendar-nav">
-                                <button class="calendar-nav-btn" id="prevWeek">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                    </svg>
-                                </button>
-                                <span class="calendar-nav-date" id="weekRange"></span>
-                                <button class="calendar-nav-btn" id="nextWeek">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="calendar-container">
-                            <div id="calendarEmptyState" class="empty-state" style="display: none;">
-                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <p class="empty-state-text">Nessuna dieta selezionata</p>
-                                <p class="empty-state-subtext">Scegli una dieta personalizzata per vedere i pasti della settimana</p>
-                            </div>
-                            <div id="calendarDays" class="calendar-days-grid"></div>
-                        </div>
-
-                        <!-- Meals Display -->
-                        <div id="mealsSection" class="meals-section" style="display: none;">
-                            <div class="meals-header">
-                                <div class="meals-title">
-                                    <span>🍽️</span>
-                                    <h3>Pasti di <span id="selectedDayName"></span></h3>
-                                </div>
-                                <span class="meals-badge" id="dayCalories">0 cal</span>
-                            </div>
-                            <div class="meals-grid" id="mealsGrid"></div>
-                        </div>
-                    </div>
-
-                    <!-- Dinner Alternatives -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">
-                                    <span>👨‍🍳</span>
-                                    <h2>Alternative per Stasera</h2>
-                                </div>
-                                <div class="card-subtitle">Scopri cosa cucinare</div>
-                            </div>
-                        </div>
-                        <div id="dinnerAlternativesContent">
-                            <div id="dinnerAlternativesEmpty" class="empty-state">
-                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                <p class="empty-state-text">Caricamento ricette da GialloZafferano...</p>
-                                <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Carica Ricette</button>
-                            </div>
-                            <div id="dinnerAlternativesList" style="display: none;">
-                                <div class="mb-4">
-                                    <input type="text" id="recipeSearchInput" class="w-full p-2 border rounded" placeholder="Cerca ricette..." onkeyup="filterRecipes()">
-                                </div>
-                                <div id="recipesList" class="space-y-3" style="max-height: 500px; overflow-y: auto;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Weight & Calories Tracker -->
-                    <div class="card">
-                        <div class="tracker-tabs">
-                            <button class="tracker-tab active" data-tab="weight">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                                </svg>
-                                Peso
-                            </button>
-                            <button class="tracker-tab" data-tab="calories">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                Calorie
-                            </button>
-                        </div>
-                        <div id="weightTracker" class="tracker-content active">
-                            <div class="tracker-value" id="currentWeight">0</div>
-                            <div class="tracker-label">kg</div>
-                        </div>
-                        <div id="caloriesTracker" class="tracker-content">
-                            <div class="tracker-value" id="currentCalories">0</div>
-                            <div class="tracker-label">kcal</div>
-                        </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    Obiettivi
+                </a>
+                <a href="progetti.html" class="venus-menu-item">
+                    Progetti
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="interessi.html" class="venus-menu-item">
+                    I Miei Interessi
+                </a>
+                <a href="sport.html" class="venus-menu-item">
+                    Sport
+                </a>
+                <a href="dieta.html" class="venus-menu-item venus-active">
+                    Dieta
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="sidebarUserAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="sidebarUserName">Utente</div>
+                        <div class="venus-user-role">Admin</div>
                     </div>
                 </div>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
+            </div>
+        </aside>
 
-                <!-- Right Column -->
-                <div class="right-column">
-                    <!-- Personal Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <div class="personal-card-avatar" id="userAvatar">U</div>
+        <!-- Main Content Area -->
+        <main class="venus-main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">Cookin'Shappa</div>
+                <div class="header-subtitle">Pianifica la tua alimentazione settimanale</div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="venus-content-area">
+                <div class="content-grid">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <!-- Weekly Calendar -->
+                        <div class="card">
+                            <div class="card-header">
                                 <div>
-                                    <h2>Profilo Personale</h2>
-                                    <div class="card-subtitle" id="userName">Utente</div>
+                                    <div class="card-title">
+                                        <svg class="card-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <h2>Calendario Settimanale</h2>
+                                    </div>
+                                    <div class="card-subtitle" id="selectedDietName"></div>
+                                </div>
+                                <div class="calendar-nav">
+                                    <button class="calendar-nav-btn" id="prevWeek">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <span class="calendar-nav-date" id="weekRange"></span>
+                                    <button class="calendar-nav-btn" id="nextWeek">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="calendar-container">
+                                <div id="calendarEmptyState" class="empty-state" style="display: none;">
+                                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <p class="empty-state-text">Nessuna dieta selezionata</p>
+                                    <p class="empty-state-subtext">Scegli una dieta personalizzata per vedere i pasti della settimana</p>
+                                </div>
+                                <div id="calendarDays" class="calendar-days-grid"></div>
+                            </div>
+
+                            <!-- Meals Display -->
+                            <div id="mealsSection" class="meals-section" style="display: none;">
+                                <div class="meals-header">
+                                    <div class="meals-title">
+                                        <span>🍽️</span>
+                                        <h3>Pasti di <span id="selectedDayName"></span></h3>
+                                    </div>
+                                    <span class="meals-badge" id="dayCalories">0 cal</span>
+                                </div>
+                                <div class="meals-grid" id="mealsGrid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Dinner Alternatives -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">
+                                        <span>👨‍🍳</span>
+                                        <h2>Alternative per Stasera</h2>
+                                    </div>
+                                    <div class="card-subtitle">Scopri cosa cucinare</div>
+                                </div>
+                            </div>
+                            <div id="dinnerAlternativesContent">
+                                <div id="dinnerAlternativesEmpty" class="empty-state">
+                                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    <p class="empty-state-text">Caricamento ricette da GialloZafferano...</p>
+                                    <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Carica Ricette</button>
+                                </div>
+                                <div id="dinnerAlternativesList" style="display: none;">
+                                    <div class="mb-4">
+                                        <input type="text" id="recipeSearchInput" class="w-full p-2 border rounded" placeholder="Cerca ricette..." onkeyup="filterRecipes()">
+                                    </div>
+                                    <div id="recipesList" class="space-y-3" style="max-height: 500px; overflow-y: auto;"></div>
                                 </div>
                             </div>
                         </div>
-                        <div id="personalCardContent">
-                            <p style="color: #4b5563; font-size: 0.875rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+
+                        <!-- Weight & Calories Tracker -->
+                        <div class="card">
+                            <div class="tracker-tabs">
+                                <button class="tracker-tab active" data-tab="weight">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                                    </svg>
+                                    Peso
+                                </button>
+                                <button class="tracker-tab" data-tab="calories">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Calorie
+                                </button>
+                            </div>
+                            <div id="weightTracker" class="tracker-content active">
+                                <div class="tracker-value" id="currentWeight">0</div>
+                                <div class="tracker-label">kg</div>
+                            </div>
+                            <div id="caloriesTracker" class="tracker-content">
+                                <div class="tracker-value" id="currentCalories">0</div>
+                                <div class="tracker-label">kcal</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Urgent Items & Fridge -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span>⚠️</span>
-                                <h2>Items Urgenti</h2>
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <!-- Personal Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <div class="personal-card-avatar" id="userAvatar">U</div>
+                                    <div>
+                                        <h2>Profilo Personale</h2>
+                                        <div class="card-subtitle" id="userName">Utente</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="personalCardContent">
+                                <p style="color: #4b5563; font-size: 0.875rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
                             </div>
                         </div>
-                        <div id="urgentItemsContent">
-                            <div class="empty-state">
-                                <p class="empty-state-text">Nessun item in scadenza</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Diet Proposals -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span>💡</span>
-                                <h2>Proposte Dieta</h2>
+                        <!-- Urgent Items & Fridge -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span>⚠️</span>
+                                    <h2>Items Urgenti</h2>
+                                </div>
+                            </div>
+                            <div id="urgentItemsContent">
+                                <div class="empty-state">
+                                    <p class="empty-state-text">Nessun item in scadenza</p>
+                                </div>
                             </div>
                         </div>
-                        <div id="dietProposalsContent">
-                            <div class="empty-state">
-                                <p class="empty-state-text">Caricamento proposte dieta...</p>
+
+                        <!-- Diet Proposals -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span>💡</span>
+                                    <h2>Proposte Dieta</h2>
+                                </div>
+                            </div>
+                            <div id="dietProposalsContent">
+                                <div class="empty-state">
+                                    <p class="empty-state-text">Caricamento proposte dieta...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -805,9 +999,17 @@
             if (user) {
                 const userName = user.username || user.email || 'Utente';
                 document.getElementById('userName').textContent = userName;
+                document.getElementById('sidebarUserName').textContent = userName;
                 const initial = userName[0].toUpperCase();
                 document.getElementById('userAvatar').textContent = initial;
+                document.getElementById('sidebarUserAvatar').textContent = initial;
             }
+
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            });
 
             // Load saved diet
             const savedDiet = localStorage.getItem('selected_diet');
