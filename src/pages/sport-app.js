@@ -448,7 +448,7 @@ function renderPrograms(tab) {
                     <div class="program-details">
                         <div class="program-header">
                             <div style="flex: 1; min-width: 0;">
-                                <h3 class="program-title">${program.title}</h3>
+                                <h3 class="program-title">${isSelected ? '✓ ' : ''}${program.title}</h3>
                                 <p class="program-subtitle">${program.subtitle}</p>
                             </div>
                             <span class="program-badge ${diffColor}">${diffLabel}</span>
@@ -476,6 +476,17 @@ function renderPrograms(tab) {
             </div>
         `;
     }).join('');
+    
+    // Scroll automatico alla card selezionata se presente
+    if (selectedProgramId) {
+        setTimeout(() => {
+            const selectedCard = container.querySelector(`[data-program-id="${selectedProgramId}"]`);
+            if (selectedCard) {
+                selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                console.log('✅ Scroll automatico alla card selezionata');
+            }
+        }, 100);
+    }
 }
 
 function showProgramInfo(programId) {
