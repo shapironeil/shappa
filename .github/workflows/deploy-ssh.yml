@@ -12,6 +12,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Verify secrets are configured
+        run: |
+          if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "❌ ERROR: SSH_PRIVATE_KEY secret is not configured!"
+            echo "📖 Please configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "📖 See guide: docs/GITHUB_SECRETS_SETUP.md"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
+            echo "❌ ERROR: DEPLOY_HOST secret is not configured!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
+            echo "❌ ERROR: DEPLOY_USER secret is not configured!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
+            echo "❌ ERROR: DEPLOY_PATH secret is not configured!"
+            exit 1
+          fi
+          echo "✅ All secrets are configured"
+
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
