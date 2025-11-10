@@ -8,8 +8,11 @@
     <link rel="stylesheet" href="../styles/venus.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
     <!-- 
-        Design basato su file React da zipfile/Healty
-        Convertito in vanilla HTML/CSS/JS mantenendo tutte le funzioni esistenti
+        Figma Design Reference:
+        File: Workout-Dashboard-Page
+        File Key: rvmn64S4Tj8xmpGzBd6a6T
+        URL: https://www.figma.com/make/rvmn64S4Tj8xmpGzBd6a6T/Workout-Dashboard-Page?node-id=0-1&p=f&t=jF1qKmb1mCoYctCa-0
+        Design da usare esattamente come nel Figma
     -->
     <style>
         /* Reset e Base */
@@ -20,24 +23,30 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: var(--venus-font-family);
             background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
             min-height: 100vh;
-            color: #1f2937;
+            color: var(--venus-text-primary);
             line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
         }
 
         /* Venus Dashboard Layout */
         .venus-dashboard-layout {
             display: flex;
             height: 100vh;
+            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
         }
 
+        /* Venus Sidebar */
         .venus-sidebar {
             width: 240px;
             min-width: 240px;
-            background: white;
-            border-right: 1px solid #e5e7eb;
+            background: var(--venus-bg-card);
+            border-right: 1px solid var(--venus-border);
             display: flex !important;
             flex-direction: column;
             height: 100vh;
@@ -46,52 +55,193 @@
             flex-shrink: 0;
         }
 
+        .venus-sidebar-header {
+            padding: 20px 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .venus-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .venus-logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            letter-spacing: 0.5px;
+        }
+
+        .venus-sidebar-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .venus-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            margin: 2px 8px;
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--venus-transition);
+            cursor: pointer;
+        }
+
+        .venus-menu-item:hover {
+            background: var(--venus-bg-gray);
+            color: var(--venus-text-primary);
+        }
+
+        .venus-menu-item.venus-active {
+            background: var(--venus-primary);
+            color: var(--venus-text-white);
+        }
+
+        .venus-sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid var(--venus-border);
+        }
+
+        .venus-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+        }
+
+        .venus-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--venus-gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--venus-text-white);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .venus-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .venus-user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .venus-user-role {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+        }
+
+        .venus-logout-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+        }
+
+        .venus-logout-btn:hover {
+            background: var(--venus-danger-light);
+            border-color: var(--venus-danger);
+            color: var(--venus-danger);
+        }
+
+        /* Main Content Area */
         .venus-main-content {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .venus-content-area {
+            flex: 1;
             overflow-y: auto;
-            padding: 2rem;
+            padding: var(--venus-space-xl);
         }
 
         /* Header */
         .header {
             background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.5rem;
         }
 
         .header-title {
             font-size: 1.5rem;
             font-weight: 600;
-            color: #1f2937;
+            margin: 0;
         }
 
         .header-subtitle {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: #4b5563;
             margin-top: 0.25rem;
         }
 
-        /* Grid Layout */
+        /* Main Content Grid - Match Figma Design */
         .content-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr;
             gap: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        @media (max-width: 1024px) {
+        @media (min-width: 1024px) {
             .content-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 2fr 380px;
+                gap: 1.5rem;
             }
         }
 
-        /* Card Styles */
+        /* Left Column */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Right Column */
+        .right-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Card Base - Match Figma Design */
         .card {
             background: white;
-            border-radius: 0.625rem;
+            border-radius: 0.75rem;
             padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
             border: 1px solid #e5e7eb;
         }
 
@@ -106,103 +256,138 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .card-title h2 {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #1f2937;
+        }
+
+        .card-title-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #2563eb;
         }
 
         .card-subtitle {
-            font-size: 0.75rem;
-            color: #6b7280;
+            font-size: 0.875rem;
+            color: #4b5563;
             margin-top: 0.25rem;
         }
 
-        /* Calendar Styles */
+        /* Weekly Calendar */
+        .calendar-container {
+            margin-bottom: 1.5rem;
+        }
+
         .calendar-nav {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .calendar-nav-btn {
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
             background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 0.375rem;
+            padding: 0.5rem;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s;
         }
 
         .calendar-nav-btn:hover {
             background: #f3f4f6;
+            border-color: #2563eb;
         }
 
         .calendar-nav-date {
             font-size: 0.875rem;
             padding: 0 0.5rem;
+            min-width: 150px;
+            text-align: center;
         }
 
         .calendar-days-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 0.75rem;
-            margin-top: 1rem;
+            gap: 0.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .calendar-days-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .calendar-days-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .calendar-day {
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            padding: 1rem 0.75rem;
+            border-radius: 1rem;
             border: 2px solid #e5e7eb;
             background: white;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
         }
 
         .calendar-day:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
         }
 
         .calendar-day.selected {
-            background: linear-gradient(to bottom right, #fed7aa, #fde68a);
-            border-color: #f97316;
-            box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2);
+            background: linear-gradient(to bottom, #eff6ff 0%, white 100%);
+            border-color: #3b82f6;
+            border-width: 2px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .calendar-day.today {
-            background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+            background: linear-gradient(to bottom, #eff6ff 0%, white 100%);
             border-color: #3b82f6;
+            border-width: 2px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calendar-day.has-workout {
+            border-color: #3b82f6;
+            border-width: 2px;
         }
 
         .calendar-day-name {
             font-size: 0.75rem;
-            color: #6b7280;
+            color: #4b5563;
             margin-bottom: 0.25rem;
         }
 
         .calendar-day-number {
             font-size: 1.125rem;
             font-weight: 600;
-            color: #1f2937;
         }
 
         .calendar-day-badge {
             display: inline-block;
-            background: #3b82f6;
+            background: #2563eb;
             color: white;
             font-size: 0.625rem;
             padding: 0.125rem 0.375rem;
-            border-radius: 9999px;
+            border-radius: 0.25rem;
             margin-top: 0.25rem;
         }
 
-        /* Meals Section */
+        /* Meals Display */
         .meals-section {
             margin-top: 1.5rem;
         }
@@ -218,29 +403,27 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .meals-title h3 {
             font-size: 1rem;
             font-weight: 600;
         }
 
         .meals-badge {
-            padding: 0.25rem 0.75rem;
             background: #f3f4f6;
+            color: #030213;
+            padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.875rem;
         }
 
         .meals-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr;
             gap: 1rem;
         }
 
-        @media (max-width: 768px) {
+        @media (min-width: 768px) {
             .meals-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -253,22 +436,34 @@
         }
 
         .meal-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             transform: scale(1.02);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .meal-card.breakfast {
-            background: linear-gradient(to bottom right, #fed7aa, #fde68a);
+            background: linear-gradient(to bottom right, #fff7ed, #ffedd5);
+            border-color: #fed7aa;
+        }
+
+        .meal-card.breakfast:hover {
             border-color: #fb923c;
         }
 
         .meal-card.lunch {
-            background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+            background: linear-gradient(to bottom right, #eff6ff, #dbeafe);
+            border-color: #bfdbfe;
+        }
+
+        .meal-card.lunch:hover {
             border-color: #60a5fa;
         }
 
         .meal-card.dinner {
-            background: linear-gradient(to bottom right, #e0e7ff, #c7d2fe);
+            background: linear-gradient(to bottom right, #eef2ff, #e0e7ff);
+            border-color: #c7d2fe;
+        }
+
+        .meal-card.dinner:hover {
             border-color: #818cf8;
         }
 
@@ -284,14 +479,91 @@
         }
 
         .meal-name {
-            font-weight: 500;
             font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .meal-card.breakfast .meal-name {
+            color: #9a3412;
+        }
+
+        .meal-card.lunch .meal-name {
+            color: #1e40af;
+        }
+
+        .meal-card.dinner .meal-name {
+            color: #3730a3;
         }
 
         .meal-content {
             font-size: 0.875rem;
-            color: #374151;
-            line-height: 1.5;
+            color: #1f2937;
+            line-height: 1.625;
+        }
+
+        /* Weight & Calories Tracker */
+        .tracker-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tracker-tab {
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tracker-tab.active {
+            color: #030213;
+            border-bottom-color: #030213;
+        }
+
+        .tracker-tab:hover {
+            color: #030213;
+        }
+
+        .tracker-content {
+            display: none;
+        }
+
+        .tracker-content.active {
+            display: block;
+        }
+
+        .tracker-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .tracker-label {
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+
+        /* Personal Card */
+        .personal-card-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            background: linear-gradient(to bottom right, #a855f7, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.125rem;
         }
 
         /* Empty State */
@@ -311,113 +583,167 @@
 
         .empty-state-text {
             font-size: 0.875rem;
-            color: #6b7280;
+            color: #4b5563;
             margin-bottom: 0.25rem;
         }
 
         .empty-state-subtext {
             font-size: 0.75rem;
-            color: #9ca3af;
+            color: #6b7280;
         }
 
-        /* Buttons */
+        /* Recipe Cards */
+        .recipe-card-item {
+            transition: all 0.2s;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid;
+            cursor: pointer;
+            margin-bottom: 0.75rem;
+        }
+
+        .recipe-card-item:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .recipe-card-item img {
+            border-radius: 0.5rem;
+        }
+
+        /* Input Search */
+        #recipeSearchInput {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        #recipeSearchInput:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Space Y */
+        .space-y-3 > * + * {
+            margin-top: 0.75rem;
+        }
+
+        /* Flex utilities */
+        .flex {
+            display: flex;
+        }
+
+        .items-start {
+            align-items: flex-start;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .flex-1 {
+            flex: 1;
+        }
+
+        .flex-wrap {
+            flex-wrap: wrap;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        /* Margin utilities */
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .ml-2 {
+            margin-left: 0.5rem;
+        }
+
+        /* Text utilities */
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .text-gray-500 {
+            color: #6b7280;
+        }
+
+        .text-gray-600 {
+            color: #4b5563;
+        }
+
+        /* Width utilities */
+        .w-full {
+            width: 100%;
+        }
+
+        .w-16 {
+            width: 4rem;
+        }
+
+        .h-16 {
+            height: 4rem;
+        }
+
+        /* Object utilities */
+        .object-cover {
+            object-fit: cover;
+        }
+
+        /* Button */
         .btn {
             padding: 0.5rem 1rem;
             border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
             cursor: pointer;
-            border: none;
             transition: all 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .btn:hover {
+            background: #f3f4f6;
         }
 
         .btn-primary {
-            background: #f97316;
+            background: #030213;
             color: white;
+            border-color: #030213;
         }
 
         .btn-primary:hover {
-            background: #ea580c;
-        }
-
-        /* Recipe Cards */
-        .recipe-card-item {
-            margin-bottom: 0.75rem;
-        }
-
-        .recipe-card-item:hover {
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        /* Tracker Tabs */
-        .tracker-tabs {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .tracker-tab {
-            padding: 0.75rem;
-            border: 1px solid #e5e7eb;
-            background: white;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            transition: all 0.2s;
-        }
-
-        .tracker-tab.active {
-            background: #f3f4f6;
-            border-color: #3b82f6;
-            color: #3b82f6;
-        }
-
-        .tracker-content {
-            display: none;
-        }
-
-        .tracker-content.active {
-            display: block;
-        }
-
-        .tracker-value {
-            font-size: 2rem;
-            font-weight: 600;
-            text-align: center;
-            color: #1f2937;
-        }
-
-        .tracker-label {
-            text-align: center;
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-top: 0.5rem;
-        }
-
-        /* Personal Card */
-        .personal-card-avatar {
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 9999px;
-            background: linear-gradient(to bottom right, #a855f7, #ec4899);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 1.125rem;
-        }
-
-        /* Scroll Area */
-        .scroll-area {
-            max-height: 500px;
-            overflow-y: auto;
-            padding-right: 0.5rem;
+            background: #1a1a2e;
         }
 
         /* Badge */
@@ -434,33 +760,11 @@
             color: #030213;
         }
 
-        /* Input */
-        .w-full {
-            width: 100%;
-        }
-
-        .p-2 {
-            padding: 0.5rem;
-        }
-
-        .border {
-            border: 1px solid #e5e7eb;
-        }
-
-        .rounded {
-            border-radius: 0.375rem;
-        }
-
-        .mb-4 {
-            margin-bottom: 1rem;
-        }
-
-        .mt-4 {
-            margin-top: 1rem;
-        }
-
-        .space-y-3 > * + * {
-            margin-top: 0.75rem;
+        /* Responsive */
+        @media (max-width: 1023px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -475,15 +779,33 @@
             </div>
             
             <nav class="venus-sidebar-menu">
-                <a href="dashboard.html" class="venus-menu-item">Dashboard</a>
-                <a href="obiettivi.html" class="venus-menu-item">Obiettivi</a>
-                <a href="progetti.html" class="venus-menu-item">Progetti</a>
-                <a href="calendario.html" class="venus-menu-item">Calendario</a>
-                <a href="products.html" class="venus-menu-item">Cerca Prodotti</a>
-                <a href="interessi.html" class="venus-menu-item">I Miei Interessi</a>
-                <a href="sport.html" class="venus-menu-item">Sport</a>
-                <a href="dieta.html" class="venus-menu-item venus-active">Dieta</a>
-                <a href="settings.html" class="venus-menu-item">Impostazioni</a>
+                <a href="dashboard.html" class="venus-menu-item">
+                    Dashboard
+                </a>
+                <a href="obiettivi.html" class="venus-menu-item">
+                    Obiettivi
+                </a>
+                <a href="progetti.html" class="venus-menu-item">
+                    Progetti
+                </a>
+                <a href="calendario.html" class="venus-menu-item">
+                    Calendario
+                </a>
+                <a href="products.html" class="venus-menu-item">
+                    Cerca Prodotti
+                </a>
+                <a href="interessi.html" class="venus-menu-item">
+                    I Miei Interessi
+                </a>
+                <a href="sport.html" class="venus-menu-item">
+                    Sport
+                </a>
+                <a href="dieta.html" class="venus-menu-item venus-active">
+                    Dieta
+                </a>
+                <a href="settings.html" class="venus-menu-item">
+                    Impostazioni
+                </a>
             </nav>
             
             <div class="venus-sidebar-footer">
@@ -494,11 +816,13 @@
                         <div class="venus-user-role">Admin</div>
                     </div>
                 </div>
-                <button class="venus-logout-btn" id="logoutBtn">Log Out</button>
+                <button class="venus-logout-btn" id="logoutBtn">
+                    Log Out
+                </button>
             </div>
         </aside>
 
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <main class="venus-main-content">
             <!-- Header -->
             <header class="header">
@@ -506,160 +830,186 @@
                 <div class="header-subtitle">Pianifica la tua alimentazione settimanale</div>
             </header>
 
-            <!-- Content Grid -->
-            <div class="content-grid">
-                <!-- Left Column -->
-                <div class="left-column">
-                    <!-- Weekly Calendar -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">
-                                    <svg class="card-title-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Content Area -->
+            <div class="venus-content-area">
+                <div class="content-grid">
+                    <!-- Left Column -->
+                    <div class="left-column">
+                        <!-- Weekly Calendar -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <div class="card-title">
+                                        <svg class="card-title-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <h2>Calendario Settimanale</h2>
+                                    </div>
+                                    <div class="card-subtitle" id="selectedDietName"></div>
+                                </div>
+                                <div class="calendar-nav">
+                                    <button class="calendar-nav-btn" id="prevWeek">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <span class="calendar-nav-date" id="weekRange"></span>
+                                    <button class="calendar-nav-btn" id="nextWeek">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="calendar-container">
+                                <div id="calendarEmptyState" class="empty-state" style="display: none;">
+                                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                     </svg>
-                                    <h2>Calendario Settimanale</h2>
+                                    <p class="empty-state-text">Nessuna dieta selezionata</p>
+                                    <p class="empty-state-subtext">Scegli una dieta personalizzata per vedere i pasti della settimana</p>
                                 </div>
-                                <div class="card-subtitle" id="selectedDietName"></div>
+                                <div id="calendarDays" class="calendar-days-grid"></div>
                             </div>
-                            <div class="calendar-nav">
-                                <button class="calendar-nav-btn" id="prevWeek">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                    </svg>
-                                </button>
-                                <span class="calendar-nav-date" id="weekRange"></span>
-                                <button class="calendar-nav-btn" id="nextWeek">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
 
-                        <div class="calendar-container">
-                            <div id="calendarEmptyState" class="empty-state" style="display: none;">
-                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                <p class="empty-state-text">Nessuna dieta selezionata</p>
-                                <p class="empty-state-subtext">Scegli una dieta personalizzata per vedere i pasti della settimana</p>
-                            </div>
-                            <div id="calendarDays" class="calendar-days-grid"></div>
-                        </div>
-
-                        <!-- Meals Display -->
-                        <div id="mealsSection" class="meals-section" style="display: none;">
-                            <div class="meals-header">
-                                <div class="meals-title">
-                                    <span>🍽️</span>
-                                    <h3>Pasti di <span id="selectedDayName"></span></h3>
+                            <!-- Meals Display -->
+                            <div id="mealsSection" class="meals-section" style="display: none;">
+                                <div class="meals-header">
+                                    <div class="meals-title">
+                                        <span>🍽️</span>
+                                        <h3>Pasti di <span id="selectedDayName"></span></h3>
+                                    </div>
+                                    <span class="meals-badge" id="dayCalories">0 cal</span>
                                 </div>
-                                <span class="meals-badge" id="dayCalories">0 cal</span>
+                                <div class="meals-grid" id="mealsGrid"></div>
                             </div>
-                            <div class="meals-grid" id="mealsGrid"></div>
                         </div>
-                    </div>
 
-                    <!-- Dinner Alternatives -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">
-                                    <span>👨‍🍳</span>
-                                    <h2>Alternative per Stasera</h2>
-                                </div>
-                                <div class="card-subtitle">Scopri cosa cucinare</div>
-                            </div>
-                        </div>
-                        <div id="dinnerAlternativesContent">
-                            <div id="dinnerAlternativesEmpty" class="empty-state">
-                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                <p class="empty-state-text">Caricamento ricette da GialloZafferano...</p>
-                                <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Carica Ricette</button>
-                            </div>
-                            <div id="dinnerAlternativesList" style="display: none;">
-                                <div class="mb-4">
-                                    <input type="text" id="recipeSearchInput" class="w-full p-2 border rounded" placeholder="Cerca ricette..." onkeyup="filterRecipes()">
-                                </div>
-                                <div id="recipesList" class="scroll-area space-y-3"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Weight & Calories Tracker -->
-                    <div class="card">
-                        <div class="tracker-tabs">
-                            <button class="tracker-tab active" data-tab="weight">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
-                                </svg>
-                                Peso
-                            </button>
-                            <button class="tracker-tab" data-tab="calories">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                                </svg>
-                                Calorie
-                            </button>
-                        </div>
-                        <div id="weightTracker" class="tracker-content active">
-                            <div class="tracker-value" id="currentWeight">0</div>
-                            <div class="tracker-label">kg</div>
-                        </div>
-                        <div id="caloriesTracker" class="tracker-content">
-                            <div class="tracker-value" id="currentCalories">0</div>
-                            <div class="tracker-label">kcal</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right Column -->
-                <div class="right-column">
-                    <!-- Personal Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <div class="personal-card-avatar" id="userAvatar">U</div>
+                        <!-- Dinner Alternatives -->
+                        <div class="card">
+                            <div class="card-header">
                                 <div>
-                                    <h2>Profilo Personale</h2>
-                                    <div class="card-subtitle" id="userName">Utente</div>
+                                    <div class="card-title">
+                                        <span>👨‍🍳</span>
+                                        <div>
+                                            <h2>Alternative per Stasera</h2>
+                                            <p class="text-xs text-gray-600" style="margin-top: 0.25rem;">Scopri cosa cucinare</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="loadNewRecipes()" class="btn" style="background: white; border: 1px solid #e5e7eb; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>🔄</span>
+                                    Nuove
+                                </button>
+                            </div>
+                            <div id="dinnerAlternativesContent">
+                                ${availableIngredients.length === 0 ? `
+                                    <div class="mb-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
+                                        <p class="text-xs" style="color: #1e40af;">
+                                            💡 Aggiungi ingredienti nel Frigorifero per vedere quali ricette puoi preparare
+                                        </p>
+                                    </div>
+                                ` : ''}
+                                <div id="dinnerAlternativesEmpty" class="empty-state" style="display: none;">
+                                    <p class="empty-state-text">Nessuna ricetta disponibile</p>
+                                </div>
+                                <div id="dinnerAlternativesList" style="display: block;">
+                                    <div class="mb-4">
+                                        <input type="text" id="recipeSearchInput" class="w-full p-2 border rounded" placeholder="Cerca ricette..." onkeyup="filterRecipes()" style="width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.375rem; font-size: 0.875rem;">
+                                    </div>
+                                    <div id="recipesList" class="scroll-area space-y-3" style="max-height: 500px; overflow-y: auto; padding-right: 0.5rem;"></div>
                                 </div>
                             </div>
                         </div>
-                        <div id="personalCardContent">
-                            <p style="color: #4b5563; font-size: 0.875rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+
+                        <!-- Weight & Calories Tracker -->
+                        <div class="card">
+                            <div class="tracker-tabs">
+                                <button class="tracker-tab active" data-tab="weight">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                                    </svg>
+                                    Peso
+                                </button>
+                                <button class="tracker-tab" data-tab="calories">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Calorie
+                                </button>
+                            </div>
+                            <div id="weightTracker" class="tracker-content active">
+                                <div class="tracker-value" id="currentWeight">0</div>
+                                <div class="tracker-label">kg</div>
+                            </div>
+                            <div id="caloriesTracker" class="tracker-content">
+                                <div class="tracker-value" id="currentCalories">0</div>
+                                <div class="tracker-label">kcal</div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Urgent Items & Fridge -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span>⚠️</span>
-                                <h2>Items Urgenti</h2>
+                    <!-- Right Column -->
+                    <div class="right-column">
+                        <!-- Personal Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <div class="personal-card-avatar" id="userAvatar">U</div>
+                                    <div>
+                                        <h2>Profilo Personale</h2>
+                                        <div class="card-subtitle" id="userName">Utente</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="personalCardContent">
+                                <p style="color: #4b5563; font-size: 0.875rem; margin-bottom: 1rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+                                <button onclick="openPersonalCardDialog()" class="btn btn-primary" style="width: 100%;">Configura Preferenze</button>
                             </div>
                         </div>
-                        <div id="urgentItemsContent">
-                            <div class="empty-state">
-                                <p class="empty-state-text">Nessun item in scadenza</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Diet Proposals -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span>💡</span>
-                                <h2>Proposte Dieta</h2>
+                        <!-- Urgent Items & Fridge -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span>⚠️</span>
+                                    <div>
+                                        <h2>Ingredienti Urgenti</h2>
+                                        <p class="text-xs text-gray-600" style="margin-top: 0.25rem;">Da consumare o congelare</p>
+                                    </div>
+                                </div>
+                                <button onclick="openFridgeDialog()" class="btn" style="background: white; border: 1px solid #e5e7eb; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span>🧊</span>
+                                    Frigorifero
+                                </button>
+                            </div>
+                            <div id="urgentItemsContent">
+                                <div class="empty-state">
+                                    <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 3rem; height: 3rem; margin: 0 auto 0.75rem; color: #9ca3af;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                    <p class="empty-state-text">Frigorifero vuoto</p>
+                                    <button onclick="openFridgeDialog()" class="btn btn-primary mt-4" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                                        <span>+</span>
+                                        Aggiungi ingredienti
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div id="dietProposalsContent">
-                            <div class="empty-state">
-                                <p class="empty-state-text">Caricamento proposte dieta...</p>
+
+                        <!-- Diet Proposals -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span>💡</span>
+                                    <h2>Proposte Dieta</h2>
+                                </div>
+                            </div>
+                            <div id="dietProposalsContent">
+                                <div class="empty-state">
+                                    <p class="empty-state-text">Caricamento proposte dieta...</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -670,7 +1020,7 @@
 
     <script src="../utils/auth-v2.js"></script>
     <script>
-        // Global State - MANTENUTA TUTTA LA LOGICA ESISTENTE
+        // Global State
         let weekOffset = 0;
         let selectedDay = null;
         let selectedDiet = null;
@@ -866,97 +1216,336 @@
             });
         }
 
+        // ========== FOOD DATABASE ==========
+        const foodDatabase = [
+            { id: 'pollo', name: 'Petto di pollo', category: 'proteina', calories: 165, protein: 31, carbs: 0, fat: 3.6, fiber: 0, allergens: [], unit: 'g', typicalServing: 150 },
+            { id: 'tacchino', name: 'Fesa di tacchino', category: 'proteina', calories: 135, protein: 30, carbs: 0, fat: 1, fiber: 0, allergens: [], unit: 'g', typicalServing: 150 },
+            { id: 'salmone', name: 'Salmone', category: 'proteina', calories: 208, protein: 20, carbs: 0, fat: 13, fiber: 0, allergens: ['Pesce'], unit: 'g', typicalServing: 150 },
+            { id: 'tonno', name: 'Tonno fresco', category: 'proteina', calories: 144, protein: 23, carbs: 0, fat: 5, fiber: 0, allergens: ['Pesce'], unit: 'g', typicalServing: 150 },
+            { id: 'uova', name: 'Uova', category: 'proteina', calories: 155, protein: 13, carbs: 1.1, fat: 11, fiber: 0, allergens: ['Uova'], unit: 'pz', typicalServing: 2 },
+            { id: 'pasta', name: 'Pasta integrale', category: 'carboidrato', calories: 348, protein: 13, carbs: 71, fat: 2.5, fiber: 8, allergens: ['Glutine'], unit: 'g', typicalServing: 80 },
+            { id: 'riso-basmati', name: 'Riso basmati', category: 'carboidrato', calories: 356, protein: 8, carbs: 78, fat: 1, fiber: 1.3, allergens: [], unit: 'g', typicalServing: 80 },
+            { id: 'quinoa', name: 'Quinoa', category: 'carboidrato', calories: 368, protein: 14, carbs: 64, fat: 6, fiber: 7, allergens: [], unit: 'g', typicalServing: 60 },
+            { id: 'pane-integrale', name: 'Pane integrale', category: 'carboidrato', calories: 247, protein: 9, carbs: 49, fat: 3.5, fiber: 6.5, allergens: ['Glutine'], unit: 'g', typicalServing: 50 },
+            { id: 'ceci', name: 'Ceci', category: 'proteina', calories: 364, protein: 19, carbs: 61, fat: 6, fiber: 17, allergens: [], unit: 'g', typicalServing: 80 },
+            { id: 'lenticchie', name: 'Lenticchie', category: 'proteina', calories: 353, protein: 25, carbs: 63, fat: 1.1, fiber: 11, allergens: [], unit: 'g', typicalServing: 80 },
+            { id: 'spinaci', name: 'Spinaci', category: 'verdura', calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, fiber: 2.2, allergens: [], unit: 'g', typicalServing: 200 },
+            { id: 'broccoli', name: 'Broccoli', category: 'verdura', calories: 34, protein: 2.8, carbs: 7, fat: 0.4, fiber: 2.6, allergens: [], unit: 'g', typicalServing: 200 },
+            { id: 'zucchine', name: 'Zucchine', category: 'verdura', calories: 17, protein: 1.2, carbs: 3.1, fat: 0.3, fiber: 1, allergens: [], unit: 'g', typicalServing: 200 },
+            { id: 'pomodori', name: 'Pomodori', category: 'verdura', calories: 18, protein: 0.9, carbs: 3.9, fat: 0.2, fiber: 1.2, allergens: [], unit: 'g', typicalServing: 150 },
+            { id: 'mela', name: 'Mela', category: 'frutta', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, fiber: 2.4, allergens: [], unit: 'g', typicalServing: 150 },
+            { id: 'banana', name: 'Banana', category: 'frutta', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, fiber: 2.6, allergens: [], unit: 'g', typicalServing: 120 },
+            { id: 'yogurt-greco', name: 'Yogurt greco 0%', category: 'latticino', calories: 59, protein: 10, carbs: 3.6, fat: 0.4, fiber: 0, allergens: ['Lattosio'], unit: 'g', typicalServing: 150 },
+            { id: 'parmigiano', name: 'Parmigiano Reggiano', category: 'latticino', calories: 431, protein: 33, carbs: 3.7, fat: 30, fiber: 0, allergens: ['Lattosio'], unit: 'g', typicalServing: 30 },
+            { id: 'mozzarella', name: 'Mozzarella', category: 'latticino', calories: 280, protein: 18, carbs: 2.2, fat: 23, fiber: 0, allergens: ['Lattosio'], unit: 'g', typicalServing: 100 },
+            { id: 'avocado', name: 'Avocado', category: 'grasso', calories: 160, protein: 2, carbs: 9, fat: 15, fiber: 7, allergens: [], unit: 'g', typicalServing: 80 },
+            { id: 'olio-oliva', name: 'Olio d\'oliva EVO', category: 'grasso', calories: 884, protein: 0, carbs: 0, fat: 100, fiber: 0, allergens: [], unit: 'ml', typicalServing: 10 },
+            { id: 'mandorle', name: 'Mandorle', category: 'grasso', calories: 579, protein: 21, carbs: 22, fat: 50, fiber: 12, allergens: ['Frutta secca'], unit: 'g', typicalServing: 30 },
+            { id: 'noci', name: 'Noci', category: 'grasso', calories: 654, protein: 15, carbs: 14, fat: 65, fiber: 7, allergens: ['Frutta secca'], unit: 'g', typicalServing: 30 },
+            { id: 'sale', name: 'Sale', category: 'condimento', calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, allergens: [], unit: 'g', typicalServing: 5 },
+            { id: 'pepe', name: 'Pepe nero', category: 'condimento', calories: 251, protein: 10, carbs: 64, fat: 3.3, fiber: 25, allergens: [], unit: 'g', typicalServing: 2 },
+            { id: 'basilico', name: 'Basilico fresco', category: 'condimento', calories: 23, protein: 3.2, carbs: 2.7, fat: 0.6, fiber: 1.6, allergens: [], unit: 'g', typicalServing: 10 },
+            { id: 'limone', name: 'Limone (succo)', category: 'condimento', calories: 29, protein: 1.1, carbs: 9, fat: 0.3, fiber: 2.8, allergens: [], unit: 'ml', typicalServing: 20 },
+            { id: 'zafferano', name: 'Zafferano', category: 'condimento', calories: 310, protein: 11, carbs: 65, fat: 6, fiber: 3.9, allergens: [], unit: 'g', typicalServing: 0.1 },
+            { id: 'acqua', name: 'Acqua', category: 'bevanda', calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, allergens: [], unit: 'ml', typicalServing: 250 },
+            { id: 'avena', name: 'Fiocchi d\'avena', category: 'carboidrato', calories: 389, protein: 17, carbs: 66, fat: 7, fiber: 10, allergens: ['Glutine'], unit: 'g', typicalServing: 50 },
+            { id: 'carote', name: 'Carote', category: 'verdura', calories: 41, protein: 0.9, carbs: 10, fat: 0.2, fiber: 2.8, allergens: [], unit: 'g', typicalServing: 100 },
+            { id: 'peperoni', name: 'Peperoni', category: 'verdura', calories: 31, protein: 1, carbs: 6, fat: 0.3, fiber: 2.1, allergens: [], unit: 'g', typicalServing: 150 }
+        ];
+
+        const categoryIcons = {
+            proteina: '🍗',
+            carboidrato: '🍞',
+            verdura: '🥬',
+            frutta: '🍎',
+            latticino: '🥛',
+            grasso: '🥑',
+            condimento: '🧂',
+            bevanda: '☕'
+        };
+
+        const categoryLabels = {
+            proteina: 'Proteine',
+            carboidrato: 'Carboidrati',
+            verdura: 'Verdure',
+            frutta: 'Frutta',
+            latticino: 'Latticini',
+            grasso: 'Grassi',
+            condimento: 'Condimenti',
+            bevanda: 'Bevande'
+        };
+
+        // ========== RECIPES DATABASE ==========
+        const recipesDatabase = [
+            {
+                id: 'spaghetti-pomodoro',
+                name: 'Spaghetti al Pomodoro',
+                description: 'Un classico intramontabile della cucina italiana',
+                difficulty: 'Facile',
+                prepTime: 5,
+                cookTime: 15,
+                servings: 4,
+                category: 'primo',
+                cuisine: 'italiana',
+                ingredients: [
+                    { foodId: 'pasta', quantity: 320, unit: 'g' },
+                    { foodId: 'pomodori', quantity: 500, unit: 'g' },
+                    { foodId: 'olio-oliva', quantity: 30, unit: 'ml' },
+                    { foodId: 'basilico', quantity: 20, unit: 'g' },
+                    { foodId: 'sale', quantity: 5, unit: 'g' }
+                ],
+                instructions: [
+                    'Portare a ebollizione l\'acqua salata per la pasta',
+                    'In una padella, scaldare l\'olio e aggiungere i pomodori',
+                    'Cuocere il sugo per 10 minuti',
+                    'Cuocere gli spaghetti al dente',
+                    'Saltare la pasta nel sugo',
+                    'Guarnire con basilico fresco'
+                ],
+                tags: ['veloce', 'economico', 'vegano']
+            },
+            {
+                id: 'risotto-zafferano',
+                name: 'Risotto allo Zafferano',
+                description: 'Il classico risotto milanese cremoso e profumato',
+                difficulty: 'Media',
+                prepTime: 10,
+                cookTime: 25,
+                servings: 4,
+                category: 'primo',
+                cuisine: 'italiana',
+                ingredients: [
+                    { foodId: 'riso-basmati', quantity: 320, unit: 'g' },
+                    { foodId: 'burro', quantity: 40, unit: 'g' },
+                    { foodId: 'parmigiano', quantity: 60, unit: 'g' },
+                    { foodId: 'zafferano', quantity: 0.2, unit: 'g' },
+                    { foodId: 'olio-oliva', quantity: 20, unit: 'ml' }
+                ],
+                instructions: [
+                    'Tostare il riso in una padella con un filo d\'olio',
+                    'Aggiungere il brodo vegetale poco alla volta',
+                    'Sciogliere lo zafferano in un po\' di brodo caldo',
+                    'A metà cottura aggiungere lo zafferano',
+                    'Mantecare con burro e parmigiano a fuoco spento',
+                    'Servire subito ben caldo'
+                ],
+                tags: ['cremoso', 'tradizionale', 'vegetariano']
+            },
+            {
+                id: 'pollo-limone',
+                name: 'Pollo al Limone',
+                description: 'Petto di pollo marinato al limone e erbe aromatiche',
+                difficulty: 'Facile',
+                prepTime: 20,
+                cookTime: 20,
+                servings: 4,
+                category: 'secondo',
+                cuisine: 'mediterranea',
+                ingredients: [
+                    { foodId: 'pollo', quantity: 600, unit: 'g' },
+                    { foodId: 'limone', quantity: 80, unit: 'ml' },
+                    { foodId: 'olio-oliva', quantity: 30, unit: 'ml' },
+                    { foodId: 'sale', quantity: 5, unit: 'g' },
+                    { foodId: 'pepe', quantity: 2, unit: 'g' }
+                ],
+                instructions: [
+                    'Marinare il pollo con succo di limone, olio, sale e pepe per 15 minuti',
+                    'Scaldare una padella antiaderente',
+                    'Cuocere il pollo 7-8 minuti per lato',
+                    'Servire con il fondo di cottura'
+                ],
+                tags: ['proteico', 'leggero', 'gluten-free']
+            },
+            {
+                id: 'salmone-forno',
+                name: 'Salmone al Forno con Verdure',
+                description: 'Trancio di salmone con verdure miste al forno',
+                difficulty: 'Facile',
+                prepTime: 15,
+                cookTime: 25,
+                servings: 4,
+                category: 'secondo',
+                cuisine: 'mediterranea',
+                ingredients: [
+                    { foodId: 'salmone', quantity: 600, unit: 'g' },
+                    { foodId: 'zucchine', quantity: 300, unit: 'g' },
+                    { foodId: 'pomodori', quantity: 200, unit: 'g' },
+                    { foodId: 'olio-oliva', quantity: 30, unit: 'ml' },
+                    { foodId: 'limone', quantity: 40, unit: 'ml' }
+                ],
+                instructions: [
+                    'Preriscaldare il forno a 180°C',
+                    'Disporre il salmone e le verdure in una teglia',
+                    'Condire con olio, limone, sale e pepe',
+                    'Infornare per 20-25 minuti',
+                    'Servire caldo'
+                ],
+                tags: ['omega-3', 'salutare', 'completo']
+            },
+            {
+                id: 'pasta-broccoli',
+                name: 'Pasta con Broccoli',
+                description: 'Pasta integrale con broccoli e aglio',
+                difficulty: 'Facile',
+                prepTime: 10,
+                cookTime: 20,
+                servings: 4,
+                category: 'primo',
+                cuisine: 'italiana',
+                ingredients: [
+                    { foodId: 'pasta', quantity: 320, unit: 'g' },
+                    { foodId: 'broccoli', quantity: 400, unit: 'g' },
+                    { foodId: 'olio-oliva', quantity: 40, unit: 'ml' },
+                    { foodId: 'pepe', quantity: 2, unit: 'g' },
+                    { foodId: 'parmigiano', quantity: 40, unit: 'g' }
+                ],
+                instructions: [
+                    'Lessare i broccoli in acqua salata',
+                    'Cuocere la pasta nella stessa acqua',
+                    'Saltare i broccoli in padella con olio e pepe',
+                    'Unire la pasta ai broccoli',
+                    'Servire con parmigiano grattugiato'
+                ],
+                tags: ['salutare', 'economico', 'vegetariano']
+            }
+        ];
+
+        // ========== USER ID ==========
+        // Ottieni userId da AuthManager o da URL/query params
+        function getUserId() {
+            // Prova da AuthManager se disponibile
+            if (typeof AuthManager !== 'undefined' && AuthManager.getCurrentUser) {
+                const user = AuthManager.getCurrentUser();
+                if (user && user.username) return user.username;
+                if (user && user.id) return user.id;
+            }
+            // Fallback: usa 'shappa' come default (da modificare con autenticazione reale)
+            return 'shappa';
+        }
+
+        const userId = getUserId();
+
+        // ========== FRIDGE & SHOPPING LIST (ONLINE-FIRST) ==========
+        let fridgeItems = [];
+        let shoppingList = [];
+        let categoryCheck = {};
+        let dietData = {
+            fridge: [],
+            preferences: null,
+            weight: [],
+            calories: [],
+            shoppingList: [],
+            selectedDiet: null
+        };
+
         // ========== Dinner Alternatives - GialloZafferano Integration ==========
-        // TUTTA LA LOGICA ESISTENTE MANTENUTA
         let availableIngredients = [];
         let allRecipes = [];
         let filteredRecipes = [];
+        let selectedRecipeId = null;
+        let checkedIngredients = {};
 
-        async function loadDinnerRecipes() {
+        // ========== LOAD DIET DATA FROM API (ONLINE-FIRST) ==========
+        async function loadDietData() {
+            try {
+                const response = await fetch(`/api/diet/data/${userId}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    dietData = result.data;
+                    fridgeItems = dietData.fridge || [];
+                    shoppingList = dietData.shoppingList || [];
+                    
+                    // Aggiorna availableIngredients dal frigo
+                    updateAvailableIngredients();
+                    
+                    // Aggiorna UI
+                    renderUrgentItems();
+                    renderFridgeDialog();
+                }
+            } catch (error) {
+                console.error('Error loading diet data:', error);
+            }
+        }
+
+        // ========== SAVE FRIDGE TO API ==========
+        async function saveFridge() {
+            try {
+                const response = await fetch(`/api/diet/fridge/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: fridgeItems })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    updateAvailableIngredients();
+                    renderUrgentItems();
+                }
+            } catch (error) {
+                console.error('Error saving fridge:', error);
+                alert('Errore nel salvare il frigo');
+            }
+        }
+
+        // ========== SAVE SHOPPING LIST TO API ==========
+        async function saveShoppingList() {
+            try {
+                const response = await fetch(`/api/diet/shopping-list/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items: shoppingList })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Shopping list saved');
+                }
+            } catch (error) {
+                console.error('Error saving shopping list:', error);
+            }
+        }
+
+        // ========== UPDATE AVAILABLE INGREDIENTS ==========
+        function updateAvailableIngredients() {
+            availableIngredients = fridgeItems.map(item => item.foodId);
+            // Ricarica ricette per aggiornare disponibilità
+            if (allRecipes.length > 0) {
+                renderRecipes();
+            }
+        }
+
+        function loadDinnerRecipes() {
             const emptyState = document.getElementById('dinnerAlternativesEmpty');
             const recipesList = document.getElementById('dinnerAlternativesList');
-            const recipesContainer = document.getElementById('recipesList');
 
-            try {
-                emptyState.innerHTML = '<p class="empty-state-text">Caricamento ricette...</p>';
+            // Usa database locale recipesDatabase
+            allRecipes = recipesDatabase.filter(r => 
+                r.category === 'primo' || r.category === 'secondo'
+            );
 
-                // Cerca ricette per cena (primi e secondi)
-                const searchQueries = ['pasta', 'risotto', 'secondo piatto', 'pesce', 'pollo'];
-                const allResults = [];
+            // Ordina per difficoltà
+            allRecipes.sort((a, b) => {
+                const difficultyOrder = { 'Facile': 1, 'Media': 2, 'Difficile': 3 };
+                return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+            });
 
-                for (const query of searchQueries.slice(0, 2)) {
-                    try {
-                        const response = await fetch('/api/recipes/search', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ query, limit: 5 })
-                        });
-
-                        const data = await response.json();
-                        if (data.success && data.recipes) {
-                            allResults.push(...data.recipes);
-                        }
-                    } catch (error) {
-                        console.error(`Error searching for "${query}":`, error);
-                    }
-                }
-
-                if (allResults.length === 0) {
+            if (allRecipes.length === 0) {
+                if (emptyState) {
                     emptyState.innerHTML = `
-                        <p class="empty-state-text">Nessuna ricetta trovata</p>
-                        <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
+                        <p class="empty-state-text">Nessuna ricetta disponibile</p>
                     `;
-                    return;
                 }
-
-                // Fetch dettagli per le prime 10 ricette
-                const recipesToFetch = allResults.slice(0, 10);
-                allRecipes = [];
-
-                for (const recipe of recipesToFetch) {
-                    try {
-                        const fetchResponse = await fetch('/api/recipes/fetch', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                url: recipe.url,
-                                saveToDatabase: false,
-                                downloadImage: false
-                            })
-                        });
-
-                        const fetchData = await fetchResponse.json();
-                        if (fetchData.success && fetchData.recipe) {
-                            const category = fetchData.recipe.category;
-                            if (category === 'primo' || category === 'secondo') {
-                                allRecipes.push(fetchData.recipe);
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Error fetching recipe "${recipe.title}":`, error);
-                    }
-                }
-
-                if (allRecipes.length === 0) {
-                    emptyState.innerHTML = `
-                        <p class="empty-state-text">Nessuna ricetta adatta trovata</p>
-                        <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
-                    `;
-                    return;
-                }
-
-                filteredRecipes = [...allRecipes];
-                renderRecipes();
-                emptyState.style.display = 'none';
-                recipesList.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error loading recipes:', error);
-                emptyState.innerHTML = `
-                    <p class="empty-state-text">Errore nel caricamento ricette</p>
-                    <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
-                `;
+                return;
             }
+
+            filteredRecipes = [...allRecipes];
+            renderRecipes();
+            if (emptyState) emptyState.style.display = 'none';
+            if (recipesList) recipesList.style.display = 'block';
+        }
+
+        function loadNewRecipes() {
+            // Ricarica ricette (può essere randomizzato in futuro)
+            loadDinnerRecipes();
         }
 
         function filterRecipes() {
@@ -978,49 +1567,150 @@
 
         function renderRecipes() {
             const recipesContainer = document.getElementById('recipesList');
+            if (!recipesContainer) return;
             
             if (filteredRecipes.length === 0) {
                 recipesContainer.innerHTML = '<p class="empty-state-text">Nessuna ricetta trovata</p>';
                 return;
             }
 
+            const difficultyColors = {
+                'Facile': 'bg-green-100 text-green-700 border-green-200',
+                'Media': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+                'Difficile': 'bg-red-100 text-red-700 border-red-200'
+            };
+
+            const cuisineColors = {
+                'italiana': 'bg-red-50 text-red-700',
+                'mediterranea': 'bg-blue-50 text-blue-700',
+                'asiatica': 'bg-orange-50 text-orange-700',
+                'internazionale': 'bg-purple-50 text-purple-700'
+            };
+
             recipesContainer.innerHTML = filteredRecipes.map(recipe => {
                 const canMake = canMakeRecipe(recipe);
                 const missing = getMissingIngredients(recipe);
-                const difficultyColors = {
-                    'Facile': 'bg-green-100 text-green-700',
-                    'Media': 'bg-yellow-100 text-yellow-700',
-                    'Difficile': 'bg-red-100 text-red-700'
-                };
+                const missingCount = missing.length;
+                const isSelected = selectedRecipeId === recipe.id;
+                const checked = checkedIngredients[recipe.id] || [];
 
                 return `
                     <div class="recipe-card-item p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                        canMake ? 'bg-white border-green-200 hover:border-green-400' : 'bg-gray-50 border-gray-200'
-                    }" onclick="showRecipeDetails('${recipe.id}')">
-                        <div class="flex items-start justify-between mb-2">
+                        isSelected 
+                            ? 'bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300' 
+                            : canMake 
+                                ? 'bg-white border-gray-200 hover:border-orange-300' 
+                                : 'bg-gray-50 border-gray-200 opacity-70'
+                    }" onclick="selectRecipe('${recipe.id}')">
+                        <div class="flex items-start justify-between mb-3">
                             <div class="flex-1">
-                                <h3 class="font-medium text-sm mb-1">${recipe.name}</h3>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <h3 class="text-sm font-medium">${recipe.name}</h3>
+                                    ${canMake ? 
+                                        '<span class="badge bg-green-100 text-green-700 border-green-200 text-xs">✓ Puoi prepararlo</span>' :
+                                        `<span class="badge bg-red-100 text-red-700 border-red-200 text-xs">${missingCount} ingredienti mancanti</span>`
+                                    }
+                                </div>
                                 <p class="text-xs text-gray-600 mb-2">${recipe.description || ''}</p>
                             </div>
-                            ${recipe.imageUrl ? `<img src="${recipe.imageUrl}" alt="${recipe.name}" class="w-16 h-16 object-cover rounded ml-2">` : ''}
                         </div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="badge ${difficultyColors[recipe.difficulty] || 'bg-gray-100'} text-xs">${recipe.difficulty}</span>
+
+                        <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            <span class="badge ${difficultyColors[recipe.difficulty] || ''} text-xs">${recipe.difficulty}</span>
+                            <span class="badge ${cuisineColors[recipe.cuisine] || ''} text-xs">${recipe.cuisine}</span>
                             <span class="text-xs text-gray-500">⏱️ ${recipe.prepTime + recipe.cookTime} min</span>
-                            <span class="text-xs text-gray-500">👥 ${recipe.servings} porzioni</span>
-                            ${canMake ? 
-                                '<span class="badge bg-green-100 text-green-700 text-xs">✓ Puoi prepararlo</span>' :
-                                `<span class="badge bg-red-100 text-red-700 text-xs">${missing.length} ingredienti mancanti</span>`
-                            }
+                            <span class="text-xs text-gray-500">👥 ${recipe.servings} persone</span>
                         </div>
-                        ${!canMake && missing.length > 0 ? `
-                            <button class="btn btn-primary mt-2 text-xs" onclick="event.stopPropagation(); addMissingToShoppingList('${recipe.id}')">
-                                Aggiungi ${missing.length} ingredienti alla lista
-                            </button>
+
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${recipe.tags.map(tag => `
+                                <span class="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full">${tag}</span>
+                            `).join('')}
+                        </div>
+
+                        ${isSelected ? `
+                            <div class="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="text-sm flex items-center gap-2">
+                                            <span>⭐</span>
+                                            Ingredienti
+                                        </h4>
+                                        ${!canMake ? `
+                                            <button class="btn text-xs" style="padding: 0.25rem 0.75rem; background: white; border: 1px solid #e5e7eb; border-radius: 0.375rem; cursor: pointer;" onclick="event.stopPropagation(); addMissingToShoppingList('${recipe.id}')">
+                                                🛒 Aggiungi mancanti
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                    <div class="space-y-2">
+                                        ${recipe.ingredients.map((ing, idx) => {
+                                            const food = foodDatabase.find(f => f.id === ing.foodId);
+                                            const hasIngredient = availableIngredients.includes(ing.foodId);
+                                            const isChecked = checked.includes(ing.foodId);
+                                            
+                                            return `
+                                                <div class="text-xs flex items-center gap-3 p-2 rounded ${
+                                                    !hasIngredient
+                                                        ? 'bg-red-50 border border-red-200'
+                                                        : isChecked
+                                                        ? 'bg-green-50 border border-green-200'
+                                                        : 'bg-gray-50'
+                                                }" onclick="event.stopPropagation(); toggleIngredient('${recipe.id}', '${ing.foodId}')">
+                                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleIngredient('${recipe.id}', '${ing.foodId}')" style="cursor: pointer;">
+                                                    <label class="flex-1 flex justify-between cursor-pointer" onclick="event.stopPropagation(); toggleIngredient('${recipe.id}', '${ing.foodId}')">
+                                                        <span class="${!hasIngredient ? 'text-red-700' : ''}">
+                                                            ${food ? food.name : ing.foodId}
+                                                            ${!hasIngredient ? ' (manca)' : ''}
+                                                        </span>
+                                                        <span class="text-gray-600">
+                                                            ${ing.quantity} ${ing.unit}
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">💡 Spunta gli ingredienti che hai per verificare</p>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm mb-2">Preparazione</h4>
+                                    <ol class="space-y-2">
+                                        ${recipe.instructions.map((step, idx) => `
+                                            <li class="text-xs flex gap-2">
+                                                <span class="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs">${idx + 1}</span>
+                                                <span class="text-gray-700">${step}</span>
+                                            </li>
+                                        `).join('')}
+                                    </ol>
+                                </div>
+                            </div>
                         ` : ''}
                     </div>
                 `;
             }).join('');
+        }
+
+        function selectRecipe(recipeId) {
+            if (selectedRecipeId === recipeId) {
+                selectedRecipeId = null;
+            } else {
+                selectedRecipeId = recipeId;
+            }
+            renderRecipes();
+        }
+
+        function toggleIngredient(recipeId, foodId) {
+            if (!checkedIngredients[recipeId]) {
+                checkedIngredients[recipeId] = [];
+            }
+            const current = checkedIngredients[recipeId];
+            if (current.includes(foodId)) {
+                checkedIngredients[recipeId] = current.filter(id => id !== foodId);
+            } else {
+                checkedIngredients[recipeId] = [...current, foodId];
+            }
+            renderRecipes();
         }
 
         function canMakeRecipe(recipe) {
@@ -1034,20 +1724,6 @@
             return recipeIngredientIds.filter(id => !availableIngredients.includes(id));
         }
 
-        function showRecipeDetails(recipeId) {
-            const recipe = allRecipes.find(r => r.id === recipeId);
-            if (!recipe) return;
-
-            const ingredientsList = recipe.ingredients.map(ing => 
-                `• ${ing.quantity}${ing.unit} ${ing.name}`
-            ).join('\n');
-
-            const instructionsList = recipe.instructions.map((inst, idx) => 
-                `${idx + 1}. ${inst}`
-            ).join('\n\n');
-
-            alert(`${recipe.name}\n\n${recipe.description || ''}\n\n📋 INGREDIENTI:\n${ingredientsList}\n\n👨‍🍳 PREPARAZIONE:\n${instructionsList}\n\n⏱️ Tempo: ${recipe.prepTime + recipe.cookTime} min | 👥 Porzioni: ${recipe.servings}`);
-        }
 
         function addMissingToShoppingList(recipeId) {
             const recipe = allRecipes.find(r => r.id === recipeId);
@@ -1059,14 +1735,885 @@
                 return;
             }
 
-            alert(`Aggiunti ${missing.length} ingredienti alla lista della spesa:\n${missing.join(', ')}`);
+            // Aggiungi alla shopping list
+            missing.forEach(foodId => {
+                const food = foodDatabase.find(f => f.id === foodId);
+                if (food) {
+                    const existing = shoppingList.find(i => i.foodId === foodId);
+                    if (!existing) {
+                        shoppingList.push({
+                            foodId,
+                            quantity: food.typicalServing,
+                            unit: food.unit
+                        });
+                    }
+                }
+            });
+
+            saveShoppingList();
+            alert(`✅ Aggiunti ${missing.length} ingredienti alla lista della spesa!`);
         }
 
         // Auto-load recipes on page load
-        setTimeout(() => {
+        loadDinnerRecipes();
+
+        // ========== DIET PROPOSALS - Complete Implementation ==========
+        // Diet Plans Data
+        const allDietPlans = [
+            {
+                id: 'high-protein',
+                name: 'Dieta Iperproteica',
+                description: 'Alta in proteine, ideale per chi non mangia frutta e verdura',
+                duration: '4-8 settimane',
+                difficulty: 'Facile',
+                targetCalories: 2000,
+                benefits: ['Aumento massa muscolare', 'Maggiore sazietà', 'Metabolismo accelerato', 'Recupero muscolare'],
+                weekPlan: {
+                    'Lunedì': { breakfast: '4 uova strapazzate + 2 fette pancetta + caffè', snack1: 'Frullato proteico 30g + latte intero', lunch: 'Petto pollo 200g + riso basmati 80g + brodo vegetale', snack2: 'Yogurt greco 200g + mandorle 30g', dinner: 'Salmone 180g + patate 150g + dado vegetale', calories: 2050 },
+                    'Martedì': { breakfast: 'Frittata 3 uova + formaggio + pane proteico', snack1: 'Barretta proteica + noci 20g', lunch: 'Tacchino 200g + quinoa 80g + ceci frullati', snack2: 'Frullato ceci 100g + banana', dinner: 'Bistecca 180g + patate dolci + brodo', calories: 2100 },
+                    'Mercoledì': { breakfast: 'Yogurt greco 250g + burro arachidi + avena 50g', snack1: 'Prosciutto crudo 80g + formaggio', lunch: 'Pollo curry 200g + riso 80g + dado vegetale', snack2: 'Frullato proteico + semi chia', dinner: 'Tonno 200g + pasta 80g + olio oliva', calories: 1980 },
+                    'Giovedì': { breakfast: '3 uova + avocado + pancetta', snack1: 'Yogurt + proteine in polvere', lunch: 'Manzo 200g + legumi frullati + riso', snack2: 'Mandorle 40g + cioccolato fondente', dinner: 'Salmone 200g + brodo + patate', calories: 2020 },
+                    'Venerdì': { breakfast: 'Pancake proteici + sciroppo senza zucchero', snack1: 'Frullato proteico + latte', lunch: 'Pollo 200g + pasta integrale 80g', snack2: 'Yogurt greco + noci', dinner: 'Pesce spada 180g + verdure frullate', calories: 1950 },
+                    'Sabato': { breakfast: 'Uova in camicia + salmone affumicato', snack1: 'Barretta proteica', lunch: 'Tacchino 250g + riso + brodo', snack2: 'Frullato ceci + banana', dinner: 'Bistecca 200g + patate + dado', calories: 2150 },
+                    'Domenica': { breakfast: 'French toast proteico + mirtilli', snack1: 'Yogurt + semi', lunch: 'Pollo arrosto 250g + legumi frullati', snack2: 'Frutta secca mix 40g', dinner: 'Salmone 200g + patate dolci + brodo', calories: 2080 }
+                },
+                supplements: ['Multivitaminico completo', 'Vitamina C 1000mg/giorno', 'Fibre solubili 10-15g/giorno', 'Omega-3 da olio pesce 2-3g/giorno', 'Probiotici 20+ miliardi CFU', 'Magnesio 400mg', 'Vitamina D3 2000-4000 UI'],
+                warnings: ['Bere MINIMO 3L acqua al giorno', 'Monitorare funzione renale con esami ogni 2-3 mesi', 'Assumere fibre quotidianamente', 'Se creatinina alta, ridurre proteine e consultare medico'],
+                tips: ['Varia fonti proteiche', 'Usa legumi frullati per texture cremosa', 'Brodo vegetale fatto con dado di qualità', 'Prepara meal prep domenica', 'Integra SEMPRE con multivitaminico'],
+                scientificBasis: ['Effetto termogenico proteine: +20-30% metabolismo', 'Sazietà aumentata: riduzione fame del 60%', 'Sintesi proteica muscolare ottimale', 'Compensazione frutta/verdura possibile'],
+                micronutrients: { focus: ['Vitamina C', 'Vitamina K', 'Folati', 'Potassio', 'Fibre'], deficiencyRisk: ['Possibile carenza vitamine liposolubili', 'Fibre insufficienti'], solutions: ['Green powder', 'Polvere barbabietola', 'Estratto bacche'] },
+                suitableFor: { excludes: ['Frutta', 'Verdura'], bodyTypes: ['ectomorfo', 'mesomorfo'], goals: ['Aumento massa muscolare', 'Definizione'] }
+            },
+            {
+                id: 'keto-adapted',
+                name: 'Dieta Chetogenica Adattata',
+                description: 'Basso contenuto di carboidrati, alto in grassi sani',
+                duration: '4-12 settimane',
+                difficulty: 'Difficile',
+                targetCalories: 1800,
+                benefits: ['Perdita peso rapida', 'Energia stabile', 'Riduzione infiammazione', 'Controllo glicemia'],
+                weekPlan: {
+                    'Lunedì': { breakfast: 'Uova 3 + bacon 3 fette + avocado 1/2 + burro', snack1: 'Noci macadamia 30g + formaggio', lunch: 'Salmone 200g + burro + spinaci saltati', snack2: 'Olive 50g + salame', dinner: 'Bistecca 180g + broccoli burro + olio', calories: 1850 },
+                    'Martedì': { breakfast: 'Frittata 4 uova + formaggio + funghi', snack1: 'Cioccolato 90% + mandorle', lunch: 'Pollo coscia 200g + insalata + olio abbondante', snack2: 'Avocado + sale', dinner: 'Tonno 200g + maionese + brodo grasso', calories: 1780 },
+                    'Mercoledì': { breakfast: 'Yogurt greco intero + noci + burro arachidi', snack1: 'Formaggio stagionato 60g', lunch: 'Maiale 200g + cavolfiore + burro ghee', snack2: 'MCT oil coffee', dinner: 'Salmone 180g + asparagi + olio oliva', calories: 1820 },
+                    'Giovedì': { breakfast: 'Uova 4 + salmone affumicato + burro', snack1: 'Noci pecan + cioccolato fondente', lunch: 'Bistecca 200g + verdure grigliate + olio', snack2: 'Brodo ossa salato', dinner: 'Pollo 180g + pesto + zucchine', calories: 1800 },
+                    'Venerdì': { breakfast: 'Pancake keto (uova + cream cheese)', snack1: 'Avocado + sale rosa', lunch: 'Tonno grasso 200g + maionese + cetrioli', snack2: 'Formaggio + olive', dinner: 'Salmone 200g + burro limone + broccoli', calories: 1830 },
+                    'Sabato': { breakfast: 'Uova Benedict + bacon + hollandaise', snack1: 'Noci + cioccolato 90%', lunch: 'Manzo 200g + funghi panna + burro', snack2: 'Bulletproof coffee', dinner: 'Pollo 180g + insalata + olio EVO abbondante', calories: 1900 },
+                    'Domenica': { breakfast: 'Frittata grande + formaggio + avocado', snack1: 'Salame + formaggi vari', lunch: 'Salmone 250g + burro + verdure', snack2: 'Brodo + sale', dinner: 'Bistecca 200g + cavolfiore + panna', calories: 1850 }
+                },
+                supplements: ['Elettroliti CRITICI: Sodio 5-7g, Potassio 3-4g, Magnesio 400-600mg', 'Multivitaminico completo', 'MCT Oil 15-30ml/giorno', 'Omega-3 EPA/DHA 3g', 'Vitamina D3 4000 UI', 'Probiotici', 'Fibre psyllium 5-10g'],
+                warnings: ['KETO FLU primi 3-7 giorni', 'Aumenta MOLTO il sale nella prima settimana', 'Monitora chetoni urine/sangue', 'NON fare "cheat days"', 'Controindicata con problemi renali'],
+                tips: ['Bevi brodo salato 2-3 volte al giorno', 'Aggiungi sale rosa himalaya', 'MCT oil nel caffè mattina', 'Grassi saturi OK', 'Mantieni proteine moderate'],
+                scientificBasis: ['Chetosi: corpo usa grassi invece glucosio', 'Riduzione insulina: migliora sensibilità 70%', 'Neuroprotezione: chetoni nutrono cervello', 'Anti-infiammazione: riduce markers 50%'],
+                micronutrients: { focus: ['Elettroliti', 'Vitamine B', 'Magnesio', 'Potassio'], deficiencyRisk: ['Elettroliti critici prima settimana'], solutions: ['Brodo ossa quotidiano', 'Sale abbondante'] },
+                suitableFor: { excludes: ['Frutta', 'Carboidrati', 'Zuccheri raffinati'], bodyTypes: ['endomorfo', 'normale'], goals: ['Perdita peso', 'Definizione', 'Controllo glicemia'] }
+            },
+            {
+                id: 'balanced-macro',
+                name: 'Dieta Bilanciata Macro',
+                description: 'Equilibrio perfetto tra proteine, carboidrati e grassi',
+                duration: '8-12 settimane',
+                difficulty: 'Facile',
+                targetCalories: 1900,
+                benefits: ['Sostenibile a lungo termine', 'Energia costante', 'Versatile', 'Nutrienti completi'],
+                weekPlan: {
+                    'Lunedì': { breakfast: 'Avena 60g + yogurt 150g + noci 20g + miele', snack1: 'Mela + mandorle 20g', lunch: 'Pollo 150g + riso 80g + verdure miste', snack2: 'Yogurt greco + frutti bosco', dinner: 'Salmone 150g + patate 100g + insalata', calories: 1920 },
+                    'Martedì': { breakfast: 'Uova 2 + pane integrale + avocado', snack1: 'Frutta + yogurt', lunch: 'Tacchino 150g + pasta 80g + pomodoro', snack2: 'Frutta secca 30g', dinner: 'Pesce 150g + quinoa 60g + verdure', calories: 1880 },
+                    'Mercoledì': { breakfast: 'Pancake avena + banana + burro arachidi', snack1: 'Smoothie frutta + proteine', lunch: 'Manzo 150g + patate dolci + broccoli', snack2: 'Barretta proteica', dinner: 'Pollo 150g + riso + verdure saltate', calories: 1910 },
+                    'Giovedì': { breakfast: 'Yogurt + granola + frutti bosco', snack1: 'Toast integrale + hummus', lunch: 'Salmone 150g + insalata quinoa', snack2: 'Frutta fresca + noci', dinner: 'Tacchino 150g + pasta 70g + verdure', calories: 1890 },
+                    'Venerdì': { breakfast: 'Uova strapazzate + toast + pomodori', snack1: 'Frullato banana + latte', lunch: 'Pollo 150g + riso basmati + legumi', snack2: 'Yogurt + miele', dinner: 'Pesce 150g + patate + insalata', calories: 1900 },
+                    'Sabato': { breakfast: 'Porridge + mirtilli + noci', snack1: 'Frutta + formaggio light', lunch: 'Pizza integrale + insalata', snack2: 'Smoothie proteico', dinner: 'Bistecca 150g + patate dolci + verdure', calories: 1950 },
+                    'Domenica': { breakfast: 'French toast + sciroppo acero + frutti', snack1: 'Frutta secca mix', lunch: 'Pasta 100g + tonno + verdure', snack2: 'Yogurt greco + granola', dinner: 'Pollo arrosto 150g + riso + insalata', calories: 1920 }
+                },
+                supplements: ['Multivitaminico base (opzionale)', 'Omega-3 1-2g/giorno', 'Vitamina D3 2000 UI', 'Magnesio 200-400mg se carente'],
+                warnings: ['Personalizza porzioni in base al tuo TDEE', 'Monitora progressi settimanalmente', 'Adatta macro se non vedi risultati'],
+                tips: ['Meal prep domenica', 'Varia fonti proteiche', 'Carboidrati complessi sempre', 'Verdure ad ogni pasto', 'Grassi sani'],
+                scientificBasis: ['Distribuzione macro ottimale', 'Energia stabile', 'Sostenibilità 95%', 'Adatta a tutti i livelli'],
+                micronutrients: { focus: ['Completo se include varietà'], deficiencyRisk: ['Bassissimo rischio'], solutions: ['Ruotare alimenti'] },
+                suitableFor: { bodyTypes: ['tutti'], goals: ['Mantenimento', 'Ricomposizione corporea', 'Salute generale'] }
+            }
+        ];
+
+        let userProfile = null;
+        let selectedDietForDialog = null;
+        let selectedDayInDialog = 'Lunedì';
+
+        // Load user profile from API (online-first)
+        async function loadUserProfile() {
+            try {
+                // Carica preferenze da dietData (già caricato da loadDietData)
+                if (dietData.preferences) {
+                    userProfile = dietData.preferences;
+                }
+                
+                // Prova anche a caricare da user-profile API
+                try {
+                    const response = await fetch(`/api/user-profile/${userId}`);
+                    const result = await response.json();
+                    if (result.success && result.data && result.data.diet) {
+                        if (result.data.diet.preferences) {
+                            userProfile = result.data.diet.preferences;
+                            dietData.preferences = userProfile;
+                        }
+                    }
+                } catch (error) {
+                    console.log('User profile API not available, using local data');
+                }
+                
+                renderDietProposals();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                renderDietProposals();
+            }
+        }
+
+        function getRecommendedDiets(profile) {
+            if (!profile) return [];
+            const scored = allDietPlans.map(diet => {
+                let score = 0;
+                if (diet.suitableFor.excludes) {
+                    const matching = diet.suitableFor.excludes.filter(exc => profile.excludeFromDiet && profile.excludeFromDiet.includes(exc));
+                    score += matching.length * 10;
+                }
+                if (diet.suitableFor.bodyTypes) {
+                    if (diet.suitableFor.bodyTypes.includes('tutti') || diet.suitableFor.bodyTypes.includes(profile.bodyType)) {
+                        score += 5;
+                    }
+                }
+                return { diet, score };
+            });
+            scored.sort((a, b) => b.score - a.score);
+            return scored.slice(0, 3).map(s => s.diet);
+        }
+
+        function renderDietProposals() {
+            const container = document.getElementById('dietProposalsContent');
+            if (!container) return;
+
+            let dietsToShow = [];
+            let showRecommendation = false;
+
+            if (userProfile) {
+                dietsToShow = getRecommendedDiets(userProfile);
+                showRecommendation = true;
+            } else {
+                // Show all diets if no profile
+                dietsToShow = allDietPlans;
+            }
+
+            if (dietsToShow.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p class="empty-state-text">Nessuna dieta disponibile</p></div>';
+                return;
+            }
+
+            container.innerHTML = `
+                ${showRecommendation ? `
+                    <div class="mb-4 p-3" style="background: linear-gradient(to right, #faf5ff, #fef3c7); border-radius: 0.5rem; border: 1px solid #e9d5ff;">
+                        <p class="text-xs" style="color: #6b21a8;">✨ Basate sulle tue preferenze: ${dietsToShow.length} diete consigliate</p>
+                    </div>
+                ` : `
+                    <div class="mb-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
+                        <p class="text-xs" style="color: #1e40af;">💡 Configura le tue preferenze per ricevere diete personalizzate</p>
+                        <button class="btn btn-primary mt-2" onclick="openPersonalCardDialog()" style="font-size: 0.75rem; padding: 0.375rem 0.75rem;">Configura Preferenze</button>
+                    </div>
+                `}
+                <div class="space-y-3">
+                    ${dietsToShow.map((plan, index) => `
+                        <div class="p-4 rounded-lg border-2 transition-all cursor-pointer ${index === 0 && showRecommendation ? 'bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-300' : 'bg-white border-gray-200'}" onclick="openDietDialog('${plan.id}')">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h3 class="text-sm font-medium">${plan.name}</h3>
+                                        ${index === 0 && showRecommendation ? '<span class="badge" style="background: #ea580c; color: white; font-size: 0.75rem;">⭐ Consigliata</span>' : ''}
+                                    </div>
+                                    <p class="text-xs text-gray-600">${plan.description}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="badge ${plan.difficulty === 'Facile' ? 'bg-green-100 text-green-700' : plan.difficulty === 'Media' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'} text-xs">${plan.difficulty}</span>
+                                <span class="badge text-xs">${plan.duration}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-4 p-3" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
+                    <p class="text-xs" style="color: #1e40af;">💡 Clicca su una dieta per vedere il piano settimanale completo</p>
+                </div>
+            `;
+        }
+
+        function openDietDialog(dietId) {
+            selectedDietForDialog = allDietPlans.find(d => d.id === dietId);
+            selectedDayInDialog = 'Lunedì';
+            if (!selectedDietForDialog) return;
+            
+            const dialog = document.getElementById('dietDialog');
+            const title = document.getElementById('dietDialogTitle');
+            const description = document.getElementById('dietDialogDescription');
+            const badge = document.getElementById('dietDialogBadge');
+            
+            if (dialog) {
+                dialog.style.display = 'flex';
+                if (title) title.textContent = selectedDietForDialog.name;
+                if (description) description.textContent = selectedDietForDialog.description;
+                if (badge) {
+                    const difficultyColors = {
+                        'Facile': 'bg-green-100 text-green-700',
+                        'Media': 'bg-yellow-100 text-yellow-700',
+                        'Difficile': 'bg-red-100 text-red-700'
+                    };
+                    badge.className = `badge ${difficultyColors[selectedDietForDialog.difficulty] || ''}`;
+                    badge.textContent = selectedDietForDialog.difficulty;
+                }
+                renderDietDialogContent();
+            }
+        }
+
+        function closeDietDialog() {
+            const dialog = document.getElementById('dietDialog');
+            if (dialog) dialog.style.display = 'none';
+        }
+
+        function renderDietDialogContent() {
+            if (!selectedDietForDialog) return;
+            const content = document.getElementById('dietDialogContent');
+            if (!content) return;
+
+            const dayPlan = selectedDietForDialog.weekPlan[selectedDayInDialog];
+            content.innerHTML = `
+                <div style="display: flex; gap: 1rem; height: 100%;">
+                    <div style="width: 12rem; flex-shrink: 0; space-y: 0.5rem;">
+                        ${weekDays.map(day => {
+                            const isSelected = selectedDayInDialog === day;
+                            return `
+                                <button onclick="selectDayInDialog('${day}')" class="w-full text-left p-3 rounded-lg border-2 transition-all ${isSelected ? 'bg-orange-100 border-orange-500' : 'bg-white border-gray-200'}" style="margin-bottom: 0.5rem;">
+                                    <div class="flex items-center justify-between">
+                                        <span class="${isSelected ? 'font-medium' : ''}">${day}</span>
+                                        ${isSelected ? '<span style="color: #ea580c;">→</span>' : ''}
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">${selectedDietForDialog.weekPlan[day].calories} cal</div>
+                                </button>
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="flex-1" style="background: linear-gradient(to bottom right, white, #f9fafb); border-radius: 0.75rem; border: 2px solid #e5e7eb; padding: 1.5rem;">
+                        <div class="flex items-center justify-between mb-6 pb-4" style="border-bottom: 2px solid #e5e7eb;">
+                            <div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600;">${selectedDayInDialog}</h3>
+                                <p class="text-sm text-gray-600">Piano pasti completo</p>
+                            </div>
+                            <span class="badge" style="font-size: 1rem; padding: 0.5rem 1rem;">${dayPlan.calories} cal</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div style="background: linear-gradient(to bottom right, #fff7ed, #ffedd5); border-radius: 0.75rem; padding: 1rem; border: 2px solid #fed7aa;">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span style="font-size: 1.5rem;">🌅</span>
+                                    <h4 class="font-medium" style="color: #9a3412;">Colazione</h4>
+                                </div>
+                                <p class="text-sm" style="color: #1f2937; line-height: 1.75;">${dayPlan.breakfast}</p>
+                            </div>
+                            <div style="background: linear-gradient(to bottom right, #f0fdf4, #dcfce7); border-radius: 0.75rem; padding: 1rem; border: 2px solid #bbf7d0;">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span style="font-size: 1.5rem;">🍎</span>
+                                    <h4 class="font-medium" style="color: #166534;">Spuntino Mattina</h4>
+                                </div>
+                                <p class="text-sm" style="color: #1f2937; line-height: 1.75;">${dayPlan.snack1}</p>
+                            </div>
+                            <div style="background: linear-gradient(to bottom right, #eff6ff, #dbeafe); border-radius: 0.75rem; padding: 1rem; border: 2px solid #bfdbfe;">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span style="font-size: 1.5rem;">☀️</span>
+                                    <h4 class="font-medium" style="color: #1e40af;">Pranzo</h4>
+                                </div>
+                                <p class="text-sm" style="color: #1f2937; line-height: 1.75;">${dayPlan.lunch}</p>
+                            </div>
+                            <div style="background: linear-gradient(to bottom right, #faf5ff, #f3e8ff); border-radius: 0.75rem; padding: 1rem; border: 2px solid #c7d2fe;">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span style="font-size: 1.5rem;">🍪</span>
+                                    <h4 class="font-medium" style="color: #6b21a8;">Spuntino Pomeriggio</h4>
+                                </div>
+                                <p class="text-sm" style="color: #1f2937; line-height: 1.75;">${dayPlan.snack2}</p>
+                            </div>
+                            <div style="background: linear-gradient(to bottom right, #eef2ff, #e0e7ff); border-radius: 0.75rem; padding: 1rem; border: 2px solid #c7d2fe; grid-column: span 2;">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span style="font-size: 1.5rem;">🌙</span>
+                                    <h4 class="font-medium" style="color: #3730a3;">Cena</h4>
+                                </div>
+                                <p class="text-sm" style="color: #1f2937; line-height: 1.75;">${dayPlan.dinner}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectDayInDialog(day) {
+            selectedDayInDialog = day;
+            renderDietDialogContent();
+        }
+
+        async function handleFollowDiet() {
+            if (!selectedDietForDialog) return;
+            try {
+                // Save selected diet to API (online-first)
+                const dietToSave = {
+                    ...selectedDietForDialog,
+                    startedAt: new Date().toISOString()
+                };
+
+                try {
+                    const response = await fetch(`/api/diet/selected-diet/${userId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ diet: dietToSave })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        dietData.selectedDiet = dietToSave;
+                        selectedDiet = selectedDietForDialog;
+                        updateDietName();
+                        renderCalendar();
+                        closeDietDialog();
+                        alert(`✅ Hai iniziato la ${selectedDietForDialog.name}! Il calendario è stato aggiornato.`);
+                    } else {
+                        throw new Error('Failed to save diet');
+                    }
+                } catch (error) {
+                    console.error('Error saving diet to API:', error);
+                    // Fallback to localStorage if API fails
+                    localStorage.setItem('selected_diet', JSON.stringify(dietToSave));
+                    selectedDiet = selectedDietForDialog;
+                    updateDietName();
+                    renderCalendar();
+                    closeDietDialog();
+                    alert(`✅ Hai iniziato la ${selectedDietForDialog.name}! Il calendario è stato aggiornato.`);
+                }
+            } catch (error) {
+                console.error('Errore salvataggio dieta:', error);
+                alert('❌ Errore nel salvare la dieta');
+            }
+        }
+
+        // ========== PERSONAL CARD DIALOG ==========
+        let personalCardFormData = {
+            dietaryPreference: 'onnivoro',
+            bodyType: 'normale',
+            allergies: [],
+            excludeFromDiet: [],
+            healthIssues: []
+        };
+
+        const allergyOptions = ['Lattosio', 'Glutine', 'Frutta secca', 'Crostacei', 'Uova', 'Soia', 'Pesce', 'Arachidi', 'Sesamo'];
+        const excludeOptions = ['Carne', 'Carne rossa', 'Pesce', 'Latticini', 'Frutta', 'Verdura', 'Verdure amare', 'Funghi', 'Cipolle', 'Aglio', 'Formaggi stagionati', 'Legumi', 'Spezie piccanti', 'Zuccheri raffinati', 'Alcool', 'Caffeina', 'Fritti', 'Carboidrati serali'];
+        const healthIssuesOptions = ['Diabete', 'Ipertensione', 'Colesterolo alto', 'Problemi digestivi', 'Reflusso gastrico', 'Colon irritabile', 'Intolleranze alimentari'];
+
+        function openPersonalCardDialog() {
+            const dialog = document.getElementById('personalCardDialog');
+            if (dialog) {
+                // Load existing preferences
+                if (dietData.preferences) {
+                    personalCardFormData = { ...dietData.preferences };
+                }
+                renderPersonalCardDialog();
+                dialog.style.display = 'flex';
+            }
+        }
+
+        function closePersonalCardDialog() {
+            const dialog = document.getElementById('personalCardDialog');
+            if (dialog) dialog.style.display = 'none';
+        }
+
+        function renderPersonalCardDialog() {
+            const content = document.getElementById('personalCardDialogContent');
+            if (!content) return;
+
+            let html = `
+                <div class="p-4 mb-4" style="background: #dbeafe; border-radius: 0.5rem; border: 1px solid #93c5fd;">
+                    <div class="flex items-start gap-2">
+                        <span style="font-size: 1.25rem;">ℹ️</span>
+                        <div>
+                            <p class="text-sm" style="color: #1e40af;">
+                                I dati fisici (età, peso, altezza, livello attività) vengono recuperati automaticamente dalla sezione Sport.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form onsubmit="savePersonalCardPreferences(event)" class="space-y-6">
+                    <!-- Preferenza Dietetica -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Preferenza Dietetica</label>
+                        <select id="dietaryPreference" class="w-full p-2 border rounded" style="width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.375rem;">
+                            <option value="onnivoro" ${personalCardFormData.dietaryPreference === 'onnivoro' ? 'selected' : ''}>Onnivoro</option>
+                            <option value="vegetariano" ${personalCardFormData.dietaryPreference === 'vegetariano' ? 'selected' : ''}>Vegetariano</option>
+                            <option value="vegano" ${personalCardFormData.dietaryPreference === 'vegano' ? 'selected' : ''}>Vegano</option>
+                            <option value="pescetariano" ${personalCardFormData.dietaryPreference === 'pescetariano' ? 'selected' : ''}>Pescetariano</option>
+                            <option value="flexitariano" ${personalCardFormData.dietaryPreference === 'flexitariano' ? 'selected' : ''}>Flexitariano</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo di Corporatura -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tipo di Corporatura</label>
+                        <select id="bodyType" class="w-full p-2 border rounded" style="width: 100%; padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 0.375rem;">
+                            <option value="ectomorfo" ${personalCardFormData.bodyType === 'ectomorfo' ? 'selected' : ''}>Ectomorfo (magro, metabolismo veloce)</option>
+                            <option value="mesomorfo" ${personalCardFormData.bodyType === 'mesomorfo' ? 'selected' : ''}>Mesomorfo (atletico, muscoloso)</option>
+                            <option value="endomorfo" ${personalCardFormData.bodyType === 'endomorfo' ? 'selected' : ''}>Endomorfo (tende ad accumulare grasso)</option>
+                            <option value="normale" ${personalCardFormData.bodyType === 'normale' ? 'selected' : ''}>Corporatura normale</option>
+                        </select>
+                    </div>
+
+                    <!-- Allergie e Intolleranze -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Allergie e Intolleranze</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                            ${allergyOptions.map(allergy => `
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" value="${allergy}" 
+                                        ${personalCardFormData.allergies.includes(allergy) ? 'checked' : ''}
+                                        onchange="togglePersonalCardArray('allergies', '${allergy}')"
+                                        style="cursor: pointer;">
+                                    <span class="text-sm">${allergy}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Cibi da Escludere -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Cibi da Escludere dalla Dieta</label>
+                        <p class="text-xs text-gray-600 mb-2">Seleziona cibi che non mangi o che preferisci evitare</p>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                            ${excludeOptions.map(exclude => `
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" value="${exclude}" 
+                                        ${personalCardFormData.excludeFromDiet.includes(exclude) ? 'checked' : ''}
+                                        onchange="togglePersonalCardArray('excludeFromDiet', '${exclude}')"
+                                        style="cursor: pointer;">
+                                    <span class="text-sm">${exclude}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Condizioni di Salute -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Condizioni di Salute</label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                            ${healthIssuesOptions.map(issue => `
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" value="${issue}" 
+                                        ${personalCardFormData.healthIssues.includes(issue) ? 'checked' : ''}
+                                        onchange="togglePersonalCardArray('healthIssues', '${issue}')"
+                                        style="cursor: pointer;">
+                                    <span class="text-sm">${issue}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div style="display: flex; justify-content: end; gap: 0.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                        <button type="button" onclick="closePersonalCardDialog()" class="btn" style="padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; border: 1px solid #e5e7eb; background: white;">
+                            Annulla
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; background: #2563eb; color: white; border: none;">
+                            ✓ Salva Preferenze
+                        </button>
+                    </div>
+                </form>
+            `;
+
+            content.innerHTML = html;
+        }
+
+        function togglePersonalCardArray(field, item) {
+            const array = personalCardFormData[field];
+            const index = array.indexOf(item);
+            if (index >= 0) {
+                array.splice(index, 1);
+            } else {
+                array.push(item);
+            }
+        }
+
+        async function savePersonalCardPreferences(event) {
+            event.preventDefault();
+            
+            // Update form data from selects
+            personalCardFormData.dietaryPreference = document.getElementById('dietaryPreference').value;
+            personalCardFormData.bodyType = document.getElementById('bodyType').value;
+
+            try {
+                const response = await fetch(`/api/diet/preferences/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(personalCardFormData)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    dietData.preferences = personalCardFormData;
+                    closePersonalCardDialog();
+                    alert('✅ Preferenze salvate con successo!');
+                    // Reload diet proposals to update recommendations
+                    loadUserProfile();
+                } else {
+                    alert('❌ Errore nel salvare le preferenze');
+                }
+            } catch (error) {
+                console.error('Error saving preferences:', error);
+                alert('❌ Errore nel salvare le preferenze');
+            }
+        }
+
+        // ========== URGENT ITEMS ==========
+        function getUrgentItems() {
+            return fridgeItems.filter(item => 
+                item.expiryDays !== undefined && item.expiryDays <= 3
+            ).sort((a, b) => (a.expiryDays || 0) - (b.expiryDays || 0));
+        }
+
+        function getSuggestedToFreeze() {
+            return fridgeItems.filter(item => 
+                item.expiryDays !== undefined && item.expiryDays > 3 && item.expiryDays <= 7
+            );
+        }
+
+        function renderUrgentItems() {
+            const container = document.getElementById('urgentItemsContent');
+            if (!container) return;
+
+            const urgentItems = getUrgentItems();
+            const freezeSuggestions = getSuggestedToFreeze();
+
+            if (urgentItems.length === 0 && freezeSuggestions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 3rem; height: 3rem; margin: 0 auto 0.75rem; color: #9ca3af;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        <p class="empty-state-text">Frigorifero vuoto</p>
+                        <button onclick="openFridgeDialog()" class="btn btn-primary mt-4" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <span>+</span>
+                            Aggiungi ingredienti
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            
+            if (urgentItems.length > 0) {
+                html += '<div class="mb-4">';
+                html += '<h3 class="text-sm font-semibold mb-2" style="color: #dc2626;">⚠️ Da consumare entro 3 giorni</h3>';
+                html += '<div class="space-y-2">';
+                urgentItems.forEach(item => {
+                    const food = foodDatabase.find(f => f.id === item.foodId);
+                    if (food) {
+                        html += `
+                            <div class="p-2 rounded" style="background: #fee2e2; border: 1px solid #fca5a5;">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm">${food.name}</span>
+                                    <span class="text-xs" style="color: #991b1b;">${item.expiryDays} giorni</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div></div>';
+            }
+
+            if (freezeSuggestions.length > 0) {
+                html += '<div>';
+                html += '<h3 class="text-sm font-semibold mb-2" style="color: #2563eb;">🧊 Suggerito: congela</h3>';
+                html += '<div class="space-y-2">';
+                freezeSuggestions.forEach(item => {
+                    const food = foodDatabase.find(f => f.id === item.foodId);
+                    if (food) {
+                        html += `
+                            <div class="p-2 rounded" style="background: #dbeafe; border: 1px solid #93c5fd;">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm">${food.name}</span>
+                                    <span class="text-xs" style="color: #1e40af;">${item.expiryDays} giorni</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                html += '</div></div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ========== FRIDGE DIALOG ==========
+        let fridgeDialogTab = 'inventario';
+
+        function openFridgeDialog() {
+            const dialog = document.getElementById('fridgeDialog');
+            if (dialog) {
+                dialog.style.display = 'flex';
+                renderFridgeDialog();
+            }
+        }
+
+        function closeFridgeDialog() {
+            const dialog = document.getElementById('fridgeDialog');
+            if (dialog) dialog.style.display = 'none';
+        }
+
+        function setFridgeDialogTab(tab) {
+            fridgeDialogTab = tab;
+            renderFridgeDialog();
+        }
+
+        function renderFridgeDialog() {
+            const tabsContainer = document.getElementById('fridgeDialogTabs');
+            const content = document.getElementById('fridgeDialogContent');
+            if (!content) return;
+
+            // Render tabs
+            if (tabsContainer) {
+                const tabs = ['inventario', 'check-rapido', 'lista-spesa'];
+                const tabLabels = {
+                    'inventario': 'Inventario',
+                    'check-rapido': 'Check Rapido',
+                    'lista-spesa': 'Lista Spesa'
+                };
+                
+                tabsContainer.innerHTML = tabs.map(tab => `
+                    <button onclick="setFridgeDialogTab('${tab}')" class="btn" style="padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; border: 1px solid #e5e7eb; background: ${fridgeDialogTab === tab ? '#f3f4f6' : 'white'};">
+                        ${tabLabels[tab]}
+                    </button>
+                `).join('');
+            }
+
+            // Render content
+            if (fridgeDialogTab === 'inventario') {
+                renderFridgeInventory();
+            } else if (fridgeDialogTab === 'check-rapido') {
+                renderFridgeQuickCheck();
+            } else if (fridgeDialogTab === 'lista-spesa') {
+                renderShoppingList();
+            }
+        }
+
+        function renderFridgeInventory() {
+            const content = document.getElementById('fridgeDialogContent');
+            if (!content) return;
+
+            const categories = ['proteina', 'carboidrato', 'verdura', 'frutta', 'latticino', 'grasso', 'condimento', 'bevanda'];
+            
+            let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">';
+            
+            categories.forEach(category => {
+                const items = fridgeItems.filter(item => {
+                    const food = foodDatabase.find(f => f.id === item.foodId);
+                    return food && food.category === category;
+                });
+                
+                html += `
+                    <div class="p-4 rounded-lg border" style="background: white;">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span style="font-size: 1.5rem;">${categoryIcons[category]}</span>
+                            <h3 class="font-semibold">${categoryLabels[category]}</h3>
+                        </div>
+                        <p class="text-sm" style="color: #6b7280;">${items.length} elementi</p>
+                        ${items.length === 0 ? '<p class="text-xs mt-2" style="color: #9ca3af;">Nessun elemento</p>' : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function renderFridgeQuickCheck() {
+            const content = document.getElementById('fridgeDialogContent');
+            if (!content) return;
+
+            const categories = ['proteina', 'carboidrato', 'verdura', 'frutta', 'latticino', 'grasso', 'condimento', 'bevanda'];
+            
+            let html = '<div class="space-y-4">';
+            html += '<p class="text-sm" style="color: #6b7280;">Seleziona cosa hai in frigo per categoria</p>';
+            
+            categories.forEach(category => {
+                const foods = foodDatabase.filter(f => f.category === category);
+                const checked = categoryCheck[category] || [];
+                
+                html += `
+                    <div class="p-4 rounded-lg border">
+                        <h3 class="font-semibold mb-3 flex items-center gap-2">
+                            <span>${categoryIcons[category]}</span>
+                            ${categoryLabels[category]}
+                        </h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            ${foods.map(food => `
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" ${checked.includes(food.id) ? 'checked' : ''} 
+                                        onchange="toggleCategoryCheck('${category}', '${food.id}')"
+                                        style="cursor: pointer;">
+                                    <span class="text-sm">${food.name}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '<button onclick="addCheckedToFridge()" class="btn btn-primary mt-4" style="width: 100%;">Aggiungi al Frigo</button>';
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function toggleCategoryCheck(category, foodId) {
+            if (!categoryCheck[category]) {
+                categoryCheck[category] = [];
+            }
+            const index = categoryCheck[category].indexOf(foodId);
+            if (index >= 0) {
+                categoryCheck[category].splice(index, 1);
+            } else {
+                categoryCheck[category].push(foodId);
+            }
+        }
+
+        function addCheckedToFridge() {
+            Object.keys(categoryCheck).forEach(category => {
+                categoryCheck[category].forEach(foodId => {
+                    const existing = fridgeItems.find(i => i.foodId === foodId);
+                    if (!existing) {
+                        const food = foodDatabase.find(f => f.id === foodId);
+                        if (food) {
+                            fridgeItems.push({
+                                foodId,
+                                quantity: food.typicalServing,
+                                unit: food.unit,
+                                expiryDays: 7,
+                                addedDate: new Date().toISOString()
+                            });
+                        }
+                    }
+                });
+            });
+            
+            saveFridge();
+            categoryCheck = {};
+            setFridgeDialogTab('inventario');
+        }
+
+        function renderShoppingList() {
+            const content = document.getElementById('fridgeDialogContent');
+            if (!content) return;
+
+            if (shoppingList.length === 0) {
+                content.innerHTML = '<p class="text-center text-gray-500">Lista spesa vuota</p>';
+                return;
+            }
+
+            let html = '<div class="space-y-2">';
+            shoppingList.forEach((item, idx) => {
+                const food = foodDatabase.find(f => f.id === item.foodId);
+                if (food) {
+                    html += `
+                        <div class="flex justify-between items-center p-2 rounded border">
+                            <span class="text-sm">${food.name}</span>
+                            <span class="text-xs text-gray-600">${item.quantity} ${item.unit}</span>
+                            <button onclick="removeFromShoppingList(${idx})" class="text-red-600 text-xs">Rimuovi</button>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function removeFromShoppingList(index) {
+            shoppingList.splice(index, 1);
+            saveShoppingList();
+            renderShoppingList();
+        }
+
+        // ========== INITIALIZATION ==========
+        // Initialize in correct order: load data first, then render
+        async function initializePage() {
+            // 1. Load diet data from API (online-first) - this must be first
+            await loadDietData();
+            
+            // 2. Load user profile (depends on dietData)
+            await loadUserProfile();
+            
+            // 3. Load recipes
             loadDinnerRecipes();
-        }, 1000);
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
+
     </script>
+
+    <!-- Diet Dialog -->
+    <div id="dietDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+        <div style="background: white; border-radius: 0.75rem; max-width: 1600px; width: 98vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; display: flex; align-items: start; justify-content: space-between; gap: 1rem;">
+                <div class="flex-1">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="dietDialogTitle">Dieta</span>
+                        <span id="dietDialogBadge" class="badge"></span>
+                    </h2>
+                    <p id="dietDialogDescription" style="color: #6b7280;"></p>
+                </div>
+                <button onclick="handleFollowDiet()" class="btn btn-primary" style="background: linear-gradient(to right, #ea580c, #f97316); border: none; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500;">
+                    ✓ Segui Questa Dieta
+                </button>
+                <button onclick="closeDietDialog()" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            <div id="dietDialogContent" style="flex: 1; overflow-y: auto; padding: 1.5rem;"></div>
+        </div>
+    </div>
+
+    <!-- Personal Card Dialog -->
+    <div id="personalCardDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+        <div style="background: white; border-radius: 0.75rem; max-width: 800px; width: 90vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; position: relative;">
+                <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">Preferenze Alimentari</h2>
+                <p style="color: #6b7280; font-size: 0.875rem;">Configura le tue preferenze per ricevere suggerimenti personalizzati</p>
+                <button onclick="closePersonalCardDialog()" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            <div id="personalCardDialogContent" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
+                <!-- Content will be rendered by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Fridge Dialog -->
+    <div id="fridgeDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 2rem;">
+        <div style="background: white; border-radius: 0.75rem; max-width: 1200px; width: 95vw; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;">
+            <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; position: relative;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.5rem;">🧊</span>
+                    <div>
+                        <h2 style="font-size: 1.5rem; font-weight: 600;">Inventario Completo Frigorifero</h2>
+                        <p style="color: #6b7280; font-size: 0.875rem;">Gestisci tutti gli ingredienti e la lista della spesa</p>
+                    </div>
+                </div>
+                <button onclick="closeFridgeDialog()" style="position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.5rem;">&times;</button>
+            </div>
+            <div id="fridgeDialogTabs" style="padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; display: flex; gap: 0.5rem;">
+                <!-- Tabs will be rendered by JavaScript -->
+            </div>
+            <div id="fridgeDialogContent" style="flex: 1; overflow-y: auto; padding: 1.5rem;">
+                <!-- Content will be rendered by JavaScript -->
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
-

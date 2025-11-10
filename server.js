@@ -3453,6 +3453,330 @@ app.get('/api/user-profile/:userId/history', async (req, res) => {
 });
 
 /**
+ * ========== DIET API ENDPOINTS ==========
+ * Gestione dati dieta, frigo, preferenze alimentari (online-first)
+ */
+
+const DIET_DATA_DIR = path.join(__dirname, 'data', 'diet');
+if (!fs.existsSync(DIET_DATA_DIR)) {
+    fs.mkdirSync(DIET_DATA_DIR, { recursive: true });
+}
+
+/**
+ * GET /api/diet/data/:userId
+ * Ottiene tutti i dati dieta per un utente
+ */
+app.get('/api/diet/data/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        
+        if (fs.existsSync(dietPath)) {
+            const data = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+            return res.json({ success: true, data });
+        }
+        
+        return res.json({ 
+            success: true, 
+            data: {
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null
+            }
+        });
+    } catch (error) {
+        console.error('Error loading diet data:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/fridge/:userId
+ * Salva/carica inventario frigo
+ */
+app.post('/api/diet/fridge/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { items } = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        dietData.fridge = items || [];
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_fridge_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true, count: dietData.fridge.length });
+    } catch (error) {
+        console.error('Error saving fridge:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/preferences/:userId
+ * Salva preferenze alimentari
+ */
+app.post('/api/diet/preferences/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const preferences = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        dietData.preferences = preferences;
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_preferences_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving preferences:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/weight/:userId
+ * Salva entry peso
+ */
+app.post('/api/diet/weight/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { weight, date } = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        if (!dietData.weight) {
+            dietData.weight = [];
+        }
+        
+        dietData.weight.push({
+            weight: parseFloat(weight),
+            date: date || new Date().toISOString().split('T')[0],
+            createdAt: new Date().toISOString()
+        });
+        
+        // Mantieni solo ultimi 30 giorni
+        dietData.weight = dietData.weight.slice(-30);
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_weight_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving weight:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/calories/:userId
+ * Salva entry calorie
+ */
+app.post('/api/diet/calories/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { consumed, burned, target, date } = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        if (!dietData.calories) {
+            dietData.calories = [];
+        }
+        
+        const dateStr = date || new Date().toISOString().split('T')[0];
+        const existingIndex = dietData.calories.findIndex(c => c.date === dateStr);
+        
+        if (existingIndex >= 0) {
+            dietData.calories[existingIndex] = {
+                consumed: parseInt(consumed) || 0,
+                burned: parseInt(burned) || 0,
+                target: parseInt(target) || 2000,
+                date: dateStr,
+                updatedAt: new Date().toISOString()
+            };
+        } else {
+            dietData.calories.push({
+                consumed: parseInt(consumed) || 0,
+                burned: parseInt(burned) || 0,
+                target: parseInt(target) || 2000,
+                date: dateStr,
+                createdAt: new Date().toISOString()
+            });
+        }
+        
+        // Mantieni solo ultimi 30 giorni
+        dietData.calories = dietData.calories.slice(-30);
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_calories_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving calories:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/shopping-list/:userId
+ * Salva lista spesa
+ */
+app.post('/api/diet/shopping-list/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { items } = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        dietData.shoppingList = items || [];
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_shopping_list_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true, count: dietData.shoppingList.length });
+    } catch (error) {
+        console.error('Error saving shopping list:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/diet/selected-diet/:userId
+ * Salva dieta selezionata
+ */
+app.post('/api/diet/selected-diet/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { diet } = req.body;
+        
+        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        let dietData = {};
+        
+        if (fs.existsSync(dietPath)) {
+            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        }
+        
+        dietData.selectedDiet = diet;
+        dietData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'diet',
+                data: dietData,
+                source: 'diet_selected_diet_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving selected diet:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * ========== AI AGENT API ENDPOINTS ==========
  * Estrazione dati da foto e testi
  */
