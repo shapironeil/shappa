@@ -460,6 +460,12 @@
                         <div id="automationsInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
                     </div>
 
+                    <!-- eBay Connection -->
+                    <div style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155; margin-bottom: 1rem;">
+                        <h3 style="color: #f59e0b; margin-bottom: 1rem; font-size: 1.2rem;">🔗 eBay Connection</h3>
+                        <div id="ebayInfo" style="color: #e2e8f0; line-height: 1.8;"></div>
+                    </div>
+
                     <!-- Raw JSON (Collapsible) -->
                     <details style="background: #0f172a; padding: 1.5rem; border-radius: 8px; border: 1px solid #334155;">
                         <summary style="color: #94a3b8; cursor: pointer; font-weight: 600; margin-bottom: 1rem;">📄 Mostra JSON Completo</summary>
@@ -623,98 +629,196 @@
             
             const d = data.data;
             
-            // Account Info
+            // Account Info - Enhanced
             let accountHtml = '';
             if (d.account) {
                 accountHtml = `
-                    <strong>Username:</strong> ${d.account.username || 'N/A'}<br>
-                    <strong>Email:</strong> ${d.account.email || 'N/A'}<br>
-                    <strong>Created:</strong> ${d.account.createdAt ? new Date(d.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Username</strong>
+                            <p style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">${d.account.username || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Email</strong>
+                            <p style="font-size: 1.1rem; font-weight: 600; margin-top: 0.25rem;">${d.account.email || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">User ID</strong>
+                            <p style="font-size: 0.9rem; color: #64748b; margin-top: 0.25rem; font-family: monospace;">${data.userId || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase;">Registrato</strong>
+                            <p style="font-size: 0.9rem; margin-top: 0.25rem;">${d.account.createdAt ? new Date(d.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}</p>
+                        </div>
+                    </div>
+                    ${d.account.lastLogin ? `<div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);"><strong style="color: #94a3b8; font-size: 0.75rem;">Ultimo Accesso:</strong> ${new Date(d.account.lastLogin).toLocaleString('it-IT')}</div>` : ''}
                 `;
             } else {
-                accountHtml = '<em style="color: #94a3b8;">Nessun dato account</em>';
+                accountHtml = '<em style="color: #94a3b8;">Nessun dato account disponibile</em>';
             }
             document.getElementById('accountInfo').innerHTML = accountHtml;
             
-            // Sport Data
+            // Sport Data - Enhanced
             let sportHtml = '';
             if (d.sport && Object.keys(d.sport).length > 0) {
                 sportHtml = `
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
-                        <div><strong>Età:</strong> ${d.sport.age || 'N/A'}</div>
-                        <div><strong>Altezza:</strong> ${d.sport.height ? d.sport.height + ' cm' : 'N/A'}</div>
-                        <div><strong>Peso:</strong> ${d.sport.weight ? d.sport.weight + ' kg' : 'N/A'}</div>
-                        <div><strong>Obiettivo:</strong> ${d.sport.goal || 'N/A'}</div>
-                        <div><strong>Livello:</strong> ${d.sport.level || 'N/A'}</div>
-                        <div><strong>Impegno Settimanale:</strong> ${d.sport.weeklyCommitment || 'N/A'}</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Età:</strong> <span style="font-weight: 600;">${d.sport.age || 'N/A'}</span></div>
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Altezza:</strong> <span style="font-weight: 600;">${d.sport.height ? d.sport.height + ' cm' : 'N/A'}</span></div>
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Peso:</strong> <span style="font-weight: 600;">${d.sport.weight ? d.sport.weight + ' kg' : 'N/A'}</span></div>
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Obiettivo:</strong> <span style="color: #3b82f6; font-weight: 600;">${d.sport.goal || 'N/A'}</span></div>
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Livello:</strong> <span style="font-weight: 600;">${d.sport.level || 'N/A'}</span></div>
+                        <div><strong style="color: #94a3b8; font-size: 0.75rem;">Impegno:</strong> <span style="font-weight: 600;">${d.sport.weeklyCommitment || 'N/A'}</span></div>
                     </div>
                 `;
                 if (d.sport.program) {
-                    sportHtml += `<br><strong>Programma Attivo:</strong> ${d.sport.program.programName || 'Sì'}<br>`;
+                    sportHtml += `<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);"><strong style="color: #10b981;">Programma:</strong> ${d.sport.program.programName || 'Attivo'}</div>`;
                 }
                 if (d.sport.stats) {
                     const completedWorkouts = d.sport.stats.completedWorkouts?.length || 0;
                     const totalCalories = d.sport.stats.totalCalories || 0;
-                    sportHtml += `<strong>Allenamenti Completati:</strong> ${completedWorkouts}<br>`;
-                    sportHtml += `<strong>Calorie Bruciate:</strong> ${totalCalories} kcal`;
+                    sportHtml += `
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div><strong style="color: #34d399; font-size: 1.25rem;">${completedWorkouts}</strong><br><span style="font-size: 0.75rem; color: #94a3b8;">Allenamenti</span></div>
+                            <div><strong style="color: #f97316; font-size: 1.25rem;">${totalCalories}</strong><br><span style="font-size: 0.75rem; color: #94a3b8;">Calorie</span></div>
+                        </div>
+                    `;
                 }
             } else {
-                sportHtml = '<em style="color: #94a3b8;">Nessun dato sport</em>';
+                sportHtml = '<em style="color: #94a3b8;">Nessun dato sport disponibile</em>';
             }
             document.getElementById('sportInfo').innerHTML = sportHtml;
             
-            // Interests
+            // Interests - Enhanced
             let interestsHtml = '';
             if (d.interests && d.interests.length > 0) {
-                interestsHtml = `<strong>Totale:</strong> ${d.interests.length} interessi<br><br>`;
-                d.interests.slice(0, 5).forEach(interest => {
-                    interestsHtml += `• ${interest.query || interest.name || 'Unknown'}<br>`;
+                interestsHtml = `<div style="margin-bottom: 1rem;"><strong style="color: #10b981; font-size: 1.1rem;">${d.interests.length}</strong> <span style="color: #94a3b8;">interessi totali</span></div>`;
+                interestsHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                d.interests.slice(0, 10).forEach(interest => {
+                    const name = interest.query || interest.name || 'Unknown';
+                    const status = interest.status ? `<span style="color: #10b981; font-size: 0.75rem;">[${interest.status}]</span>` : '';
+                    interestsHtml += `<div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">• ${name} ${status}</div>`;
                 });
-                if (d.interests.length > 5) {
-                    interestsHtml += `<em style="color: #94a3b8;">... e altri ${d.interests.length - 5}</em>`;
+                interestsHtml += '</div>';
+                if (d.interests.length > 10) {
+                    interestsHtml += `<div style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.85rem;">... e altri ${d.interests.length - 10} interessi</div>`;
                 }
             } else {
-                interestsHtml = '<em style="color: #94a3b8;">Nessun interesse</em>';
+                interestsHtml = '<em style="color: #94a3b8;">Nessun interesse configurato</em>';
             }
             document.getElementById('interestsInfo').innerHTML = interestsHtml;
             
-            // Webhook
+            // Webhook - Enhanced (show all pages)
             let webhookHtml = '';
             if (d.webhook) {
-                const webhookUrl = typeof d.webhook === 'string' ? d.webhook : d.webhook.url || d.webhook.webhook;
-                if (webhookUrl) {
-                    webhookHtml = `
-                        <strong>Configurato:</strong> ✅ Sì<br>
-                        <strong>URL:</strong> <span style="color: #94a3b8; font-size: 0.85rem;">${webhookUrl.substring(0, 50)}...</span>
-                    `;
+                // Check if new format (multiple pages)
+                if (typeof d.webhook === 'object' && d.webhook.webhooks) {
+                    const pages = Object.keys(d.webhook.webhooks);
+                    if (pages.length > 0) {
+                        webhookHtml = `<div style="margin-bottom: 0.5rem;"><strong style="color: #10b981;">✅ Configurato</strong> per ${pages.length} pagina/e</div>`;
+                        webhookHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">';
+                        pages.forEach(page => {
+                            const url = d.webhook.webhooks[page].url || '';
+                            webhookHtml += `
+                                <div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                    <strong style="color: #94a3b8; font-size: 0.75rem; text-transform: capitalize;">${page}:</strong><br>
+                                    <span style="color: #64748b; font-size: 0.8rem; font-family: monospace; word-break: break-all;">${url.substring(0, 60)}...</span>
+                                </div>
+                            `;
+                        });
+                        webhookHtml += '</div>';
+                    } else {
+                        webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
+                    }
                 } else {
-                    webhookHtml = '<strong>Configurato:</strong> ❌ No';
+                    // Old format (single webhook)
+                    const webhookUrl = typeof d.webhook === 'string' ? d.webhook : d.webhook.url || d.webhook.webhook;
+                    if (webhookUrl) {
+                        webhookHtml = `
+                            <div style="margin-bottom: 0.5rem;"><strong style="color: #10b981;">✅ Configurato</strong></div>
+                            <div style="padding: 0.5rem; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                <span style="color: #64748b; font-size: 0.85rem; font-family: monospace; word-break: break-all;">${webhookUrl.substring(0, 60)}...</span>
+                            </div>
+                        `;
+                    } else {
+                        webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
+                    }
                 }
             } else {
-                webhookHtml = '<strong>Configurato:</strong> ❌ No';
+                webhookHtml = '<strong style="color: #ef4444;">❌ Non configurato</strong>';
             }
             document.getElementById('webhookInfo').innerHTML = webhookHtml;
             
-            // Automations
+            // Automations - Enhanced
             let automationsHtml = '';
             if (d.automations) {
                 if (d.automations.sport) {
-                    automationsHtml += `<strong>Sport:</strong><br>`;
-                    automationsHtml += `• Notifiche: ${d.automations.sport.enableNotifications ? '✅' : '❌'}<br>`;
-                    automationsHtml += `• Avviso prima: ${d.automations.sport.notifyBefore || 30} min<br>`;
-                    automationsHtml += `• Esercizi Discord: ${d.automations.sport.sendExercisesDiscord ? '✅' : '❌'}<br>`;
-                    automationsHtml += `• Fascia oraria: ${d.automations.sport.preferredTimeSlot || 'Non impostata'}<br><br>`;
+                    automationsHtml += `
+                        <div style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border-left: 3px solid #3b82f6;">
+                            <strong style="color: #3b82f6;">💪 Sport</strong>
+                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                                <div>Notifiche: ${d.automations.sport.enableNotifications ? '✅' : '❌'}</div>
+                                <div>Avviso: ${d.automations.sport.notifyBefore || 30} min</div>
+                                <div>Esercizi Discord: ${d.automations.sport.sendExercisesDiscord ? '✅' : '❌'}</div>
+                                <div>Fascia: ${d.automations.sport.preferredTimeSlot || 'N/A'}</div>
+                            </div>
+                        </div>
+                    `;
                 }
                 if (d.automations.habits) {
-                    automationsHtml += `<strong>Abitudini:</strong><br>`;
-                    automationsHtml += `• Auto-tracking: ${d.automations.habits.autoTracking ? '✅' : '❌'}<br>`;
-                    automationsHtml += `• Reminder: ${d.automations.habits.dailyReminder || 'Nessuno'}<br>`;
-                    automationsHtml += `• Obiettivo settimanale: ${d.automations.habits.weeklyGoal || 5} giorni`;
+                    automationsHtml += `
+                        <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 3px solid #10b981;">
+                            <strong style="color: #10b981;">🔄 Abitudini</strong>
+                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                                <div>Auto-tracking: ${d.automations.habits.autoTracking ? '✅' : '❌'}</div>
+                                <div>Reminder: ${d.automations.habits.dailyReminder || 'Nessuno'}</div>
+                                <div>Streak: ${d.automations.habits.streakNotifications ? '✅' : '❌'}</div>
+                                <div>Obiettivo: ${d.automations.habits.weeklyGoal || 5} giorni</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (d.automations.notifications) {
+                    automationsHtml += `
+                        <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                            <strong style="color: #8b5cf6;">🔔 Notifiche Discord</strong>
+                            <div style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+                                <div>Monitor: ${d.automations.notifications.notifyMonitorProducts ? '✅' : '❌'}</div>
+                                <div>Workout: ${d.automations.notifications.notifyWorkouts ? '✅' : '❌'}</div>
+                                <div>Abitudini: ${d.automations.notifications.notifyHabits ? '✅' : '❌'}</div>
+                                <div>eBay: ${d.automations.notifications.notifyEbay ? '✅' : '❌'}</div>
+                                <div colspan="2" style="grid-column: 1 / -1; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                                    Frequenza: <strong>${d.automations.notifications.frequency || 'realtime'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
             } else {
                 automationsHtml = '<em style="color: #94a3b8;">Nessuna automazione configurata</em>';
             }
             document.getElementById('automationsInfo').innerHTML = automationsHtml;
+            
+            // eBay Connection - Enhanced
+            let ebayHtml = '';
+            if (d.ebay) {
+                if (d.ebay.connected) {
+                    ebayHtml = `
+                        <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px; border-left: 3px solid #10b981;">
+                            <strong style="color: #10b981;">✅ Connesso</strong>
+                            <div style="margin-top: 0.5rem; font-size: 0.85rem;">
+                                <div>Scope: <span style="color: #94a3b8;">${d.ebay.scope || 'N/A'}</span></div>
+                                ${d.ebay.expiresAt ? `<div>Scade: <span style="color: #94a3b8;">${new Date(d.ebay.expiresAt).toLocaleDateString('it-IT')}</span></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    ebayHtml = '<div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border-left: 3px solid #ef4444;"><strong style="color: #ef4444;">❌ Non connesso</strong></div>';
+                }
+            } else {
+                ebayHtml = '<em style="color: #94a3b8;">Nessuna connessione eBay</em>';
+            }
+            document.getElementById('ebayInfo').innerHTML = ebayHtml;
         }
 
         async function exportUserData() {
@@ -1144,10 +1248,23 @@
             container.innerHTML = '<div class="users-grid">' + 
                 usersWithData.map(user => {
                     const interestsCount = user.interests?.length || 0;
-                    const webhookUrl = user.webhook || 'N/A';
-                    const webhookDisplay = webhookUrl !== 'N/A' && webhookUrl.length > 50 
-                        ? webhookUrl.substring(0, 50) + '...' 
-                        : webhookUrl;
+                    
+                    // Webhook data (new format with multiple pages)
+                    let webhookDisplay = '❌ Non configurato';
+                    let webhookPages = [];
+                    if (user.webhook) {
+                        if (typeof user.webhook === 'object' && user.webhook.webhooks) {
+                            webhookPages = Object.keys(user.webhook.webhooks);
+                            if (webhookPages.length > 0) {
+                                webhookDisplay = `✅ Configurato (${webhookPages.length} pagina/e)`;
+                            }
+                        } else {
+                            const webhookUrl = typeof user.webhook === 'string' ? user.webhook : user.webhook.url || user.webhook.webhook || user.webhook.default;
+                            if (webhookUrl) {
+                                webhookDisplay = '✅ Configurato';
+                            }
+                        }
+                    }
                     
                     // Sport data
                     const sportAge = user.sport?.age || 'N/A';
@@ -1156,8 +1273,6 @@
                     const sportGoal = user.sport?.goal || 'N/A';
                     const sportLevel = user.sport?.level || 'N/A';
                     const weeklyCommitment = user.sport?.weeklyCommitment || 'N/A';
-                    const completedWorkouts = user.sport?.stats?.completedWorkouts?.length || 0;
-                    const totalCalories = user.sport?.stats?.totalCalories || 0;
                     const completedWorkouts = user.sport?.stats?.completedWorkouts?.length || 0;
                     const totalCalories = user.sport?.stats?.totalCalories || 0;
                     
@@ -1226,9 +1341,13 @@
                                 <div style="font-size: 0.7rem; font-weight: 700; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                     🔔 Webhook
                                 </div>
-                                <div style="font-size: 0.7rem; color: ${webhookUrl !== 'N/A' ? '#10b981' : '#64748b'}; word-break: break-all;">
-                                    ${webhookUrl !== 'N/A' ? '✅ Configurato' : '❌ Non configurato'}<br>
-                                    ${webhookUrl !== 'N/A' ? `<span style="color: #94a3b8; font-size: 0.65rem;">${webhookDisplay}</span>` : ''}
+                                <div style="font-size: 0.7rem; color: ${webhookPages.length > 0 || webhookDisplay.includes('✅') ? '#10b981' : '#64748b'};">
+                                    ${webhookDisplay}
+                                    ${webhookPages.length > 0 ? `
+                                        <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.25rem;">
+                                            ${webhookPages.map(page => `<span style="background: #0f172a; color: #a78bfa; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.65rem; text-transform: capitalize;">${page}</span>`).join('')}
+                                        </div>
+                                    ` : ''}
                                 </div>
                             </div>
                             

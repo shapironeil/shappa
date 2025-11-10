@@ -1571,10 +1571,63 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 // DISCORD WEBHOOK ENDPOINTS (SERVER-SIDE)
 // ============================================
 
-// GET - Retrieve user Discord webhook
+// POST - Save user Discord webhook (with page context support)
+app.post('/api/webhooks/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { webhook, page = 'generale' } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        if (!webhook || !webhook.includes('discord.com/api/webhooks/')) {
+            return res.status(400).json({ success: false, error: 'Invalid webhook URL' });
+        }
+
+        const filePath = getUserWebhookPath(userId);
+        let webhookData = {};
+        
+        // Load existing webhooks if file exists
+        if (fs.existsSync(filePath)) {
+            try {
+                webhookData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            } catch (e) {
+                // If old format (just URL string), convert to new format
+                const oldData = fs.readFileSync(filePath, 'utf8');
+                if (oldData.startsWith('http')) {
+                    webhookData = { generale: oldData };
+                }
+            }
+        }
+        
+        // Save webhook for specific page
+        if (!webhookData.webhooks) {
+            webhookData.webhooks = {};
+        }
+        webhookData.webhooks[page] = {
+            url: webhook,
+            updatedAt: new Date().toISOString()
+        };
+        webhookData.default = webhook; // Keep default for backward compatibility
+        webhookData.updatedAt = new Date().toISOString();
+
+        await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
+        
+        console.log(`💾 Saved Discord webhook for user ${userId}, page: ${page}`);
+        return res.json({ success: true, page });
+    } catch (error) {
+        console.error('❌ Error saving webhook:', error);
+        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
+    }
+});
+
+// GET - Get user Discord webhook (with page context support)
 app.get('/api/webhooks/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+        const { page = 'generale' } = req.query;
+
         if (!userId) {
             return res.status(400).json({ success: false, error: 'userId required' });
         }
@@ -1586,42 +1639,31 @@ app.get('/api/webhooks/:userId', async (req, res) => {
         }
 
         const data = await fsPromises.readFile(filePath, 'utf8');
-        const webhookData = JSON.parse(data);
+        let webhookData;
         
-        return res.json({ success: true, webhook: webhookData.url });
+        try {
+            webhookData = JSON.parse(data);
+        } catch (e) {
+            // Old format (just URL string)
+            return res.json({ success: true, webhook: data.trim() });
+        }
+        
+        // New format: get webhook for specific page
+        if (webhookData.webhooks && webhookData.webhooks[page]) {
+            return res.json({ 
+                success: true, 
+                webhook: webhookData.webhooks[page].url || webhookData.default 
+            });
+        }
+        
+        // Fallback to default
+        return res.json({ 
+            success: true, 
+            webhook: webhookData.default || webhookData.webhook || null 
+        });
     } catch (error) {
         console.error('❌ Error reading webhook:', error);
         return res.status(500).json({ success: false, error: 'Failed to read webhook' });
-    }
-});
-
-// POST - Save user Discord webhook
-app.post('/api/webhooks/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { webhook } = req.body;
-
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        if (!webhook || !webhook.includes('discord.com/api/webhooks/')) {
-            return res.status(400).json({ success: false, error: 'Invalid webhook URL' });
-        }
-
-        const filePath = getUserWebhookPath(userId);
-        const webhookData = {
-            url: webhook,
-            updatedAt: new Date().toISOString()
-        };
-
-        await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
-        
-        console.log(`💾 Saved Discord webhook for user ${userId}`);
-        return res.json({ success: true });
-    } catch (error) {
-        console.error('❌ Error saving webhook:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
     }
 });
 
@@ -2565,12 +2607,13 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
             console.log(`No interests for ${userId}`);
         }
 
-        // 4. Webhooks
+        // 4. Webhooks (new format with multiple pages)
         try {
             const webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
             if (fs.existsSync(webhookPath)) {
                 const webhookData = JSON.parse(fs.readFileSync(webhookPath, 'utf8'));
-                userData.data.webhook = webhookData.webhook || webhookData;
+                // Return full webhook data (supports both old and new format)
+                userData.data.webhook = webhookData;
             }
         } catch (err) {
             console.log(`No webhook for ${userId}`);

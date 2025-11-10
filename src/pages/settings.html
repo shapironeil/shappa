@@ -385,6 +385,30 @@
             margin-top: var(--venus-space-xs);
         }
 
+        /* Webhook Menu Dropdown Styles */
+        .webhook-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .webhook-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .webhook-menu-item:hover {
+            background: var(--venus-bg-gray);
+        }
+
+        .webhook-menu-item.active {
+            background: var(--venus-primary-light);
+            border-left: 3px solid var(--venus-primary);
+        }
+
         /* Switch/Toggle Styles */
         .venus-switch {
             position: relative;
@@ -856,7 +880,7 @@
                             </div>
                         </div>
                         
-                        <!-- Discord Webhook Configuration -->
+                        <!-- Discord Webhook Configuration - Multi-Page System -->
                         <div class="venus-widget">
                             <div class="venus-widget-content">
                                 <h3 class="venus-widget-title">🔔 Discord Webhook - Notifiche</h3>
@@ -871,6 +895,63 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Webhook Selector - Menu a comparsa -->
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Seleziona Pagina</label>
+                                    <div style="position: relative;">
+                                        <button 
+                                            class="venus-form-select" 
+                                            id="webhookPageSelector" 
+                                            onclick="toggleWebhookMenu()"
+                                            style="cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center;"
+                                        >
+                                            <span id="selectedPageText">💪 Sport</span>
+                                            <span style="font-size: 0.8rem;">▼</span>
+                                        </button>
+                                        
+                                        <!-- Dropdown Menu -->
+                                        <div id="webhookPageMenu" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--venus-border); border-radius: var(--venus-radius); margin-top: 4px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 300px; overflow-y: auto;">
+                                            <div class="webhook-menu-item" onclick="selectWebhookPage('sport')">
+                                                <span style="font-size: 1.2rem; margin-right: 8px;">💪</span>
+                                                <div>
+                                                    <div style="font-weight: 600;">Sport</div>
+                                                    <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche workout e allenamenti</div>
+                                                </div>
+                                            </div>
+                                            <div class="webhook-menu-item" onclick="selectWebhookPage('dieta')">
+                                                <span style="font-size: 1.2rem; margin-right: 8px;">🥗</span>
+                                                <div>
+                                                    <div style="font-weight: 600;">Dieta</div>
+                                                    <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche pasti e obiettivi nutrizionali</div>
+                                                </div>
+                                            </div>
+                                            <div class="webhook-menu-item" onclick="selectWebhookPage('calendario')">
+                                                <span style="font-size: 1.2rem; margin-right: 8px;">📅</span>
+                                                <div>
+                                                    <div style="font-weight: 600;">Calendario</div>
+                                                    <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche eventi e promemoria</div>
+                                                </div>
+                                            </div>
+                                            <div class="webhook-menu-item" onclick="selectWebhookPage('interessi')">
+                                                <span style="font-size: 1.2rem; margin-right: 8px;">🔍</span>
+                                                <div>
+                                                    <div style="font-weight: 600;">Interessi</div>
+                                                    <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche monitor prodotti</div>
+                                                </div>
+                                            </div>
+                                            <div class="webhook-menu-item" onclick="selectWebhookPage('generale')">
+                                                <span style="font-size: 1.2rem; margin-right: 8px;">⚙️</span>
+                                                <div>
+                                                    <div style="font-weight: 600;">Generale</div>
+                                                    <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche generali e sistema</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="venus-form-help">Scegli per quale pagina configurare il webhook</div>
+                                </div>
+                                
+                                <!-- Webhook URL Input (dynamically updated) -->
                                 <div class="venus-form-group">
                                     <label class="venus-form-label">Webhook URL</label>
                                     <input type="text" class="venus-form-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN">
@@ -1481,6 +1562,69 @@
             alert('Esportazione dati avviata. Riceverai un email con il link per il download.');
         }
 
+        // ========================================
+        // WEBHOOK MULTI-PAGE SYSTEM
+        // ========================================
+        let currentWebhookPage = 'sport'; // Default page
+
+        function toggleWebhookMenu() {
+            const menu = document.getElementById('webhookPageMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function selectWebhookPage(page) {
+            currentWebhookPage = page;
+            const menu = document.getElementById('webhookPageMenu');
+            menu.style.display = 'none';
+            
+            // Update selector text
+            const pageNames = {
+                'sport': '💪 Sport',
+                'dieta': '🥗 Dieta',
+                'calendario': '📅 Calendario',
+                'interessi': '🔍 Interessi',
+                'generale': '⚙️ Generale'
+            };
+            document.getElementById('selectedPageText').textContent = pageNames[page] || page;
+            
+            // Update active state
+            document.querySelectorAll('.webhook-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.webhook-menu-item').classList.add('active');
+            
+            // Load webhook for selected page
+            loadWebhookForPage(page);
+        }
+
+        async function loadWebhookForPage(page) {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) return;
+
+            try {
+                // Load webhook with page context
+                const response = await fetch(`${API_BASE}/api/webhooks/${user.id}?page=${page}`);
+                const data = await response.json();
+                
+                if (data.success && data.webhook) {
+                    document.getElementById('discordWebhookUrl').value = data.webhook;
+                } else {
+                    document.getElementById('discordWebhookUrl').value = '';
+                }
+            } catch (error) {
+                console.error('Error loading webhook:', error);
+            }
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('webhookPageMenu');
+            const selector = document.getElementById('webhookPageSelector');
+            if (menu && selector && !menu.contains(event.target) && !selector.contains(event.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
         // Discord Webhook Functions
         async function saveDiscordWebhook() {
             const webhookUrl = document.getElementById('discordWebhookUrl').value.trim();
@@ -1495,7 +1639,7 @@
                 return;
             }
             
-            // 🔴 SALVA SU SERVER, NON localStorage!
+            // 🔴 SALVA SU SERVER CON CONTESTO PAGINA
             const user = AuthManager.getCurrentUser();
             if (!user || !user.id) {
                 alert('❌ Devi essere autenticato per salvare il webhook');
@@ -1503,10 +1647,14 @@
             }
 
             try {
+                // Save webhook with page context
                 const response = await fetch(`${API_BASE}/api/webhooks/${user.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ webhook: webhookUrl })
+                    body: JSON.stringify({ 
+                        webhook: webhookUrl,
+                        page: currentWebhookPage // Include page context
+                    })
                 });
                 
                 const data = await response.json();
@@ -1515,7 +1663,7 @@
                     document.getElementById('discord-status-badge').textContent = 'Connesso';
                     document.getElementById('discord-status-badge').className = 'venus-integration-status venus-status-connected';
                     
-                    alert('✅ Discord Webhook salvato su SERVER con successo!');
+                    alert(`✅ Discord Webhook salvato per ${currentWebhookPage} con successo!`);
                 } else {
                     alert('❌ Errore salvataggio: ' + data.error);
                 }
@@ -1585,7 +1733,8 @@
             const statusBadge = document.getElementById('discord-status-badge');
             
             try {
-                const response = await fetch(`${API_BASE}/api/webhooks/${user.id}`);
+                // Load webhook for current page
+                const response = await fetch(`${API_BASE}/api/webhooks/${user.id}?page=${currentWebhookPage}`);
                 const data = await response.json();
                 
                 if (data.success && data.webhook) {
@@ -1593,6 +1742,11 @@
                     if (statusBadge) {
                         statusBadge.textContent = 'Connesso';
                         statusBadge.className = 'venus-integration-status venus-status-connected';
+                    }
+                } else {
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Non configurato';
+                        statusBadge.className = 'venus-integration-status';
                     }
                 }
                 
