@@ -2424,13 +2424,18 @@
                     }
                 } catch (error) {
                     console.error('❌ Error saving diet to server:', error);
-                    // In caso di errore, mostra messaggio ma NON salvare localmente
-                    alert('❌ Errore nel salvare la dieta sul server. Riprova più tardi.');
-                    console.log('ℹ️ Dieta NON salvata (server-first workflow: tutto deve essere salvato sul server)');
+                    // NON aggiornare dati in memoria se API fallisce
+                    // Ricarica dati dal server per evitare inconsistenze
+                    await loadDietData();
+                    await loadUserProfile();
+                    alert('❌ Errore nel salvare la dieta sul server. I dati sono stati ripristinati. Riprova più tardi.');
+                    return; // Esci senza aggiornare UI
                 }
             } catch (error) {
-                console.error('Errore salvataggio dieta:', error);
-                alert('❌ Errore nel salvare la dieta');
+                console.error('❌ Errore salvataggio dieta:', error);
+                await loadDietData();
+                await loadUserProfile();
+                alert('❌ Errore nel salvare la dieta sul server. Riprova più tardi.');
             }
         }
 
@@ -2452,21 +2457,25 @@
                     }
                 } catch (error) {
                     console.error('❌ Error removing diet from server:', error);
-                    // In caso di errore, mostra messaggio
-                    alert('❌ Errore nel rimuovere la dieta dal server. Riprova più tardi.');
-                    console.log('ℹ️ Dieta NON rimossa (server-first workflow: tutto deve essere salvato sul server)');
-                    return; // Non continuare se l'API fallisce
+                    // NON aggiornare dati in memoria se API fallisce
+                    // Ricarica dati dal server per evitare inconsistenze
+                    await loadDietData();
+                    await loadUserProfile();
+                    alert('❌ Errore nel rimuovere la dieta dal server. I dati sono stati ripristinati. Riprova più tardi.');
+                    return; // Esci senza aggiornare UI
                 }
                 
-                // Clear selected diet
+                // Clear selected diet solo dopo conferma dal server
                 dietData.selectedDiet = null;
                 selectedDiet = null;
                 updateDietName();
                 renderCalendar();
-                renderDietProposals(); // Re-render per rimuovere lo stato selezionato
+                renderDietProposals();
             } catch (error) {
-                console.error('Errore rimozione dieta:', error);
-                alert('❌ Errore nel rimuovere la dieta');
+                console.error('❌ Errore rimozione dieta:', error);
+                await loadDietData();
+                await loadUserProfile();
+                alert('❌ Errore nel rimuovere la dieta dal server. Riprova più tardi.');
             }
         }
 
@@ -2662,9 +2671,11 @@
                 }
             } catch (error) {
                 console.error('❌ Error saving preferences to server:', error);
-                // In caso di errore, mostra messaggio all'utente ma NON salvare localmente
-                alert('❌ Errore nel salvare le preferenze sul server. Riprova più tardi.');
-                console.log('ℹ️ Dati NON salvati (server-first workflow: tutto deve essere salvato sul server)');
+                // NON aggiornare dati in memoria se API fallisce
+                // Ricarica dati dal server per evitare inconsistenze
+                await loadDietData();
+                await loadUserProfile();
+                alert('❌ Errore nel salvare le preferenze sul server. I dati sono stati ripristinati. Riprova più tardi.');
             }
         }
 
