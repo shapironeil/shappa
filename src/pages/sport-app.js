@@ -12,7 +12,7 @@ let userData = {
 };
 
 let scheduledWorkouts = [];
-let selectedProgramId = null;
+let selectedProgramIds = []; // Array per permettere selezione multipla
 let currentQuestionIndex = 0;
 let currentAnswer = "";
 
@@ -434,7 +434,7 @@ function renderPrograms(tab) {
     }
 
     container.innerHTML = programs.map(program => {
-        const isSelected = selectedProgramId === program.id;
+        const isSelected = selectedProgramIds.includes(program.id);
         const icon = getIconHTML(program.icon);
         const diffColor = getDifficultyColor(program.level);
         const diffLabel = getDifficultyLabel(program.level);
@@ -477,10 +477,10 @@ function renderPrograms(tab) {
         `;
     }).join('');
     
-    // Scroll automatico alla card selezionata se presente
-    if (selectedProgramId) {
+    // Scroll automatico alla prima card selezionata se presente
+    if (selectedProgramIds.length > 0) {
         setTimeout(() => {
-            const selectedCard = container.querySelector(`[data-program-id="${selectedProgramId}"]`);
+            const selectedCard = container.querySelector(`[data-program-id="${selectedProgramIds[0]}"]`);
             if (selectedCard) {
                 selectedCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 console.log('✅ Scroll automatico alla card selezionata');
@@ -612,7 +612,10 @@ function startProgram(programId) {
     const program = workoutPrograms.find(p => p.id === programId);
     if (!program) return;
 
-    selectedProgramId = programId;
+    // Aggiungi alla lista selezionati (non sostituire)
+    if (!selectedProgramIds.includes(programId)) {
+        selectedProgramIds.push(programId);
+    }
 
     // Open schedule modal
     const modal = document.getElementById('scheduleModal');
@@ -666,7 +669,7 @@ function confirmSchedule() {
         return;
     }
 
-    const program = workoutPrograms.find(p => p.id === selectedProgramId);
+    const program = workoutPrograms.find(p => p.id === selectedProgramIds[selectedProgramIds.length - 1]);
     if (!program) return;
 
     // Clear existing workouts for this program
@@ -696,10 +699,12 @@ function closeSchedule() {
 }
 
 function cancelProgram(programId) {
-
+    // Rimuovi dalle selezioni
+    selectedProgramIds = selectedProgramIds.filter(id => id !== programId);
+    
+    // Rimuovi workout schedulati per questo programma
     scheduledWorkouts = scheduledWorkouts.filter(w => w.workoutId !== programId);
     saveScheduledWorkouts();
-    selectedProgramId = null;
     
     renderWeeklyCalendar();
     renderPrograms(document.querySelector('.tab-btn.active').dataset.tab);
