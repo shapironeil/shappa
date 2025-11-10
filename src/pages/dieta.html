@@ -1831,7 +1831,7 @@
 
             const missing = getMissingIngredients(recipe);
             if (missing.length === 0) {
-                alert('Hai già tutti gli ingredienti!');
+                // Utente ha già tutti gli ingredienti, nessuna azione necessaria
                 return;
             }
 
@@ -1851,7 +1851,6 @@
             });
 
             saveShoppingList();
-            alert(`✅ Aggiunti ${missing.length} ingredienti alla lista della spesa!`);
         }
 
         // Auto-load recipes on page load
