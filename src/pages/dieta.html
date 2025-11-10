@@ -206,18 +206,19 @@
             margin-top: 0.25rem;
         }
 
-        /* Main Content Grid */
+        /* Main Content Grid - Match Figma Design */
         .content-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 1.5rem;
-            max-width: 1280px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
         @media (min-width: 1024px) {
             .content-grid {
-                grid-template-columns: 2fr 1fr;
+                grid-template-columns: 2fr 380px;
+                gap: 1.5rem;
             }
         }
 
@@ -235,13 +236,13 @@
             gap: 1.5rem;
         }
 
-        /* Card Base */
+        /* Card Base - Match Figma Design */
         .card {
             background: white;
-            border-radius: 0.625rem;
+            border-radius: 0.75rem;
             padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
         }
 
         .card-header {
@@ -309,47 +310,60 @@
 
         .calendar-days-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.75rem;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
         }
 
-        @media (min-width: 768px) {
+        @media (max-width: 1024px) {
             .calendar-days-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
 
-        @media (min-width: 1024px) {
+        @media (max-width: 768px) {
             .calendar-days-grid {
-                grid-template-columns: repeat(7, 1fr);
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
         .calendar-day {
-            padding: 0.75rem;
-            border-radius: 0.5rem;
+            padding: 1rem 0.75rem;
+            border-radius: 1rem;
             border: 2px solid #e5e7eb;
             background: white;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
         }
 
         .calendar-day:hover {
-            border-color: #60a5fa;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
         }
 
         .calendar-day.selected {
-            background: #fff7ed;
-            border-color: #fb923c;
+            background: linear-gradient(to bottom, #eff6ff 0%, white 100%);
+            border-color: #3b82f6;
+            border-width: 2px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .calendar-day.today {
-            background: #eff6ff;
-            border-color: #60a5fa;
+            background: linear-gradient(to bottom, #eff6ff 0%, white 100%);
+            border-color: #3b82f6;
+            border-width: 2px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .calendar-day.has-workout {
+            border-color: #3b82f6;
+            border-width: 2px;
         }
 
         .calendar-day-name {
