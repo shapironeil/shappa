@@ -2659,6 +2659,19 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
     }
 });
 
+// ============================================
+// AUTOMATIONS API
+// ============================================
+
+const DATA_DIR = path.join(__dirname, 'data');
+const AUTOMATIONS_DIR = path.join(DATA_DIR, 'automations');
+
+// Ensure automations directory exists
+if (!fs.existsSync(AUTOMATIONS_DIR)) {
+    fs.mkdirSync(AUTOMATIONS_DIR, { recursive: true });
+    console.log('📁 Created automations directory');
+}
+
 /**
  * POST /api/automations/sport
  * Save sport automation settings
@@ -2671,7 +2684,7 @@ app.post('/api/automations/sport', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing userId' });
         }
 
-        const automationsDir = path.join(DATA_DIR, 'automations');
+        const automationsDir = AUTOMATIONS_DIR;
         if (!fs.existsSync(automationsDir)) {
             fs.mkdirSync(automationsDir, { recursive: true });
         }
@@ -2709,7 +2722,7 @@ app.post('/api/automations/sport', async (req, res) => {
 app.get('/api/automations/sport/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
 
         if (!fs.existsSync(automationsPath)) {
             return res.json({
@@ -2751,7 +2764,7 @@ app.post('/api/automations/habits', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing userId' });
         }
 
-        const automationsDir = path.join(DATA_DIR, 'automations');
+        const automationsDir = AUTOMATIONS_DIR;
         if (!fs.existsSync(automationsDir)) {
             fs.mkdirSync(automationsDir, { recursive: true });
         }
@@ -2789,7 +2802,7 @@ app.post('/api/automations/habits', async (req, res) => {
 app.get('/api/automations/habits/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
 
         if (!fs.existsSync(automationsPath)) {
             return res.json({
@@ -2831,7 +2844,7 @@ app.post('/api/automations/notifications', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Missing userId' });
         }
 
-        const automationsDir = path.join(DATA_DIR, 'automations');
+        const automationsDir = AUTOMATIONS_DIR;
         if (!fs.existsSync(automationsDir)) {
             fs.mkdirSync(automationsDir, { recursive: true });
         }
@@ -2869,7 +2882,7 @@ app.post('/api/automations/notifications', async (req, res) => {
 app.get('/api/automations/notifications/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
+        const automationsPath = path.join(AUTOMATIONS_DIR, `${userId}.json`);
 
         if (!fs.existsSync(automationsPath)) {
             return res.json({
