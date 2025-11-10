@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            // IMPORTANTE: renderPrograms mantiene lo stato selectedProgramId
             renderPrograms(btn.dataset.tab);
         });
     });
@@ -55,10 +56,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     ]);
 
     // Render initial UI after data is loaded
+    // IMPORTANTE: renderPrograms deve essere chiamato DOPO loadScheduledWorkouts
+    // per assicurarsi che selectedProgramId sia già caricato
     renderWeeklyCalendar();
     renderPrograms('recommended');
     renderProgressWidget();
     renderPersonalCard();
+    
+    // Se c'è un programma selezionato, assicurati che sia visibile anche nella tab "Tutti"
+    if (selectedProgramId) {
+        console.log('✅ Programma selezionato caricato:', selectedProgramId);
+    }
 });
 
 // ========== AUTH ==========
@@ -126,6 +134,12 @@ async function loadScheduledWorkouts() {
                 scheduledWorkouts = result.data.weekSchedule || [];
                 selectedProgramId = result.data.programId || null;
                 console.log('✅ Loaded workouts:', scheduledWorkouts.length, 'Program ID:', selectedProgramId);
+                
+                // Se c'è un programma selezionato, log per debug
+                if (selectedProgramId) {
+                    const program = workoutPrograms.find(p => p.id === selectedProgramId);
+                    console.log('✅ Programma selezionato trovato:', program?.title || 'ID: ' + selectedProgramId);
+                }
             }
         }
     } catch (error) {
