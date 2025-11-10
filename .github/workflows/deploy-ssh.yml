@@ -15,69 +15,150 @@ jobs:
       - name: Validate secrets
         run: |
           echo "🔍 Validating required secrets..."
+          echo ""
+          
+          MISSING_SECRETS=0
+          
           if [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
             echo "❌ ERROR: SSH_PRIVATE_KEY secret is missing!"
-            exit 1
+            MISSING_SECRETS=$((MISSING_SECRETS + 1))
+          else
+            KEY_LENGTH=$(echo "${{ secrets.SSH_PRIVATE_KEY }}" | wc -c)
+            echo "✅ SSH_PRIVATE_KEY: configured (length: $KEY_LENGTH chars)"
+            if [ "$KEY_LENGTH" -lt 100 ]; then
+              echo "   ⚠️  WARNING: Key seems too short. Make sure it includes BEGIN/END lines."
+            fi
           fi
+          
           if [ -z "${{ secrets.DEPLOY_HOST }}" ]; then
             echo "❌ ERROR: DEPLOY_HOST secret is missing!"
-            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
+            MISSING_SECRETS=$((MISSING_SECRETS + 1))
+          else
+            echo "✅ DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}"
           fi
+          
           if [ -z "${{ secrets.DEPLOY_USER }}" ]; then
             echo "❌ ERROR: DEPLOY_USER secret is missing!"
-            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
-            exit 1
+            MISSING_SECRETS=$((MISSING_SECRETS + 1))
+          else
+            echo "✅ DEPLOY_USER: ${{ secrets.DEPLOY_USER }}"
           fi
+          
           if [ -z "${{ secrets.DEPLOY_PATH }}" ]; then
             echo "❌ ERROR: DEPLOY_PATH secret is missing!"
-            echo "   Configure it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            MISSING_SECRETS=$((MISSING_SECRETS + 1))
+          else
+            echo "✅ DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}"
+          fi
+          
+          echo ""
+          if [ "$MISSING_SECRETS" -gt 0 ]; then
+            echo "❌ $MISSING_SECRETS secret(s) missing!"
+            echo ""
+            echo "Configure missing secrets at:"
+            echo "https://github.com/${{ github.repository }}/settings/secrets/actions"
             exit 1
           fi
-          echo "✅ All secrets are configured"
-          echo "   Host: ${{ secrets.DEPLOY_HOST }}"
-          echo "   User: ${{ secrets.DEPLOY_USER }}"
-          echo "   Path: ${{ secrets.DEPLOY_PATH }}"
+          
+          echo "✅ All secrets are configured correctly!"
+          echo ""
 
       - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-        continue-on-error: false
-
-      - name: Test SSH connection
         run: |
-          echo "🔌 Testing SSH connection to ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}..."
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "echo 'SSH connection successful'"
+          echo "🔧 Setting up SSH..."
+          echo "Creating temporary SSH key file..."
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "✅ SSH key file created"
+          
+          # Test key format
+          if grep -q "BEGIN.*PRIVATE KEY" ~/.ssh/deploy_key; then
+            echo "✅ SSH key format looks correct"
+          else
+            echo "❌ ERROR: SSH key format invalid (missing BEGIN/END markers)"
+            exit 1
+          fi
+          
+          # Add to ssh-agent
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/deploy_key
+          echo "✅ SSH key added to agent"
+          
+          # Test connection
+          echo ""
+          echo "🔌 Testing SSH connection..."
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o ConnectTimeout=10 \
+              -o LogLevel=ERROR \
+              -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+              "echo 'SSH connection successful' && whoami && pwd" || {
+            echo ""
+            echo "❌ SSH connection failed!"
+            echo ""
+            echo "Troubleshooting steps:"
+            echo "1. Verify SSH_PRIVATE_KEY is complete (includes BEGIN/END lines)"
+            echo "2. Verify DEPLOY_USER exists on server: ${{ secrets.DEPLOY_USER }}"
+            echo "3. Verify DEPLOY_HOST is reachable: ${{ secrets.DEPLOY_HOST }}"
+            echo "4. Check that public key is in ~/.ssh/authorized_keys on server"
+            echo ""
+            exit 1
+          }
+          
+          echo "✅ SSH connection successful!"
 
       - name: Sync files to server
         run: |
           echo "📦 Syncing files to server..."
+          echo "Source: $(pwd)"
+          echo "Destination: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}"
+          echo ""
+          
           rsync -avz --delete \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.env' \
             --exclude='.env.local' \
+            --exclude='.env.private' \
             --exclude='data/' \
             --exclude='ssl/' \
             --exclude='*.log' \
             --exclude='.DS_Store' \
-            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
-        env:
-          RSYNC_RSH: 'ssh -o StrictHostKeyChecking=no'
+            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/deploy_key" \
+            ./ ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }} || {
+            echo ""
+            echo "❌ File sync failed!"
+            exit 1
+          }
+          
+          echo ""
+          echo "✅ Files synced successfully!"
 
       - name: Remote post-deploy
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           echo "🚀 Running post-deploy tasks..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
-            cd $DEPLOY_PATH
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
+            set -e  # Exit on error
+            cd ${{ secrets.DEPLOY_PATH }}
+            
+            echo "📂 Current directory: $(pwd)"
+            echo "👤 User: $(whoami)"
+            echo ""
             
             # Installa dipendenze
             if [ -f package.json ]; then
               echo "📦 Installing dependencies..."
-              npm ci --production
+              npm ci --production || {
+                echo "⚠️ npm ci failed, trying npm install..."
+                npm install --production
+              }
+            else
+              echo "⚠️ package.json not found, skipping dependency installation"
             fi
             
             # Esegui restart script se esiste
@@ -89,26 +170,45 @@ jobs:
               # Fallback: restart con PM2
               if command -v pm2 &> /dev/null; then
                 echo "🚀 Restarting with PM2..."
-                pm2 restart shappa || pm2 start server.js --name shappa
+                pm2 restart shappa || pm2 start server.js --name shappa || {
+                  echo "⚠️ PM2 restart failed, trying to start fresh..."
+                  pm2 delete shappa 2>/dev/null || true
+                  pm2 start server.js --name shappa
+                }
                 pm2 save
+                echo "✅ PM2 process restarted"
               else
                 echo "⚠️ PM2 not found. Please restart manually."
               fi
             fi
             
+            echo ""
             echo "✅ Deploy completed!"
           ENDSSH
 
       - name: Verify deployment
-        env:
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           echo "🔍 Verifying deployment..."
-          ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
-            cd $DEPLOY_PATH
+          ssh -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -i ~/.ssh/deploy_key \
+              ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} << ENDSSH
+            cd ${{ secrets.DEPLOY_PATH }}
+            echo "📂 Directory: $(pwd)"
+            echo "📦 Files: $(ls -la | head -5)"
+            echo ""
+            
             if command -v pm2 &> /dev/null; then
+              echo "📊 PM2 Status:"
               pm2 status
+              echo ""
+              echo "📋 PM2 Logs (last 10 lines):"
+              pm2 logs shappa --lines 10 --nostream || echo "No logs available"
+            else
+              echo "⚠️ PM2 not found"
             fi
+            
+            echo ""
             echo "✅ Verification complete"
           ENDSSH
 
