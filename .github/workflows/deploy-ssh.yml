@@ -34,20 +34,24 @@ jobs:
           
           # Check DEPLOY_HOST
           DEPLOY_HOST="${{ secrets.DEPLOY_HOST }}"
-          if [ -z "$DEPLOY_HOST" ] || [ "$DEPLOY_HOST" = "" ]; then
-            echo "❌ ERROR: DEPLOY_HOST secret is missing!"
+          DEPLOY_HOST_LENGTH=${#DEPLOY_HOST}
+          if [ -z "$DEPLOY_HOST" ] || [ "$DEPLOY_HOST" = "" ] || [ "$DEPLOY_HOST_LENGTH" -eq 0 ]; then
+            echo "❌ ERROR: DEPLOY_HOST secret is missing or empty!"
+            echo "   Debug: length=$DEPLOY_HOST_LENGTH"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            echo "✅ DEPLOY_HOST: configured (value: ${DEPLOY_HOST:0:3}***)"
+            echo "✅ DEPLOY_HOST: configured (length: $DEPLOY_HOST_LENGTH chars, value: ${DEPLOY_HOST:0:3}***)"
           fi
           
           # Check DEPLOY_USER
           DEPLOY_USER="${{ secrets.DEPLOY_USER }}"
-          if [ -z "$DEPLOY_USER" ] || [ "$DEPLOY_USER" = "" ]; then
-            echo "❌ ERROR: DEPLOY_USER secret is missing!"
+          DEPLOY_USER_LENGTH=${#DEPLOY_USER}
+          if [ -z "$DEPLOY_USER" ] || [ "$DEPLOY_USER" = "" ] || [ "$DEPLOY_USER_LENGTH" -eq 0 ]; then
+            echo "❌ ERROR: DEPLOY_USER secret is missing or empty!"
+            echo "   Debug: length=$DEPLOY_USER_LENGTH"
             MISSING_SECRETS=$((MISSING_SECRETS + 1))
           else
-            echo "✅ DEPLOY_USER: configured (value: $DEPLOY_USER)"
+            echo "✅ DEPLOY_USER: configured (length: $DEPLOY_USER_LENGTH chars, value: $DEPLOY_USER)"
           fi
           
           # Check DEPLOY_PATH
