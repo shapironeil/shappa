@@ -881,7 +881,7 @@
                         <!-- Discord Webhook Configuration - Multi-Page System -->
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">🔔 Discord Webhook - Notifiche</h3>
+                                <h3 class="venus-widget-title">Discord Webhook - Notifiche</h3>
                                 
                                 <div class="venus-integration-card" style="margin-bottom: var(--venus-space-md);">
                                     <div class="venus-integration-info">
@@ -903,42 +903,37 @@
                                             onclick="toggleWebhookMenu()"
                                             style="cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center;"
                                         >
-                                            <span id="selectedPageText">💪 Sport</span>
+                                            <span id="selectedPageText">Sport</span>
                                             <span style="font-size: 0.8rem;">▼</span>
                                         </button>
                                         
                                         <!-- Dropdown Menu -->
                                         <div id="webhookPageMenu" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--venus-border); border-radius: var(--venus-radius); margin-top: 4px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 300px; overflow-y: auto;">
                                             <div class="webhook-menu-item" onclick="selectWebhookPage('sport')">
-                                                <span style="font-size: 1.2rem; margin-right: 8px;">💪</span>
                                                 <div>
                                                     <div style="font-weight: 600;">Sport</div>
                                                     <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche workout e allenamenti</div>
                                                 </div>
                                             </div>
                                             <div class="webhook-menu-item" onclick="selectWebhookPage('dieta')">
-                                                <span style="font-size: 1.2rem; margin-right: 8px;">🥗</span>
                                                 <div>
                                                     <div style="font-weight: 600;">Dieta</div>
                                                     <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche pasti e obiettivi nutrizionali</div>
                                                 </div>
                                             </div>
                                             <div class="webhook-menu-item" onclick="selectWebhookPage('calendario')">
-                                                <span style="font-size: 1.2rem; margin-right: 8px;">📅</span>
                                                 <div>
                                                     <div style="font-weight: 600;">Calendario</div>
                                                     <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche eventi e promemoria</div>
                                                 </div>
                                             </div>
                                             <div class="webhook-menu-item" onclick="selectWebhookPage('interessi')">
-                                                <span style="font-size: 1.2rem; margin-right: 8px;">🔍</span>
                                                 <div>
                                                     <div style="font-weight: 600;">Interessi</div>
                                                     <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche monitor prodotti</div>
                                                 </div>
                                             </div>
                                             <div class="webhook-menu-item" onclick="selectWebhookPage('generale')">
-                                                <span style="font-size: 1.2rem; margin-right: 8px;">⚙️</span>
                                                 <div>
                                                     <div style="font-weight: 600;">Generale</div>
                                                     <div style="font-size: 0.75rem; color: var(--venus-text-muted);">Notifiche generali e sistema</div>
@@ -960,17 +955,17 @@
                                 
                                 <div class="venus-btn-group" style="display: flex; gap: 8px; margin-top: var(--venus-space-md);">
                                     <button class="venus-btn venus-btn-primary" onclick="saveDiscordWebhook()">
-                                        💾 Salva Webhook
+                                        Salva Webhook
                                     </button>
                                     <button class="venus-btn" onclick="testDiscordWebhook()">
-                                        🧪 Test Notifica
+                                        Test Notifica
                                     </button>
                                 </div>
                                 
                                 <!-- Notification Settings -->
                                 <div style="margin-top: var(--venus-space-xl); padding-top: var(--venus-space-lg); border-top: 1px solid var(--venus-border);">
                                     <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--venus-text-primary); margin-bottom: var(--venus-space-md);">
-                                        📬 Impostazioni Notifiche Discord
+                                        Impostazioni Notifiche Discord
                                     </h4>
                                     
                                     <div class="venus-switch-group">
@@ -1021,7 +1016,7 @@
                                     
                                     <div class="venus-btn-group" style="margin-top: var(--venus-space-md);">
                                         <button type="button" class="venus-btn venus-btn-primary" onclick="saveDiscordNotificationSettings()">
-                                            💾 Salva Impostazioni Notifiche
+                                            Salva Impostazioni Notifiche
                                         </button>
                                     </div>
                                 </div>
@@ -1577,11 +1572,11 @@
             
             // Update selector text
             const pageNames = {
-                'sport': '💪 Sport',
-                'dieta': '🥗 Dieta',
-                'calendario': '📅 Calendario',
-                'interessi': '🔍 Interessi',
-                'generale': '⚙️ Generale'
+                'sport': 'Sport',
+                'dieta': 'Dieta',
+                'calendario': 'Calendario',
+                'interessi': 'Interessi',
+                'generale': 'Generale'
             };
             document.getElementById('selectedPageText').textContent = pageNames[page] || page;
             
@@ -1701,7 +1696,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         embeds: [{
-                            title: '🔔 Test Notifica da Shappa',
+                            title: 'Test Notifica da Shappa',
                             description: 'Il webhook Discord è configurato correttamente!',
                             color: 0x6366f1,
                             timestamp: new Date().toISOString(),
