@@ -2567,10 +2567,15 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 
         // 4. Webhooks
         try {
-            const webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
+            // Try new format first (webhook_${userId}.json)
+            let webhookPath = path.join(WEBHOOKS_DIR, `webhook_${userId}.json`);
+            if (!fs.existsSync(webhookPath)) {
+                // Try old format (${userId}.json)
+                webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
+            }
             if (fs.existsSync(webhookPath)) {
                 const webhookData = JSON.parse(fs.readFileSync(webhookPath, 'utf8'));
-                userData.data.webhook = webhookData.webhook || webhookData;
+                userData.data.webhook = webhookData.webhook || webhookData.url || webhookData;
             }
         } catch (err) {
             console.log(`No webhook for ${userId}`);
