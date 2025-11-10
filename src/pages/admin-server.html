@@ -844,13 +844,10 @@
             document.getElementById('activeMonitors').textContent = counts.activeMonitors || 0;
         }
 
-        function renderUsers() {
+        async function renderUsers() {
             if (!serverData || !serverData.data) return;
             
             const users = serverData.data.users;
-            const interests = serverData.data.interests;
-            const webhooks = serverData.data.webhooks;
-            
             const container = document.getElementById('usersContainer');
             
             if (Object.keys(users).length === 0) {
@@ -864,80 +861,146 @@
                 return;
             }
             
-            container.innerHTML = '<div class="users-grid">' + 
-                Object.entries(users).map(([filename, userData]) => {
-                    const userId = filename.replace('.json', '');
-                    const interestsFile = `interests_${userId}.json`;
-                    const webhooksFile = `webhooks_${userId}.json`;
-                    
-                    const userInterests = interests[interestsFile] || [];
-                    const userWebhooks = webhooks[webhooksFile] || [];
-                    
-                    const interestsCount = Array.isArray(userInterests) ? userInterests.length : 0;
-                    
-                    // Estrai webhook URL dai webhooks o dagli interests
-                    let webhookUrl = 'N/A';
-                    if (Array.isArray(userWebhooks) && userWebhooks.length > 0) {
-                        webhookUrl = userWebhooks[0].url || userWebhooks[0].webhook || 'N/A';
-                    } else if (Array.isArray(userInterests) && userInterests.length > 0 && userInterests[0].discordWebhook) {
-                        webhookUrl = userInterests[0].discordWebhook;
+            // Mostra loading
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>Caricamento dati completi...</p></div>';
+            
+            // Carica dati completi per ogni utente usando l'API unificata
+            const usersWithData = [];
+            for (const [filename, userData] of Object.entries(users)) {
+                const userId = filename.replace('.json', '');
+                try {
+                    const response = await fetch(`https://shapiro.ninja/api/admin/user-data/${userId}`);
+                    const fullData = await response.json();
+                    if (fullData.success) {
+                        usersWithData.push({
+                            userId,
+                            account: userData,
+                            ...fullData.data
+                        });
+                    } else {
+                        usersWithData.push({ userId, account: userData });
                     }
-                    
-                    // Truncate webhook per display
+                } catch (error) {
+                    console.error(`Error loading data for ${userId}:`, error);
+                    usersWithData.push({ userId, account: userData });
+                }
+            }
+            
+            // Render con dati completi
+            container.innerHTML = '<div class="users-grid">' + 
+                usersWithData.map(user => {
+                    const interestsCount = user.interests?.length || 0;
+                    const webhookUrl = user.webhook || 'N/A';
                     const webhookDisplay = webhookUrl !== 'N/A' && webhookUrl.length > 50 
                         ? webhookUrl.substring(0, 50) + '...' 
                         : webhookUrl;
                     
+                    // Sport data
+                    const sportAge = user.sport?.age || 'N/A';
+                    const sportHeight = user.sport?.height ? user.sport.height + ' cm' : 'N/A';
+                    const sportWeight = user.sport?.weight ? user.sport.weight + ' kg' : 'N/A';
+                    const sportGoal = user.sport?.goal || 'N/A';
+                    const sportLevel = user.sport?.level || 'N/A';
+                    const weeklyCommitment = user.sport?.weeklyCommitment || 'N/A';
+                    const completedWorkouts = user.sport?.stats?.completedWorkouts?.length || 0;
+                    const totalCalories = user.sport?.stats?.totalCalories || 0;
+                    const completedWorkouts = user.sport?.stats?.completedWorkouts?.length || 0;
+                    const totalCalories = user.sport?.stats?.totalCalories || 0;
+                    
                     return `
-                        <div class="user-card">
+                        <div class="user-card" style="border: 2px solid rgba(139, 92, 246, 0.3);">
                             <div class="user-header">
                                 <div class="user-info">
-                                    <h3>${userData.username || userId}</h3>
-                                    <span class="user-id">${userId}</span>
+                                    <h3>${user.account.username || user.userId}</h3>
+                                    <span class="user-id">${user.userId}</span>
                                 </div>
                             </div>
                             
-                            <div class="user-stats">
-                                <div class="user-stat">
-                                    <div class="user-stat-value">${interestsCount}</div>
-                                    <div class="user-stat-label">Interests</div>
+                            <!-- Account Info -->
+                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #a78bfa; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    👤 Account
                                 </div>
-                                <div class="user-stat">
-                                    <div class="user-stat-value">${webhookUrl !== 'N/A' ? '1' : '0'}</div>
-                                    <div class="user-stat-label">Webhooks</div>
+                                <div style="font-size: 0.8rem; color: #e2e8f0; line-height: 1.6;">
+                                    <strong>Email:</strong> ${user.account.email || 'N/A'}<br>
+                                    <strong>Registrato:</strong> ${user.account.createdAt ? new Date(user.account.createdAt).toLocaleDateString('it-IT') : 'N/A'}
                                 </div>
                             </div>
                             
-                            <div style="margin-bottom: 1rem;">
-                                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.5rem;">
-                                    Email: ${userData.email || 'N/A'}
+                            <!-- Sport Data -->
+                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #60a5fa; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    💪 Sport & Fitness
                                 </div>
-                                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem;">
-                                    Registrato: ${userData.createdAt ? new Date(userData.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem; color: #e2e8f0; line-height: 1.6;">
+                                    <div><strong>Età:</strong> ${sportAge}</div>
+                                    <div><strong>Altezza:</strong> ${sportHeight}</div>
+                                    <div><strong>Peso:</strong> ${sportWeight}</div>
+                                    <div><strong>Livello:</strong> ${sportLevel}</div>
+                                    <div style="grid-column: 1 / -1;"><strong>Obiettivo:</strong> ${sportGoal}</div>
+                                    <div style="grid-column: 1 / -1;"><strong>Impegno:</strong> ${weeklyCommitment}</div>
+                                    <div><strong>Allenamenti:</strong> ${completedWorkouts}</div>
+                                    <div><strong>Calorie:</strong> ${totalCalories} kcal</div>
                                 </div>
-                                <div style="font-size: 0.7rem; color: #64748b; word-break: break-all; margin-bottom: 1rem;">
-                                    Webhook: ${webhookDisplay}
-                                </div>
-                                
-                                ${interestsCount > 0 ? `
-                                    <div style="margin-top: 1rem; padding: 0.75rem; background: #1e293b; border-radius: 6px;">
-                                        <div style="font-size: 0.75rem; font-weight: 600; color: #94a3b8; margin-bottom: 0.5rem;">
-                                            INTERESSI ATTIVI (${interestsCount})
+                            </div>
+                            
+                            <!-- Interests -->
+                            ${interestsCount > 0 ? `
+                                <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; color: #f59e0b; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ⭐ Interests (${interestsCount})
+                                    </div>
+                                    ${user.interests.slice(0, 3).map(interest => `
+                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: #0f172a; border-radius: 4px; margin-bottom: 0.25rem; font-size: 0.7rem;">
+                                            <span style="color: #e2e8f0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                ${interest.productName || interest.query || interest.name || 'N/A'}
+                                            </span>
+                                            <button 
+                                                onclick="stopMonitorAdmin('${interest.id}', '${user.userId}')" 
+                                                style="padding: 0.25rem 0.5rem; background: #dc2626; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.65rem; margin-left: 0.5rem; white-space: nowrap;"
+                                                title="Stop monitor">
+                                                STOP
+                                            </button>
                                         </div>
-                                        ${userInterests.slice(0, 3).map(interest => `
-                                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: #0f172a; border-radius: 4px; margin-bottom: 0.25rem; font-size: 0.7rem;">
-                                                <span style="color: #e2e8f0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                                    ${interest.productName || interest.name || 'N/A'}
-                                                </span>
-                                                <button 
-                                                    onclick="stopMonitorAdmin('${interest.id}', '${userId}')" 
-                                                    style="padding: 0.25rem 0.5rem; background: #dc2626; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.65rem; margin-left: 0.5rem; white-space: nowrap;"
-                                                    title="Stop monitor">
-                                                    STOP
-                                                </button>
-                                            </div>
-                                        `).join('')}
-                                        ${interestsCount > 3 ? `<div style="font-size: 0.65rem; color: #64748b; text-align: center; margin-top: 0.5rem;">+${interestsCount - 3} altri...</div>` : ''}
+                                    `).join('')}
+                                    ${interestsCount > 3 ? `<div style="font-size: 0.65rem; color: #64748b; text-align: center; margin-top: 0.5rem;">+${interestsCount - 3} altri...</div>` : ''}
+                                </div>
+                            ` : ''}
+                            
+                            <!-- Webhook -->
+                            <div style="background: #1e293b; padding: 1rem; border-radius: 6px; margin-bottom: 0.75rem;">
+                                <div style="font-size: 0.7rem; font-weight: 700; color: #10b981; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    🔔 Webhook
+                                </div>
+                                <div style="font-size: 0.7rem; color: ${webhookUrl !== 'N/A' ? '#10b981' : '#64748b'}; word-break: break-all;">
+                                    ${webhookUrl !== 'N/A' ? '✅ Configurato' : '❌ Non configurato'}<br>
+                                    ${webhookUrl !== 'N/A' ? `<span style="color: #94a3b8; font-size: 0.65rem;">${webhookDisplay}</span>` : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- Automations -->
+                            ${user.automations ? `
+                                <div style="background: #1e293b; padding: 1rem; border-radius: 6px;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; color: #ec4899; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        ⚙️ Automations
+                                    </div>
+                                    <div style="font-size: 0.7rem; color: #e2e8f0; line-height: 1.8;">
+                                        ${user.automations.sport ? `
+                                            <strong>Sport:</strong><br>
+                                            • Notifiche: ${user.automations.sport.enableNotifications ? '✅' : '❌'}<br>
+                                            • Fascia: ${user.automations.sport.preferredTimeSlot || 'N/A'}<br>
+                                        ` : ''}
+                                        ${user.automations.habits ? `
+                                            <strong>Abitudini:</strong><br>
+                                            • Obiettivo: ${user.automations.habits.weeklyGoal || 5} giorni/sett
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('') + '</div>';
+        }
                                     </div>
                                 ` : ''}
                             </div>
