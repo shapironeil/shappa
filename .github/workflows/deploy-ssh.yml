@@ -185,17 +185,37 @@ jobs:
               ./restart.sh
             else
               # Fallback: restart con PM2
-              if command -v pm2 &> /dev/null; then
+              # Prova prima senza sudo, poi con sudo se necessario
+              if command -v pm2 &> /dev/null || command -v sudo &> /dev/null; then
                 echo "🚀 Restarting with PM2..."
-                pm2 restart shappa || pm2 start server.js --name shappa || {
+                
+                # Prova senza sudo
+                if command -v pm2 &> /dev/null; then
+                  PM2_CMD="pm2"
+                elif sudo -n pm2 &> /dev/null 2>&1; then
+                  PM2_CMD="sudo pm2"
+                else
+                  PM2_CMD="pm2"
+                fi
+                
+                # Restart o start
+                $PM2_CMD restart shappa 2>/dev/null || \
+                $PM2_CMD start server.js --name shappa 2>/dev/null || {
                   echo "⚠️ PM2 restart failed, trying to start fresh..."
-                  pm2 delete shappa 2>/dev/null || true
-                  pm2 start server.js --name shappa
+                  $PM2_CMD delete shappa 2>/dev/null || true
+                  $PM2_CMD start server.js --name shappa || {
+                    echo "⚠️ Trying with sudo..."
+                    sudo pm2 delete shappa 2>/dev/null || true
+                    sudo pm2 start server.js --name shappa
+                  }
                 }
-                pm2 save
+                
+                # Salva configurazione PM2
+                $PM2_CMD save 2>/dev/null || sudo pm2 save 2>/dev/null || true
                 echo "✅ PM2 process restarted"
               else
                 echo "⚠️ PM2 not found. Please restart manually."
+                echo "   You can restart manually with: pm2 restart shappa"
               fi
             fi
             
@@ -215,14 +235,21 @@ jobs:
             echo "📦 Files: $(ls -la | head -5)"
             echo ""
             
+            # Verifica PM2 status
             if command -v pm2 &> /dev/null; then
               echo "📊 PM2 Status:"
-              pm2 status
+              pm2 status || sudo pm2 status || echo "PM2 status check failed"
               echo ""
               echo "📋 PM2 Logs (last 10 lines):"
-              pm2 logs shappa --lines 10 --nostream || echo "No logs available"
+              pm2 logs shappa --lines 10 --nostream 2>/dev/null || \
+              sudo pm2 logs shappa --lines 10 --nostream 2>/dev/null || \
+              echo "No logs available"
             else
-              echo "⚠️ PM2 not found"
+              echo "⚠️ PM2 not found in PATH"
+              if command -v sudo &> /dev/null; then
+                echo "   Trying with sudo..."
+                sudo pm2 status || echo "PM2 not accessible even with sudo"
+              fi
             fi
             
             echo ""
