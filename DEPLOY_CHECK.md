@@ -141,8 +141,9 @@ Dopo il deploy, testa l'endpoint che dava errore:
 
 ```bash
 # Test locale (se hai accesso SSH)
-curl https://shapiro.ninja/api/automations/sport/user_1762637577613_ynxsce4ye
+curl https://shapiro.ninja/api/automations/sport/YOUR_USER_ID
 
+# Sostituisci YOUR_USER_ID con il tuo ID utente reale
 # Dovresti vedere una risposta JSON, non errore 500
 ```
 
@@ -187,4 +188,3 @@ curl https://shapiro.ninja/api/automations/sport/user_1762637577613_ynxsce4ye
 - GitHub Actions: https://github.com/shapironeil/shappa/actions
 - GitHub Secrets: https://github.com/shapironeil/shappa/settings/secrets/actions
 - Health Check: https://shapiro.ninja/health
-

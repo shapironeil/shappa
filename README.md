@@ -504,7 +504,7 @@ Copy-Item .env.example .env
 
 {# Modifica .env con le tue configurazioni- Monitoraggio prezzi Amazon in tempo reale (ogni 30 minuti)
 
-  "userId": "user_1762637577613_ynxsce4ye",
+  "userId": "YOUR_USER_ID",
 
   "webhookUrl": "https://discord.com/api/webhooks/123456789/abcdef"
 
