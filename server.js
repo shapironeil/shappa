@@ -3465,6 +3465,12 @@ if (!fs.existsSync(DIET_DATA_DIR)) {
 
 console.log('✅ Diet API endpoints directory initialized:', DIET_DATA_DIR);
 
+// Test endpoint per verificare che gli endpoint API siano registrati
+app.get('/api/diet/test', (req, res) => {
+    console.log('✅ Test endpoint /api/diet/test called');
+    return res.json({ success: true, message: 'Diet API endpoints are working!' });
+});
+
 /**
  * GET /api/diet/data/:userId
  * Ottiene tutti i dati dieta per un utente
