@@ -133,6 +133,14 @@ async function loadScheduledWorkouts() {
             if (result.success && result.data) {
                 scheduledWorkouts = result.data.weekSchedule || [];
                 selectedProgramId = result.data.programId || null;
+                
+                // Sincronizza selectedProgramId con selectedProgramIds per la visualizzazione
+                if (selectedProgramId && !selectedProgramIds.includes(selectedProgramId)) {
+                    selectedProgramIds = [selectedProgramId];
+                } else if (!selectedProgramId) {
+                    selectedProgramIds = [];
+                }
+                
                 console.log('✅ Loaded workouts:', scheduledWorkouts.length, 'Program ID:', selectedProgramId);
                 
                 // Se c'è un programma selezionato, log per debug
@@ -320,11 +328,16 @@ function openWorkoutDetail(dayIndex) {
                 ${exercisesList}
             </div>
             
-            <div style="padding: 20px 24px; border-top: 1px solid #e5e7eb; background: #f9fafb; display: flex; gap: 12px;">
-                <button onclick="completeWorkout(${dayIndex})" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
-                    <i class="fas fa-check-circle"></i> Segna Completato
-                </button>
-                <button onclick="this.closest('.workout-modal').remove()" style="flex: 1; background: white; color: #374151; border: 1px solid #d1d5db; padding: 14px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px; transition: all 0.2s;">
+            <div style="padding: 20px 24px; border-top: 1px solid #e5e7eb; background: #f9fafb; display: flex; gap: 12px; flex-direction: column;">
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="completeWorkout(${dayIndex})" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+                        <i class="fas fa-check-circle"></i> Segna Completato
+                    </button>
+                    <button onclick="markWorkoutSkipped(${dayIndex})" style="flex: 1; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 14px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3); transition: all 0.2s;">
+                        <i class="fas fa-times-circle"></i> Non ci sono andato
+                    </button>
+                </div>
+                <button onclick="this.closest('.workout-modal').remove()" style="width: 100%; background: white; color: #374151; border: 1px solid #d1d5db; padding: 12px 24px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;">
                     Chiudi
                 </button>
             </div>
@@ -351,6 +364,40 @@ function openWorkoutDetail(dayIndex) {
         }
     `;
     document.head.appendChild(style);
+}
+
+// Segna workout come saltato
+async function markWorkoutSkipped(dayIndex) {
+    try {
+        const user = AuthManager.getCurrentUser();
+        if (!user || !user.id) {
+            showNotification('Errore: utente non autenticato', 'error');
+            return;
+        }
+
+        const response = await fetch('/api/sport/stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                workoutSkipped: true,
+                date: new Date().toISOString(),
+                dayIndex: dayIndex
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('⚠️ Workout segnato come saltato', 'warning');
+            document.querySelector('.workout-modal')?.remove();
+            await renderProgressWidget();
+            renderWeeklyCalendar();
+        } else {
+            showNotification('Errore nel salvare il dato', 'error');
+        }
+    } catch (error) {
+        console.error('Error marking workout as skipped:', error);
+        showNotification('Errore nel salvare il dato', 'error');
+    }
 }
 
 // Completa workout
@@ -724,7 +771,7 @@ async function renderProgressWidget() {
 
         // Get real stats from server
         const response = await fetch(`/api/sport/stats/${user.id}`);
-        let stats = { totalWorkouts: 0, currentStreak: 0, estimatedCalories: 0 };
+        let stats = { totalWorkouts: 0, skippedWorkouts: 0, currentStreak: 0, estimatedCalories: 0 };
         
         if (response.ok) {
             const result = await response.json();
@@ -756,6 +803,7 @@ async function renderProgressWidget() {
 
         // Calculate from scheduled workouts
         const weeklyCompleted = stats.totalWorkouts || 0;
+        const weeklySkipped = stats.skippedWorkouts || 0;
         
         // Se non ha scelto un programma, mostra /0
         if (!hasProgram) {
@@ -763,7 +811,10 @@ async function renderProgressWidget() {
             caloriesGoalPerWeek = 0;
         }
         
-        const weeklyPercentage = weeklyGoal > 0 ? Math.min((weeklyCompleted / weeklyGoal) * 100, 100) : 0;
+        // Calcola progressi: completati / (programmati - saltati)
+        // Esempio: programmati 3, saltati 1, completati 1 → 1 / (3 - 1) = 50%
+        const effectiveGoal = Math.max(0, weeklyGoal - weeklySkipped);
+        const weeklyPercentage = effectiveGoal > 0 ? Math.min((weeklyCompleted / effectiveGoal) * 100, 100) : (weeklyGoal > 0 ? 0 : 0);
 
         // Calories calculation
         const caloriesBurned = stats.estimatedCalories || 0;
@@ -776,12 +827,12 @@ async function renderProgressWidget() {
                         <i class="fas fa-target" style="color: #3b82f6;"></i>
                         Obiettivo Settimanale
                     </div>
-                    <div class="progress-value">${weeklyCompleted} / ${weeklyGoal} allenamenti</div>
+                    <div class="progress-value">${weeklyCompleted} / ${weeklyGoal} allenamenti${weeklySkipped > 0 ? ` (${weeklySkipped} saltati)` : ''}</div>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${weeklyPercentage}%;"></div>
                 </div>
-                <div class="progress-percent">${weeklyGoal > 0 ? Math.round(weeklyPercentage) + '% completato' : 'Scegli un programma per iniziare'}</div>
+                <div class="progress-percent">${weeklyGoal > 0 ? `${Math.round(weeklyPercentage)}% completato${weeklySkipped > 0 ? ` • ${weeklySkipped} saltati` : ''}` : 'Scegli un programma per iniziare'}</div>
             </div>
 
             <div class="progress-item">

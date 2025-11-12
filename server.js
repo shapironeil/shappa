@@ -72,7 +72,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
+// ⚠️ IMPORTANTE: express.static deve essere DOPO gli endpoint API
+// per evitare che intercetti le richieste API
+// app.use(express.static(__dirname)); // Spostato dopo gli endpoint API
 
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
 // Note: questo è un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
@@ -88,7 +90,7 @@ app.post('/api/ebay/list', express.json(), async (req, res) => {
         return res.status(500).json({ success: false, error: 'internal_error' });
     }
 });
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+// app.use('/assets', express.static(path.join(__dirname, 'assets'))); // Spostato dopo gli endpoint API
 
 const sessions = new Map();
 
@@ -2444,19 +2446,88 @@ app.get('/api/sport/stats/:userId', async (req, res) => {
 
         const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
         const completedCount = programData.completedWorkouts?.length || 0;
-        const estimatedCalories = completedCount * (programData.programData?.estimatedCalories || 400);
+        const skippedCount = programData.skippedWorkouts?.length || 0;
+        const estimatedCalories = (programData.completedWorkouts || []).reduce((sum, w) => sum + (w.caloriesBurned || 400), 0);
 
         return res.json({ 
             success: true, 
             stats: {
                 totalWorkouts: completedCount,
-                currentStreak: calculateStreak(programData.completedWorkouts),
+                skippedWorkouts: skippedCount,
+                currentStreak: calculateStreak(programData.completedWorkouts || []),
                 estimatedCalories,
                 programTitle: programData.programData?.title
             }
         });
     } catch (error) {
         console.error('❌ Error getting stats:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// POST /api/sport/stats - Update sport statistics (workout completed or skipped)
+app.post('/api/sport/stats', async (req, res) => {
+    try {
+        const { userId, workoutCompleted, workoutSkipped, caloriesBurned, date, dayIndex } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, error: 'userId required' });
+        }
+
+        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+        
+        // Se non esiste il file programma, crealo
+        let programData = {};
+        if (fs.existsSync(programPath)) {
+            programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+        }
+
+        // Inizializza array se non esistono
+        if (!programData.completedWorkouts) {
+            programData.completedWorkouts = [];
+        }
+        if (!programData.skippedWorkouts) {
+            programData.skippedWorkouts = [];
+        }
+
+        const workoutDate = date || new Date().toISOString();
+
+        if (workoutCompleted) {
+            // Aggiungi workout completato
+            programData.completedWorkouts.push({
+                date: workoutDate,
+                caloriesBurned: caloriesBurned || 400,
+                completedAt: new Date().toISOString(),
+                dayIndex: dayIndex
+            });
+            console.log(`✅ Workout completed for user: ${userId}`);
+        } else if (workoutSkipped) {
+            // Aggiungi workout saltato
+            programData.skippedWorkouts.push({
+                date: workoutDate,
+                skippedAt: new Date().toISOString(),
+                dayIndex: dayIndex
+            });
+            console.log(`⚠️ Workout skipped for user: ${userId}`);
+        }
+
+        // Salva i dati
+        fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
+
+        // Calcola stats aggiornate
+        const stats = {
+            totalWorkouts: programData.completedWorkouts.length,
+            skippedWorkouts: programData.skippedWorkouts.length,
+            currentStreak: calculateStreak(programData.completedWorkouts),
+            estimatedCalories: programData.completedWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 400), 0)
+        };
+
+        return res.json({ 
+            success: true, 
+            stats
+        });
+    } catch (error) {
+        console.error('❌ Error updating stats:', error);
         return res.status(500).json({ success: false, error: error.message });
     }
 });
@@ -4419,7 +4490,11 @@ app.post('/api/figma/generate-code', async (req, res) => {
 
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
-    const httpServer = app.listen(PORT, '0.0.0.0', () => {
+// Serve static files AFTER all API routes are defined
+app.use(express.static(__dirname));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
     console.log('✅ Shappa Backend Server Running (HTTP)');
     console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
