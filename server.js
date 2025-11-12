@@ -4491,10 +4491,17 @@ app.post('/api/figma/generate-code', async (req, res) => {
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
 // Serve static files AFTER all API routes are defined
-app.use(express.static(__dirname));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+// IMPORTANTE: Questo deve essere DOPO tutti gli endpoint API ma PRIMA che il server inizi ad ascoltare
+if (!app._staticFilesConfigured) {
+    app.use(express.static(__dirname));
+    app.use('/assets', express.static(path.join(__dirname, 'assets')));
+    app._staticFilesConfigured = true;
+    console.log('✅ Static files middleware configured (after API routes)');
+}
 
-const httpServer = app.listen(PORT, '0.0.0.0', () => {
+function startHttp() {
+    console.log('🚀 Starting HTTP server as fallback...');
+    const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
     console.log('✅ Shappa Backend Server Running (HTTP)');
     console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
