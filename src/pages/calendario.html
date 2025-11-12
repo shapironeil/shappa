@@ -183,9 +183,8 @@
 
         /* Calendar Styles */
         .calendar-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: var(--venus-space-xl);
+            max-width: 1400px;
+            margin: 0 auto;
             height: 100%;
         }
 
@@ -201,6 +200,12 @@
             align-items: center;
             justify-content: space-between;
             margin-bottom: var(--venus-space-xl);
+        }
+
+        .calendar-header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--venus-space-lg);
         }
 
         .calendar-month {
@@ -227,6 +232,27 @@
 
         .calendar-nav-btn:hover {
             background: var(--venus-bg-gray);
+        }
+
+        .calendar-add-btn {
+            padding: 10px 20px;
+            background: var(--venus-primary);
+            color: white;
+            border: none;
+            border-radius: var(--venus-radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--venus-transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calendar-add-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: var(--venus-shadow-sm);
         }
 
         .calendar-grid {
@@ -312,121 +338,166 @@
             font-size: 14px;
         }
 
-        .calendar-day-indicator {
-            width: 4px;
-            height: 4px;
-            background: var(--venus-primary);
-            border-radius: 50%;
-            margin-top: 2px;
+        /* Day Popup Modal - Wide Format (3:1 ratio) */
+        .day-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
 
-        .calendar-day.today .calendar-day-indicator {
+        .day-popup-overlay.active {
+            display: flex;
+        }
+
+        .day-popup-content {
             background: white;
+            border-radius: 12px;
+            padding: 32px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 300px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
         }
 
-        /* Events Sidebar */
-        .calendar-events {
+        .day-popup-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--venus-border);
+        }
+
+        .day-popup-date {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-text-primary);
+            margin: 0;
+        }
+
+        .day-popup-events {
             display: flex;
             flex-direction: column;
-            gap: var(--venus-space-lg);
+            gap: 16px;
         }
 
-        .events-section {
-            background: var(--venus-bg-card);
-            border: 1px solid var(--venus-border);
-            border-radius: var(--venus-radius-md);
-            padding: var(--venus-space-lg);
+        .day-popup-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--venus-text-muted);
+            font-size: 14px;
         }
 
-        .events-section-title {
+        .day-event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            background: var(--venus-bg-gray);
+            border-radius: 8px;
+            border-left: 4px solid;
+            transition: all var(--venus-transition);
+        }
+
+        .day-event-item:hover {
+            background: #f3f4f6;
+            transform: translateX(4px);
+        }
+
+        .day-event-item.sport {
+            border-left-color: #10b981;
+        }
+
+        .day-event-item.impegni {
+            border-left-color: #3b82f6;
+        }
+
+        .day-event-item.dieta {
+            border-left-color: #f59e0b;
+        }
+
+        .day-event-content {
+            flex: 1;
+        }
+
+        .day-event-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .day-event-title {
             font-size: 16px;
             font-weight: 600;
             color: var(--venus-text-primary);
-            margin-bottom: var(--venus-space-md);
+            margin: 0;
         }
 
-        .event-item {
-            padding: var(--venus-space-md);
-            border-left: 3px solid;
-            background: var(--venus-bg-gray);
-            border-radius: var(--venus-radius-sm);
-            margin-bottom: var(--venus-space-sm);
-        }
-
-        .event-item.vendita {
-            border-color: #10b981;
-        }
-
-        .event-item.listing {
-            border-color: #3b82f6;
-        }
-
-        .event-item.scadenza {
-            border-color: #ef4444;
-        }
-
-        .event-item.attivita {
-            border-color: #f59e0b;
-        }
-
-        .event-time {
-            font-size: 12px;
-            color: var(--venus-text-muted);
-            margin-bottom: 4px;
-        }
-
-        .event-title {
+        .day-event-time {
             font-size: 14px;
             font-weight: 600;
-            color: var(--venus-text-primary);
-            margin-bottom: 2px;
+            color: var(--venus-text-secondary);
         }
 
-        .event-description {
-            font-size: 12px;
-            color: var(--venus-text-muted);
-        }
-
-        .add-event-btn {
-            width: 100%;
-            padding: var(--venus-space-md);
-            background: var(--venus-primary);
-            border: none;
-            border-radius: var(--venus-radius-sm);
-            color: white;
+        .day-event-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .day-event-badge.sport {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .day-event-badge.impegni {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .day-event-badge.dieta {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .day-event-description {
+            font-size: 13px;
+            color: var(--venus-text-muted);
+            margin: 0;
+        }
+
+        .day-event-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-details {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--venus-border);
+            border-radius: 6px;
+            color: var(--venus-text-secondary);
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: all var(--venus-transition);
         }
 
-        .add-event-btn:hover {
-            background: #2563eb;
-        }
-
-        .quick-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--venus-space-md);
-            margin-top: var(--venus-space-md);
-        }
-
-        .quick-stat {
-            text-align: center;
-            padding: var(--venus-space-md);
+        .btn-details:hover {
             background: var(--venus-bg-gray);
-            border-radius: var(--venus-radius-sm);
-        }
-
-        .quick-stat-value {
-            font-size: 20px;
-            font-weight: 700;
+            border-color: var(--venus-primary);
             color: var(--venus-primary);
-        }
-
-        .quick-stat-label {
-            font-size: 11px;
-            color: var(--venus-text-muted);
-            margin-top: 4px;
         }
 
         /* Event Modal */
@@ -438,7 +509,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+            z-index: 1001;
             align-items: center;
             justify-content: center;
         }
@@ -512,6 +583,7 @@
             font-size: 14px;
             color: var(--venus-text-primary);
             transition: all var(--venus-transition);
+            box-sizing: border-box;
         }
 
         .form-input:focus,
@@ -525,6 +597,18 @@
         .form-textarea {
             resize: vertical;
             min-height: 80px;
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
         .modal-actions {
@@ -565,7 +649,7 @@
 
         @media (max-width: 1200px) {
             .calendar-container {
-                grid-template-columns: 1fr;
+                max-width: 100%;
             }
         }
     </style>
@@ -583,9 +667,6 @@
             <nav class="venus-sidebar-menu">
                 <a href="dashboard.html" class="venus-menu-item">
                     Dashboard
-                </a>
-                <a href="obiettivi.html" class="venus-menu-item">
-                    Obiettivi
                 </a>
                 <a href="impegni.html" class="venus-menu-item">
                     Impegni
@@ -615,7 +696,7 @@
                     <div class="venus-user-avatar" id="userAvatar">U</div>
                     <div class="venus-user-info">
                         <div class="venus-user-name" id="userName">Utente</div>
-                        <div class="venus-user-role">Venditore</div>
+                        <div class="venus-user-role">Utente</div>
                     </div>
                 </div>
                 <button class="venus-logout-btn" onclick="handleLogout()">
@@ -629,17 +710,22 @@
         <main class="venus-main-content">
             <div class="venus-top-bar">
                 <h1 class="venus-page-title">📅 Calendario</h1>
+                <button class="calendar-add-btn" onclick="openNewEventModal()">
+                    <span>+</span>
+                    Nuovo Impegno
+                </button>
             </div>
 
             <div class="venus-content-area">
                 <div class="calendar-container">
-                    <!-- Calendar Main -->
                     <div class="calendar-main">
                         <div class="calendar-header">
-                            <h2 class="calendar-month" id="currentMonth">Novembre 2025</h2>
-                            <div class="calendar-nav">
-                                <button class="calendar-nav-btn" onclick="previousMonth()">‹</button>
-                                <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
+                            <div class="calendar-header-left">
+                                <h2 class="calendar-month" id="currentMonth">Novembre 2025</h2>
+                                <div class="calendar-nav">
+                                    <button class="calendar-nav-btn" onclick="previousMonth()">‹</button>
+                                    <button class="calendar-nav-btn" onclick="nextMonth()">›</button>
+                                </div>
                             </div>
                         </div>
 
@@ -656,99 +742,44 @@
                         <!-- Days grid -->
                         <div class="calendar-grid" id="calendarDays"></div>
                     </div>
-
-                    <!-- Events Sidebar -->
-                    <div class="calendar-events">
-                        <!-- Today's Events -->
-                        <div class="events-section">
-                            <h3 class="events-section-title">📌 Oggi - 7 Novembre</h3>
-                            
-                            <div class="event-item vendita">
-                                <div class="event-time">14:30</div>
-                                <div class="event-title">Vendita Completata</div>
-                                <div class="event-description">iPhone 13 Pro - €850</div>
-                            </div>
-
-                            <div class="event-item listing">
-                                <div class="event-time">16:00</div>
-                                <div class="event-title">Nuovo Listing</div>
-                                <div class="event-description">AirPods Pro 2</div>
-                            </div>
-
-                            <div class="event-item attivita">
-                                <div class="event-time">18:00</div>
-                                <div class="event-title">Risposta Cliente</div>
-                                <div class="event-description">Richiesta info spedizione</div>
-                            </div>
-                        </div>
-
-                        <!-- Upcoming Events -->
-                        <div class="events-section">
-                            <h3 class="events-section-title">🔜 Prossimi Eventi</h3>
-                            
-                            <div class="event-item scadenza">
-                                <div class="event-time">10 Nov - 09:00</div>
-                                <div class="event-title">Scadenza Listing</div>
-                                <div class="event-description">3 listing in scadenza</div>
-                            </div>
-
-                            <div class="event-item attivita">
-                                <div class="event-time">12 Nov - 14:00</div>
-                                <div class="event-title">Inventario Check</div>
-                                <div class="event-description">Verifica stock prodotti</div>
-                            </div>
-
-                            <div class="event-item vendita">
-                                <div class="event-time">15 Nov - 10:00</div>
-                                <div class="event-title">Obiettivo Vendite</div>
-                                <div class="event-description">Review progresso mensile</div>
-                            </div>
-
-                            <button class="add-event-btn" onclick="aggiungiEvento()">
-                                + Aggiungi Evento
-                            </button>
-                        </div>
-
-                        <!-- Quick Stats -->
-                        <div class="events-section">
-                            <h3 class="events-section-title">📊 Questo Mese</h3>
-                            <div class="quick-stats">
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value">34</div>
-                                    <div class="quick-stat-label">Vendite</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value">12</div>
-                                    <div class="quick-stat-label">Nuovi Listing</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value">€1,450</div>
-                                    <div class="quick-stat-label">Profitto</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value">98%</div>
-                                    <div class="quick-stat-label">Soddisfazione</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Day Popup Modal -->
+    <div class="day-popup-overlay" id="dayPopup">
+        <div class="day-popup-content">
+            <div class="day-popup-header">
+                <h3 class="day-popup-date" id="popupDate">Mercoledì 13 Novembre 2025</h3>
+            </div>
+            <div class="day-popup-events" id="popupEvents">
+                <!-- Events will be loaded here -->
+            </div>
+        </div>
     </div>
 
     <!-- Event Modal -->
     <div class="modal-overlay" id="eventModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Nuovo Evento</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <h2 class="modal-title" id="modalTitle">Nuovo Impegno</h2>
+                <button class="modal-close" onclick="closeEventModal()">&times;</button>
             </div>
 
             <form id="eventForm" onsubmit="saveEvent(event)">
                 <div class="form-group">
                     <label class="form-label" for="eventTitle">Titolo *</label>
-                    <input type="text" class="form-input" id="eventTitle" required placeholder="Es: Riunione con fornitore">
+                    <input type="text" class="form-input" id="eventTitle" required placeholder="Es: Riunione importante">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="eventCategory">Categoria *</label>
+                    <select class="form-select" id="eventCategory" required>
+                        <option value="impegni">Impegni</option>
+                        <option value="sport">Sport</option>
+                        <option value="dieta">Dieta</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
@@ -757,18 +788,25 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="eventTime">Ora</label>
-                    <input type="time" class="form-input" id="eventTime">
+                    <label class="form-label">
+                        <div class="form-checkbox-group">
+                            <input type="checkbox" class="form-checkbox" id="eventAllDay" onchange="toggleTimeInputs()">
+                            <span>Tutto il giorno</span>
+                        </div>
+                    </label>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="eventType">Tipo *</label>
-                    <select class="form-select" id="eventType" required>
-                        <option value="vendita">Vendita</option>
-                        <option value="listing">Listing</option>
-                        <option value="scadenza">Scadenza</option>
-                        <option value="attivita">Attività</option>
-                    </select>
+                <div class="form-group" id="timeGroup">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="form-label" for="eventStartTime">Ora inizio</label>
+                            <input type="time" class="form-input" id="eventStartTime">
+                        </div>
+                        <div>
+                            <label class="form-label" for="eventEndTime">Ora fine</label>
+                            <input type="time" class="form-input" id="eventEndTime">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -777,8 +815,8 @@
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
-                    <button type="submit" class="btn btn-primary">Salva Evento</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEventModal()">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Salva</button>
                 </div>
             </form>
         </div>
@@ -787,51 +825,42 @@
     <script src="../utils/auth-v2.js"></script>
     <script>
         // Global variables
-        let currentMonth = 10; // November (0-indexed)
-        let currentYear = 2025;
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
         let selectedDay = null;
+        let selectedDate = null;
         let events = [];
+        let currentUserId = null;
 
-        // Load events from localStorage
-        function loadEvents() {
-            const savedEvents = localStorage.getItem('calendar_events');
-            if (savedEvents) {
-                events = JSON.parse(savedEvents);
-            } else {
-                // Sample events
-                events = [
-                    {
-                        id: 1,
-                        date: '2025-11-07',
-                        time: '14:30',
-                        title: 'Vendita Completata',
-                        description: 'iPhone 13 Pro - €850',
-                        type: 'vendita'
-                    },
-                    {
-                        id: 2,
-                        date: '2025-11-07',
-                        time: '16:00',
-                        title: 'Nuovo Listing',
-                        description: 'AirPods Pro 2',
-                        type: 'listing'
-                    },
-                    {
-                        id: 3,
-                        date: '2025-11-10',
-                        time: '09:00',
-                        title: 'Scadenza Listing',
-                        description: '3 listing in scadenza',
-                        type: 'scadenza'
-                    }
-                ];
-                saveEventsToStorage();
-            }
+        // Format date for display
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const days = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+            const months = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                          'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+            return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         }
 
-        // Save events to localStorage
-        function saveEventsToStorage() {
-            localStorage.setItem('calendar_events', JSON.stringify(events));
+        // Load events from API
+        async function loadEvents() {
+            if (!currentUserId) return;
+            
+            try {
+                const response = await fetch(`/api/calendar/events/${currentUserId}`);
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        events = result.events || [];
+                        generateCalendar();
+                    }
+                } else {
+                    console.error('Error loading events:', response.statusText);
+                    events = [];
+                }
+            } catch (error) {
+                console.error('Error loading events:', error);
+                events = [];
+            }
         }
 
         // Auth Check
@@ -844,21 +873,15 @@
             // Load user info
             const user = AuthManager.getCurrentUser();
             if (user) {
+                currentUserId = user.id || user.username || user.email;
                 const userName = user.username || user.email || 'Utente';
                 document.getElementById('userName').textContent = userName;
                 const initial = userName[0].toUpperCase();
                 document.getElementById('userAvatar').textContent = initial;
             }
 
-            // Setup logout handler
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', handleLogout);
-            }
-
             // Load events and generate calendar
             loadEvents();
-            generateCalendar();
         });
 
         function handleLogout() {
@@ -893,13 +916,14 @@
             for (let i = 1; i <= lastDayDate; i++) {
                 const isToday = isCurrentMonth && i === todayDate;
                 const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-                const hasEvents = events.some(e => e.date === dateString);
+                const dayEvents = events.filter(e => e.date === dateString);
+                const hasEvents = dayEvents.length > 0;
                 const isSelected = selectedDay === i;
                 
                 const classes = `calendar-day ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''} ${isSelected ? 'selected' : ''}`;
                 
                 calendarHTML += `
-                    <div class="${classes}" onclick="selectDay(${i})">
+                    <div class="${classes}" onclick="selectDay(${i}, '${dateString}')">
                         <span class="calendar-day-number">${i}</span>
                     </div>
                 `;
@@ -920,14 +944,53 @@
             document.getElementById('currentMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
         }
 
-        function selectDay(day) {
+        function selectDay(day, dateString) {
             selectedDay = day;
+            selectedDate = dateString;
             generateCalendar();
             
-            // Open modal to add event for selected day
-            const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            document.getElementById('eventDate').value = dateString;
-            openModal();
+            // Show popup with day events
+            const dayEvents = events.filter(e => e.date === dateString);
+            showDayPopup(dateString, dayEvents);
+        }
+
+        function showDayPopup(dateString, dayEvents) {
+            const popup = document.getElementById('dayPopup');
+            const popupDate = document.getElementById('popupDate');
+            const popupEvents = document.getElementById('popupEvents');
+            
+            popupDate.textContent = formatDate(dateString);
+            
+            if (dayEvents.length === 0) {
+                popupEvents.innerHTML = '<div class="day-popup-empty">Nessun impegno pianificato per oggi.</div>';
+            } else {
+                popupEvents.innerHTML = dayEvents.map(event => {
+                    const categoryClass = event.category || 'impegni';
+                    const timeDisplay = event.allDay ? 'Tutto il giorno' : (event.startTime || '');
+                    return `
+                        <div class="day-event-item ${categoryClass}">
+                            <div class="day-event-content">
+                                <div class="day-event-header">
+                                    <h4 class="day-event-title">${event.title}</h4>
+                                    ${timeDisplay ? `<span class="day-event-time">${timeDisplay}</span>` : ''}
+                                    <span class="day-event-badge ${categoryClass}">${categoryClass}</span>
+                                </div>
+                                ${event.description ? `<p class="day-event-description">${event.description}</p>` : ''}
+                            </div>
+                            <div class="day-event-actions">
+                                <button class="btn-details" onclick="viewEventDetails('${event.id}')">Dettagli</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            popup.classList.add('active');
+        }
+
+        function viewEventDetails(eventId) {
+            // TODO: Implement event details view
+            alert('Dettagli evento - Funzionalità in arrivo');
         }
 
         function previousMonth() {
@@ -937,7 +1000,8 @@
                 currentYear--;
             }
             selectedDay = null;
-            generateCalendar();
+            selectedDate = null;
+            loadEvents();
         }
 
         function nextMonth() {
@@ -947,61 +1011,107 @@
                 currentYear++;
             }
             selectedDay = null;
-            generateCalendar();
+            selectedDate = null;
+            loadEvents();
         }
 
-        function aggiungiEvento() {
-            openModal();
+        function openNewEventModal() {
+            const modal = document.getElementById('eventModal');
+            const form = document.getElementById('eventForm');
+            form.reset();
+            document.getElementById('modalTitle').textContent = 'Nuovo Impegno';
+            
+            // Pre-fill date if a day is selected
+            if (selectedDate) {
+                document.getElementById('eventDate').value = selectedDate;
+            } else {
+                const today = new Date();
+                document.getElementById('eventDate').value = today.toISOString().split('T')[0];
+            }
+            
+            document.getElementById('eventAllDay').checked = false;
+            toggleTimeInputs();
+            modal.classList.add('active');
         }
 
-        function openModal() {
-            document.getElementById('eventModal').classList.add('active');
+        function closeEventModal() {
+            const modal = document.getElementById('eventModal');
+            modal.classList.remove('active');
             document.getElementById('eventForm').reset();
-            document.getElementById('modalTitle').textContent = 'Nuovo Evento';
         }
 
-        function closeModal() {
-            document.getElementById('eventModal').classList.remove('active');
-            document.getElementById('eventForm').reset();
-            selectedDay = null;
-            generateCalendar();
+        function toggleTimeInputs() {
+            const allDay = document.getElementById('eventAllDay').checked;
+            const timeGroup = document.getElementById('timeGroup');
+            timeGroup.style.display = allDay ? 'none' : 'block';
         }
 
-        function saveEvent(e) {
+        async function saveEvent(e) {
             e.preventDefault();
+            
+            if (!currentUserId) {
+                alert('Errore: utente non autenticato');
+                return;
+            }
             
             const title = document.getElementById('eventTitle').value;
             const date = document.getElementById('eventDate').value;
-            const time = document.getElementById('eventTime').value;
-            const type = document.getElementById('eventType').value;
+            const category = document.getElementById('eventCategory').value;
             const description = document.getElementById('eventDescription').value;
-
-            const newEvent = {
-                id: Date.now(),
-                date,
-                time: time || '00:00',
-                title,
-                description,
-                type
-            };
-
-            events.push(newEvent);
-            saveEventsToStorage();
+            const allDay = document.getElementById('eventAllDay').checked;
+            const startTime = allDay ? null : document.getElementById('eventStartTime').value;
+            const endTime = allDay ? null : document.getElementById('eventEndTime').value;
             
-            closeModal();
-            generateCalendar();
-            
-            // Show success message
-            alert('Evento aggiunto con successo!');
+            try {
+                const response = await fetch(`/api/calendar/events/${currentUserId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title,
+                        date,
+                        category,
+                        description,
+                        startTime,
+                        endTime,
+                        allDay
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        closeEventModal();
+                        await loadEvents();
+                        // Show success message
+                        alert('Impegno salvato con successo!');
+                    } else {
+                        alert('Errore nel salvataggio: ' + (result.error || 'Errore sconosciuto'));
+                    }
+                } else {
+                    const error = await response.json();
+                    alert('Errore nel salvataggio: ' + (error.error || 'Errore sconosciuto'));
+                }
+            } catch (error) {
+                console.error('Error saving event:', error);
+                alert('Errore nel salvataggio: ' + error.message);
+            }
         }
+
+        // Close popup on overlay click
+        document.getElementById('dayPopup').addEventListener('click', (e) => {
+            if (e.target.id === 'dayPopup') {
+                document.getElementById('dayPopup').classList.remove('active');
+            }
+        });
 
         // Close modal on overlay click
         document.getElementById('eventModal').addEventListener('click', (e) => {
             if (e.target.id === 'eventModal') {
-                closeModal();
+                closeEventModal();
             }
         });
-    </script>
     </script>
 </body>
 </html>
