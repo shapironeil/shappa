@@ -602,13 +602,67 @@
             window.location.href = 'gaming-hub-login.html';
         }
 
-        // Load user info
+        // Load user info and gaming profile
         const currentUser = authSystem.getCurrentUser();
         if (currentUser) {
             const userName = currentUser.username || 'Player';
             document.getElementById('userName').textContent = userName;
             const initial = userName[0].toUpperCase();
             document.getElementById('userAvatar').textContent = initial;
+            
+            // Load gaming profile (level, experience, etc.)
+            loadGamingProfile(currentUser);
+        }
+
+        // Load or initialize gaming profile
+        async function loadGamingProfile(user) {
+            try {
+                // Try to load from server
+                const response = await fetch(`/api/gaming/profile/${user.username}`);
+                if (response.ok) {
+                    const profile = await response.json();
+                    if (profile.success && profile.data) {
+                        updateGamingUI(profile.data);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('No gaming profile found, initializing...');
+            }
+            
+            // Initialize new profile with level 1
+            const newProfile = {
+                level: 1,
+                experience: 0,
+                experienceToNext: 100,
+                totalGames: 0,
+                wins: 0,
+                losses: 0
+            };
+            
+            // Save to server
+            try {
+                await fetch(`/api/gaming/profile/${user.username}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newProfile)
+                });
+            } catch (error) {
+                console.error('Error saving gaming profile:', error);
+            }
+            
+            updateGamingUI(newProfile);
+        }
+
+        function updateGamingUI(profile) {
+            const level = profile.level || 1;
+            const experience = profile.experience || 0;
+            const experienceToNext = profile.experienceToNext || 100;
+            const progress = (experience / experienceToNext) * 100;
+            
+            document.getElementById('userLevel').textContent = level;
+            document.getElementById('userLevelBadge').textContent = level;
+            document.getElementById('progressFill').style.width = `${Math.min(progress, 100)}%`;
         }
 
         // Logout

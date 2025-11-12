@@ -3859,6 +3859,159 @@ app.post('/api/diet/selected-diet/:userId', async (req, res) => {
 });
 
 /**
+ * ========== GAMING API ENDPOINTS ==========
+ * Gestione profili gaming, livelli, esperienza, statistiche
+ */
+
+const GAMING_DATA_DIR = path.join(__dirname, 'data', 'gaming');
+if (!fs.existsSync(GAMING_DATA_DIR)) {
+    fs.mkdirSync(GAMING_DATA_DIR, { recursive: true });
+}
+console.log('✅ Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
+
+/**
+ * GET /api/gaming/profile/:userId
+ * Ottiene il profilo gaming di un utente
+ */
+app.get('/api/gaming/profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
+        
+        if (fs.existsSync(profilePath)) {
+            const profileData = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+            return res.json({ success: true, data: profileData });
+        } else {
+            // Return default profile (level 1)
+            const defaultProfile = {
+                level: 1,
+                experience: 0,
+                experienceToNext: 100,
+                totalGames: 0,
+                wins: 0,
+                losses: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            return res.json({ success: true, data: defaultProfile });
+        }
+    } catch (error) {
+        console.error('Error loading gaming profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/gaming/profile/:userId
+ * Crea o aggiorna il profilo gaming di un utente
+ */
+app.post('/api/gaming/profile/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const profileData = req.body;
+        
+        // Ensure default values
+        const profile = {
+            level: profileData.level || 1,
+            experience: profileData.experience || 0,
+            experienceToNext: profileData.experienceToNext || 100,
+            totalGames: profileData.totalGames || 0,
+            wins: profileData.wins || 0,
+            losses: profileData.losses || 0,
+            createdAt: profileData.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
+        fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2), 'utf8');
+        
+        // Notify UserProfileAgent
+        if (coordinator) {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'gaming',
+                data: profile,
+                source: 'gaming_profile_endpoint'
+            });
+        }
+        
+        console.log('✅ Gaming profile saved for user:', userId);
+        return res.json({ success: true, data: profile });
+    } catch (error) {
+        console.error('Error saving gaming profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/gaming/profile/:userId/add-experience
+ * Aggiunge esperienza e gestisce level up
+ */
+app.post('/api/gaming/profile/:userId/add-experience', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { amount } = req.body;
+        
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid experience amount' });
+        }
+        
+        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
+        let profile = {
+            level: 1,
+            experience: 0,
+            experienceToNext: 100,
+            totalGames: 0,
+            wins: 0,
+            losses: 0,
+            createdAt: new Date().toISOString()
+        };
+        
+        if (fs.existsSync(profilePath)) {
+            profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+        }
+        
+        // Add experience
+        profile.experience = (profile.experience || 0) + amount;
+        
+        // Check for level up
+        let leveledUp = false;
+        while (profile.experience >= profile.experienceToNext) {
+            profile.experience -= profile.experienceToNext;
+            profile.level = (profile.level || 1) + 1;
+            profile.experienceToNext = Math.floor(profile.experienceToNext * 1.5); // Increase exp needed
+            leveledUp = true;
+        }
+        
+        profile.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2), 'utf8');
+        
+        // Notify UserProfileAgent
+        if (coordinator) {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'gaming',
+                data: profile,
+                source: 'gaming_experience_endpoint'
+            });
+        }
+        
+        return res.json({ 
+            success: true, 
+            data: profile,
+            leveledUp,
+            newLevel: leveledUp ? profile.level : null
+        });
+    } catch (error) {
+        console.error('Error adding experience:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * ========== CALENDAR API ENDPOINTS ==========
  * Gestione eventi calendario unificati (Sport, Impegni, Dieta)
  */

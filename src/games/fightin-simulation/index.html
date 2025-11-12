@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FightinSimulation - GameHub</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥊</text></svg">
+    <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Menu principale -->
+        <div id="main-menu" class="menu-screen">
+            <div class="menu-content">
+                <h1 class="game-title">FightinSimulation</h1>
+                <p class="game-subtitle">Scegli la modalità di gioco</p>
+                
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="startGame('story')">
+                        <span class="btn-icon">📖</span>
+                        <span class="btn-text">Modalità Storia</span>
+                        <span class="btn-desc">Vivi l'avventura completa</span>
+                    </button>
+                    
+                    <button class="menu-btn" onclick="startGame('simulation')">
+                        <span class="btn-icon">🎯</span>
+                        <span class="btn-text">Modalità Simulation</span>
+                        <span class="btn-desc">Combattimento libero e training</span>
+                    </button>
+                    
+                    <button class="menu-btn secondary" onclick="goBack()">
+                        <span class="btn-icon">←</span>
+                        <span class="btn-text">Torna alla Dashboard</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas del gioco -->
+        <div id="game-canvas-container" class="hidden">
+            <canvas id="game-canvas"></canvas>
+            <div id="game-hud">
+                <div class="hud-top">
+                    <div class="health-bar">
+                        <div class="bar-label">HP</div>
+                        <div class="bar-fill" id="player-health" style="width: 100%;"></div>
+                    </div>
+                    <div class="stamina-bar">
+                        <div class="bar-label">Stamina</div>
+                        <div class="bar-fill" id="player-stamina" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <div class="hud-bottom">
+                    <div class="controls-hint">
+                        <span>WASD: Movimento | Spazio: Attacca | Shift: Difendi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon-es/0.20.0/cannon-es.min.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/GameEngine.js"></script>
+    <script src="js/SceneManager.js"></script>
+    <script src="js/modes/StoryMode.js"></script>
+    <script src="js/modes/SimulationMode.js"></script>
+    <script src="js/entities/Character.js"></script>
+    <script src="js/entities/Player.js"></script>
+    <script src="js/entities/Enemy.js"></script>
+    <script src="js/combat/CombatSystem.js"></script>
+    <script src="js/utils/Loader.js"></script>
+    <script src="js/utils/AudioManager.js"></script>
+</body>
+</html>
+
