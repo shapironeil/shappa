@@ -3872,89 +3872,144 @@ console.log('✅ Calendar API endpoints directory initialized:', CALENDAR_DATA_D
 /**
  * GET /api/calendar/events/:userId
  * Ottiene tutti gli eventi calendario per un utente
- * Include eventi da Sport, Impegni, Dieta e eventi personalizzati
+ * Raccoglie schede settimanali da Sport, Dieta, Impegni e le converte in eventi ricorrenti
  */
 app.get('/api/calendar/events/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { startDate, endDate } = req.query;
         
-        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
-        let calendarData = { events: [] };
+        // Determina range date (mese corrente se non specificato)
+        const today = new Date();
+        const start = startDate ? new Date(startDate) : new Date(today.getFullYear(), today.getMonth(), 1);
+        const end = endDate ? new Date(endDate) : new Date(today.getFullYear(), today.getMonth() + 1, 0);
         
-        if (fs.existsSync(calendarPath)) {
-            calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
-        }
+        // Normalizza date (solo giorno, senza ora)
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
         
-        // Carica eventi da Sport (allenamenti programmati)
-        let sportEvents = [];
+        let allEvents = [];
+        
+        // ========== SPORT: Leggi weekSchedule e converti in eventi ricorrenti ==========
         try {
             const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
             if (fs.existsSync(programPath)) {
                 const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
-                if (programData.scheduledWorkouts && Array.isArray(programData.scheduledWorkouts)) {
-                    sportEvents = programData.scheduledWorkouts.map(workout => ({
-                        id: `sport_${workout.id || Date.now()}_${workout.dayIndex}`,
-                        date: getDateForDayIndex(workout.dayIndex),
-                        startTime: workout.startTime || '09:00',
-                        endTime: workout.endTime || null,
-                        title: workout.workoutTitle || 'Allenamento',
-                        description: workout.workoutType || '',
-                        category: 'sport',
-                        source: 'sport',
-                        workoutId: workout.workoutId,
-                        duration: workout.duration
-                    }));
-                }
+                
+                // weekSchedule contiene array di { dayIndex, workoutId, workoutTitle, workoutType, duration }
+                const weekSchedule = programData.weekSchedule || [];
+                
+                weekSchedule.forEach(workout => {
+                    if (workout.dayIndex !== undefined && workout.dayIndex !== null) {
+                        // Converti dayIndex (0=Lun, 6=Dom) in date ricorrenti per il range
+                        const dates = getRecurringDatesForDayIndex(workout.dayIndex, start, end);
+                        
+                        dates.forEach(date => {
+                            allEvents.push({
+                                id: `sport_${workout.workoutId || 'unknown'}_${workout.dayIndex}_${date}`,
+                                date: date,
+                                startTime: workout.startTime || '09:00',
+                                endTime: workout.endTime || null,
+                                title: workout.workoutTitle || 'Allenamento',
+                                description: workout.workoutType || workout.description || '',
+                                category: 'sport',
+                                source: 'sport',
+                                workoutId: workout.workoutId,
+                                duration: workout.duration,
+                                recurring: true,
+                                dayIndex: workout.dayIndex
+                            });
+                        });
+                    }
+                });
             }
         } catch (err) {
             console.error('Error loading sport events:', err);
         }
         
-        // Carica eventi da Dieta (past programmati - se disponibili)
-        let dietEvents = [];
+        // ========== DIETA: Leggi weekPlan e converti in eventi ricorrenti ==========
         try {
             const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
             if (fs.existsSync(dietPath)) {
                 const dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
-                // Se ci sono pasti programmati nella struttura dieta
-                if (dietData.mealPlan && Array.isArray(dietData.mealPlan)) {
-                    dietEvents = dietData.mealPlan
-                        .filter(meal => meal.date && meal.time)
-                        .map(meal => ({
-                            id: `diet_${meal.id || Date.now()}_${meal.date}`,
-                            date: meal.date,
-                            startTime: meal.time,
-                            endTime: null,
-                            title: meal.mealName || 'Pasto',
-                            description: meal.description || '',
-                            category: 'dieta',
-                            source: 'diet'
-                        }));
+                
+                // selectedDiet contiene weekPlan con giorni della settimana come chiavi
+                if (dietData.selectedDiet && dietData.selectedDiet.weekPlan) {
+                    const weekPlan = dietData.selectedDiet.weekPlan;
+                    
+                    // Mappa giorni italiani a dayIndex (0=Lun, 6=Dom)
+                    const dayMap = {
+                        'Lunedì': 0, 'Martedì': 1, 'Mercoledì': 2, 'Giovedì': 3,
+                        'Venerdì': 4, 'Sabato': 5, 'Domenica': 6
+                    };
+                    
+                    // Per ogni giorno della settimana nella dieta
+                    Object.keys(weekPlan).forEach(dayName => {
+                        const dayIndex = dayMap[dayName];
+                        if (dayIndex !== undefined) {
+                            const dayPlan = weekPlan[dayName];
+                            
+                            // Converti dayIndex in date ricorrenti per il range
+                            const dates = getRecurringDatesForDayIndex(dayIndex, start, end);
+                            
+                            // Crea eventi per ogni pasto del giorno
+                            const meals = [
+                                { name: 'Colazione', time: '08:00', meal: dayPlan.breakfast },
+                                { name: 'Spuntino 1', time: '11:00', meal: dayPlan.snack1 },
+                                { name: 'Pranzo', time: '13:00', meal: dayPlan.lunch },
+                                { name: 'Spuntino 2', time: '17:00', meal: dayPlan.snack2 },
+                                { name: 'Cena', time: '20:00', meal: dayPlan.dinner }
+                            ];
+                            
+                            dates.forEach(date => {
+                                meals.forEach(mealData => {
+                                    if (mealData.meal && mealData.meal.trim()) {
+                                        allEvents.push({
+                                            id: `diet_${dayName}_${mealData.name}_${date}`,
+                                            date: date,
+                                            startTime: mealData.time,
+                                            endTime: null,
+                                            title: `${mealData.name}: ${mealData.meal.substring(0, 50)}${mealData.meal.length > 50 ? '...' : ''}`,
+                                            description: mealData.meal,
+                                            category: 'dieta',
+                                            source: 'diet',
+                                            recurring: true,
+                                            dayName: dayName,
+                                            calories: dayPlan.calories
+                                        });
+                                    }
+                                });
+                            });
+                        }
+                    });
                 }
             }
         } catch (err) {
             console.error('Error loading diet events:', err);
         }
         
-        // Carica eventi personalizzati (Impegni)
-        let customEvents = (calendarData.events || []).map(event => ({
-            ...event,
-            category: event.category || 'impegni',
-            source: 'custom'
-        }));
-        
-        // Unifica tutti gli eventi
-        let allEvents = [...sportEvents, ...dietEvents, ...customEvents];
-        
-        // Filtra per data se specificato
-        if (startDate && endDate) {
-            allEvents = allEvents.filter(event => {
-                const eventDate = new Date(event.date);
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                return eventDate >= start && eventDate <= end;
-            });
+        // ========== IMPEGNI: Leggi eventi personalizzati (non ricorrenti) ==========
+        try {
+            const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
+            if (fs.existsSync(calendarPath)) {
+                const calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
+                const customEvents = (calendarData.events || [])
+                    .filter(event => {
+                        // Filtra eventi nel range
+                        const eventDate = new Date(event.date);
+                        return eventDate >= start && eventDate <= end;
+                    })
+                    .map(event => ({
+                        ...event,
+                        category: event.category || 'impegni',
+                        source: 'custom',
+                        recurring: false
+                    }));
+                
+                allEvents = allEvents.concat(customEvents);
+            }
+        } catch (err) {
+            console.error('Error loading custom events:', err);
         }
         
         // Ordina per data e ora
@@ -4082,14 +4137,39 @@ app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
     }
 });
 
-// Helper function per convertire dayIndex in data
-function getDateForDayIndex(dayIndex) {
-    const today = new Date();
-    const currentDay = today.getDay();
-    const diff = dayIndex - ((currentDay + 6) % 7); // Convert to Mon=0, Sun=6
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + diff);
-    return targetDate.toISOString().split('T')[0];
+/**
+ * Helper: Converte dayIndex (0=Lun, 6=Dom) in date ricorrenti per un range di date
+ * @param {number} dayIndex - 0=Lunedì, 6=Domenica
+ * @param {Date} startDate - Data inizio range
+ * @param {Date} endDate - Data fine range
+ * @returns {string[]} Array di date ISO (YYYY-MM-DD)
+ */
+function getRecurringDatesForDayIndex(dayIndex, startDate, endDate) {
+    const dates = [];
+    const current = new Date(startDate);
+    
+    // Trova il primo giorno della settimana corrispondente nel range
+    // dayIndex: 0=Lun, 1=Mar, ..., 6=Dom
+    // current.getDay(): 0=Dom, 1=Lun, ..., 6=Sab
+    
+    // Converti getDay() a formato dayIndex (0=Lun, 6=Dom)
+    const currentDayIndex = (current.getDay() + 6) % 7;
+    
+    // Calcola giorni da aggiungere per arrivare al primo giorno corrispondente
+    let daysToAdd = dayIndex - currentDayIndex;
+    if (daysToAdd < 0) {
+        daysToAdd += 7; // Prossima settimana
+    }
+    
+    current.setDate(current.getDate() + daysToAdd);
+    
+    // Aggiungi tutte le occorrenze settimanali nel range
+    while (current <= endDate) {
+        dates.push(current.toISOString().split('T')[0]);
+        current.setDate(current.getDate() + 7); // Prossima settimana
+    }
+    
+    return dates;
 }
 
 /**
