@@ -803,7 +803,7 @@
             const game = games.find(g => {
                 const gameIdStr = String(g.id);
                 const searchIdStr = String(gameId);
-                return gameIdStr === searchIdStr || gameIdStr === searchIdStr;
+                return gameIdStr === searchIdStr;
             });
             
             if (game && game.path) {
