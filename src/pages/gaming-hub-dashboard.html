@@ -625,9 +625,12 @@
                         updateGamingUI(profile.data);
                         return;
                     }
+                } else if (response.status === 404) {
+                    // Profile doesn't exist yet, initialize it
+                    console.log('No gaming profile found, initializing...');
                 }
             } catch (error) {
-                console.log('No gaming profile found, initializing...');
+                console.log('Error loading gaming profile, initializing...', error);
             }
             
             // Initialize new profile with level 1
@@ -642,11 +645,14 @@
             
             // Save to server
             try {
-                await fetch(`/api/gaming/profile/${user.username}`, {
+                const saveResponse = await fetch(`/api/gaming/profile/${user.username}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newProfile)
                 });
+                if (saveResponse.ok) {
+                    console.log('✅ Gaming profile initialized');
+                }
             } catch (error) {
                 console.error('Error saving gaming profile:', error);
             }
@@ -660,9 +666,13 @@
             const experienceToNext = profile.experienceToNext || 100;
             const progress = (experience / experienceToNext) * 100;
             
-            document.getElementById('userLevel').textContent = level;
-            document.getElementById('userLevelBadge').textContent = level;
-            document.getElementById('progressFill').style.width = `${Math.min(progress, 100)}%`;
+            const levelEl = document.getElementById('userLevel');
+            const badgeEl = document.getElementById('userLevelBadge');
+            const progressEl = document.getElementById('progressFill');
+            
+            if (levelEl) levelEl.textContent = level;
+            if (badgeEl) badgeEl.textContent = level;
+            if (progressEl) progressEl.style.width = `${Math.min(progress, 100)}%`;
         }
 
         // Logout
@@ -686,12 +696,15 @@
             // TODO: Implementare logica per mostrare sezioni diverse
         }
 
+        // Games data (global)
+        let games = [];
+        
         // Load games
         function loadGames() {
             const container = document.getElementById('gamesGrid');
             
             // Mock games data
-            const games = [
+            games = [
                 {
                     id: 'fightin-simulation',
                     title: 'FightinSimulation',
@@ -756,8 +769,11 @@
                 const statusClass = game.status === 'Online' ? 'game-status' : 'game-status';
                 const statusColor = game.status === 'Online' ? '#10b981' : '#6b7280';
                 
+                // Escape game.id for onclick (handle strings properly)
+                const gameIdEscaped = typeof game.id === 'string' ? `'${game.id}'` : game.id;
+                
                 return `
-                    <div class="game-card ${isFeatured ? 'featured-game' : ''}" onclick="openGame(${game.id})">
+                    <div class="game-card ${isFeatured ? 'featured-game' : ''}" onclick="openGame(${gameIdEscaped})">
                         <div class="game-card-header">
                             <div>
                                 <div class="game-title">${game.title}</div>
@@ -781,18 +797,25 @@
         }
 
         function openGame(gameId) {
-            console.log('Opening game:', gameId);
+            console.log('Opening game:', gameId, 'Available games:', games);
             
             // Find game in games array
-            const game = games.find(g => g.id === gameId || g.id === String(gameId));
+            const game = games.find(g => {
+                const gameIdStr = String(g.id);
+                const searchIdStr = String(gameId);
+                return gameIdStr === searchIdStr || gameIdStr === searchIdStr;
+            });
             
             if (game && game.path) {
-                // Open game in new window or same window
+                // Open game in same window
                 window.location.href = game.path;
             } else {
-                console.log('Game not found or path not available:', gameId);
+                console.error('Game not found or path not available:', gameId, 'Available:', games.map(g => g.id));
             }
         }
+        
+        // Make openGame globally available
+        window.openGame = openGame;
 
         // Load games on page load
         document.addEventListener('DOMContentLoaded', () => {
