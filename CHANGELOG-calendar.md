@@ -4,6 +4,8 @@
 **Versione:** 2.0.0  
 **Scopo:** Ristrutturazione completa della pagina Calendario per renderla funzionale, visivamente coerente e integrata con il sistema
 
+**Status Deploy:** ✅ Pronto per deploy (modifiche in `server.js` e `src/pages/calendario.html`)
+
 ---
 
 ## ✅ Modifiche Implementate

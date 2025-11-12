@@ -183,9 +183,12 @@
 
         /* Calendar Styles */
         .calendar-container {
-            max-width: 1400px;
-            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: var(--venus-space-xl);
             height: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
         .calendar-main {
@@ -193,6 +196,136 @@
             border: 1px solid var(--venus-border);
             border-radius: var(--venus-radius-md);
             padding: var(--venus-space-xl);
+        }
+        
+        /* Events Sidebar */
+        .calendar-events-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: var(--venus-space-lg);
+            overflow-y: auto;
+        }
+
+        .events-section {
+            background: var(--venus-bg-card);
+            border: 1px solid var(--venus-border);
+            border-radius: var(--venus-radius-md);
+            padding: var(--venus-space-lg);
+        }
+
+        .events-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: var(--venus-space-md);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-item {
+            padding: var(--venus-space-md);
+            border-left: 3px solid;
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius-sm);
+            margin-bottom: var(--venus-space-sm);
+            transition: all var(--venus-transition);
+        }
+
+        .event-item:hover {
+            transform: translateX(4px);
+            box-shadow: var(--venus-shadow-sm);
+        }
+
+        .event-item.sport {
+            border-left-color: #10b981;
+        }
+
+        .event-item.impegni {
+            border-left-color: #3b82f6;
+        }
+
+        .event-item.dieta {
+            border-left-color: #f59e0b;
+        }
+
+        .event-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--venus-text-muted);
+            margin-bottom: 4px;
+        }
+
+        .event-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--venus-text-primary);
+            margin-bottom: 2px;
+        }
+
+        .event-description {
+            font-size: 12px;
+            color: var(--venus-text-muted);
+            line-height: 1.4;
+        }
+
+        .event-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        .event-badge.sport {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .event-badge.impegni {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .event-badge.dieta {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .empty-events {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--venus-text-muted);
+            font-size: 14px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--venus-space-md);
+            margin-top: var(--venus-space-md);
+        }
+
+        .quick-stat {
+            text-align: center;
+            padding: var(--venus-space-md);
+            background: var(--venus-bg-gray);
+            border-radius: var(--venus-radius-sm);
+        }
+
+        .quick-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--venus-primary);
+        }
+
+        .quick-stat-label {
+            font-size: 11px;
+            color: var(--venus-text-muted);
+            margin-top: 4px;
         }
 
         .calendar-header {
@@ -336,168 +469,6 @@
 
         .calendar-day-number {
             font-size: 14px;
-        }
-
-        /* Day Popup Modal - Wide Format (3:1 ratio) */
-        .day-popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .day-popup-overlay.active {
-            display: flex;
-        }
-
-        .day-popup-content {
-            background: white;
-            border-radius: 12px;
-            padding: 32px;
-            width: 90%;
-            max-width: 900px;
-            max-height: 300px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow-y: auto;
-        }
-
-        .day-popup-header {
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--venus-border);
-        }
-
-        .day-popup-date {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--venus-text-primary);
-            margin: 0;
-        }
-
-        .day-popup-events {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .day-popup-empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--venus-text-muted);
-            font-size: 14px;
-        }
-
-        .day-event-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 16px;
-            background: var(--venus-bg-gray);
-            border-radius: 8px;
-            border-left: 4px solid;
-            transition: all var(--venus-transition);
-        }
-
-        .day-event-item:hover {
-            background: #f3f4f6;
-            transform: translateX(4px);
-        }
-
-        .day-event-item.sport {
-            border-left-color: #10b981;
-        }
-
-        .day-event-item.impegni {
-            border-left-color: #3b82f6;
-        }
-
-        .day-event-item.dieta {
-            border-left-color: #f59e0b;
-        }
-
-        .day-event-content {
-            flex: 1;
-        }
-
-        .day-event-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .day-event-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--venus-text-primary);
-            margin: 0;
-        }
-
-        .day-event-time {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--venus-text-secondary);
-        }
-
-        .day-event-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .day-event-badge.sport {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .day-event-badge.impegni {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .day-event-badge.dieta {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .day-event-description {
-            font-size: 13px;
-            color: var(--venus-text-muted);
-            margin: 0;
-        }
-
-        .day-event-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-details {
-            padding: 8px 16px;
-            background: transparent;
-            border: 1px solid var(--venus-border);
-            border-radius: 6px;
-            color: var(--venus-text-secondary);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--venus-transition);
-        }
-
-        .btn-details:hover {
-            background: var(--venus-bg-gray);
-            border-color: var(--venus-primary);
-            color: var(--venus-primary);
         }
 
         /* Event Modal */
@@ -649,7 +620,12 @@
 
         @media (max-width: 1200px) {
             .calendar-container {
+                grid-template-columns: 1fr;
                 max-width: 100%;
+            }
+            
+            .calendar-events-sidebar {
+                order: -1;
             }
         }
     </style>
@@ -718,6 +694,7 @@
 
             <div class="venus-content-area">
                 <div class="calendar-container">
+                    <!-- Calendar Main -->
                     <div class="calendar-main">
                         <div class="calendar-header">
                             <div class="calendar-header-left">
@@ -742,21 +719,51 @@
                         <!-- Days grid -->
                         <div class="calendar-grid" id="calendarDays"></div>
                     </div>
+
+                    <!-- Events Sidebar -->
+                    <div class="calendar-events-sidebar">
+                        <!-- Today's Events -->
+                        <div class="events-section">
+                            <h3 class="events-section-title" id="todayTitle">📌 Oggi</h3>
+                            <div id="todayEvents">
+                                <div class="empty-events">Caricamento...</div>
+                            </div>
+                        </div>
+
+                        <!-- Upcoming Events -->
+                        <div class="events-section">
+                            <h3 class="events-section-title">🔜 Prossimi Eventi</h3>
+                            <div id="upcomingEvents">
+                                <div class="empty-events">Caricamento...</div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="events-section">
+                            <h3 class="events-section-title">📊 Questo Mese</h3>
+                            <div class="quick-stats" id="monthStats">
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statSport">-</div>
+                                    <div class="quick-stat-label">Sport</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statImpegni">-</div>
+                                    <div class="quick-stat-label">Impegni</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statDieta">-</div>
+                                    <div class="quick-stat-label">Dieta</div>
+                                </div>
+                                <div class="quick-stat">
+                                    <div class="quick-stat-value" id="statTotal">-</div>
+                                    <div class="quick-stat-label">Totale</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Day Popup Modal -->
-    <div class="day-popup-overlay" id="dayPopup">
-        <div class="day-popup-content">
-            <div class="day-popup-header">
-                <h3 class="day-popup-date" id="popupDate">Mercoledì 13 Novembre 2025</h3>
-            </div>
-            <div class="day-popup-events" id="popupEvents">
-                <!-- Events will be loaded here -->
-            </div>
-        </div>
     </div>
 
     <!-- Event Modal -->
@@ -841,25 +848,54 @@
             return `${days[date.getDay()]} ${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         }
 
+        // Get user ID helper (same pattern as other pages)
+        function getUserId() {
+            if (currentUserId) return currentUserId;
+            
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                // Usa id se esiste, altrimenti username (come nelle altre pagine)
+                return user.id || user.username;
+            }
+            // Fallback: usa 'shappa' come default
+            return 'shappa';
+        }
+
         // Load events from API
         async function loadEvents() {
-            if (!currentUserId) return;
+            const userId = getUserId();
+            if (!userId) {
+                console.error('No user ID available');
+                return;
+            }
             
             try {
-                const response = await fetch(`/api/calendar/events/${currentUserId}`);
+                // Calcola range mese corrente
+                const today = new Date();
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                
+                const startDate = startOfMonth.toISOString().split('T')[0];
+                const endDate = endOfMonth.toISOString().split('T')[0];
+                
+                console.log('📅 Loading calendar events for user:', userId);
+                const response = await fetch(`/api/calendar/events/${userId}?startDate=${startDate}&endDate=${endDate}`);
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
                         events = result.events || [];
                         generateCalendar();
+                        refreshEventsDisplay();
                     }
                 } else {
                     console.error('Error loading events:', response.statusText);
                     events = [];
+                    refreshEventsDisplay();
                 }
             } catch (error) {
                 console.error('Error loading events:', error);
                 events = [];
+                refreshEventsDisplay();
             }
         }
 
@@ -873,16 +909,28 @@
             // Load user info
             const user = AuthManager.getCurrentUser();
             if (user) {
-                currentUserId = user.id || user.username || user.email;
+                // Usa id se esiste, altrimenti username (come nelle altre pagine)
+                currentUserId = user.id || user.username;
                 const userName = user.username || user.email || 'Utente';
                 document.getElementById('userName').textContent = userName;
                 const initial = userName[0].toUpperCase();
                 document.getElementById('userAvatar').textContent = initial;
+                
+                console.log('👤 User loaded:', userName, 'ID:', currentUserId);
+            } else {
+                console.error('❌ No user found in AuthManager');
             }
 
             // Load events and generate calendar
             loadEvents();
         });
+
+        // Update sidebar when events are loaded
+        function refreshEventsDisplay() {
+            updateTodayEvents();
+            updateUpcomingEvents();
+            updateMonthStats();
+        }
 
         function handleLogout() {
             if (confirm('Sei sicuro di voler uscire?')) {
@@ -949,43 +997,96 @@
             selectedDate = dateString;
             generateCalendar();
             
-            // Show popup with day events
-            const dayEvents = events.filter(e => e.date === dateString);
-            showDayPopup(dateString, dayEvents);
+            // Show popup with day events (optional - can be removed if not needed)
+            // updateSelectedDayEvents(dateString);
         }
 
-        function showDayPopup(dateString, dayEvents) {
-            const popup = document.getElementById('dayPopup');
-            const popupDate = document.getElementById('popupDate');
-            const popupEvents = document.getElementById('popupEvents');
+        function updateTodayEvents() {
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            const todayEvents = events.filter(e => e.date === todayString);
             
-            popupDate.textContent = formatDate(dateString);
+            const titleEl = document.getElementById('todayTitle');
+            const eventsEl = document.getElementById('todayEvents');
             
-            if (dayEvents.length === 0) {
-                popupEvents.innerHTML = '<div class="day-popup-empty">Nessun impegno pianificato per oggi.</div>';
+            const todayFormatted = today.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+            titleEl.textContent = `📌 Oggi - ${todayFormatted}`;
+            
+            if (todayEvents.length === 0) {
+                eventsEl.innerHTML = '<div class="empty-events">Nessun impegno pianificato per oggi.</div>';
             } else {
-                popupEvents.innerHTML = dayEvents.map(event => {
+                eventsEl.innerHTML = todayEvents.map(event => {
                     const categoryClass = event.category || 'impegni';
                     const timeDisplay = event.allDay ? 'Tutto il giorno' : (event.startTime || '');
                     return `
-                        <div class="day-event-item ${categoryClass}">
-                            <div class="day-event-content">
-                                <div class="day-event-header">
-                                    <h4 class="day-event-title">${event.title}</h4>
-                                    ${timeDisplay ? `<span class="day-event-time">${timeDisplay}</span>` : ''}
-                                    <span class="day-event-badge ${categoryClass}">${categoryClass}</span>
-                                </div>
-                                ${event.description ? `<p class="day-event-description">${event.description}</p>` : ''}
-                            </div>
-                            <div class="day-event-actions">
-                                <button class="btn-details" onclick="viewEventDetails('${event.id}')">Dettagli</button>
-                            </div>
+                        <div class="event-item ${categoryClass}">
+                            <div class="event-time">${timeDisplay}</div>
+                            <div class="event-title">${escapeHtml(event.title)}</div>
+                            ${event.description ? `<div class="event-description">${escapeHtml(event.description)}</div>` : ''}
+                            <span class="event-badge ${categoryClass}">${categoryClass}</span>
                         </div>
                     `;
                 }).join('');
             }
+        }
+
+        function updateUpcomingEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
             
-            popup.classList.add('active');
+            const upcoming = events.filter(e => {
+                const eventDate = new Date(e.date);
+                return eventDate > today && eventDate < nextWeek;
+            }).slice(0, 5); // Limita a 5 eventi
+            
+            const eventsEl = document.getElementById('upcomingEvents');
+            
+            if (upcoming.length === 0) {
+                eventsEl.innerHTML = '<div class="empty-events">Nessun evento nei prossimi giorni</div>';
+            } else {
+                eventsEl.innerHTML = upcoming.map(event => {
+                    const categoryClass = event.category || 'impegni';
+                    const timeDisplay = event.allDay ? 'Tutto il giorno' : (event.startTime || '');
+                    const dateDisplay = new Date(event.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+                    return `
+                        <div class="event-item ${categoryClass}">
+                            <div class="event-time">${dateDisplay} - ${timeDisplay}</div>
+                            <div class="event-title">${escapeHtml(event.title)}</div>
+                            ${event.description ? `<div class="event-description">${escapeHtml(event.description)}</div>` : ''}
+                            <span class="event-badge ${categoryClass}">${categoryClass}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateMonthStats() {
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            const monthEvents = events.filter(e => {
+                const eventDate = new Date(e.date);
+                return eventDate >= startOfMonth && eventDate <= endOfMonth;
+            });
+            
+            const sportCount = monthEvents.filter(e => e.category === 'sport').length;
+            const impegniCount = monthEvents.filter(e => e.category === 'impegni').length;
+            const dietaCount = monthEvents.filter(e => e.category === 'dieta').length;
+            const totalCount = monthEvents.length;
+            
+            document.getElementById('statSport').textContent = sportCount;
+            document.getElementById('statImpegni').textContent = impegniCount;
+            document.getElementById('statDieta').textContent = dietaCount;
+            document.getElementById('statTotal').textContent = totalCount;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function viewEventDetails(eventId) {
@@ -1049,7 +1150,8 @@
         async function saveEvent(e) {
             e.preventDefault();
             
-            if (!currentUserId) {
+            const userId = getUserId();
+            if (!userId) {
                 alert('Errore: utente non autenticato');
                 return;
             }
@@ -1063,7 +1165,8 @@
             const endTime = allDay ? null : document.getElementById('eventEndTime').value;
             
             try {
-                const response = await fetch(`/api/calendar/events/${currentUserId}`, {
+                console.log('💾 Saving event for user:', userId);
+                const response = await fetch(`/api/calendar/events/${userId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1082,10 +1185,11 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        closeEventModal();
-                        await loadEvents();
-                        // Show success message
-                        alert('Impegno salvato con successo!');
+                    closeEventModal();
+                    await loadEvents();
+                    // Show success message
+                    alert('Impegno salvato con successo!');
+                    refreshEventsDisplay();
                     } else {
                         alert('Errore nel salvataggio: ' + (result.error || 'Errore sconosciuto'));
                     }
@@ -1098,13 +1202,6 @@
                 alert('Errore nel salvataggio: ' + error.message);
             }
         }
-
-        // Close popup on overlay click
-        document.getElementById('dayPopup').addEventListener('click', (e) => {
-            if (e.target.id === 'dayPopup') {
-                document.getElementById('dayPopup').classList.remove('active');
-            }
-        });
 
         // Close modal on overlay click
         document.getElementById('eventModal').addEventListener('click', (e) => {

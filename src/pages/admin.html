@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shappa - Admin Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a202c;
+            min-height: 100vh;
+        }
+
+        /* Layout */
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #4a5568;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .menu-item.active {
+            background: #edf2f7;
+            color: #2c5282;
+            border-left-color: #2c5282;
+            font-weight: 600;
+        }
+
+        .menu-item-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: #fed7d7;
+            border-color: #fc8181;
+            color: #c53030;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .notification-bell {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notification-bell:hover {
+            background: #edf2f7;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 18px;
+            height: 18px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .kpi-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #718096;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .kpi-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .kpi-change.positive {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .kpi-change.negative {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .kpi-change-icon {
+            font-size: 12px;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .time-filters {
+            display: flex;
+            gap: 8px;
+        }
+
+        .time-filter {
+            padding: 6px 12px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-filter:hover {
+            background: #edf2f7;
+        }
+
+        .time-filter.active {
+            background: #2c5282;
+            color: white;
+            border-color: #2c5282;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            background: #f7fafc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        /* Region Cards */
+        .region-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .region-card {
+            background: linear-gradient(135deg, #f6ad55 0%, #fc8181 100%);
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .region-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(246, 173, 85, 0.3);
+        }
+
+        .region-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .region-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Users Table */
+        .users-section {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .user-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-card:hover {
+            border-color: #2c5282;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .user-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .user-card-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .user-card-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 2px;
+        }
+
+        .user-card-info p {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .user-card-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .user-stat {
+            font-size: 12px;
+        }
+
+        .user-stat-label {
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .user-stat-value {
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: #718096;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2c5282;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .region-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                z-index: 1000;
+                transition: left 0.3s;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .region-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+                <h1>Shappa Admin</h1>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" onclick="showSection('dashboard'); return false;">
+                    <span class="menu-item-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('users'); return false;">
+                    <span class="menu-item-icon">👥</span>
+                    Utenti
+                </a>
+                <a href="admin-server.html" class="menu-item">
+                    <span class="menu-item-icon">🤖</span>
+                    Agenti
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('analytics'); return false;">
+                    <span class="menu-item-icon">📈</span>
+                    Analytics
+                </a>
+                <a href="#" class="menu-item" onclick="showSection('reports'); return false;">
+                    <span class="menu-item-icon">📄</span>
+                    Report
+                </a>
+                <a href="settings.html" class="menu-item">
+                    <span class="menu-item-icon">⚙️</span>
+                    Impostazioni
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-info">
+                        <div class="user-name" id="userName">Admin</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Log Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Monitora KPI, utenti e attività in tempo reale.</p>
+                </div>
+                <div class="top-actions">
+                    <div class="notification-bell">
+                        🔔
+                        <span class="notification-badge">3</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Utenti Attivi</div>
+                        </div>
+                        <div class="kpi-value" id="activeUsers">-</div>
+                        <div class="kpi-change positive">
+                            <span class="kpi-change-icon">↑</span>
+                            <span id="activeUsersChange">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Churn Rate</div>
+                        </div>
+                        <div class="kpi-value" id="churnRate">-</div>
+                        <div class="kpi-change negative">
+                            <span class="kpi-change-icon">↓</span>
+                            <span id="churnRateChange">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Durata Media Sessione</div>
+                        </div>
+                        <div class="kpi-value" id="avgSession">-</div>
+                        <div class="kpi-change positive">
+                            <span class="kpi-change-icon">↑</span>
+                            <span id="avgSessionChange">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-title">Agenti Attivi</div>
+                        </div>
+                        <div class="kpi-value" id="activeAgents">-</div>
+                        <div class="kpi-change positive">
+                            <span class="kpi-change-icon">↑</span>
+                            <span>0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Attività Utenti</h3>
+                            <div class="time-filters">
+                                <button class="time-filter active" onclick="setTimeFilter('7d')">7d</button>
+                                <button class="time-filter" onclick="setTimeFilter('30d')">30d</button>
+                                <button class="time-filter" onclick="setTimeFilter('90d')">90d</button>
+                                <button class="time-filter" onclick="setTimeFilter('12m')">12m</button>
+                            </div>
+                        </div>
+                        <div class="chart-placeholder">
+                            📊 Grafico attività (da implementare)
+                        </div>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">Utenti per Regione</h3>
+                        </div>
+                        <div class="region-grid" id="regionGrid">
+                            <!-- Popolato dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div class="users-section" id="usersSection">
+                    <h3 class="section-title">Utenti Recenti</h3>
+                    <div class="users-grid" id="usersGrid">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>Caricamento utenti...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Auth check
+        if (!AuthManager || !AuthManager.isLoggedIn()) {
+            window.location.href = '/src/pages/login.html';
+        }
+
+        // Load user info
+        const user = AuthManager.getCurrentUser();
+        if (user) {
+            const userName = user.username || user.email || 'Admin';
+            document.getElementById('userName').textContent = userName;
+            const initial = userName[0].toUpperCase();
+            document.getElementById('userAvatar').textContent = initial;
+        }
+
+        // Logout
+        function logout() {
+            if (AuthManager) {
+                AuthManager.logout();
+            }
+            window.location.href = '/src/pages/login.html';
+        }
+
+        // Sidebar toggle
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // Section navigation
+        function showSection(section) {
+            // Rimuovi active da tutti i menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Aggiungi active al menu item cliccato
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Qui puoi implementare la logica per mostrare sezioni diverse
+            console.log('Show section:', section);
+        }
+
+        // Time filter
+        function setTimeFilter(period) {
+            document.querySelectorAll('.time-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            console.log('Time filter:', period);
+        }
+
+        // Load dashboard data
+        async function loadDashboardData() {
+            try {
+                // Load users
+                const usersResponse = await fetch('/api/admin/server-data');
+                const usersData = await usersResponse.json();
+                
+                if (usersData.success && usersData.data && usersData.data.users) {
+                    const users = Object.keys(usersData.data.users);
+                    document.getElementById('activeUsers').textContent = users.length.toLocaleString();
+                    document.getElementById('activeUsersChange').textContent = '8.2%';
+                }
+
+                // Load agents
+                try {
+                    const agentsResponse = await fetch('/api/agents/stats');
+                    const agentsData = await agentsResponse.json();
+                    
+                    if (agentsData.success && agentsData.stats) {
+                        document.getElementById('activeAgents').textContent = agentsData.stats.agents || 0;
+                    }
+                } catch (e) {
+                    console.error('Error loading agents:', e);
+                }
+
+                // Mock data per demo
+                document.getElementById('churnRate').textContent = '2.4%';
+                document.getElementById('churnRateChange').textContent = '0.8%';
+                document.getElementById('avgSession').textContent = '14m 32s';
+                document.getElementById('avgSessionChange').textContent = '5.1%';
+
+                // Load regions (mock)
+                const regions = [
+                    { name: 'Lombardia', value: '2.543' },
+                    { name: 'Lazio', value: '1.876' },
+                    { name: 'Campania', value: '1.432' },
+                    { name: 'Veneto', value: '987' },
+                    { name: 'Emilia-R.', value: '765' },
+                    { name: 'Piemonte', value: '543' }
+                ];
+
+                const regionGrid = document.getElementById('regionGrid');
+                regionGrid.innerHTML = regions.map(region => `
+                    <div class="region-card">
+                        <div class="region-name">${region.name}</div>
+                        <div class="region-value">${region.value}</div>
+                    </div>
+                `).join('');
+
+                // Load users list
+                await loadUsers();
+
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        // Load users
+        async function loadUsers() {
+            const container = document.getElementById('usersGrid');
+            
+            try {
+                const response = await fetch('/api/admin/server-data');
+                const serverData = await response.json();
+                
+                if (!serverData.success || !serverData.data || !serverData.data.users) {
+                    container.innerHTML = '<div class="loading"><p>Nessun utente trovato</p></div>';
+                    return;
+                }
+
+                const users = serverData.data.users;
+                const userIds = Object.keys(users).map(filename => filename.replace('.json', ''));
+
+                if (userIds.length === 0) {
+                    container.innerHTML = '<div class="loading"><p>Nessun utente trovato</p></div>';
+                    return;
+                }
+
+                // Load full data for first 6 users
+                const usersWithData = [];
+                for (const userId of userIds.slice(0, 6)) {
+                    try {
+                        const userResponse = await fetch(`/api/admin/user-data/${userId}`);
+                        const userData = await userResponse.json();
+                        
+                        if (userData.success) {
+                            usersWithData.push({
+                                userId,
+                                ...userData.data
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Error loading data for ${userId}:`, error);
+                    }
+                }
+
+                // Render users
+                if (usersWithData.length === 0) {
+                    container.innerHTML = '<div class="loading"><p>Nessun utente trovato</p></div>';
+                    return;
+                }
+
+                container.innerHTML = usersWithData.map(user => {
+                    const username = user.account?.username || user.userId;
+                    const email = user.account?.email || 'N/A';
+                    const interestsCount = user.interests?.length || 0;
+                    const sportConfigured = user.sport?.profile ? 'Sì' : 'No';
+                    
+                    return `
+                        <div class="user-card" onclick="viewUser('${user.userId}')">
+                            <div class="user-card-header">
+                                <div class="user-card-avatar">${username[0].toUpperCase()}</div>
+                                <div class="user-card-info">
+                                    <h4>${username}</h4>
+                                    <p>${email}</p>
+                                </div>
+                            </div>
+                            <div class="user-card-stats">
+                                <div class="user-stat">
+                                    <div class="user-stat-label">Interessi</div>
+                                    <div class="user-stat-value">${interestsCount}</div>
+                                </div>
+                                <div class="user-stat">
+                                    <div class="user-stat-label">Sport</div>
+                                    <div class="user-stat-value">${sportConfigured}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading users:', error);
+                container.innerHTML = '<div class="loading"><p>Errore nel caricamento</p></div>';
+            }
+        }
+
+        function viewUser(userId) {
+            window.location.href = `admin-users.html?userId=${userId}`;
+        }
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDashboardData();
+            // Auto-refresh ogni 30 secondi
+            setInterval(loadDashboardData, 30000);
+        });
+    </script>
+</body>
+</html>
+
