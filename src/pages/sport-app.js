@@ -663,6 +663,9 @@ function startProgram(programId) {
     if (!selectedProgramIds.includes(programId)) {
         selectedProgramIds.push(programId);
     }
+    
+    // Sincronizza selectedProgramId
+    selectedProgramId = programId;
 
     // Open schedule modal
     const modal = document.getElementById('scheduleModal');
@@ -748,6 +751,11 @@ function closeSchedule() {
 function cancelProgram(programId) {
     // Rimuovi dalle selezioni
     selectedProgramIds = selectedProgramIds.filter(id => id !== programId);
+    
+    // Sincronizza selectedProgramId
+    if (selectedProgramId === programId) {
+        selectedProgramId = null;
+    }
     
     // Rimuovi workout schedulati per questo programma
     scheduledWorkouts = scheduledWorkouts.filter(w => w.workoutId !== programId);
