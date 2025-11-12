@@ -3859,6 +3859,240 @@ app.post('/api/diet/selected-diet/:userId', async (req, res) => {
 });
 
 /**
+ * ========== CALENDAR API ENDPOINTS ==========
+ * Gestione eventi calendario unificati (Sport, Impegni, Dieta)
+ */
+
+const CALENDAR_DATA_DIR = path.join(__dirname, 'data', 'calendar');
+if (!fs.existsSync(CALENDAR_DATA_DIR)) {
+    fs.mkdirSync(CALENDAR_DATA_DIR, { recursive: true });
+}
+console.log('✅ Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
+
+/**
+ * GET /api/calendar/events/:userId
+ * Ottiene tutti gli eventi calendario per un utente
+ * Include eventi da Sport, Impegni, Dieta e eventi personalizzati
+ */
+app.get('/api/calendar/events/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { startDate, endDate } = req.query;
+        
+        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
+        let calendarData = { events: [] };
+        
+        if (fs.existsSync(calendarPath)) {
+            calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
+        }
+        
+        // Carica eventi da Sport (allenamenti programmati)
+        let sportEvents = [];
+        try {
+            const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
+            if (fs.existsSync(programPath)) {
+                const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
+                if (programData.scheduledWorkouts && Array.isArray(programData.scheduledWorkouts)) {
+                    sportEvents = programData.scheduledWorkouts.map(workout => ({
+                        id: `sport_${workout.id || Date.now()}_${workout.dayIndex}`,
+                        date: getDateForDayIndex(workout.dayIndex),
+                        startTime: workout.startTime || '09:00',
+                        endTime: workout.endTime || null,
+                        title: workout.workoutTitle || 'Allenamento',
+                        description: workout.workoutType || '',
+                        category: 'sport',
+                        source: 'sport',
+                        workoutId: workout.workoutId,
+                        duration: workout.duration
+                    }));
+                }
+            }
+        } catch (err) {
+            console.error('Error loading sport events:', err);
+        }
+        
+        // Carica eventi da Dieta (past programmati - se disponibili)
+        let dietEvents = [];
+        try {
+            const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+            if (fs.existsSync(dietPath)) {
+                const dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+                // Se ci sono pasti programmati nella struttura dieta
+                if (dietData.mealPlan && Array.isArray(dietData.mealPlan)) {
+                    dietEvents = dietData.mealPlan
+                        .filter(meal => meal.date && meal.time)
+                        .map(meal => ({
+                            id: `diet_${meal.id || Date.now()}_${meal.date}`,
+                            date: meal.date,
+                            startTime: meal.time,
+                            endTime: null,
+                            title: meal.mealName || 'Pasto',
+                            description: meal.description || '',
+                            category: 'dieta',
+                            source: 'diet'
+                        }));
+                }
+            }
+        } catch (err) {
+            console.error('Error loading diet events:', err);
+        }
+        
+        // Carica eventi personalizzati (Impegni)
+        let customEvents = (calendarData.events || []).map(event => ({
+            ...event,
+            category: event.category || 'impegni',
+            source: 'custom'
+        }));
+        
+        // Unifica tutti gli eventi
+        let allEvents = [...sportEvents, ...dietEvents, ...customEvents];
+        
+        // Filtra per data se specificato
+        if (startDate && endDate) {
+            allEvents = allEvents.filter(event => {
+                const eventDate = new Date(event.date);
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                return eventDate >= start && eventDate <= end;
+            });
+        }
+        
+        // Ordina per data e ora
+        allEvents.sort((a, b) => {
+            const dateCompare = new Date(a.date) - new Date(b.date);
+            if (dateCompare !== 0) return dateCompare;
+            return (a.startTime || '00:00').localeCompare(b.startTime || '00:00');
+        });
+        
+        return res.json({ 
+            success: true, 
+            events: allEvents,
+            count: allEvents.length
+        });
+    } catch (error) {
+        console.error('Error loading calendar events:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/calendar/events/:userId
+ * Crea o aggiorna un evento calendario
+ */
+app.post('/api/calendar/events/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { id, title, date, startTime, endTime, category, description, allDay } = req.body;
+        
+        if (!title || !date) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Title and date are required' 
+            });
+        }
+        
+        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
+        let calendarData = { events: [] };
+        
+        if (fs.existsSync(calendarPath)) {
+            calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
+        }
+        
+        const eventData = {
+            id: id || `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            title,
+            date,
+            startTime: allDay ? null : (startTime || '09:00'),
+            endTime: allDay ? null : endTime,
+            category: category || 'impegni',
+            description: description || '',
+            allDay: allDay || false,
+            createdAt: id ? undefined : new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        if (id) {
+            // Aggiorna evento esistente
+            const index = calendarData.events.findIndex(e => e.id === id);
+            if (index >= 0) {
+                calendarData.events[index] = { ...calendarData.events[index], ...eventData };
+            } else {
+                calendarData.events.push(eventData);
+            }
+        } else {
+            // Crea nuovo evento
+            calendarData.events.push(eventData);
+        }
+        
+        calendarData.updatedAt = new Date().toISOString();
+        
+        fs.writeFileSync(calendarPath, JSON.stringify(calendarData, null, 2), 'utf8');
+        
+        // Notifica UserProfileAgent
+        try {
+            await coordinator.assignTask({
+                type: 'monitor_data_changes',
+                userId,
+                dataType: 'calendar',
+                data: eventData,
+                source: 'calendar_events_endpoint'
+            });
+        } catch (err) {
+            console.error('Error notifying UserProfileAgent:', err);
+        }
+        
+        return res.json({ 
+            success: true, 
+            event: eventData 
+        });
+    } catch (error) {
+        console.error('Error saving calendar event:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * DELETE /api/calendar/events/:userId/:eventId
+ * Elimina un evento calendario
+ */
+app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
+    try {
+        const { userId, eventId } = req.params;
+        
+        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
+        if (!fs.existsSync(calendarPath)) {
+            return res.status(404).json({ success: false, error: 'Calendar not found' });
+        }
+        
+        const calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
+        const initialLength = calendarData.events.length;
+        calendarData.events = calendarData.events.filter(e => e.id !== eventId);
+        
+        if (calendarData.events.length === initialLength) {
+            return res.status(404).json({ success: false, error: 'Event not found' });
+        }
+        
+        calendarData.updatedAt = new Date().toISOString();
+        fs.writeFileSync(calendarPath, JSON.stringify(calendarData, null, 2), 'utf8');
+        
+        return res.json({ success: true, message: 'Event deleted' });
+    } catch (error) {
+        console.error('Error deleting calendar event:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Helper function per convertire dayIndex in data
+function getDateForDayIndex(dayIndex) {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const diff = dayIndex - ((currentDay + 6) % 7); // Convert to Mon=0, Sun=6
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+    return targetDate.toISOString().split('T')[0];
+}
+
+/**
  * ========== AI AGENT API ENDPOINTS ==========
  * Estrazione dati da foto e testi
  */
