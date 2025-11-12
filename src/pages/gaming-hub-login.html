@@ -296,6 +296,9 @@
 
             <!-- Login Form -->
             <form class="login-form active" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="error-message" id="loginError"></div>
+                <div class="success-message" id="loginSuccess"></div>
+                
                 <div class="form-group">
                     <label class="form-label" for="loginEmail">Email o Username</label>
                     <div class="input-wrapper">
@@ -308,6 +311,7 @@
                             class="form-input" 
                             placeholder="username"
                             required
+                            autocomplete="username"
                         >
                     </div>
                 </div>
@@ -324,6 +328,7 @@
                             class="form-input" 
                             placeholder="••••••••"
                             required
+                            autocomplete="current-password"
                         >
                     </div>
                 </div>
@@ -333,6 +338,9 @@
 
             <!-- Register Form -->
             <form class="register-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="error-message" id="registerError"></div>
+                <div class="success-message" id="registerSuccess"></div>
+                
                 <div class="form-group">
                     <label class="form-label" for="registerUsername">Username</label>
                     <div class="input-wrapper">
@@ -345,6 +353,7 @@
                             class="form-input" 
                             placeholder="username"
                             required
+                            autocomplete="username"
                         >
                     </div>
                 </div>
@@ -361,6 +370,7 @@
                             class="form-input" 
                             placeholder="email@example.com"
                             required
+                            autocomplete="email"
                         >
                     </div>
                 </div>
@@ -377,6 +387,7 @@
                             class="form-input" 
                             placeholder="••••••••"
                             required
+                            autocomplete="new-password"
                         >
                     </div>
                 </div>
@@ -389,7 +400,39 @@
     <!-- Help Icon -->
     <div class="help-icon" onclick="showHelp()">?</div>
 
+    <!-- Auth System -->
+    <script src="../core/dataManager.js"></script>
+    <script src="../core/userDataSync.js"></script>
+    <script src="../utils/auth-v2.js"></script>
     <script>
+        // Initialize auth system
+        const authSystem = new ShappaAuth();
+
+        // Check if already logged in - redirect to dashboard
+        if (authSystem.isLoggedIn()) {
+            console.log('✅ User already logged in, redirecting to dashboard...');
+            window.location.href = 'gaming-hub-dashboard.html';
+        }
+
+        // Error/Success messages
+        function showError(message, formType) {
+            const errorDiv = document.getElementById(formType + 'Error');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.add('show');
+                setTimeout(() => errorDiv.classList.remove('show'), 5000);
+            }
+        }
+
+        function showSuccess(message, formType) {
+            const successDiv = document.getElementById(formType + 'Success');
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.classList.add('show');
+                setTimeout(() => successDiv.classList.remove('show'), 5000);
+            }
+        }
+
         function switchTab(tab) {
             // Update tabs
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -405,31 +448,125 @@
             }
         }
 
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
             
-            console.log('Login attempt:', { email, password });
-            // TODO: Implementare logica di login
-            alert('Login funzionalità da implementare');
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const submitBtn = event.target.querySelector('.submit-btn');
+            
+            if (!email || !password) {
+                showError('⚠️ Compila tutti i campi', 'login');
+                return;
+            }
+
+            // Loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Accesso...';
+
+            try {
+                // Attempt login
+                const result = await authSystem.login(email, password, false);
+
+                if (result.success) {
+                    showSuccess(`✅ Benvenuto ${result.user.username}!`, 'login');
+                    submitBtn.textContent = '✅ Successo!';
+                    
+                    // Redirect to dashboard after 1 second
+                    setTimeout(() => {
+                        window.location.href = 'gaming-hub-dashboard.html';
+                    }, 1000);
+                } else {
+                    showError(`❌ ${result.error}`, 'login');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('❌ Errore durante il login. Riprova più tardi.', 'login');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
 
-        function handleRegister(event) {
+        async function handleRegister(event) {
             event.preventDefault();
-            const username = document.getElementById('registerUsername').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
             
-            console.log('Register attempt:', { username, email, password });
-            // TODO: Implementare logica di registrazione
-            alert('Registrazione funzionalità da implementare');
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const submitBtn = event.target.querySelector('.submit-btn');
+            
+            if (!username || !email || !password) {
+                showError('⚠️ Compila tutti i campi', 'register');
+                return;
+            }
+
+            // Loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔄 Creazione account...';
+
+            try {
+                // Attempt registration
+                const result = await authSystem.register(username, email, password, password);
+
+                if (result.success) {
+                    showSuccess(`✅ Account creato! Benvenuto ${result.user.username}!`, 'register');
+                    submitBtn.textContent = '✅ Account Creato!';
+                    
+                    // Auto-login after registration
+                    await authSystem.login(email, password, false);
+                    
+                    // Redirect to dashboard after 1 second
+                    setTimeout(() => {
+                        window.location.href = 'gaming-hub-dashboard.html';
+                    }, 1000);
+                } else {
+                    showError(`❌ ${result.error}`, 'register');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                showError('❌ Errore durante la registrazione. Riprova più tardi.', 'register');
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
 
         function showHelp() {
             alert('Aiuto: Contatta il supporto per assistenza');
         }
     </script>
+    
+    <style>
+        /* Error/Success messages */
+        .error-message, .success-message {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .success-message {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .error-message.show, .success-message.show {
+            display: block;
+        }
+    </style>
 </body>
 </html>
 
