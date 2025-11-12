@@ -16,6 +16,61 @@ let selectedProgramIds = []; // Array per permettere selezione multipla
 let currentQuestionIndex = 0;
 let currentAnswer = "";
 
+// ========== NOTIFICATION UTILITY ==========
+function showNotification(message, type = 'info') {
+    // Rimuovi notifiche precedenti
+    const existing = document.querySelector('.sport-notification');
+    if (existing) existing.remove();
+    
+    // Crea nuova notifica
+    const notification = document.createElement('div');
+    notification.className = 'sport-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        z-index: 10000;
+        max-width: 400px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        animation: slideInRight 0.3s ease-out;
+        ${type === 'success' ? 'background: linear-gradient(135deg, #10b981, #059669);' :
+          type === 'error' ? 'background: linear-gradient(135deg, #ef4444, #dc2626);' :
+          type === 'warning' ? 'background: linear-gradient(135deg, #f59e0b, #d97706);' :
+          'background: linear-gradient(135deg, #3b82f6, #1d4ed8);'}
+    `;
+    notification.textContent = message;
+    
+    // Aggiungi animazione CSS se non esiste
+    if (!document.getElementById('sport-notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'sport-notification-styles';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Rimuovi dopo 5 secondi
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+    
+    console.log(`[${type.toUpperCase()}] ${message}`);
+}
+
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
     // Auth check
