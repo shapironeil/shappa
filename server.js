@@ -4875,3 +4875,6 @@ try {
     console.warn('🔄 Falling back to HTTP...');
     startHttp();
 }
+
+// Export app for Vercel
+module.exports = app;
