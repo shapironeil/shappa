@@ -134,19 +134,19 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
     
-    <!-- Game Scripts -->
-    <script src="js/main.js"></script>
+    <!-- Game Scripts - Load utilities first -->
+    <script src="js/utils/PathSystem.js"></script>
+    <script src="js/utils/EvolutionSystem.js"></script>
+    <script src="js/utils/Loader.js"></script>
+    <script src="js/utils/AudioManager.js"></script>
     <script src="js/GameEngine.js"></script>
-    <script src="js/modes/StoryMode.js"></script>
-    <script src="js/modes/SimulationMode.js"></script>
     <script src="js/entities/Character.js"></script>
     <script src="js/entities/Player.js"></script>
     <script src="js/entities/Enemy.js"></script>
     <script src="js/combat/CombatSystem.js"></script>
     <script src="js/combat/TurnBasedCombat.js"></script>
-    <script src="js/utils/Loader.js"></script>
-    <script src="js/utils/AudioManager.js"></script>
-    <script src="js/utils/PathSystem.js"></script>
-    <script src="js/utils/EvolutionSystem.js"></script>
+    <script src="js/modes/StoryMode.js"></script>
+    <script src="js/modes/SimulationMode.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

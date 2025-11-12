@@ -94,15 +94,9 @@ function generateEnemiesForStage(stage) {
     return enemies;
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        getAvailableEquipment,
-        getEquipmentData,
-        getEvolutionForStage,
-        generateEnemiesForStage,
-        EQUIPMENT_PROGRESSION,
-        EVOLUTION_STAGES
-    };
-}
+// Make functions globally available
+window.getAvailableEquipment = getAvailableEquipment;
+window.getEquipmentData = getEquipmentData;
+window.getEvolutionForStage = getEvolutionForStage;
+window.generateEnemiesForStage = generateEnemiesForStage;
 

@@ -36,13 +36,8 @@ function applyEvolutionMultiplier(stats, evolutionId) {
     };
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        getEvolutionForStage,
-        getEvolutionData,
-        applyEvolutionMultiplier,
-        EVOLUTION_STAGES
-    };
-}
+// Make functions globally available
+window.getEvolutionForStage = getEvolutionForStage;
+window.getEvolutionData = getEvolutionData;
+window.applyEvolutionMultiplier = applyEvolutionMultiplier;
 
