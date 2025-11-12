@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookin'Shappa - Dieta & Salute</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg">
+    <!-- 
+        Design basato su file React da zipfile/Healty
+        Convertito in vanilla HTML/CSS/JS mantenendo tutte le funzioni esistenti
+    -->
+    <style>
+        /* Reset e Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
+            min-height: 100vh;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+
+        /* Venus Dashboard Layout */
+        .venus-dashboard-layout {
+            display: flex;
+            height: 100vh;
+        }
+
+        .venus-sidebar {
+            width: 240px;
+            min-width: 240px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex !important;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .venus-main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Grid Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: white;
+            border-radius: 0.625rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .card-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        /* Calendar Styles */
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .calendar-nav-btn {
+            padding: 0.5rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .calendar-nav-date {
+            font-size: 0.875rem;
+            padding: 0 0.5rem;
+        }
+
+        .calendar-days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .calendar-day {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .calendar-day:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(to bottom right, #fed7aa, #fde68a);
+            border-color: #f97316;
+            box-shadow: 0 4px 6px rgba(249, 115, 22, 0.2);
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+            border-color: #3b82f6;
+        }
+
+        .calendar-day-name {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .calendar-day-number {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .calendar-day-badge {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 9999px;
+            margin-top: 0.25rem;
+        }
+
+        /* Meals Section */
+        .meals-section {
+            margin-top: 1.5rem;
+        }
+
+        .meals-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .meals-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meals-title h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .meals-badge {
+            padding: 0.25rem 0.75rem;
+            background: #f3f4f6;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+
+        .meals-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .meals-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .meal-card {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .meal-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .meal-card.breakfast {
+            background: linear-gradient(to bottom right, #fed7aa, #fde68a);
+            border-color: #fb923c;
+        }
+
+        .meal-card.lunch {
+            background: linear-gradient(to bottom right, #dbeafe, #bfdbfe);
+            border-color: #60a5fa;
+        }
+
+        .meal-card.dinner {
+            background: linear-gradient(to bottom right, #e0e7ff, #c7d2fe);
+            border-color: #818cf8;
+        }
+
+        .meal-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .meal-icon {
+            font-size: 1.5rem;
+        }
+
+        .meal-name {
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .meal-content {
+            font-size: 0.875rem;
+            color: #374151;
+            line-height: 1.5;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            border: 2px dashed #e5e7eb;
+            border-radius: 0.5rem;
+        }
+
+        .empty-state-icon {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 0.75rem;
+            color: #9ca3af;
+        }
+
+        .empty-state-text {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .empty-state-subtext {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #f97316;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ea580c;
+        }
+
+        /* Recipe Cards */
+        .recipe-card-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .recipe-card-item:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Tracker Tabs */
+        .tracker-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tracker-tab {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .tracker-tab.active {
+            background: #f3f4f6;
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .tracker-content {
+            display: none;
+        }
+
+        .tracker-content.active {
+            display: block;
+        }
+
+        .tracker-value {
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            color: #1f2937;
+        }
+
+        .tracker-label {
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        /* Personal Card */
+        .personal-card-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            background: linear-gradient(to bottom right, #a855f7, #ec4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        /* Scroll Area */
+        .scroll-area {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-secondary {
+            background: #f3f4f6;
+            color: #030213;
+        }
+
+        /* Input */
+        .w-full {
+            width: 100%;
+        }
+
+        .p-2 {
+            padding: 0.5rem;
+        }
+
+        .border {
+            border: 1px solid #e5e7eb;
+        }
+
+        .rounded {
+            border-radius: 0.375rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .space-y-3 > * + * {
+            margin-top: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="venus-dashboard-layout">
+        <!-- Venus Sidebar -->
+        <aside class="venus-sidebar">
+            <div class="venus-sidebar-header">
+                <div class="venus-logo">
+                    <span class="venus-logo-text">SHAPPA</span>
+                </div>
+            </div>
+            
+            <nav class="venus-sidebar-menu">
+                <a href="dashboard.html" class="venus-menu-item">Dashboard</a>
+                <a href="obiettivi.html" class="venus-menu-item">Obiettivi</a>
+                <a href="progetti.html" class="venus-menu-item">Progetti</a>
+                <a href="calendario.html" class="venus-menu-item">Calendario</a>
+                <a href="products.html" class="venus-menu-item">Cerca Prodotti</a>
+                <a href="interessi.html" class="venus-menu-item">I Miei Interessi</a>
+                <a href="sport.html" class="venus-menu-item">Sport</a>
+                <a href="dieta.html" class="venus-menu-item venus-active">Dieta</a>
+                <a href="settings.html" class="venus-menu-item">Impostazioni</a>
+            </nav>
+            
+            <div class="venus-sidebar-footer">
+                <div class="venus-user-profile">
+                    <div class="venus-user-avatar" id="sidebarUserAvatar">U</div>
+                    <div class="venus-user-info">
+                        <div class="venus-user-name" id="sidebarUserName">Utente</div>
+                        <div class="venus-user-role">Admin</div>
+                    </div>
+                </div>
+                <button class="venus-logout-btn" id="logoutBtn">Log Out</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="venus-main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-title">Cookin'Shappa</div>
+                <div class="header-subtitle">Pianifica la tua alimentazione settimanale</div>
+            </header>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Weekly Calendar -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">
+                                    <svg class="card-title-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <h2>Calendario Settimanale</h2>
+                                </div>
+                                <div class="card-subtitle" id="selectedDietName"></div>
+                            </div>
+                            <div class="calendar-nav">
+                                <button class="calendar-nav-btn" id="prevWeek">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                </button>
+                                <span class="calendar-nav-date" id="weekRange"></span>
+                                <button class="calendar-nav-btn" id="nextWeek">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="calendar-container">
+                            <div id="calendarEmptyState" class="empty-state" style="display: none;">
+                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <p class="empty-state-text">Nessuna dieta selezionata</p>
+                                <p class="empty-state-subtext">Scegli una dieta personalizzata per vedere i pasti della settimana</p>
+                            </div>
+                            <div id="calendarDays" class="calendar-days-grid"></div>
+                        </div>
+
+                        <!-- Meals Display -->
+                        <div id="mealsSection" class="meals-section" style="display: none;">
+                            <div class="meals-header">
+                                <div class="meals-title">
+                                    <span>🍽️</span>
+                                    <h3>Pasti di <span id="selectedDayName"></span></h3>
+                                </div>
+                                <span class="meals-badge" id="dayCalories">0 cal</span>
+                            </div>
+                            <div class="meals-grid" id="mealsGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dinner Alternatives -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">
+                                    <span>👨‍🍳</span>
+                                    <h2>Alternative per Stasera</h2>
+                                </div>
+                                <div class="card-subtitle">Scopri cosa cucinare</div>
+                            </div>
+                        </div>
+                        <div id="dinnerAlternativesContent">
+                            <div id="dinnerAlternativesEmpty" class="empty-state">
+                                <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                <p class="empty-state-text">Caricamento ricette da GialloZafferano...</p>
+                                <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Carica Ricette</button>
+                            </div>
+                            <div id="dinnerAlternativesList" style="display: none;">
+                                <div class="mb-4">
+                                    <input type="text" id="recipeSearchInput" class="w-full p-2 border rounded" placeholder="Cerca ricette..." onkeyup="filterRecipes()">
+                                </div>
+                                <div id="recipesList" class="scroll-area space-y-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weight & Calories Tracker -->
+                    <div class="card">
+                        <div class="tracker-tabs">
+                            <button class="tracker-tab active" data-tab="weight">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+                                </svg>
+                                Peso
+                            </button>
+                            <button class="tracker-tab" data-tab="calories">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                                Calorie
+                            </button>
+                        </div>
+                        <div id="weightTracker" class="tracker-content active">
+                            <div class="tracker-value" id="currentWeight">0</div>
+                            <div class="tracker-label">kg</div>
+                        </div>
+                        <div id="caloriesTracker" class="tracker-content">
+                            <div class="tracker-value" id="currentCalories">0</div>
+                            <div class="tracker-label">kcal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Personal Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <div class="personal-card-avatar" id="userAvatar">U</div>
+                                <div>
+                                    <h2>Profilo Personale</h2>
+                                    <div class="card-subtitle" id="userName">Utente</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="personalCardContent">
+                            <p style="color: #4b5563; font-size: 0.875rem;">Configura le tue preferenze per ricevere diete personalizzate</p>
+                        </div>
+                    </div>
+
+                    <!-- Urgent Items & Fridge -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span>⚠️</span>
+                                <h2>Items Urgenti</h2>
+                            </div>
+                        </div>
+                        <div id="urgentItemsContent">
+                            <div class="empty-state">
+                                <p class="empty-state-text">Nessun item in scadenza</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Diet Proposals -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span>💡</span>
+                                <h2>Proposte Dieta</h2>
+                            </div>
+                        </div>
+                        <div id="dietProposalsContent">
+                            <div class="empty-state">
+                                <p class="empty-state-text">Caricamento proposte dieta...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../utils/auth-v2.js"></script>
+    <script>
+        // Global State - MANTENUTA TUTTA LA LOGICA ESISTENTE
+        let weekOffset = 0;
+        let selectedDay = null;
+        let selectedDiet = null;
+        const weekDays = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Auth Check
+            if (!AuthManager.isLoggedIn()) {
+                window.location.href = '/src/pages/login.html';
+                return;
+            }
+
+            // Load user info
+            const user = AuthManager.getCurrentUser();
+            if (user) {
+                const userName = user.username || user.email || 'Utente';
+                document.getElementById('userName').textContent = userName;
+                document.getElementById('sidebarUserName').textContent = userName;
+                const initial = userName[0].toUpperCase();
+                document.getElementById('userAvatar').textContent = initial;
+                document.getElementById('sidebarUserAvatar').textContent = initial;
+            }
+
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                AuthManager.logout();
+                window.location.href = '/src/pages/login.html';
+            });
+
+            // Load saved diet
+            const savedDiet = localStorage.getItem('selected_diet');
+            if (savedDiet) {
+                try {
+                    selectedDiet = JSON.parse(savedDiet);
+                    updateDietName();
+                } catch (e) {
+                    console.error('Error loading diet:', e);
+                }
+            }
+
+            // Setup calendar
+            setupCalendar();
+            renderCalendar();
+
+            // Setup tabs
+            setupTabs();
+
+            // Setup navigation
+            document.getElementById('prevWeek').addEventListener('click', () => {
+                weekOffset--;
+                renderCalendar();
+            });
+
+            document.getElementById('nextWeek').addEventListener('click', () => {
+                weekOffset++;
+                renderCalendar();
+            });
+        });
+
+        function setupCalendar() {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const dayIndex = currentDay === 0 ? 6 : currentDay - 1;
+            selectedDay = weekDays[dayIndex];
+        }
+
+        function getCurrentWeekDates() {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1) + (weekOffset * 7));
+            
+            return weekDays.map((_, index) => {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + index);
+                return date;
+            });
+        }
+
+        function renderCalendar() {
+            const dates = getCurrentWeekDates();
+            const isCurrentWeek = weekOffset === 0;
+            const calendarDays = document.getElementById('calendarDays');
+            const calendarEmptyState = document.getElementById('calendarEmptyState');
+            const mealsSection = document.getElementById('mealsSection');
+
+            // Update week range
+            const weekRange = document.getElementById('weekRange');
+            weekRange.textContent = `${dates[0].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${dates[6].toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}`;
+
+            if (!selectedDiet) {
+                calendarDays.style.display = 'none';
+                calendarEmptyState.style.display = 'block';
+                mealsSection.style.display = 'none';
+                return;
+            }
+
+            calendarDays.style.display = 'grid';
+            calendarEmptyState.style.display = 'none';
+            calendarDays.innerHTML = '';
+
+            weekDays.forEach((day, index) => {
+                const date = dates[index];
+                const isToday = isCurrentWeek && new Date().getDay() === (index + 1) % 7;
+                const dayPlan = selectedDiet.weekPlan?.[day];
+                const isSelected = selectedDay === day;
+
+                const dayElement = document.createElement('div');
+                dayElement.className = `calendar-day ${isSelected ? 'selected' : ''} ${isToday ? 'today' : ''}`;
+                dayElement.onclick = () => {
+                    selectedDay = day;
+                    renderCalendar();
+                    renderMeals();
+                };
+
+                dayElement.innerHTML = `
+                    <div class="calendar-day-name">${day.substring(0, 3)}</div>
+                    <div class="calendar-day-number">${date.getDate()}</div>
+                    ${isToday ? '<span class="calendar-day-badge">Oggi</span>' : ''}
+                `;
+
+                calendarDays.appendChild(dayElement);
+            });
+
+            renderMeals();
+        }
+
+        function renderMeals() {
+            if (!selectedDiet || !selectedDay) return;
+
+            const dayPlan = selectedDiet.weekPlan[selectedDay];
+            if (!dayPlan) return;
+
+            const mealsSection = document.getElementById('mealsSection');
+            const selectedDayName = document.getElementById('selectedDayName');
+            const dayCalories = document.getElementById('dayCalories');
+            const mealsGrid = document.getElementById('mealsGrid');
+
+            mealsSection.style.display = 'block';
+            selectedDayName.textContent = selectedDay;
+            dayCalories.textContent = `${dayPlan.calories} cal`;
+
+            mealsGrid.innerHTML = `
+                <div class="meal-card breakfast" onclick="showMealDetails('breakfast', '${dayPlan.breakfast.replace(/'/g, "\\'")}')">
+                    <div class="meal-card-header">
+                        <span class="meal-icon">🌅</span>
+                        <h4 class="meal-name">Colazione</h4>
+                    </div>
+                    <p class="meal-content">${dayPlan.breakfast}</p>
+                </div>
+                <div class="meal-card lunch" onclick="showMealDetails('lunch', '${dayPlan.lunch.replace(/'/g, "\\'")}')">
+                    <div class="meal-card-header">
+                        <span class="meal-icon">☀️</span>
+                        <h4 class="meal-name">Pranzo</h4>
+                    </div>
+                    <p class="meal-content">${dayPlan.lunch}</p>
+                </div>
+                <div class="meal-card dinner" onclick="showMealDetails('dinner', '${dayPlan.dinner.replace(/'/g, "\\'")}')">
+                    <div class="meal-card-header">
+                        <span class="meal-icon">🌙</span>
+                        <h4 class="meal-name">Cena</h4>
+                    </div>
+                    <p class="meal-content">${dayPlan.dinner}</p>
+                </div>
+            `;
+        }
+
+        function showMealDetails(type, content) {
+            alert(`${type === 'breakfast' ? '🌅 Colazione' : type === 'lunch' ? '☀️ Pranzo' : '🌙 Cena'}\n\n${content}`);
+        }
+
+        function updateDietName() {
+            if (selectedDiet) {
+                document.getElementById('selectedDietName').textContent = `Dieta: ${selectedDiet.name}`;
+            }
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tracker-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    // Update content
+                    document.querySelectorAll('.tracker-content').forEach(c => c.classList.remove('active'));
+                    document.getElementById(`${tabName}Tracker`).classList.add('active');
+                });
+            });
+        }
+
+        // ========== Dinner Alternatives - GialloZafferano Integration ==========
+        // TUTTA LA LOGICA ESISTENTE MANTENUTA
+        let availableIngredients = [];
+        let allRecipes = [];
+        let filteredRecipes = [];
+
+        async function loadDinnerRecipes() {
+            const emptyState = document.getElementById('dinnerAlternativesEmpty');
+            const recipesList = document.getElementById('dinnerAlternativesList');
+            const recipesContainer = document.getElementById('recipesList');
+
+            try {
+                emptyState.innerHTML = '<p class="empty-state-text">Caricamento ricette...</p>';
+
+                // Cerca ricette per cena (primi e secondi)
+                const searchQueries = ['pasta', 'risotto', 'secondo piatto', 'pesce', 'pollo'];
+                const allResults = [];
+
+                for (const query of searchQueries.slice(0, 2)) {
+                    try {
+                        const response = await fetch('/api/recipes/search', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query, limit: 5 })
+                        });
+
+                        const data = await response.json();
+                        if (data.success && data.recipes) {
+                            allResults.push(...data.recipes);
+                        }
+                    } catch (error) {
+                        console.error(`Error searching for "${query}":`, error);
+                    }
+                }
+
+                if (allResults.length === 0) {
+                    emptyState.innerHTML = `
+                        <p class="empty-state-text">Nessuna ricetta trovata</p>
+                        <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
+                    `;
+                    return;
+                }
+
+                // Fetch dettagli per le prime 10 ricette
+                const recipesToFetch = allResults.slice(0, 10);
+                allRecipes = [];
+
+                for (const recipe of recipesToFetch) {
+                    try {
+                        const fetchResponse = await fetch('/api/recipes/fetch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                url: recipe.url,
+                                saveToDatabase: false,
+                                downloadImage: false
+                            })
+                        });
+
+                        const fetchData = await fetchResponse.json();
+                        if (fetchData.success && fetchData.recipe) {
+                            const category = fetchData.recipe.category;
+                            if (category === 'primo' || category === 'secondo') {
+                                allRecipes.push(fetchData.recipe);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching recipe "${recipe.title}":`, error);
+                    }
+                }
+
+                if (allRecipes.length === 0) {
+                    emptyState.innerHTML = `
+                        <p class="empty-state-text">Nessuna ricetta adatta trovata</p>
+                        <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
+                    `;
+                    return;
+                }
+
+                filteredRecipes = [...allRecipes];
+                renderRecipes();
+                emptyState.style.display = 'none';
+                recipesList.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading recipes:', error);
+                emptyState.innerHTML = `
+                    <p class="empty-state-text">Errore nel caricamento ricette</p>
+                    <button class="btn btn-primary mt-4" onclick="loadDinnerRecipes()">Riprova</button>
+                `;
+            }
+        }
+
+        function filterRecipes() {
+            const searchInput = document.getElementById('recipeSearchInput');
+            const query = searchInput.value.toLowerCase();
+
+            if (!query) {
+                filteredRecipes = [...allRecipes];
+            } else {
+                filteredRecipes = allRecipes.filter(recipe => 
+                    recipe.name.toLowerCase().includes(query) ||
+                    recipe.description.toLowerCase().includes(query) ||
+                    recipe.tags.some(tag => tag.toLowerCase().includes(query))
+                );
+            }
+
+            renderRecipes();
+        }
+
+        function renderRecipes() {
+            const recipesContainer = document.getElementById('recipesList');
+            
+            if (filteredRecipes.length === 0) {
+                recipesContainer.innerHTML = '<p class="empty-state-text">Nessuna ricetta trovata</p>';
+                return;
+            }
+
+            recipesContainer.innerHTML = filteredRecipes.map(recipe => {
+                const canMake = canMakeRecipe(recipe);
+                const missing = getMissingIngredients(recipe);
+                const difficultyColors = {
+                    'Facile': 'bg-green-100 text-green-700',
+                    'Media': 'bg-yellow-100 text-yellow-700',
+                    'Difficile': 'bg-red-100 text-red-700'
+                };
+
+                return `
+                    <div class="recipe-card-item p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                        canMake ? 'bg-white border-green-200 hover:border-green-400' : 'bg-gray-50 border-gray-200'
+                    }" onclick="showRecipeDetails('${recipe.id}')">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex-1">
+                                <h3 class="font-medium text-sm mb-1">${recipe.name}</h3>
+                                <p class="text-xs text-gray-600 mb-2">${recipe.description || ''}</p>
+                            </div>
+                            ${recipe.imageUrl ? `<img src="${recipe.imageUrl}" alt="${recipe.name}" class="w-16 h-16 object-cover rounded ml-2">` : ''}
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="badge ${difficultyColors[recipe.difficulty] || 'bg-gray-100'} text-xs">${recipe.difficulty}</span>
+                            <span class="text-xs text-gray-500">⏱️ ${recipe.prepTime + recipe.cookTime} min</span>
+                            <span class="text-xs text-gray-500">👥 ${recipe.servings} porzioni</span>
+                            ${canMake ? 
+                                '<span class="badge bg-green-100 text-green-700 text-xs">✓ Puoi prepararlo</span>' :
+                                `<span class="badge bg-red-100 text-red-700 text-xs">${missing.length} ingredienti mancanti</span>`
+                            }
+                        </div>
+                        ${!canMake && missing.length > 0 ? `
+                            <button class="btn btn-primary mt-2 text-xs" onclick="event.stopPropagation(); addMissingToShoppingList('${recipe.id}')">
+                                Aggiungi ${missing.length} ingredienti alla lista
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function canMakeRecipe(recipe) {
+            if (availableIngredients.length === 0) return false;
+            const recipeIngredientIds = recipe.ingredients.map(ing => ing.foodId);
+            return recipeIngredientIds.every(id => availableIngredients.includes(id));
+        }
+
+        function getMissingIngredients(recipe) {
+            const recipeIngredientIds = recipe.ingredients.map(ing => ing.foodId);
+            return recipeIngredientIds.filter(id => !availableIngredients.includes(id));
+        }
+
+        function showRecipeDetails(recipeId) {
+            const recipe = allRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            const ingredientsList = recipe.ingredients.map(ing => 
+                `• ${ing.quantity}${ing.unit} ${ing.name}`
+            ).join('\n');
+
+            const instructionsList = recipe.instructions.map((inst, idx) => 
+                `${idx + 1}. ${inst}`
+            ).join('\n\n');
+
+            alert(`${recipe.name}\n\n${recipe.description || ''}\n\n📋 INGREDIENTI:\n${ingredientsList}\n\n👨‍🍳 PREPARAZIONE:\n${instructionsList}\n\n⏱️ Tempo: ${recipe.prepTime + recipe.cookTime} min | 👥 Porzioni: ${recipe.servings}`);
+        }
+
+        function addMissingToShoppingList(recipeId) {
+            const recipe = allRecipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            const missing = getMissingIngredients(recipe);
+            if (missing.length === 0) {
+                alert('Hai già tutti gli ingredienti!');
+                return;
+            }
+
+            alert(`Aggiunti ${missing.length} ingredienti alla lista della spesa:\n${missing.join(', ')}`);
+        }
+
+        // Auto-load recipes on page load
+        setTimeout(() => {
+            loadDinnerRecipes();
+        }, 1000);
+    </script>
+</body>
+</html>
+

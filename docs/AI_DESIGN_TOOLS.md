@@ -120,3 +120,4 @@ Il progetto già supporta:
 
 **Nota**: Per design complessi, combinare Figma (design) + FigmaAgent (export) + Cursor (refinement) è il workflow più efficace.
 
+

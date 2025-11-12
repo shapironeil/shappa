@@ -1464,8 +1464,8 @@
                 <a href="obiettivi.html" class="venus-menu-item">
                     Obiettivi
                 </a>
-                <a href="progetti.html" class="venus-menu-item">
-                    Progetti
+                <a href="impegni.html" class="venus-menu-item">
+                    Impegni
                 </a>
                 <a href="calendario.html" class="venus-menu-item">
                     Calendario
@@ -1480,7 +1480,7 @@
                     Sport
                 </a>
                 <a href="dieta.html" class="venus-menu-item">
-                    Dieta
+                    Cookin Shapp
                 </a>
                 <a href="settings.html" class="venus-menu-item">
                     Impostazioni
@@ -3556,6 +3556,52 @@
     }
 
     /**
+     * Sincronizza monitor attivi dal server
+     * Garantisce che i monitor attivi nel file JSON vengano riavviati nel MonitorManager
+     * Necessario per visibilità su tutti i dispositivi
+     */
+    async function syncActiveMonitors() {
+        try {
+            const user = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+            if (!user || !user.id) {
+                console.warn('⚠️ User not authenticated, skipping monitor sync');
+                return;
+            }
+
+            // Carica interessi dal server
+            const interests = await getUserInterests();
+            const releasingInterests = interests.filter(i => i.type === 'releasing');
+            
+            // Verifica quali monitor sono attivi nel file JSON
+            const activeInFile = releasingInterests.filter(i => 
+                i.status === 'monitoring' || i.status === 'starting' || i.status === 'product found'
+            );
+
+            if (activeInFile.length === 0) {
+                console.log('ℹ️ Nessun monitor attivo da sincronizzare');
+                return;
+            }
+
+            // Carica monitor attivi dal MonitorManager
+            const response = await fetch(`${API_BASE}/api/monitors/user/${user.id}`);
+            const data = await response.json();
+            const activeInManager = data.success ? data.monitors.map(m => m.monitorId) : [];
+
+            // Riavvia i monitor che sono attivi nel file ma non nel Manager
+            for (const interest of activeInFile) {
+                if (!activeInManager.includes(interest.id)) {
+                    console.log(`🔄 Riavvio monitor ${interest.id} (${interest.name}) - era attivo ma non nel Manager`);
+                    await startMonitor(interest.id);
+                }
+            }
+
+            console.log(`✅ Sincronizzazione monitor completata: ${activeInFile.length} monitor attivi verificati`);
+        } catch (error) {
+            console.error('❌ Errore sincronizzazione monitor:', error);
+        }
+    }
+
+    /**
      * Ferma un monitor
      */
     async function stopMonitor(interestId) {
@@ -4072,6 +4118,9 @@
         await loadInterestsTable();
         await loadReleaseDates();
         await updateCounters();
+        
+        // 🔄 Sincronizza monitor attivi (per visibilità su tutti i dispositivi)
+        await syncActiveMonitors();
         
         // Avvia auto-refresh per vedere status in tempo reale
         startAutoRefresh();

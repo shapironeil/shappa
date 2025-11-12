@@ -576,3 +576,4 @@ Prima di modificare codice, verificare:
 **Mantieni questa architettura consistente. Evita duplicazioni. Usa i pattern esistenti.**
 
 
+
