@@ -4804,8 +4804,9 @@ app.post('/api/figma/generate-code', async (req, res) => {
 
 function startHttp() {
     console.log('� Starting HTTP server as fallback...');
-// Serve static files AFTER all API routes are defined
-// IMPORTANTE: Questo deve essere DOPO tutti gli endpoint API ma PRIMA che il server inizi ad ascoltare
+// ========== STATIC FILES MIDDLEWARE ==========
+// IMPORTANTE: Questo DEVE essere DOPO tutti gli endpoint API ma PRIMA che il server inizi ad ascoltare
+// Su Vercel, questo viene eseguito immediatamente quando il modulo viene caricato
 if (!app._staticFilesConfigured) {
     app.use(express.static(__dirname));
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
