@@ -693,6 +693,15 @@
             // Mock games data
             const games = [
                 {
+                    id: 'fightin-simulation',
+                    title: 'FightinSimulation',
+                    subtitle: '3D Fighting Game',
+                    status: 'Online',
+                    image: '🥊',
+                    stats: { players: '1.5K', rating: '4.9' },
+                    path: '../games/fightin-simulation/index.html'
+                },
+                {
                     id: 1,
                     title: 'FINAL FIGHT®',
                     subtitle: 'SNS-FT-USA',
@@ -773,7 +782,16 @@
 
         function openGame(gameId) {
             console.log('Opening game:', gameId);
-            // TODO: Implementare apertura gioco
+            
+            // Find game in games array
+            const game = games.find(g => g.id === gameId || g.id === String(gameId));
+            
+            if (game && game.path) {
+                // Open game in new window or same window
+                window.location.href = game.path;
+            } else {
+                console.log('Game not found or path not available:', gameId);
+            }
         }
 
         // Load games on page load

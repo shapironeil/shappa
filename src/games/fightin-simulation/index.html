@@ -36,45 +36,117 @@
             </div>
         </div>
 
-        <!-- Canvas del gioco -->
+        <!-- Scelta Genere (Storia) -->
+        <div id="gender-selection" class="menu-screen hidden">
+            <div class="menu-content">
+                <h1 class="game-title">Scegli il tuo Personaggio</h1>
+                <p class="game-subtitle">Maschio o Femmina?</p>
+                
+                <div class="gender-buttons">
+                    <button class="gender-btn" onclick="selectGender('male')">
+                        <span class="gender-icon">👨</span>
+                        <span class="gender-text">Maschio</span>
+                    </button>
+                    <button class="gender-btn" onclick="selectGender('female')">
+                        <span class="gender-icon">👩</span>
+                        <span class="gender-text">Femmina</span>
+                    </button>
+                </div>
+                
+                <button class="menu-btn secondary" onclick="backToMainMenu()" style="margin-top: 32px;">
+                    <span class="btn-icon">←</span>
+                    <span class="btn-text">Indietro</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Selezione Equipaggiamento -->
+        <div id="equipment-selection" class="menu-screen hidden">
+            <div class="menu-content">
+                <h1 class="game-title">Equipaggiamento</h1>
+                <p class="game-subtitle" id="equipment-subtitle">Scegli il tuo equipaggiamento</p>
+                
+                <div class="equipment-grid" id="equipment-grid">
+                    <!-- Popolato dinamicamente -->
+                </div>
+                
+                <button class="menu-btn secondary" onclick="backToGenderSelection()" style="margin-top: 32px;">
+                    <span class="btn-icon">←</span>
+                    <span class="btn-text">Indietro</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Selezione Nemico (Path Selection) -->
+        <div id="path-selection" class="menu-screen hidden">
+            <div class="menu-content">
+                <h1 class="game-title">Scegli il tuo Avversario</h1>
+                <p class="game-subtitle">Stage <span id="current-stage">1</span> - Scegli un percorso</p>
+                
+                <div class="path-container" id="path-container">
+                    <!-- Popolato dinamicamente -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Combattimento -->
+        <div id="combat-screen" class="menu-screen hidden">
+            <div class="combat-content">
+                <div class="combat-header">
+                    <div class="combatant-info">
+                        <div class="combatant-name" id="player-name">Player</div>
+                        <div class="health-bar-combat">
+                            <div class="bar-fill" id="player-health-bar" style="width: 100%;"></div>
+                            <span class="health-text" id="player-health-text">100/100</span>
+                        </div>
+                    </div>
+                    <div class="vs-divider">VS</div>
+                    <div class="combatant-info">
+                        <div class="combatant-name" id="enemy-name">Enemy</div>
+                        <div class="health-bar-combat">
+                            <div class="bar-fill enemy" id="enemy-health-bar" style="width: 100%;"></div>
+                            <span class="health-text" id="enemy-health-text">100/100</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="combat-actions" id="combat-actions">
+                    <!-- Popolato dinamicamente -->
+                </div>
+                
+                <div class="combat-log" id="combat-log">
+                    <!-- Log combattimento -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas del gioco (per visualizzazione 3D) -->
         <div id="game-canvas-container" class="hidden">
             <canvas id="game-canvas"></canvas>
-            <div id="game-hud">
-                <div class="hud-top">
-                    <div class="health-bar">
-                        <div class="bar-label">HP</div>
-                        <div class="bar-fill" id="player-health" style="width: 100%;"></div>
-                    </div>
-                    <div class="stamina-bar">
-                        <div class="bar-label">Stamina</div>
-                        <div class="bar-fill" id="player-stamina" style="width: 100%;"></div>
-                    </div>
-                </div>
-                <div class="hud-bottom">
-                    <div class="controls-hint">
-                        <span>WASD: Movimento | Spazio: Attacca | Shift: Difendi</span>
-                    </div>
-                </div>
+            <div id="viewer-controls">
+                <button class="viewer-btn" onclick="zoomIn()">+</button>
+                <button class="viewer-btn" onclick="zoomOut()">-</button>
+                <button class="viewer-btn" onclick="resetView()">↻</button>
             </div>
         </div>
     </div>
 
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon-es/0.20.0/cannon-es.min.js"></script>
     
     <!-- Game Scripts -->
     <script src="js/main.js"></script>
     <script src="js/GameEngine.js"></script>
-    <script src="js/SceneManager.js"></script>
     <script src="js/modes/StoryMode.js"></script>
     <script src="js/modes/SimulationMode.js"></script>
     <script src="js/entities/Character.js"></script>
     <script src="js/entities/Player.js"></script>
     <script src="js/entities/Enemy.js"></script>
     <script src="js/combat/CombatSystem.js"></script>
+    <script src="js/combat/TurnBasedCombat.js"></script>
     <script src="js/utils/Loader.js"></script>
     <script src="js/utils/AudioManager.js"></script>
+    <script src="js/utils/PathSystem.js"></script>
+    <script src="js/utils/EvolutionSystem.js"></script>
 </body>
 </html>
-
