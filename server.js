@@ -3634,6 +3634,32 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
 });
 
 /**
+ * GET /api/diet/preferences/:userId
+ * Ottiene preferenze alimentari (MongoDB online-first)
+ */
+app.get('/api/diet/preferences/:userId', async (req, res) => {
+    console.log(`📥 GET /api/diet/preferences/${req.params.userId}`);
+    try {
+        const { userId } = req.params;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
+        
+        // Cerca dati dieta in MongoDB
+        const dietData = await mongoDB.findOne('diet_data', { userId });
+        
+        if (dietData && dietData.preferences) {
+            return res.json({ success: true, preferences: dietData.preferences });
+        }
+        
+        // Se non esiste, ritorna null
+        return res.json({ success: true, preferences: null });
+    } catch (error) {
+        console.error('Error loading diet preferences:', error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * POST /api/diet/preferences/:userId
  * Salva preferenze alimentari (MongoDB online-first)
  */
