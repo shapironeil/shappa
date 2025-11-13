@@ -468,9 +468,15 @@ class UserProfileAgent extends AgentBase {
 
     async loadDietData(userId) {
         try {
-            const dietPath = path.join(__dirname, '../../data/diet', `${userId}.json`);
-            if (fs.existsSync(dietPath)) {
-                return JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+            // Usa MongoDB invece di file system (online-first)
+            const { getMongoDB } = require('../../lib/db/mongodb');
+            const mongoDB = getMongoDB();
+            
+            const dietData = await mongoDB.findOne('diet_data', { userId });
+            if (dietData) {
+                // Rimuovi _id e userId (metadati MongoDB)
+                const { _id, userId: _, ...data } = dietData;
+                return data;
             }
         } catch (error) {
             console.error(`Error loading diet data for ${userId}:`, error);

@@ -3544,19 +3544,25 @@ app.get('/api/diet/test', (req, res) => {
 
 /**
  * GET /api/diet/data/:userId
- * Ottiene tutti i dati dieta per un utente
+ * Ottiene tutti i dati dieta per un utente (MongoDB online-first)
  */
 app.get('/api/diet/data/:userId', async (req, res) => {
     console.log(`📥 GET /api/diet/data/${req.params.userId}`);
     try {
         const { userId } = req.params;
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        if (fs.existsSync(dietPath)) {
-            const data = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        // Cerca dati dieta in MongoDB
+        const dietData = await mongoDB.findOne('diet_data', { userId });
+        
+        if (dietData) {
+            // Rimuovi _id e userId dal risultato (sono metadati MongoDB)
+            const { _id, userId: __, ...data } = dietData;
             return res.json({ success: true, data });
         }
         
+        // Se non esiste, ritorna struttura vuota
         return res.json({ 
             success: true, 
             data: {
@@ -3576,24 +3582,36 @@ app.get('/api/diet/data/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/fridge/:userId
- * Salva/carica inventario frigo
+ * Salva/carica inventario frigo (MongoDB online-first)
  */
 app.post('/api/diet/fridge/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { items } = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         dietData.fridge = items || [];
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
         
         // Notifica UserProfileAgent
         try {
@@ -3617,25 +3635,39 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/preferences/:userId
- * Salva preferenze alimentari
+ * Salva preferenze alimentari (MongoDB online-first)
  */
 app.post('/api/diet/preferences/:userId', async (req, res) => {
     console.log(`📥 POST /api/diet/preferences/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const preferences = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         dietData.preferences = preferences;
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
+        
+        console.log('✅ Preferenze salvate in MongoDB:', Object.keys(preferences));
         
         // Notifica UserProfileAgent
         try {
@@ -3659,18 +3691,29 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/weight/:userId
- * Salva entry peso
+ * Salva entry peso (MongoDB online-first)
  */
 app.post('/api/diet/weight/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { weight, date } = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         if (!dietData.weight) {
@@ -3687,7 +3730,8 @@ app.post('/api/diet/weight/:userId', async (req, res) => {
         dietData.weight = dietData.weight.slice(-30);
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
         
         // Notifica UserProfileAgent
         try {
@@ -3711,18 +3755,29 @@ app.post('/api/diet/weight/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/calories/:userId
- * Salva entry calorie
+ * Salva entry calorie (MongoDB online-first)
  */
 app.post('/api/diet/calories/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { consumed, burned, target, date } = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         if (!dietData.calories) {
@@ -3754,7 +3809,8 @@ app.post('/api/diet/calories/:userId', async (req, res) => {
         dietData.calories = dietData.calories.slice(-30);
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
         
         // Notifica UserProfileAgent
         try {
@@ -3778,24 +3834,36 @@ app.post('/api/diet/calories/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/shopping-list/:userId
- * Salva lista spesa
+ * Salva lista spesa (MongoDB online-first)
  */
 app.post('/api/diet/shopping-list/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { items } = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         dietData.shoppingList = items || [];
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
         
         // Notifica UserProfileAgent
         try {
@@ -3819,24 +3887,36 @@ app.post('/api/diet/shopping-list/:userId', async (req, res) => {
 
 /**
  * POST /api/diet/selected-diet/:userId
- * Salva dieta selezionata
+ * Salva dieta selezionata (MongoDB online-first)
  */
 app.post('/api/diet/selected-diet/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const { diet } = req.body;
+        const { getMongoDB } = require('./lib/db/mongodb');
+        const mongoDB = getMongoDB();
         
-        const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-        let dietData = {};
+        // Carica dati esistenti o crea nuovo
+        let dietData = await mongoDB.findOne('diet_data', { userId });
         
-        if (fs.existsSync(dietPath)) {
-            dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
+        if (!dietData) {
+            dietData = {
+                userId,
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null,
+                createdAt: new Date().toISOString()
+            };
         }
         
         dietData.selectedDiet = diet;
         dietData.updatedAt = new Date().toISOString();
         
-        fs.writeFileSync(dietPath, JSON.stringify(dietData, null, 2), 'utf8');
+        // Salva in MongoDB (upsert)
+        await mongoDB.upsertOne('diet_data', { userId }, dietData);
         
         // Notifica UserProfileAgent
         try {

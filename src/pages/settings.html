@@ -786,49 +786,47 @@
                     <div class="venus-settings-grid">
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Notifiche Sport</h3>
+                                <h3 class="venus-widget-title">Abitudini Dieta</h3>
                                 
-                                <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Abilita Notifiche Pre-Allenamento</span>
-                                    <label class="venus-switch">
-                                        <input type="checkbox" id="enableSportNotifications" checked>
-                                        <span class="venus-switch-slider"></span>
-                                    </label>
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Orario Preferito Colazione</label>
+                                    <input type="time" class="venus-form-input" id="breakfastTime" value="08:00">
+                                    <div class="venus-form-help">Orario preferito per la colazione</div>
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Notifica Prima di (minuti)</label>
-                                    <select class="venus-form-select" id="notifyBeforeWorkout">
-                                        <option value="15">15 minuti</option>
-                                        <option value="30" selected>30 minuti</option>
-                                        <option value="60">1 ora</option>
-                                        <option value="120">2 ore</option>
-                                    </select>
-                                    <div class="venus-form-help">Ricevi promemoria Discord prima dell'allenamento</div>
-                                </div>
-                                
-                                <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Invia Esercizi su Discord (1 ogni 10min)</span>
-                                    <label class="venus-switch">
-                                        <input type="checkbox" id="sendExercisesDiscord">
-                                        <span class="venus-switch-slider"></span>
-                                    </label>
+                                    <label class="venus-form-label">Orario Preferito Pranzo</label>
+                                    <input type="time" class="venus-form-input" id="lunchTime" value="13:00">
+                                    <div class="venus-form-help">Orario preferito per il pranzo</div>
                                 </div>
                                 
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Fascia Oraria Preferita</label>
-                                    <select class="venus-form-select" id="preferredTimeSlot">
-                                        <option value="06:00-09:00">Mattina (06:00-09:00)</option>
-                                        <option value="12:00-14:00">Pranzo (12:00-14:00)</option>
-                                        <option value="18:00-20:00" selected>Sera (18:00-20:00)</option>
-                                        <option value="20:00-22:00">Tardi (20:00-22:00)</option>
-                                    </select>
-                                    <div class="venus-form-help">Il calendario suggerirà orari in questa fascia</div>
+                                    <label class="venus-form-label">Orario Preferito Cena</label>
+                                    <input type="time" class="venus-form-input" id="dinnerTime" value="20:00">
+                                    <div class="venus-form-help">Orario preferito per la cena</div>
                                 </div>
                                 
                                 <div class="venus-btn-group">
-                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveSportAutomations()">
-                                        Salva Automazioni Sport
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveDietHabits()">
+                                        Salva Abitudini Dieta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="venus-widget">
+                            <div class="venus-widget-content">
+                                <h3 class="venus-widget-title">Automazioni Calendario</h3>
+                                
+                                <div class="venus-form-group">
+                                    <label class="venus-form-label">Minuti tra Impegni</label>
+                                    <input type="number" class="venus-form-input" id="minutesBetweenEvents" min="0" max="120" value="15" placeholder="15">
+                                    <div class="venus-form-help">Minuti di pausa tra un impegno e l'altro nella compilazione automatica del calendario</div>
+                                </div>
+                                
+                                <div class="venus-btn-group">
+                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveCalendarAutomations()">
+                                        Salva Automazioni Calendario
                                     </button>
                                 </div>
                             </div>
@@ -1216,61 +1214,157 @@
             console.log('General settings saved:', { language, currency, timezone });
         }
 
-        // ========== SPORT AUTOMATIONS ==========
-        async function saveSportAutomations() {
+        // ========== DIET HABITS ==========
+        async function saveDietHabits() {
             const user = AuthManager.getCurrentUser();
             if (!user || !user.id) {
                 alert('❌ Devi essere autenticato');
                 return;
             }
 
-            const automations = {
-                enableNotifications: document.getElementById('enableSportNotifications').checked,
-                notifyBefore: parseInt(document.getElementById('notifyBeforeWorkout').value),
-                sendExercisesDiscord: document.getElementById('sendExercisesDiscord').checked,
-                preferredTimeSlot: document.getElementById('preferredTimeSlot').value
+            const dietHabits = {
+                breakfastTime: document.getElementById('breakfastTime').value,
+                lunchTime: document.getElementById('lunchTime').value,
+                dinnerTime: document.getElementById('dinnerTime').value
             };
 
             try {
-                const response = await fetch(`${API_BASE}/api/automations/sport`, {
+                // Salva in localStorage come parte delle automazioni
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.dietHabits = dietHabits;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+
+                // Salva anche sul server se c'è un endpoint
+                const response = await fetch(`${API_BASE}/api/automations/diet-habits`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: user.id,
-                        automations
+                        habits: dietHabits
                     })
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ Automazioni Sport salvate con successo!');
-                    console.log('Sport automations saved:', automations);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('✅ Abitudini Dieta salvate con successo!');
+                        console.log('Diet habits saved:', dietHabits);
+                    }
                 } else {
-                    alert('❌ Errore nel salvataggio: ' + data.error);
+                    // Se l'endpoint non esiste, salva solo in localStorage
+                    alert('✅ Abitudini Dieta salvate localmente!');
+                    console.log('Diet habits saved locally:', dietHabits);
                 }
             } catch (error) {
-                console.error('Error saving sport automations:', error);
-                alert('❌ Errore durante il salvataggio.');
+                // Fallback a localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.dietHabits = dietHabits;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+                alert('✅ Abitudini Dieta salvate localmente!');
+                console.log('Diet habits saved locally:', dietHabits);
             }
         }
 
-        async function loadSportAutomations() {
+        async function loadDietHabits() {
             const user = AuthManager.getCurrentUser();
             if (!user || !user.id) return;
 
             try {
-                const response = await fetch(`${API_BASE}/api/automations/sport/${user.id}`);
-                const data = await response.json();
-                
-                if (data.success && data.automations) {
-                    const auto = data.automations;
-                    document.getElementById('enableSportNotifications').checked = auto.enableNotifications || false;
-                    document.getElementById('notifyBeforeWorkout').value = auto.notifyBefore || 30;
-                    document.getElementById('sendExercisesDiscord').checked = auto.sendExercisesDiscord || false;
-                    document.getElementById('preferredTimeSlot').value = auto.preferredTimeSlot || '18:00-20:00';
+                // Carica da localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                if (automations.dietHabits) {
+                    const habits = automations.dietHabits;
+                    if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = habits.breakfastTime || '08:00';
+                    if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = habits.lunchTime || '13:00';
+                    if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = habits.dinnerTime || '20:00';
+                }
+
+                // Prova a caricare dal server
+                const response = await fetch(`${API_BASE}/api/automations/diet-habits/${user.id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.habits) {
+                        const habits = data.habits;
+                        if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = habits.breakfastTime || '08:00';
+                        if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = habits.lunchTime || '13:00';
+                        if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = habits.dinnerTime || '20:00';
+                    }
                 }
             } catch (error) {
-                console.error('Error loading sport automations:', error);
+                console.error('Error loading diet habits:', error);
+            }
+        }
+
+        // ========== CALENDAR AUTOMATIONS ==========
+        async function saveCalendarAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                alert('❌ Devi essere autenticato');
+                return;
+            }
+
+            const calendarAutomations = {
+                minutesBetweenEvents: parseInt(document.getElementById('minutesBetweenEvents').value) || 15
+            };
+
+            try {
+                // Salva in localStorage come parte delle automazioni
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.calendar = calendarAutomations;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+
+                // Salva anche sul server se c'è un endpoint
+                const response = await fetch(`${API_BASE}/api/automations/calendar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        automations: calendarAutomations
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('✅ Automazioni Calendario salvate con successo!');
+                        console.log('Calendar automations saved:', calendarAutomations);
+                    }
+                } else {
+                    // Se l'endpoint non esiste, salva solo in localStorage
+                    alert('✅ Automazioni Calendario salvate localmente!');
+                    console.log('Calendar automations saved locally:', calendarAutomations);
+                }
+            } catch (error) {
+                // Fallback a localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.calendar = calendarAutomations;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+                alert('✅ Automazioni Calendario salvate localmente!');
+                console.log('Calendar automations saved locally:', calendarAutomations);
+            }
+        }
+
+        async function loadCalendarAutomations() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) return;
+
+            try {
+                // Carica da localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                if (automations.calendar && document.getElementById('minutesBetweenEvents')) {
+                    document.getElementById('minutesBetweenEvents').value = automations.calendar.minutesBetweenEvents || 15;
+                }
+
+                // Prova a caricare dal server
+                const response = await fetch(`${API_BASE}/api/automations/calendar/${user.id}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.automations && document.getElementById('minutesBetweenEvents')) {
+                        document.getElementById('minutesBetweenEvents').value = data.automations.minutesBetweenEvents || 15;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading calendar automations:', error);
             }
         }
 
@@ -1849,7 +1943,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateEbayStatusUI();
             loadDiscordStatus();
-            loadSportAutomations();
+            loadDietHabits();
+            loadCalendarAutomations();
             loadHabitAutomations();
         });
 

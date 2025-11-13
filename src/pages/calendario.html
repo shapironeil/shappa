@@ -688,11 +688,7 @@
         <!-- Main Content -->
         <main class="venus-main-content">
             <div class="venus-top-bar">
-                <h1 class="venus-page-title">📅 Calendario</h1>
-                <button class="calendar-add-btn" onclick="openNewEventModal()">
-                    <span>+</span>
-                    Nuovo Impegno
-                </button>
+                <h1 class="venus-page-title">Calendario</h1>
             </div>
 
             <div class="venus-content-area">
@@ -727,7 +723,7 @@
                     <div class="calendar-events-sidebar">
                         <!-- Today's Events -->
                         <div class="events-section">
-                            <h3 class="events-section-title" id="todayTitle">📌 Oggi</h3>
+                            <h3 class="events-section-title" id="todayTitle">Oggi</h3>
                             <div id="todayEvents">
                                 <div class="empty-events">Caricamento...</div>
                             </div>
@@ -735,34 +731,12 @@
 
                         <!-- Upcoming Events -->
                         <div class="events-section">
-                            <h3 class="events-section-title">🔜 Prossimi Eventi</h3>
+                            <h3 class="events-section-title">Prossimi Eventi</h3>
                             <div id="upcomingEvents">
                                 <div class="empty-events">Caricamento...</div>
                             </div>
                         </div>
 
-                        <!-- Quick Stats -->
-                        <div class="events-section">
-                            <h3 class="events-section-title">📊 Questo Mese</h3>
-                            <div class="quick-stats" id="monthStats">
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value" id="statSport">-</div>
-                                    <div class="quick-stat-label">Sport</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value" id="statImpegni">-</div>
-                                    <div class="quick-stat-label">Impegni</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value" id="statDieta">-</div>
-                                    <div class="quick-stat-label">Dieta</div>
-                                </div>
-                                <div class="quick-stat">
-                                    <div class="quick-stat-value" id="statTotal">-</div>
-                                    <div class="quick-stat-label">Totale</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -779,42 +753,38 @@
 
             <form id="eventForm" onsubmit="saveEvent(event)">
                 <div class="form-group">
+                    <label class="form-label" for="aiInput">AI - Incolla comando o testo</label>
+                    <textarea class="form-textarea" id="aiInput" placeholder="Es: 'Riunione con il team alle 14:00 per discutere il progetto X' oppure 'Esame di matematica il 15 dicembre alle 9:00'"></textarea>
+                    <div style="margin-top: 8px;">
+                        <button type="button" class="btn btn-secondary" onclick="processAIInput()" style="flex: 0 0 auto; padding: 8px 16px;">Analizza con AI</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label" for="eventTitle">Titolo *</label>
                     <input type="text" class="form-input" id="eventTitle" required placeholder="Es: Riunione importante">
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="eventCategory">Categoria *</label>
-                    <select class="form-select" id="eventCategory" required>
-                        <option value="impegni">Impegni</option>
-                        <option value="sport">Sport</option>
-                        <option value="dieta">Dieta</option>
-                    </select>
-                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <div class="form-checkbox-group">
+                                <input type="checkbox" class="form-checkbox" id="eventAllDay" onchange="toggleTimeInputs()">
+                                <span>Tutto il giorno</span>
+                            </div>
+                        </label>
+                    </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="eventDate">Data *</label>
-                    <input type="date" class="form-input" id="eventDate" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <div class="form-checkbox-group">
-                            <input type="checkbox" class="form-checkbox" id="eventAllDay" onchange="toggleTimeInputs()">
-                            <span>Tutto il giorno</span>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="form-group" id="timeGroup">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                        <div>
-                            <label class="form-label" for="eventStartTime">Ora inizio</label>
-                            <input type="time" class="form-input" id="eventStartTime">
-                        </div>
-                        <div>
-                            <label class="form-label" for="eventEndTime">Ora fine</label>
-                            <input type="time" class="form-input" id="eventEndTime">
+                    <div class="form-group" id="timeGroup">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label class="form-label" for="eventStartTime">Ora inizio</label>
+                                <input type="time" class="form-input" id="eventStartTime">
+                            </div>
+                            <div>
+                                <label class="form-label" for="eventEndTime">Ora fine</label>
+                                <input type="time" class="form-input" id="eventEndTime">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -932,7 +902,6 @@
         function refreshEventsDisplay() {
             updateTodayEvents();
             updateUpcomingEvents();
-            updateMonthStats();
         }
 
         function handleLogout() {
@@ -1000,8 +969,8 @@
             selectedDate = dateString;
             generateCalendar();
             
-            // Show popup with day events (optional - can be removed if not needed)
-            // updateSelectedDayEvents(dateString);
+            // Apri automaticamente il modal per creare un nuovo impegno
+            openNewEventModal();
         }
 
         function updateTodayEvents() {
@@ -1013,7 +982,7 @@
             const eventsEl = document.getElementById('todayEvents');
             
             const todayFormatted = today.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
-            titleEl.textContent = `📌 Oggi - ${todayFormatted}`;
+            titleEl.textContent = `Oggi - ${todayFormatted}`;
             
             if (todayEvents.length === 0) {
                 eventsEl.innerHTML = '<div class="empty-events">Nessun impegno pianificato per oggi.</div>';
@@ -1065,26 +1034,6 @@
             }
         }
 
-        function updateMonthStats() {
-            const today = new Date();
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            
-            const monthEvents = events.filter(e => {
-                const eventDate = new Date(e.date);
-                return eventDate >= startOfMonth && eventDate <= endOfMonth;
-            });
-            
-            const sportCount = monthEvents.filter(e => e.category === 'sport').length;
-            const impegniCount = monthEvents.filter(e => e.category === 'impegni').length;
-            const dietaCount = monthEvents.filter(e => e.category === 'dieta').length;
-            const totalCount = monthEvents.length;
-            
-            document.getElementById('statSport').textContent = sportCount;
-            document.getElementById('statImpegni').textContent = impegniCount;
-            document.getElementById('statDieta').textContent = dietaCount;
-            document.getElementById('statTotal').textContent = totalCount;
-        }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -1125,13 +1074,8 @@
             form.reset();
             document.getElementById('modalTitle').textContent = 'Nuovo Impegno';
             
-            // Pre-fill date if a day is selected
-            if (selectedDate) {
-                document.getElementById('eventDate').value = selectedDate;
-            } else {
-                const today = new Date();
-                document.getElementById('eventDate').value = today.toISOString().split('T')[0];
-            }
+            // La data viene dal giorno selezionato, non serve il campo
+            // selectedDate è già impostato da selectDay
             
             document.getElementById('eventAllDay').checked = false;
             toggleTimeInputs();
@@ -1142,6 +1086,61 @@
             const modal = document.getElementById('eventModal');
             modal.classList.remove('active');
             document.getElementById('eventForm').reset();
+            document.getElementById('aiInput').value = '';
+        }
+
+        // Process AI input to auto-fill event form
+        function processAIInput() {
+            const aiText = document.getElementById('aiInput').value.trim();
+            if (!aiText) {
+                alert('Incolla un comando o testo da analizzare');
+                return;
+            }
+
+            // Simple AI parsing (can be enhanced with actual AI API)
+            // Estrai titolo, data, ora dal testo
+            let title = '';
+            let startTime = '';
+            let endTime = '';
+            let description = '';
+
+            // Cerca pattern comuni
+            // Esempio: "Riunione alle 14:00" -> title: "Riunione", startTime: "14:00"
+            const timePattern = /alle?\s+(\d{1,2}):(\d{2})/i;
+            const datePattern = /(\d{1,2})\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)/i;
+            
+            const timeMatch = aiText.match(timePattern);
+            if (timeMatch) {
+                startTime = `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`;
+            }
+
+            // Estrai titolo (prima parte del testo fino all'ora/data)
+            const titleMatch = aiText.match(/^([^0-9]+?)(?:\s+alle?|\s+il|\s+il\s+\d)/i);
+            if (titleMatch) {
+                title = titleMatch[1].trim();
+            } else {
+                // Se non trova pattern, usa tutto come titolo
+                title = aiText.split(/alle?|il\s+\d/i)[0].trim();
+            }
+
+            // Se non trova un titolo, usa tutto il testo
+            if (!title) {
+                title = aiText;
+            }
+
+            // Imposta i valori nel form
+            document.getElementById('eventTitle').value = title;
+            if (startTime) {
+                document.getElementById('eventStartTime').value = startTime;
+                document.getElementById('eventAllDay').checked = false;
+                toggleTimeInputs();
+            }
+            if (description) {
+                document.getElementById('eventDescription').value = description;
+            }
+
+            // Mostra feedback
+            alert('✅ Informazioni estratte! Controlla e modifica se necessario.');
         }
 
         function toggleTimeInputs() {
@@ -1159,9 +1158,15 @@
                 return;
             }
             
+            // La data viene dal giorno selezionato
+            if (!selectedDate) {
+                alert('Errore: seleziona un giorno nel calendario');
+                return;
+            }
+            
             const title = document.getElementById('eventTitle').value;
-            const date = document.getElementById('eventDate').value;
-            const category = document.getElementById('eventCategory').value;
+            const date = selectedDate; // Usa la data selezionata
+            const category = 'impegni'; // Default, non più selezionabile
             const description = document.getElementById('eventDescription').value;
             const allDay = document.getElementById('eventAllDay').checked;
             const startTime = allDay ? null : document.getElementById('eventStartTime').value;
