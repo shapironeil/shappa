@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shappa - Progetti</title>
+    <title>Shappa - Hubs</title>
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/venus.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
@@ -174,161 +174,138 @@
 
         .venus-content-area {
             flex: 1;
-            padding: 24px;
+            padding: 32px;
             overflow-y: auto;
             background: #f8f9fa;
         }
 
-        /* Progetti Content */
-        .progetti-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+        /* Hubs Content */
+        .hubs-container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .add-project-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+        .hubs-header {
+            margin-bottom: 32px;
         }
 
-        .add-project-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        .hubs-subtitle {
+            font-size: 16px;
+            color: var(--venus-text-secondary);
+            margin-top: 8px;
         }
 
-        .projects-grid {
+        .hubs-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px;
         }
 
-        .project-card {
+        .hub-widget {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid;
-            transition: all 0.2s;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
-        .project-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        .hub-widget::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
-        .project-card.status-planning {
-            border-color: #3b82f6;
+        .hub-widget:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            border-color: #8b5cf6;
         }
 
-        .project-card.status-progress {
-            border-color: #f59e0b;
+        .hub-widget:hover::before {
+            transform: scaleX(1);
         }
 
-        .project-card.status-completed {
-            border-color: #10b981;
-        }
-
-        .project-card.status-onhold {
-            border-color: #ef4444;
-        }
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
+        .hub-icon {
+            font-size: 48px;
             margin-bottom: 16px;
+            display: block;
         }
 
-        .project-title {
-            font-size: 20px;
+        .hub-title {
+            font-size: 24px;
             font-weight: 700;
             color: var(--venus-text-primary);
-            margin: 0 0 8px 0;
+            margin: 0 0 12px 0;
         }
 
-        .project-status {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .status-planning {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-progress {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-completed {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-onhold {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .project-description {
-            color: var(--venus-text-secondary);
+        .hub-description {
             font-size: 14px;
+            color: var(--venus-text-secondary);
             line-height: 1.6;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
-        .project-meta {
+        .hub-footer {
             display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
+            align-items: center;
+            justify-content: space-between;
             padding-top: 16px;
             border-top: 1px solid var(--venus-border);
         }
 
-        .meta-item {
+        .hub-status {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 13px;
-            color: var(--venus-text-muted);
+            font-weight: 600;
         }
 
-        .project-progress {
-            margin-top: 16px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            color: var(--venus-text-muted);
-            margin-bottom: 8px;
-        }
-
-        .progress-bar {
+        .hub-status-dot {
+            width: 8px;
             height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
-            transition: width 0.3s;
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .hub-status.online {
+            color: #10b981;
+        }
+
+        .hub-status.coming-soon {
+            color: #6b7280;
+        }
+
+        .hub-status.coming-soon .hub-status-dot {
+            background: #6b7280;
+            animation: none;
+        }
+
+        .hub-arrow {
+            font-size: 20px;
+            color: var(--venus-text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .hub-widget:hover .hub-arrow {
+            transform: translateX(4px);
+            color: #8b5cf6;
         }
 
         /* Empty State */
@@ -352,145 +329,15 @@
         .empty-text {
             font-size: 16px;
             color: var(--venus-text-secondary);
-            margin-bottom: 24px;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 32px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--venus-text-primary);
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 28px;
-            cursor: pointer;
-            color: var(--venus-text-muted);
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s;
-        }
-
-        .modal-close:hover {
-            background: var(--venus-bg-gray);
-            color: var(--venus-text-primary);
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--venus-text-primary);
-            margin-bottom: 8px;
-        }
-
-        .form-input,
-        .form-select,
-        .form-textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid var(--venus-border);
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .form-textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
-            outline: none;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--venus-bg-gray);
-            color: var(--venus-text-primary);
-        }
-
-        .btn-secondary:hover {
-            background: #e5e7eb;
         }
 
         @media (max-width: 768px) {
-            .projects-grid {
+            .hubs-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .venus-content-area {
+                padding: 16px;
             }
         }
     </style>
@@ -513,7 +360,7 @@
                     Obiettivi
                 </a>
                 <a href="impegni.html" class="venus-menu-item venus-active">
-                    Impegni
+                    Hubs
                 </a>
                 <a href="calendario.html" class="venus-menu-item">
                     Calendario
@@ -552,135 +399,47 @@
         <!-- Main Content -->
         <main class="venus-main-content">
             <div class="venus-page-header">
-                <h1 class="venus-page-title">📋 Impegni</h1>
+                <h1 class="venus-page-title">🎮 Hubs</h1>
             </div>
 
             <div class="venus-content-area">
-                <div class="progetti-header">
-                    <div></div>
-                    <button class="add-project-btn" onclick="openModal()">+ Nuovo Progetto</button>
-                </div>
-
-                <div class="projects-grid" id="projectsGrid">
-                    <!-- Sample Projects -->
-                    <div class="project-card status-progress">
-                        <div class="project-header">
-                            <div>
-                                <h3 class="project-title">Shappa Platform</h3>
-                            </div>
-                            <span class="project-status status-progress">In Corso</span>
-                        </div>
-                        <p class="project-description">
-                            Sviluppo piattaforma completa per gestione e-commerce con integrazione eBay e tracking avanzato.
-                        </p>
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                📅 Inizio: 01/11/2025
-                            </div>
-                            <div class="meta-item">
-                                🎯 Scadenza: 31/12/2025
-                            </div>
-                        </div>
-                        <div class="project-progress">
-                            <div class="progress-label">
-                                <span>Progresso</span>
-                                <span>65%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 65%;"></div>
-                            </div>
-                        </div>
+                <div class="hubs-container">
+                    <div class="hubs-header">
+                        <p class="hubs-subtitle">Accedi ai tuoi hub preferiti e scopri nuove esperienze</p>
                     </div>
 
-                    <div class="project-card status-planning">
-                        <div class="project-header">
-                            <div>
-                                <h3 class="project-title">Sistema Fitness</h3>
-                            </div>
-                            <span class="project-status status-planning">Pianificazione</span>
-                        </div>
-                        <p class="project-description">
-                            Implementazione moduli sport e dieta per tracking completo della salute personale.
-                        </p>
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                📅 Inizio: 07/11/2025
-                            </div>
-                            <div class="meta-item">
-                                🎯 Scadenza: 15/12/2025
-                            </div>
-                        </div>
-                        <div class="project-progress">
-                            <div class="progress-label">
-                                <span>Progresso</span>
-                                <span>20%</span>
-                            </div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 20%;"></div>
-                            </div>
-                        </div>
+                    <div class="hubs-grid" id="hubsGrid">
+                        <!-- Hubs will be loaded here -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Project Modal -->
-    <div class="modal-overlay" id="projectModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">Nuovo Progetto</h2>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-
-            <form id="projectForm" onsubmit="saveProject(event)">
-                <div class="form-group">
-                    <label class="form-label" for="projectTitle">Titolo Progetto *</label>
-                    <input type="text" class="form-input" id="projectTitle" required placeholder="Es: Nuovo sito web">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="projectDescription">Descrizione *</label>
-                    <textarea class="form-textarea" id="projectDescription" required placeholder="Descrivi il progetto..."></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="projectStatus">Stato *</label>
-                    <select class="form-select" id="projectStatus" required>
-                        <option value="planning">Pianificazione</option>
-                        <option value="progress">In Corso</option>
-                        <option value="completed">Completato</option>
-                        <option value="onhold">In Pausa</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="projectStart">Data Inizio *</label>
-                    <input type="date" class="form-input" id="projectStart" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="projectEnd">Data Scadenza *</label>
-                    <input type="date" class="form-input" id="projectEnd" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="projectProgress">Progresso (%)</label>
-                    <input type="number" class="form-input" id="projectProgress" min="0" max="100" value="0" placeholder="0">
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
-                    <button type="submit" class="btn btn-primary">Salva Progetto</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script src="../utils/auth-v2.js"></script>
     <script>
-        // Global variables
-        let projects = [];
+        // Available hubs
+        const hubs = [
+            {
+                id: 'gaming-hub',
+                title: 'Gaming Hub',
+                description: 'Piattaforma gaming completa con giochi, livelli, esperienza e classifiche. Diventa il campione!',
+                icon: '🎮',
+                status: 'online',
+                path: 'gaming-hub-login.html',
+                color: '#8b5cf6'
+            }
+            // Future hubs can be added here
+            // {
+            //     id: 'music-hub',
+            //     title: 'Music Hub',
+            //     description: 'Scopri nuova musica, crea playlist e condividi i tuoi brani preferiti.',
+            //     icon: '🎵',
+            //     status: 'coming-soon',
+            //     path: null,
+            //     color: '#10b981'
+            // }
+        ];
 
         // Auth Check
         document.addEventListener('DOMContentLoaded', () => {
@@ -704,8 +463,8 @@
                 logoutBtn.addEventListener('click', handleLogout);
             }
 
-            // Load projects
-            loadProjects();
+            // Load hubs
+            loadHubs();
         });
 
         function handleLogout() {
@@ -715,54 +474,50 @@
             }
         }
 
-        function loadProjects() {
-            const saved = localStorage.getItem('progetti_data');
-            if (saved) {
-                projects = JSON.parse(saved);
+        function loadHubs() {
+            const container = document.getElementById('hubsGrid');
+            
+            if (hubs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎯</div>
+                        <div class="empty-title">Nessun hub disponibile</div>
+                        <div class="empty-text">Presto saranno disponibili nuovi hub!</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = hubs.map(hub => {
+                const statusClass = hub.status === 'online' ? 'online' : 'coming-soon';
+                const statusText = hub.status === 'online' ? 'Online' : 'Prossimamente';
+                
+                return `
+                    <div class="hub-widget" onclick="${hub.status === 'online' ? `openHub('${hub.path}')` : 'showComingSoon()'}" style="border-left: 4px solid ${hub.color || '#8b5cf6'};">
+                        <span class="hub-icon">${hub.icon}</span>
+                        <h2 class="hub-title">${hub.title}</h2>
+                        <p class="hub-description">${hub.description}</p>
+                        <div class="hub-footer">
+                            <div class="hub-status ${statusClass}">
+                                <span class="hub-status-dot"></span>
+                                ${statusText}
+                            </div>
+                            <span class="hub-arrow">→</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openHub(path) {
+            if (path) {
+                window.location.href = path;
             }
         }
 
-        function saveProjects() {
-            localStorage.setItem('progetti_data', JSON.stringify(projects));
+        function showComingSoon() {
+            alert('🚀 Questo hub sarà disponibile presto!');
         }
-
-        function openModal() {
-            document.getElementById('projectModal').classList.add('active');
-            document.getElementById('projectForm').reset();
-        }
-
-        function closeModal() {
-            document.getElementById('projectModal').classList.remove('active');
-            document.getElementById('projectForm').reset();
-        }
-
-        function saveProject(e) {
-            e.preventDefault();
-
-            const project = {
-                id: Date.now(),
-                title: document.getElementById('projectTitle').value,
-                description: document.getElementById('projectDescription').value,
-                status: document.getElementById('projectStatus').value,
-                startDate: document.getElementById('projectStart').value,
-                endDate: document.getElementById('projectEnd').value,
-                progress: parseInt(document.getElementById('projectProgress').value) || 0,
-                createdAt: new Date().toISOString()
-            };
-
-            projects.push(project);
-            saveProjects();
-            closeModal();
-
-            alert('Progetto creato! 📁');
-        }
-
-        // Close modal on overlay click
-        document.getElementById('projectModal').addEventListener('click', (e) => {
-            if (e.target.id === 'projectModal') {
-                closeModal();
-            }
-        });
     </script>
 </body>
 </html>

@@ -554,3 +554,5 @@ Questo registry deve essere aggiornato quando:
 **Ultimo aggiornamento:** Gennaio 2025
 
 
+
+
