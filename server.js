@@ -3443,12 +3443,42 @@ app.get('/api/user-profile/:userId', async (req, res) => {
             forceRefresh: forceRefresh === 'true'
         });
         
+        // Se il task fallisce, ritorna struttura vuota invece di errore
+        if (!result || !result.success) {
+            console.warn('⚠️ UserProfileAgent returned error, returning empty profile');
+            return res.json({
+                success: true,
+                data: {
+                    account: null,
+                    sport: null,
+                    interests: [],
+                    webhook: null,
+                    automations: null,
+                    diet: {
+                        preferences: null,
+                        selectedDiet: null
+                    }
+                }
+            });
+        }
+        
         res.json(result);
     } catch (error) {
         console.error('Error getting unified profile:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        // Ritorna struttura vuota invece di errore 500 (graceful degradation)
+        res.json({
+            success: true,
+            data: {
+                account: null,
+                sport: null,
+                interests: [],
+                webhook: null,
+                automations: null,
+                diet: {
+                    preferences: null,
+                    selectedDiet: null
+                }
+            }
         });
     }
 });
@@ -3553,16 +3583,22 @@ app.get('/api/diet/data/:userId', async (req, res) => {
         const { getMongoDB } = require('./lib/db/mongodb');
         const mongoDB = getMongoDB();
         
-        // Cerca dati dieta in MongoDB
-        const dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (dietData) {
-            // Rimuovi _id e userId dal risultato (sono metadati MongoDB)
-            const { _id, userId: __, ...data } = dietData;
-            return res.json({ success: true, data });
+        // Verifica se MongoDB è disponibile
+        try {
+            // Cerca dati dieta in MongoDB
+            const dietData = await mongoDB.findOne('diet_data', { userId });
+            
+            if (dietData) {
+                // Rimuovi _id e userId dal risultato (sono metadati MongoDB)
+                const { _id, userId: __, ...data } = dietData;
+                return res.json({ success: true, data });
+            }
+        } catch (mongoError) {
+            // MongoDB non disponibile o errore di connessione - ritorna dati vuoti (graceful degradation)
+            console.warn('⚠️ MongoDB not available, returning empty diet data:', mongoError.message);
         }
         
-        // Se non esiste, ritorna struttura vuota
+        // Se non esiste o MongoDB non disponibile, ritorna struttura vuota
         return res.json({ 
             success: true, 
             data: {
@@ -3576,7 +3612,18 @@ app.get('/api/diet/data/:userId', async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading diet data:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        // In caso di errore, ritorna comunque dati vuoti invece di errore 500
+        return res.json({ 
+            success: true, 
+            data: {
+                fridge: [],
+                preferences: null,
+                weight: [],
+                calories: [],
+                shoppingList: [],
+                selectedDiet: null
+            }
+        });
     }
 });
 

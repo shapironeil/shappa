@@ -786,36 +786,6 @@
                     <div class="venus-settings-grid">
                         <div class="venus-widget">
                             <div class="venus-widget-content">
-                                <h3 class="venus-widget-title">Abitudini Dieta</h3>
-                                
-                                <div class="venus-form-group">
-                                    <label class="venus-form-label">Orario Preferito Colazione</label>
-                                    <input type="time" class="venus-form-input" id="breakfastTime" value="08:00">
-                                    <div class="venus-form-help">Orario preferito per la colazione</div>
-                                </div>
-                                
-                                <div class="venus-form-group">
-                                    <label class="venus-form-label">Orario Preferito Pranzo</label>
-                                    <input type="time" class="venus-form-input" id="lunchTime" value="13:00">
-                                    <div class="venus-form-help">Orario preferito per il pranzo</div>
-                                </div>
-                                
-                                <div class="venus-form-group">
-                                    <label class="venus-form-label">Orario Preferito Cena</label>
-                                    <input type="time" class="venus-form-input" id="dinnerTime" value="20:00">
-                                    <div class="venus-form-help">Orario preferito per la cena</div>
-                                </div>
-                                
-                                <div class="venus-btn-group">
-                                    <button type="button" class="venus-btn venus-btn-primary" onclick="saveDietHabits()">
-                                        Salva Abitudini Dieta
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="venus-widget">
-                            <div class="venus-widget-content">
                                 <h3 class="venus-widget-title">Automazioni Calendario</h3>
                                 
                                 <div class="venus-form-group">
@@ -836,36 +806,48 @@
                             <div class="venus-widget-content">
                                 <h3 class="venus-widget-title">Abitudini</h3>
                                 
-                                <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Tracciamento Automatico Abitudini</span>
-                                    <label class="venus-switch">
-                                        <input type="checkbox" id="autoHabitTracking" checked>
-                                        <span class="venus-switch-slider"></span>
-                                    </label>
-                                </div>
-                                
+                                <!-- Menu per selezionare la pagina -->
                                 <div class="venus-form-group">
-                                    <label class="venus-form-label">Reminder Giornalieri</label>
-                                    <select class="venus-form-select" id="dailyHabitReminder">
-                                        <option value="none">Nessuno</option>
-                                        <option value="morning">Mattina (08:00)</option>
-                                        <option value="evening" selected>Sera (20:00)</option>
-                                        <option value="both">Mattina e Sera</option>
+                                    <label class="venus-form-label">Seleziona Pagina</label>
+                                    <select class="venus-form-select" id="habitPageSelector" onchange="updateHabitForm()">
+                                        <option value="sport">Sport</option>
+                                        <option value="dieta">Dieta</option>
                                     </select>
+                                    <div class="venus-form-help">Scegli per quale pagina configurare le abitudini</div>
                                 </div>
                                 
-                                <div class="venus-switch-group">
-                                    <span class="venus-switch-label">Notifica Streak (serie consecutive)</span>
-                                    <label class="venus-switch">
-                                        <input type="checkbox" id="streakNotifications" checked>
-                                        <span class="venus-switch-slider"></span>
-                                    </label>
+                                <!-- Form Sport -->
+                                <div id="habitFormSport" class="habit-form-section">
+                                    <div class="venus-form-group">
+                                        <label class="venus-form-label">Fascia Oraria Preferita</label>
+                                        <select class="venus-form-select" id="sportTimeSlot">
+                                            <option value="morning">Mattina (06:00-12:00)</option>
+                                            <option value="afternoon">Pomeriggio (12:00-18:00)</option>
+                                            <option value="evening" selected>Sera (18:00-22:00)</option>
+                                        </select>
+                                        <div class="venus-form-help">Fascia oraria preferita per gli allenamenti</div>
+                                    </div>
                                 </div>
                                 
-                                <div class="venus-form-group">
-                                    <label class="venus-form-label">Obiettivo Settimanale</label>
-                                    <input type="number" class="venus-form-input" id="weeklyHabitGoal" placeholder="5" min="1" max="7" value="5">
-                                    <div class="venus-form-help">Giorni a settimana per completare le abitudini</div>
+                                <!-- Form Dieta -->
+                                <div id="habitFormDieta" class="habit-form-section" style="display: none;">
+                                    <div class="venus-form-group">
+                                        <label class="venus-form-label">Orario Preferito Colazione</label>
+                                        <input type="time" class="venus-form-input" id="breakfastTime" value="08:00">
+                                        <div class="venus-form-help">Orario preferito per la colazione</div>
+                                    </div>
+                                    
+                                    <div class="venus-form-group">
+                                        <label class="venus-form-label">Orario Preferito Pranzo</label>
+                                        <input type="time" class="venus-form-input" id="lunchTime" value="13:00">
+                                        <div class="venus-form-help">Orario preferito per il pranzo</div>
+                                    </div>
+                                    
+                                    <div class="venus-form-group">
+                                        <label class="venus-form-label">Orario Preferito Cena</label>
+                                        <input type="time" class="venus-form-input" id="dinnerTime" value="20:00">
+                                        <div class="venus-form-help">Orario preferito per la cena</div>
+                                    </div>
                                 </div>
                                 
                                 <div class="venus-btn-group">
@@ -1214,86 +1196,6 @@
             console.log('General settings saved:', { language, currency, timezone });
         }
 
-        // ========== DIET HABITS ==========
-        async function saveDietHabits() {
-            const user = AuthManager.getCurrentUser();
-            if (!user || !user.id) {
-                alert('❌ Devi essere autenticato');
-                return;
-            }
-
-            const dietHabits = {
-                breakfastTime: document.getElementById('breakfastTime').value,
-                lunchTime: document.getElementById('lunchTime').value,
-                dinnerTime: document.getElementById('dinnerTime').value
-            };
-
-            try {
-                // Salva in localStorage come parte delle automazioni
-                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
-                automations.dietHabits = dietHabits;
-                localStorage.setItem('user_automations', JSON.stringify(automations));
-
-                // Salva anche sul server se c'è un endpoint
-                const response = await fetch(`${API_BASE}/api/automations/diet-habits`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        habits: dietHabits
-                    })
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        alert('✅ Abitudini Dieta salvate con successo!');
-                        console.log('Diet habits saved:', dietHabits);
-                    }
-                } else {
-                    // Se l'endpoint non esiste, salva solo in localStorage
-                    alert('✅ Abitudini Dieta salvate localmente!');
-                    console.log('Diet habits saved locally:', dietHabits);
-                }
-            } catch (error) {
-                // Fallback a localStorage
-                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
-                automations.dietHabits = dietHabits;
-                localStorage.setItem('user_automations', JSON.stringify(automations));
-                alert('✅ Abitudini Dieta salvate localmente!');
-                console.log('Diet habits saved locally:', dietHabits);
-            }
-        }
-
-        async function loadDietHabits() {
-            const user = AuthManager.getCurrentUser();
-            if (!user || !user.id) return;
-
-            try {
-                // Carica da localStorage
-                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
-                if (automations.dietHabits) {
-                    const habits = automations.dietHabits;
-                    if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = habits.breakfastTime || '08:00';
-                    if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = habits.lunchTime || '13:00';
-                    if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = habits.dinnerTime || '20:00';
-                }
-
-                // Prova a caricare dal server
-                const response = await fetch(`${API_BASE}/api/automations/diet-habits/${user.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.habits) {
-                        const habits = data.habits;
-                        if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = habits.breakfastTime || '08:00';
-                        if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = habits.lunchTime || '13:00';
-                        if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = habits.dinnerTime || '20:00';
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading diet habits:', error);
-            }
-        }
 
         // ========== CALENDAR AUTOMATIONS ==========
         async function saveCalendarAutomations() {
@@ -1369,6 +1271,20 @@
         }
 
         // ========== HABIT AUTOMATIONS ==========
+        function updateHabitForm() {
+            const selectedPage = document.getElementById('habitPageSelector').value;
+            const sportForm = document.getElementById('habitFormSport');
+            const dietaForm = document.getElementById('habitFormDieta');
+            
+            if (selectedPage === 'sport') {
+                sportForm.style.display = 'block';
+                dietaForm.style.display = 'none';
+            } else if (selectedPage === 'dieta') {
+                sportForm.style.display = 'none';
+                dietaForm.style.display = 'block';
+            }
+        }
+
         async function saveHabitAutomations() {
             const user = AuthManager.getCurrentUser();
             if (!user || !user.id) {
@@ -1376,33 +1292,62 @@
                 return;
             }
 
-            const habitSettings = {
-                autoTracking: document.getElementById('autoHabitTracking').checked,
-                dailyReminder: document.getElementById('dailyHabitReminder').value,
-                streakNotifications: document.getElementById('streakNotifications').checked,
-                weeklyGoal: parseInt(document.getElementById('weeklyHabitGoal').value) || 5
-            };
+            const selectedPage = document.getElementById('habitPageSelector').value;
+            let habitSettings = {};
+
+            if (selectedPage === 'sport') {
+                habitSettings = {
+                    page: 'sport',
+                    timeSlot: document.getElementById('sportTimeSlot').value
+                };
+            } else if (selectedPage === 'dieta') {
+                habitSettings = {
+                    page: 'dieta',
+                    breakfastTime: document.getElementById('breakfastTime').value,
+                    lunchTime: document.getElementById('lunchTime').value,
+                    dinnerTime: document.getElementById('dinnerTime').value
+                };
+            }
 
             try {
+                // Salva in localStorage come parte delle automazioni
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.habits = automations.habits || {};
+                automations.habits[selectedPage] = habitSettings;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+
+                // Salva anche sul server se c'è un endpoint
                 const response = await fetch(`${API_BASE}/api/automations/habits`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: user.id,
+                        page: selectedPage,
                         settings: habitSettings
                     })
                 });
 
-                const data = await response.json();
-                if (data.success) {
-                    alert('✅ Impostazioni Abitudini salvate!');
-                    console.log('Habit settings saved:', habitSettings);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(`✅ Abitudini ${selectedPage === 'sport' ? 'Sport' : 'Dieta'} salvate con successo!`);
+                        console.log('Habit settings saved:', habitSettings);
+                    } else {
+                        alert('✅ Abitudini salvate localmente!');
+                    }
                 } else {
-                    alert('❌ Errore nel salvataggio: ' + data.error);
+                    // Se l'endpoint non esiste, salva solo in localStorage
+                    alert('✅ Abitudini salvate localmente!');
+                    console.log('Habit settings saved locally:', habitSettings);
                 }
             } catch (error) {
-                console.error('Error saving habit settings:', error);
-                alert('❌ Errore durante il salvataggio.');
+                // Fallback a localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                automations.habits = automations.habits || {};
+                automations.habits[selectedPage] = habitSettings;
+                localStorage.setItem('user_automations', JSON.stringify(automations));
+                alert('✅ Abitudini salvate localmente!');
+                console.log('Habit settings saved locally:', habitSettings);
             }
         }
 
@@ -1411,15 +1356,38 @@
             if (!user || !user.id) return;
 
             try {
+                // Carica da localStorage
+                const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
+                if (automations.habits) {
+                    // Carica sport
+                    if (automations.habits.sport && document.getElementById('sportTimeSlot')) {
+                        document.getElementById('sportTimeSlot').value = automations.habits.sport.timeSlot || 'evening';
+                    }
+                    // Carica dieta
+                    if (automations.habits.dieta) {
+                        const dieta = automations.habits.dieta;
+                        if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = dieta.breakfastTime || '08:00';
+                        if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = dieta.lunchTime || '13:00';
+                        if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = dieta.dinnerTime || '20:00';
+                    }
+                }
+
+                // Prova a caricare dal server
                 const response = await fetch(`${API_BASE}/api/automations/habits/${user.id}`);
-                const data = await response.json();
-                
-                if (data.success && data.settings) {
-                    const settings = data.settings;
-                    document.getElementById('autoHabitTracking').checked = settings.autoTracking !== false;
-                    document.getElementById('dailyHabitReminder').value = settings.dailyReminder || 'evening';
-                    document.getElementById('streakNotifications').checked = settings.streakNotifications !== false;
-                    document.getElementById('weeklyHabitGoal').value = settings.weeklyGoal || 5;
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.settings) {
+                        const settings = data.settings;
+                        // Aggiorna i form in base ai dati caricati
+                        if (settings.sport && document.getElementById('sportTimeSlot')) {
+                            document.getElementById('sportTimeSlot').value = settings.sport.timeSlot || 'evening';
+                        }
+                        if (settings.dieta) {
+                            if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = settings.dieta.breakfastTime || '08:00';
+                            if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = settings.dieta.lunchTime || '13:00';
+                            if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = settings.dieta.dinnerTime || '20:00';
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading habit settings:', error);
@@ -1943,7 +1911,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             updateEbayStatusUI();
             loadDiscordStatus();
-            loadDietHabits();
+            loadHabitAutomations();
             loadCalendarAutomations();
             loadHabitAutomations();
         });
