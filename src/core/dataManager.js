@@ -35,7 +35,7 @@ class DataManager {
     init() {
         try {
             // Prova prima con AuthManager (sistema nuovo)
-            if (window.AuthManager && AuthManager.isLoggedIn()) {
+            if (window.AuthManager && typeof AuthManager.isLoggedIn === 'function' && AuthManager.isLoggedIn()) {
                 const user = AuthManager.getCurrentUser();
                 if (user) {
                     this.userId = user.id || user.username;
@@ -48,7 +48,7 @@ class DataManager {
             if (window.ShappaAuth) {
                 try {
                     const auth = new window.ShappaAuth();
-                    if (auth.isLoggedIn()) {
+                    if (auth.isLoggedIn && auth.isLoggedIn()) {
                         const user = auth.getCurrentUser();
                         if (user) {
                             this.userId = user.id || user.username;
@@ -67,7 +67,13 @@ class DataManager {
                 return;
             }
             
-            console.warn('⚠️ DataManager: No user logged in');
+            // Non loggare warning se AuthManager non è ancora inizializzato
+            // (viene chiamato di nuovo quando l'utente si logga)
+            if (window.AuthManager || window.ShappaAuth) {
+                console.log('ℹ️ DataManager: Waiting for user authentication...');
+            } else {
+                console.warn('⚠️ DataManager: No user logged in');
+            }
         } catch (error) {
             console.error('❌ DataManager init error:', error);
         }

@@ -1251,19 +1251,10 @@
             if (!user || !user.id) return;
 
             try {
-                // Carica da localStorage
+                // Carica da localStorage (endpoint non esiste ancora, usiamo solo localStorage)
                 const automations = JSON.parse(localStorage.getItem('user_automations') || '{}');
                 if (automations.calendar && document.getElementById('minutesBetweenEvents')) {
                     document.getElementById('minutesBetweenEvents').value = automations.calendar.minutesBetweenEvents || 15;
-                }
-
-                // Prova a caricare dal server
-                const response = await fetch(`${API_BASE}/api/automations/calendar/${user.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.automations && document.getElementById('minutesBetweenEvents')) {
-                        document.getElementById('minutesBetweenEvents').value = data.automations.minutesBetweenEvents || 15;
-                    }
                 }
             } catch (error) {
                 console.error('Error loading calendar automations:', error);
@@ -1372,22 +1363,27 @@
                     }
                 }
 
-                // Prova a caricare dal server
-                const response = await fetch(`${API_BASE}/api/automations/habits/${user.id}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.settings) {
-                        const settings = data.settings;
-                        // Aggiorna i form in base ai dati caricati
-                        if (settings.sport && document.getElementById('sportTimeSlot')) {
-                            document.getElementById('sportTimeSlot').value = settings.sport.timeSlot || 'evening';
-                        }
-                        if (settings.dieta) {
-                            if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = settings.dieta.breakfastTime || '08:00';
-                            if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = settings.dieta.lunchTime || '13:00';
-                            if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = settings.dieta.dinnerTime || '20:00';
+                // Prova a caricare dal server (gestisce errori silenziosamente)
+                try {
+                    const response = await fetch(`${API_BASE}/api/automations/habits/${user.id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.settings) {
+                            const settings = data.settings;
+                            // Aggiorna i form in base ai dati caricati
+                            if (settings.sport && document.getElementById('sportTimeSlot')) {
+                                document.getElementById('sportTimeSlot').value = settings.sport.timeSlot || 'evening';
+                            }
+                            if (settings.dieta) {
+                                if (document.getElementById('breakfastTime')) document.getElementById('breakfastTime').value = settings.dieta.breakfastTime || '08:00';
+                                if (document.getElementById('lunchTime')) document.getElementById('lunchTime').value = settings.dieta.lunchTime || '13:00';
+                                if (document.getElementById('dinnerTime')) document.getElementById('dinnerTime').value = settings.dieta.dinnerTime || '20:00';
+                            }
                         }
                     }
+                } catch (fetchError) {
+                    // Ignora errori di fetch (endpoint potrebbe non essere disponibile)
+                    console.log('Habit automations loaded from localStorage only');
                 }
             } catch (error) {
                 console.error('Error loading habit settings:', error);
@@ -1913,7 +1909,6 @@
             loadDiscordStatus();
             loadHabitAutomations();
             loadCalendarAutomations();
-            loadHabitAutomations();
         });
 
         // Search functionality
