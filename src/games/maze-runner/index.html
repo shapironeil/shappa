@@ -241,15 +241,25 @@
                 desk.position.set(5, 0, 7);
                 desk.position.sub(center);
                 
-                // Scala più grande per essere visibile
-                const targetHeight = 0.7;
-                const scaleFactor = targetHeight / size.y;
-                desk.scale.set(scaleFactor * 1.5, scaleFactor * 1.5, scaleFactor * 1.5);
+                // Scala più grande per essere visibile - usa la dimensione massima
+                const maxSize = Math.max(size.x, size.y, size.z);
+                const targetSize = 1.5; // Dimensione target in unità Three.js
+                const scaleFactor = targetSize / maxSize;
+                desk.scale.set(scaleFactor, scaleFactor, scaleFactor);
                 desk.rotation.y = 0;
                 desk.castShadow = true;
                 desk.receiveShadow = true;
+                
+                // Aggiorna la matrice del mondo
+                desk.updateMatrixWorld(true);
+                
                 scene.add(desk);
-                console.log('✅ Tavolino caricato - Scale:', desk.scale, 'Position:', desk.position);
+                
+                // Helper per debug (rimuovere in produzione)
+                const boxHelper = new THREE.BoxHelper(desk, 0xff0000);
+                scene.add(boxHelper);
+                
+                console.log('✅ Tavolino caricato - Scale:', desk.scale, 'Position:', desk.position, 'Size:', size);
             },
             (progress) => {
                 console.log('📥 Caricamento tavolino:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
@@ -306,16 +316,26 @@
                 pcMesh.position.set(5, 0.8, 7);
                 pcMesh.position.sub(centerPC);
                 
-                // Scala più grande per essere visibile
-                const targetHeightPC = 0.3;
-                const scaleFactorPC = targetHeightPC / sizePC.y;
+                // Scala più grande per essere visibile - usa la dimensione massima
+                const maxSizePC = Math.max(sizePC.x, sizePC.y, sizePC.z);
+                const targetSizePC = 0.5; // Dimensione target in unità Three.js
+                const scaleFactorPC = targetSizePC / maxSizePC;
                 pcMesh.scale.set(scaleFactorPC * 2, scaleFactorPC * 2, scaleFactorPC * 2);
                 pcMesh.rotation.y = Math.PI; // Rivolto verso il giocatore
                 pcMesh.userData.interactable = true;
                 pcMesh.userData.type = 'pc';
                 pcMesh.castShadow = true;
+                
+                // Aggiorna la matrice del mondo
+                pcMesh.updateMatrixWorld(true);
+                
                 scene.add(pcMesh);
-                console.log('✅ Computer caricato - Scale:', pcMesh.scale, 'Position:', pcMesh.position);
+                
+                // Helper per debug (rimuovere in produzione)
+                const boxHelperPC = new THREE.BoxHelper(pcMesh, 0x0000ff);
+                scene.add(boxHelperPC);
+                
+                console.log('✅ Computer caricato - Scale:', pcMesh.scale, 'Position:', pcMesh.position, 'Size:', sizePC);
                 
                 // Add glow to PC
                 const pcLight = new THREE.PointLight(0x3b82f6, 0.6, 4);
@@ -378,14 +398,24 @@
                 sofa.position.set(2, 0, 3);
                 sofa.position.sub(centerSofa);
                 
-                // Scala più grande per essere visibile
-                const targetHeightSofa = 0.8;
-                const scaleFactorSofa = targetHeightSofa / sizeSofa.y;
+                // Scala più grande per essere visibile - usa la dimensione massima
+                const maxSizeSofa = Math.max(sizeSofa.x, sizeSofa.y, sizeSofa.z);
+                const targetSizeSofa = 1.2; // Dimensione target in unità Three.js
+                const scaleFactorSofa = targetSizeSofa / maxSizeSofa;
                 sofa.scale.set(scaleFactorSofa * 1.5, scaleFactorSofa * 1.5, scaleFactorSofa * 1.5);
                 sofa.rotation.y = Math.PI / 2; // Rivolto verso il centro
                 sofa.castShadow = true;
+                
+                // Aggiorna la matrice del mondo
+                sofa.updateMatrixWorld(true);
+                
                 scene.add(sofa);
-                console.log('✅ Divano caricato - Scale:', sofa.scale, 'Position:', sofa.position);
+                
+                // Helper per debug (rimuovere in produzione)
+                const boxHelperSofa = new THREE.BoxHelper(sofa, 0x00ff00);
+                scene.add(boxHelperSofa);
+                
+                console.log('✅ Divano caricato - Scale:', sofa.scale, 'Position:', sofa.position, 'Size:', sizeSofa);
             },
             (progress) => {
                 console.log('📥 Caricamento divano:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
