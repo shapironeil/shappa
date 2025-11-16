@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Runner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 92, 246, 0.9);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="ui">
+        <div>⏱️ <span id="timer">00:00</span></div>
+        <div>🔑 <span id="keys">0/3</span></div>
+    </div>
+    
+    <div id="instructions">
+        <strong>Click per iniziare</strong><br>
+        WASD = Movimento | Mouse = Guarda
+    </div>
+
+    <!-- Three.js Local -->
+    <script src="lib/three.min.js"></script>
+    
+    <script>
+        console.log('🎮 Inizializzazione...');
+        
+        // Check THREE
+        if (typeof THREE === 'undefined') {
+            alert('THREE.js non caricato!');
+            throw new Error('THREE.js missing');
+        }
+        
+        console.log('✅ THREE.js OK:', THREE.REVISION);
+        
+        // Setup
+        const canvas = document.getElementById('game-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 10, 50);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(5, 1.6, 5);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        sunLight.position.set(10, 20, 10);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+        
+        // Simple maze (5x5)
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+        const wallHeight = 4;
+        const cellSize = 2;
+        
+        // Create simple walls
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+                // Outer walls only
+                if (i === 0 || i === 4 || j === 0 || j === 4) {
+                    const wall = new THREE.Mesh(
+                        new THREE.BoxGeometry(cellSize, wallHeight, 0.2),
+                        wallMaterial
+                    );
+                    wall.position.set(i * cellSize, wallHeight / 2, j * cellSize);
+                    wall.castShadow = true;
+                    scene.add(wall);
+                }
+            }
+        }
+        
+        // Floor
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(10, 10),
+            new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(5, 0, 5);
+        floor.receiveShadow = true;
+        scene.add(floor);
+        
+        // Keys (3 golden spheres)
+        const keys = [];
+        const keyPositions = [[2,2], [5,5], [8,8]];
+        keyPositions.forEach(pos => {
+            const key = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 16, 16),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0xffd700,
+                    emissive: 0xffaa00,
+                    emissiveIntensity: 0.5
+                })
+            );
+            key.position.set(pos[0], 0.5, pos[1]);
+            key.userData.collected = false;
+            scene.add(key);
+            keys.push(key);
+        });
+        
+        // Controls
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        let isLocked = false;
+        let keysCollected = 0;
+        let startTime = 0;
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'KeyW') moveForward = true;
+            if (e.code === 'KeyS') moveBackward = true;
+            if (e.code === 'KeyA') moveLeft = true;
+            if (e.code === 'KeyD') moveRight = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') moveForward = false;
+            if (e.code === 'KeyS') moveBackward = false;
+            if (e.code === 'KeyA') moveLeft = false;
+            if (e.code === 'KeyD') moveRight = false;
+        });
+        
+        canvas.addEventListener('click', () => {
+            if (!isLocked) {
+                canvas.requestPointerLock();
+            }
+        });
+        
+        document.addEventListener('pointerlockchange', () => {
+            isLocked = document.pointerLockElement === canvas;
+            if (isLocked && startTime === 0) {
+                startTime = Date.now();
+            }
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isLocked) return;
+            
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= e.movementX * 0.002;
+            euler.x -= e.movementY * 0.002;
+            euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+            camera.quaternion.setFromEuler(euler);
+        });
+        
+        // Game loop
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            const speed = 5 * delta;
+            
+            // Movement
+            if (isLocked) {
+                const forward = new THREE.Vector3();
+                camera.getWorldDirection(forward);
+                forward.y = 0;
+                forward.normalize();
+                
+                const right = new THREE.Vector3();
+                right.crossVectors(camera.up, forward).normalize();
+                
+                if (moveForward) camera.position.add(forward.multiplyScalar(speed));
+                if (moveBackward) camera.position.add(forward.multiplyScalar(-speed));
+                if (moveRight) camera.position.add(right.multiplyScalar(speed));
+                if (moveLeft) camera.position.add(right.multiplyScalar(-speed));
+                
+                camera.position.y = 1.6;
+                
+                // Keep in bounds
+                camera.position.x = Math.max(1, Math.min(9, camera.position.x));
+                camera.position.z = Math.max(1, Math.min(9, camera.position.z));
+                
+                // Check key collection
+                keys.forEach(key => {
+                    if (!key.userData.collected) {
+                        const dist = camera.position.distanceTo(key.position);
+                        if (dist < 0.5) {
+                            key.userData.collected = true;
+                            scene.remove(key);
+                            keysCollected++;
+                            document.getElementById('keys').textContent = keysCollected + '/3';
+                            console.log('🔑 Chiave raccolta!', keysCollected);
+                            
+                            if (keysCollected >= 3) {
+                                alert('🎉 Hai vinto! Tempo: ' + ((Date.now() - startTime) / 1000).toFixed(2) + 's');
+                                document.exitPointerLock();
+                            }
+                        }
+                    }
+                });
+                
+                // Update timer
+                if (startTime > 0) {
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = Math.floor(elapsed % 60);
+                    document.getElementById('timer').textContent = 
+                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                }
+            }
+            
+            // Animate keys
+            keys.forEach(key => {
+                if (!key.userData.collected) {
+                    key.rotation.y += delta * 2;
+                    key.position.y = 0.5 + Math.sin(Date.now() * 0.002) * 0.1;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log('✅ Gioco pronto! Click per iniziare');
+    </script>
+</body>
+</html>
+
