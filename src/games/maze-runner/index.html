@@ -90,14 +90,9 @@
         </div>
     </div>
 
-    <!-- Three.js from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-    
-    <!-- Three.js Addons -->
-    <script>
-        // GLTFLoader inline (evita problemi CDN)
-        THREE.GLTFLoader=function(t){this.manager=void 0!==t?t:THREE.DefaultLoadingManager,this.path=""};THREE.GLTFLoader.prototype={constructor:THREE.GLTFLoader,load:function(t,e,r,o){var n=this,i=this.path+t,a=new THREE.FileLoader(n.manager);a.setResponseType("arraybuffer"),a.load(i,function(t){n.parse(t,e,o)},r,o)},setPath:function(t){return this.path=t,this},parse:function(t,e,r){var o=JSON.parse(new TextDecoder().decode(new Uint8Array(t)));console.log("GLTF parsed:",o),e&&e({scene:new THREE.Group()})}};
-    </script>
+    <!-- Three.js Local (no CDN issues) -->
+    <script src="lib/three.min.js"></script>
+    <script src="lib/GLTFLoader.js"></script>
     
     <!-- Shared Systems -->
     <script src="../shared/AssetManager.js"></script>

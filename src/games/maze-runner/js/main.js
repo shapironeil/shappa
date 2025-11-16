@@ -14,18 +14,9 @@ let victoryScreen = null;
 let victoryTimeEl = null;
 let bestTimeEl = null;
 
-// Initialize game - Wait for ALL scripts to load (including Three.js from CDN)
-window.addEventListener('load', () => {
+// Initialize game
+document.addEventListener('DOMContentLoaded', () => {
     console.log('🎮 Maze Runner - Inizializzazione...');
-    
-    // Double-check THREE is available
-    if (typeof THREE === 'undefined') {
-        console.error('❌ THREE.js non caricato! Controlla CDN.');
-        alert('Errore caricamento Three.js. Ricarica la pagina.');
-        return;
-    }
-    
-    console.log('✅ THREE.js caricato correttamente');
     
     // Get UI elements
     timerEl = document.getElementById('timer');
