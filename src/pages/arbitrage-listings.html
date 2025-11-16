@@ -227,16 +227,6 @@
             color: #eab308;
         }
         
-        .status-draft {
-            background: rgba(156, 163, 175, 0.2);
-            color: #9ca3af;
-        }
-        
-        .status-outofstock {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-        
         .actions {
             display: flex;
             gap: 8px;
@@ -348,7 +338,6 @@
             cursor: not-allowed;
         }
 
-        /* Monitor Control Badge */
         .monitor-indicator {
             display: inline-flex;
             align-items: center;
@@ -376,6 +365,34 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        /* Modal Styles (come interessi.html) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        .modal-content-animated {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
@@ -413,8 +430,8 @@
             <div class="table-header">
                 <h2 class="table-title">📋 Prodotti Monitorati</h2>
                 <div class="table-actions">
-                    <button class="btn-action" onclick="showAddMonitorModal()">
-                        ➕ Aggiungi Monitor
+                    <button class="btn-action" onclick="showAddInterestModal()">
+                        ✨ Aggiungi Monitor
                     </button>
                     <button class="btn-action" onclick="refreshMonitors()">
                         🔄 Aggiorna
@@ -468,6 +485,7 @@
         const authSystem = new ShappaAuth();
         const arbitrageCore = window.ArbitrageCore;
         const API_BASE = window.location.origin;
+        const AuthManager = authSystem; // Alias per compatibilità
         
         if (!authSystem.isLoggedIn()) {
             window.location.href = 'arbitrage-hub-login.html';
@@ -479,34 +497,179 @@
         let ALL_INTERESTS = [];
         let FILTERED_INTERESTS = [];
         
-        // Load data on page load
+        // ============================================
+        // INITIALIZATION
+        // ============================================
         async function init() {
             await loadInterestsTable();
             updateStats();
         }
         
-        /**
-         * Carica interessi/monitor dal SERVER
-         */
-        async function loadInterestsTable() {
+        // ============================================
+        // API FUNCTIONS (ESATTA LOGICA DA interessi.html)
+        // ============================================
+        async function getUserInterests() {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                console.error('❌ Utente non autenticato');
+                return [];
+            }
+
             try {
-                const user = authSystem.getCurrentUser();
-                if (!user || !user.id) {
-                    console.error('User not authenticated');
-                    showEmptyState();
-                    return;
-                }
-                
                 const response = await fetch(`${API_BASE}/api/interests/${user.id}`);
                 const data = await response.json();
                 
-                if (data.success && Array.isArray(data.interests)) {
-                    ALL_INTERESTS = data.interests;
-                    FILTERED_INTERESTS = ALL_INTERESTS;
-                    renderTable();
-                } else {
-                    showEmptyState();
+                if (data.success) {
+                    console.log(`✅ Loaded ${data.interests.length} interests from server`);
+                    return data.interests;
                 }
+                
+                console.error('❌ Failed to load interests:', data.error);
+                return [];
+            } catch (error) {
+                console.error('❌ Error loading interests:', error);
+                return [];
+            }
+        }
+
+        async function addUserInterest(interest) {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                console.error('❌ Utente non autenticato');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/interests/${user.id}/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(interest)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log(`✅ Added interest: ${interest.name}`);
+                    return true;
+                }
+                
+                console.error('❌ Failed to add interest:', data.error);
+                return false;
+            } catch (error) {
+                console.error('❌ Error adding interest:', error);
+                return false;
+            }
+        }
+
+        async function deleteUserInterest(interestId) {
+            const user = AuthManager.getCurrentUser();
+            if (!user || !user.id) {
+                console.error('❌ Utente non autenticato');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/interests/${user.id}/${interestId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log(`🗑️ Deleted interest: ${interestId}`);
+                    return true;
+                }
+                
+                console.error('❌ Failed to delete interest:', data.error);
+                return false;
+            } catch (error) {
+                console.error('❌ Error deleting interest:', error);
+                return false;
+            }
+        }
+
+        // ============================================
+        // MONITOR FUNCTIONS
+        // ============================================
+        async function startMonitor(interestId) {
+            try {
+                const user = AuthManager.getCurrentUser();
+                if (!user) {
+                    console.warn('User not authenticated');
+                    return false;
+                }
+
+                const response = await fetch(`${API_BASE}/api/monitors/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        interestId: interestId
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Monitor ${interestId} avviato`);
+                    showToast('✅ Monitor avviato con successo!', 'success');
+                    await loadInterestsTable();
+                    return true;
+                } else {
+                    console.error('❌ Errore avvio monitor:', result.error);
+                    showToast('❌ Errore: ' + result.error, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error starting monitor:', error);
+                showToast('❌ Errore di connessione', 'error');
+                return false;
+            }
+        }
+
+        async function stopMonitor(interestId) {
+            try {
+                const user = AuthManager.getCurrentUser();
+                if (!user) {
+                    console.warn('User not authenticated');
+                    return false;
+                }
+
+                const response = await fetch(`${API_BASE}/api/monitors/stop/${interestId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log(`✅ Monitor ${interestId} fermato`);
+                    showToast('⏸️ Monitor fermato', 'success');
+                    await loadInterestsTable();
+                    return true;
+                } else {
+                    console.error('❌ Errore stop monitor:', result.error);
+                    showToast('❌ Errore: ' + result.error, 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error stopping monitor:', error);
+                showToast('❌ Errore di connessione', 'error');
+                return false;
+            }
+        }
+        
+        // ============================================
+        // TABLE RENDERING
+        // ============================================
+        async function loadInterestsTable() {
+            try {
+                const interests = await getUserInterests();
+                ALL_INTERESTS = Array.isArray(interests) ? interests : [];
+                FILTERED_INTERESTS = ALL_INTERESTS;
+                renderTable();
+                updateStats();
             } catch (error) {
                 console.error('Error loading interests:', error);
                 showEmptyState();
@@ -531,9 +694,9 @@
             const pageItems = FILTERED_INTERESTS.slice(startIndex, endIndex);
             
             tbody.innerHTML = pageItems.map(interest => {
-                const imageUrl = interest.sourceData?.image || interest.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
-                const title = interest.name || interest.title || 'Senza titolo';
-                const asin = interest.asin || interest.sourceData?.asin || '-';
+                const imageUrl = interest.image || interest.sourceData?.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23374151'/></svg>";
+                const title = interest.name || interest.displayName || interest.title || 'Senza titolo';
+                const asin = interest.asin || interest.sourceData?.asin || '';
                 const monitorActive = interest.monitorStatus === 'active';
                 const statusClass = monitorActive ? 'status-monitoring' : 'status-paused';
                 const statusText = monitorActive ? 'Monitoring' : 'Paused';
@@ -547,11 +710,11 @@
                         <td>
                             <div class="product-info">
                                 <img src="${imageUrl}" alt="${title}" class="product-thumbnail" 
-                                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 120 120\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23e9ecef\\'/></svg>'">
+                                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 120 120\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23374151\\'/></svg>'">
                                 <div class="product-details">
                                     <div class="product-title">${title}</div>
                                     <div class="product-meta">
-                                        ${asin !== '-' ? `ASIN: ${asin}` : 'No ASIN'}
+                                        ${asin ? `ASIN: ${asin}` : (interest.url ? 'URL Monitor' : 'No ASIN')}
                                         ${monitorActive ? '<span class="monitor-indicator active"><span class="monitor-dot"></span>LIVE</span>' : ''}
                                     </div>
                                 </div>
@@ -566,12 +729,11 @@
                         <td>
                             <div class="actions">
                                 ${monitorActive ? 
-                                    `<button class="btn-icon" onclick="stopMonitor('${interest.id}')" title="Ferma Monitor">⏸️</button>` :
-                                    `<button class="btn-icon" onclick="startMonitor('${interest.id}')" title="Avvia Monitor">▶️</button>`
+                                    `<button class="btn-icon" onclick="stopMonitor(${interest.id})" title="Ferma Monitor">⏸️</button>` :
+                                    `<button class="btn-icon" onclick="startMonitor(${interest.id})" title="Avvia Monitor">▶️</button>`
                                 }
-                                <button class="btn-icon" onclick="viewDetails('${interest.id}')" title="Dettagli">👁️</button>
-                                <button class="btn-icon" onclick="editMonitor('${interest.id}')" title="Modifica">✏️</button>
-                                <button class="btn-icon btn-danger" onclick="deleteMonitor('${interest.id}')" title="Elimina">🗑️</button>
+                                <button class="btn-icon" onclick="viewDetails(${interest.id})" title="Dettagli">👁️</button>
+                                <button class="btn-icon btn-danger" onclick="deleteMonitor(${interest.id})" title="Elimina">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -587,16 +749,17 @@
                 <tr>
                     <td colspan="5">
                         <div class="empty-state">
-                            <div class="empty-icon">📦</div>
+                            <div class="empty-icon">🔔</div>
                             <div class="empty-title">Nessun monitor attivo</div>
-                            <div class="empty-description">Inizia aggiungendo prodotti da monitorare</div>
-                            <button class="btn-add" onclick="showAddMonitorModal()">
-                                Aggiungi Monitor
+                            <div class="empty-description">Crea un monitor per tracciare drop e restock in tempo reale</div>
+                            <button class="btn-add" onclick="showAddInterestModal()">
+                                ✨ Aggiungi Monitor
                             </button>
                         </div>
                     </td>
                 </tr>
             `;
+            updatePagination();
         }
         
         function updatePagination() {
@@ -633,114 +796,369 @@
             document.getElementById('totalListings').textContent = ALL_INTERESTS.length;
         }
         
-        /**
-         * MONITOR FUNCTIONS
-         */
-        
-        async function startMonitor(interestId) {
-            try {
-                const user = authSystem.getCurrentUser();
-                if (!user) return;
-                
-                showNotification('Avvio monitor...', 'info');
-                
-                const response = await fetch(`${API_BASE}/api/monitors/start`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: user.id,
-                        interestId: interestId
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification('Monitor avviato con successo!', 'success');
-                    await loadInterestsTable();
-                } else {
-                    showNotification('Errore avvio monitor: ' + result.error, 'error');
-                }
-            } catch (error) {
-                console.error('Error starting monitor:', error);
-                showNotification('Errore di connessione', 'error');
-            }
+        async function refreshMonitors() {
+            showToast('🔄 Aggiornamento in corso...', 'info');
+            await loadInterestsTable();
+            showToast('✅ Monitor aggiornati!', 'success');
         }
         
-        async function stopMonitor(interestId) {
-            try {
-                const user = authSystem.getCurrentUser();
-                if (!user) return;
-                
-                showNotification('Arresto monitor...', 'info');
-                
-                const response = await fetch(`${API_BASE}/api/monitors/stop/${interestId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: user.id })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification('Monitor fermato', 'success');
-                    await loadInterestsTable();
-                } else {
-                    showNotification('Errore: ' + result.error, 'error');
-                }
-            } catch (error) {
-                console.error('Error stopping monitor:', error);
-                showNotification('Errore di connessione', 'error');
+        // ============================================
+        // MODAL FUNCTIONS (ESATTA LOGICA DA interessi.html)
+        // ============================================
+        
+        function showAddInterestModal() {
+            const overlay = document.createElement('div');
+            overlay.id = 'interestTypeModal';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            
+            overlay.innerHTML = `
+                <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 32px; width: 90%; max-width: 550px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                        <h2 style="font-size: 24px; font-weight: 700; margin: 0; color: #1f2937;">Aggiungi Monitor</h2>
+                        <button onclick="document.getElementById('interestTypeModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                            &times;
+                        </button>
+                    </div>
+                    
+                    <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 15px;">Seleziona il tipo di monitoraggio che desideri:</p>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <button onclick="openReleaseDateModal()" style="padding: 32px 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); cursor: pointer; transition: all 0.3s; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">📅</div>
+                            <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 8px 0; color: #0369a1;">Release Date</h3>
+                            <p style="font-size: 13px; color: #0c4a6e; margin: 0; line-height: 1.5;">Segnati un'uscita e ricevi notifica</p>
+                        </button>
+                        
+                        <button onclick="openReleasingModal()" style="padding: 32px 24px; border: 2px solid #e5e7eb; border-radius: 12px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); cursor: pointer; transition: all 0.3s; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 12px;">🔔</div>
+                            <h3 style="font-size: 17px; font-weight: 700; margin: 0 0 8px 0; color: #92400e;">Releasing</h3>
+                            <p style="font-size: 13px; color: #78350f; margin: 0; line-height: 1.5;">Monitor sito + notifiche real-time</p>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            overlay.onclick = (e) => {
+                if (e.target.id === 'interestTypeModal') overlay.remove();
+            };
+        }
+
+        function openReleaseDateModal() {
+            document.getElementById('interestTypeModal')?.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'releaseDateModal';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            `;
+            
+            overlay.innerHTML = `
+                <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 28px;">📅</div>
+                            <h2 style="font-size: 20px; font-weight: 700; margin: 0; color: #0369a1;">Release Date</h2>
+                        </div>
+                        <button onclick="document.getElementById('releaseDateModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                            &times;
+                        </button>
+                    </div>
+                    
+                    <form id="releaseDateForm" onsubmit="saveReleaseDate(event)">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Nome Prodotto *</label>
+                            <input type="text" id="rdProductName" required style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: all 0.2s;">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">URL Prodotto</label>
+                            <input type="url" id="rdProductUrl" placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Data Uscita *</label>
+                                <input type="date" id="rdProductDate" required style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Ora (opzionale)</label>
+                                <input type="time" id="rdProductTime" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">URL Immagine (opzionale)</label>
+                            <input type="url" id="rdProductImage" placeholder="https://..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Verrà estratta automaticamente dall'URL se lasciato vuoto</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Note Personali</label>
+                            <textarea id="rdProductNotes" rows="2" placeholder="Es: Prezzo previsto, dove comprarlo, promemoria..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; resize: vertical;"></textarea>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <button type="button" onclick="document.getElementById('releaseDateModal').remove()" style="flex: 1; padding: 12px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Annulla
+                            </button>
+                            <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+                                Salva Release
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            overlay.onclick = (e) => {
+                if (e.target.id === 'releaseDateModal') overlay.remove();
+            };
+            
+            // Set today as default
+            document.getElementById('rdProductDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        function openReleasingModal() {
+            document.getElementById('interestTypeModal')?.remove();
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'releasingModal';
+            overlay.className = 'modal-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.5);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                overflow-y: auto;
+            `;
+            
+            overlay.innerHTML = `
+                <div class="modal-content-animated" style="background: white; border-radius: 16px; padding: 24px; width: 90%; max-width: 650px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 28px;">🔔</div>
+                            <h2 style="font-size: 20px; font-weight: 700; margin: 0; color: #92400e;">Releasing Monitor</h2>
+                        </div>
+                        <button onclick="document.getElementById('releasingModal').remove()" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #9ca3af; width: 36px; height: 36px; border-radius: 50%; transition: all 0.2s;">
+                            &times;
+                        </button>
+                    </div>
+                    
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; border-radius: 8px; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 12px; color: #78350f; line-height: 1.5;">
+                            <strong>Monitor Intelligente:</strong> rileva quando un prodotto diventa disponibile (sparisce "SOON", "SOLD OUT", button diventa attivo). Notifica istantanea su Discord!
+                        </p>
+                    </div>
+                    
+                    <form id="releasingForm" onsubmit="saveReleasing(event)">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">URL da Monitorare *</label>
+                            <input type="url" id="rlProductUrl" required placeholder="https://shop.travisscott.com/products/..." style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Incolla link del prodotto da monitorare</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Keywords Blocco (opzionale)</label>
+                            <input type="text" id="rlProductName" placeholder='es: "SOON", "SOLD OUT", "COMING SOON"' style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                            <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Parole che indicano prodotto NON disponibile. Quando spariscono → notifica!</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Tipo Sito</label>
+                            <select id="rlMonitorModule" onchange="toggleAdvancedOptions()" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                                <option value="universal" selected>🌐 Universale (funziona su qualsiasi sito)</option>
+                                <option value="shopify">🛍️ Shopify (Travis Scott, Supreme, Nike)</option>
+                            </select>
+                        </div>
+                        
+                        <div id="advancedOptions" style="display: none;">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Selettore CSS Avanzato</label>
+                                <input type="text" id="rlMonitorTarget" placeholder=".add-to-cart-button" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px;">
+                                <p style="font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">Solo per utenti avanzati - lascia vuoto per auto-detect</p>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #374151;">Intervallo Check</label>
+                            <select id="rlCheckInterval" style="width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; background: white;">
+                                <option value="1">⚡ 1 minuto (ultra veloce - high drop)</option>
+                                <option value="3">🔥 3 minuti (veloce)</option>
+                                <option value="15">⭐ 15 minuti (rapido)</option>
+                                <option value="20">🕐 20 minuti (normale)</option>
+                                <option value="30" selected>💤 30 minuti (consigliato)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <button type="button" onclick="document.getElementById('releasingModal').remove()" style="flex: 1; padding: 12px; background: #f3f4f6; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                Annulla
+                            </button>
+                            <button type="submit" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                                Attiva Monitor
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            overlay.onclick = (e) => {
+                if (e.target.id === 'releasingModal') overlay.remove();
+            };
+        }
+
+        function toggleAdvancedOptions() {
+            const select = document.getElementById('rlMonitorModule');
+            const advanced = document.getElementById('advancedOptions');
+            if (advanced) {
+                advanced.style.display = select.value === 'shopify' ? 'block' : 'none';
             }
         }
-        
+
+        // ============================================
+        // SAVE FUNCTIONS
+        // ============================================
+        async function saveReleaseDate(e) {
+            e.preventDefault();
+            
+            const interest = {
+                id: Date.now(),
+                type: 'release',
+                name: document.getElementById('rdProductName').value.trim(),
+                url: document.getElementById('rdProductUrl').value.trim(),
+                date: document.getElementById('rdProductDate').value,
+                time: document.getElementById('rdProductTime').value,
+                image: document.getElementById('rdProductImage').value.trim(),
+                notes: document.getElementById('rdProductNotes').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+            
+            const success = await addUserInterest(interest);
+            
+            document.getElementById('releaseDateModal').remove();
+            
+            if (success) {
+                showToast(`✅ Release Date "${interest.name}" aggiunto!`, 'success');
+                await loadInterestsTable();
+            } else {
+                showToast('❌ Errore durante il salvataggio', 'error');
+            }
+        }
+
+        async function saveReleasing(e) {
+            e.preventDefault();
+            
+            const keywords = document.getElementById('rlProductName').value.trim();
+            const url = document.getElementById('rlProductUrl').value.trim();
+            
+            // Estrai nome prodotto dall'URL
+            const urlParts = url.split('/').filter(p => p);
+            const displayName = urlParts[urlParts.length - 1]
+                .replace(/-/g, ' ')
+                .split(' ')
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+            
+            const monitor = {
+                id: Date.now(),
+                type: 'releasing',
+                name: keywords || 'SOON,SOLD OUT,COMING SOON',
+                url: url,
+                displayName: displayName,
+                module: document.getElementById('rlMonitorModule').value,
+                target: document.getElementById('rlMonitorTarget')?.value?.trim() || '',
+                interval: parseInt(document.getElementById('rlCheckInterval').value),
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            
+            const success = await addUserInterest(monitor);
+            
+            document.getElementById('releasingModal').remove();
+            
+            if (success) {
+                await loadInterestsTable();
+                
+                // Avvia monitor automaticamente
+                await startMonitor(monitor.id);
+            } else {
+                showToast('❌ Errore durante il salvataggio', 'error');
+            }
+        }
+
+        // ============================================
+        // ACTION FUNCTIONS
+        // ============================================
         async function deleteMonitor(interestId) {
             if (!confirm('Eliminare definitivamente questo monitor?')) return;
             
-            try {
-                const user = authSystem.getCurrentUser();
-                if (!user) return;
-                
-                // Prima ferma il monitor
-                await stopMonitor(interestId);
-                
-                // Poi elimina l'interesse
-                const response = await fetch(`${API_BASE}/api/interests/${user.id}/${interestId}`, {
-                    method: 'DELETE'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification('Monitor eliminato', 'success');
-                    await loadInterestsTable();
-                } else {
-                    showNotification('Errore eliminazione', 'error');
-                }
-            } catch (error) {
-                console.error('Error deleting monitor:', error);
-                showNotification('Errore di connessione', 'error');
+            // Ferma monitor
+            await stopMonitor(interestId);
+            
+            // Elimina interesse
+            const success = await deleteUserInterest(interestId);
+            
+            if (success) {
+                showToast('🗑️ Monitor eliminato', 'success');
+                await loadInterestsTable();
+            } else {
+                showToast('❌ Errore eliminazione', 'error');
             }
         }
         
         function viewDetails(interestId) {
-            const interest = ALL_INTERESTS.find(i => i.id === interestId);
+            const interest = ALL_INTERESTS.find(i => i.id == interestId);
             if (!interest) return;
             
             const modal = `
                 <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="this.remove()">
                     <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%;" onclick="event.stopPropagation()">
-                        <h2 style="font-size: 24px; margin-bottom: 20px;">📦 ${interest.name || interest.title}</h2>
+                        <h2 style="font-size: 24px; margin-bottom: 20px;">📦 ${interest.name || interest.displayName || interest.title}</h2>
                         <div style="margin-bottom: 16px;">
                             <strong>Status:</strong> ${interest.monitorStatus === 'active' ? '🟢 Attivo' : '⏸️ Paused'}
                         </div>
                         ${interest.url ? `<div style="margin-bottom: 16px;"><strong>URL:</strong> <a href="${interest.url}" target="_blank" style="color: #4ade80;">${interest.url}</a></div>` : ''}
-                        ${interest.asin ? `<div style="margin-bottom: 16px;"><strong>ASIN:</strong> ${interest.asin}</div>` : ''}
-                        ${interest.type ? `<div style="margin-bottom: 16px;"><strong>Tipo:</strong> ${interest.type}</div>` : ''}
+                        ${interest.type ? `<div style="margin-bottom: 16px;"><strong>Tipo:</strong> ${interest.type === 'release' ? '📅 Release Date' : '🔔 Monitor Releasing'}</div>` : ''}
+                        ${interest.date ? `<div style="margin-bottom: 16px;"><strong>Data Release:</strong> ${new Date(interest.date).toLocaleDateString('it-IT')}</div>` : ''}
+                        ${interest.interval ? `<div style="margin-bottom: 16px;"><strong>Intervallo Check:</strong> ${interest.interval} minuti</div>` : ''}
                         <div style="margin-bottom: 16px;">
                             <strong>Creato:</strong> ${new Date(interest.createdAt).toLocaleString('it-IT')}
                         </div>
                         ${interest.lastCheck ? `<div style="margin-bottom: 16px;"><strong>Ultimo Check:</strong> ${new Date(interest.lastCheck).toLocaleString('it-IT')}</div>` : ''}
+                        ${interest.notes ? `<div style="margin-bottom: 16px;"><strong>Note:</strong><br>${interest.notes}</div>` : ''}
                         <button style="width: 100%; padding: 12px; background: rgba(34, 197, 94, 0.2); border: none; border-radius: 8px; color: #4ade80; font-weight: 600; cursor: pointer; margin-top: 20px;" onclick="this.parentElement.parentElement.remove()">Chiudi</button>
                     </div>
                 </div>
@@ -748,121 +1166,18 @@
             document.body.insertAdjacentHTML('beforeend', modal);
         }
         
-        function editMonitor(interestId) {
-            showNotification('Modifica monitor - Coming soon!', 'info');
-        }
-        
-        async function refreshMonitors() {
-            showNotification('Aggiornamento in corso...', 'info');
-            await loadInterestsTable();
-            showNotification('Monitor aggiornati!', 'success');
-        }
-        
-        function showAddMonitorModal() {
-            const modal = `
-                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="this.remove()" id="addMonitorModal">
-                    <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%;" onclick="event.stopPropagation()">
-                        <h2 style="font-size: 24px; margin-bottom: 20px;">➕ Aggiungi Monitor</h2>
-                        <form onsubmit="handleAddMonitor(event)">
-                            <div style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">Nome Prodotto</label>
-                                <input type="text" id="monitorName" placeholder="es. Nike Air Max" required 
-                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
-                            </div>
-                            <div style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">URL Prodotto (opzionale)</label>
-                                <input type="url" id="monitorUrl" placeholder="https://amazon.it/dp/..." 
-                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
-                            </div>
-                            <div style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">ASIN (opzionale)</label>
-                                <input type="text" id="monitorAsin" placeholder="B01ABC1234" 
-                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
-                            </div>
-                            <div style="margin-bottom: 24px;">
-                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">Tipo Monitor</label>
-                                <select id="monitorType" 
-                                        style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
-                                    <option value="price">Monitoraggio Prezzo</option>
-                                    <option value="stock">Monitoraggio Stock</option>
-                                    <option value="releasing">Monitoraggio Release</option>
-                                </select>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                <button type="button" onclick="document.getElementById('addMonitorModal').remove()" 
-                                        style="flex: 1; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #9ca3af; font-weight: 600; cursor: pointer;">
-                                    Annulla
-                                </button>
-                                <button type="submit" 
-                                        style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e 0%, #10b981 100%); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">
-                                    Aggiungi
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modal);
-        }
-        
-        async function handleAddMonitor(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('monitorName').value.trim();
-            const url = document.getElementById('monitorUrl').value.trim();
-            const asin = document.getElementById('monitorAsin').value.trim();
-            const type = document.getElementById('monitorType').value;
-            
-            const user = authSystem.getCurrentUser();
-            if (!user) return;
-            
-            const interest = {
-                id: `monitor_${Date.now()}`,
-                name,
-                url,
-                asin,
-                type,
-                status: 'active',
-                monitorStatus: 'paused',
-                createdAt: new Date().toISOString()
-            };
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/interests/${user.id}/add`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(interest)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('addMonitorModal').remove();
-                    showNotification('Monitor aggiunto!', 'success');
-                    await loadInterestsTable();
-                    
-                    // Avvia automaticamente il monitor
-                    if (confirm('Vuoi avviare subito il monitor?')) {
-                        await startMonitor(interest.id);
-                    }
-                } else {
-                    showNotification('Errore: ' + result.error, 'error');
-                }
-            } catch (error) {
-                console.error('Error adding monitor:', error);
-                showNotification('Errore di connessione', 'error');
-            }
-        }
-        
-        function showNotification(message, type = 'info') {
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function showToast(message, type = 'info') {
             const colors = {
-                success: 'rgba(34, 197, 94, 0.9)',
-                error: 'rgba(239, 68, 68, 0.9)',
-                info: 'rgba(59, 130, 246, 0.9)'
+                success: '#10b981',
+                error: '#ef4444',
+                info: '#3b82f6'
             };
             
-            const notification = document.createElement('div');
-            notification.style.cssText = `
+            const toast = document.createElement('div');
+            toast.style.cssText = `
                 position: fixed;
                 top: 20px;
                 right: 20px;
@@ -874,17 +1189,17 @@
                 z-index: 10000;
                 font-size: 14px;
                 font-weight: 500;
-                animation: slideIn 0.3s ease;
+                animation: slideInRight 0.3s ease;
             `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
+            toast.textContent = message;
+            document.body.appendChild(toast);
             
             setTimeout(() => {
-                notification.style.animation = 'fadeOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
+                toast.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
             }, 3000);
         }
-        
+
         // Initialize
         init();
     </script>
