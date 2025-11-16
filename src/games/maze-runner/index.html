@@ -62,8 +62,7 @@
     <canvas id="game-canvas"></canvas>
     
     <div id="ui">
-        <div>⏱️ <span id="timer">00:00</span></div>
-        <div>🔑 <span id="keys">0/3</span></div>
+        <div>🏠 <span style="font-size: 14px;">La Tua Camera</span></div>
     </div>
     
     <div id="instructions">
@@ -118,142 +117,160 @@
         // Setup
         const canvas = document.getElementById('game-canvas');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87CEEB);
-        scene.fog = new THREE.Fog(0x87CEEB, 10, 50);
+        scene.background = new THREE.Color(0xe8e8e8); // Colore camera più caldo
+        scene.fog = new THREE.Fog(0xe8e8e8, 15, 30);
         
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(5, 1.6, 5);
+        camera.position.set(5, 1.6, 5); // Centro della camera
         
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // Lights - Illuminazione camera
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
         
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        sunLight.position.set(10, 20, 10);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        sunLight.position.set(5, 8, 5);
         sunLight.castShadow = true;
         scene.add(sunLight);
         
-        // Simple maze (5x5)
-        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
-        const wallHeight = 4;
-        const cellSize = 2;
+        // Camera walls - Pareti della camera (10x10 metri)
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
+        const wallHeight = 3;
+        const roomSize = 10;
+        const wallThickness = 0.2;
         
-        // Create simple walls
-        for (let i = 0; i < 5; i++) {
-            for (let j = 0; j < 5; j++) {
-                // Outer walls only
-                if (i === 0 || i === 4 || j === 0 || j === 4) {
-                    const wall = new THREE.Mesh(
-                        new THREE.BoxGeometry(cellSize, wallHeight, 0.2),
-                        wallMaterial
-                    );
-                    wall.position.set(i * cellSize, wallHeight / 2, j * cellSize);
-                    wall.castShadow = true;
-                    scene.add(wall);
-                }
-            }
-        }
+        // Parete Nord (z = 0)
+        const northWall = new THREE.Mesh(
+            new THREE.BoxGeometry(roomSize, wallHeight, wallThickness),
+            wallMaterial
+        );
+        northWall.position.set(roomSize/2, wallHeight/2, 0);
+        northWall.castShadow = true;
+        scene.add(northWall);
         
-        // Floor (più grande e con pattern)
+        // Parete Sud (z = 10)
+        const southWall = new THREE.Mesh(
+            new THREE.BoxGeometry(roomSize, wallHeight, wallThickness),
+            wallMaterial
+        );
+        southWall.position.set(roomSize/2, wallHeight/2, roomSize);
+        southWall.castShadow = true;
+        scene.add(southWall);
+        
+        // Parete Est (x = 10)
+        const eastWall = new THREE.Mesh(
+            new THREE.BoxGeometry(wallThickness, wallHeight, roomSize),
+            wallMaterial
+        );
+        eastWall.position.set(roomSize, wallHeight/2, roomSize/2);
+        eastWall.castShadow = true;
+        scene.add(eastWall);
+        
+        // Parete Ovest (x = 0)
+        const westWall = new THREE.Mesh(
+            new THREE.BoxGeometry(wallThickness, wallHeight, roomSize),
+            wallMaterial
+        );
+        westWall.position.set(0, wallHeight/2, roomSize/2);
+        westWall.castShadow = true;
+        scene.add(westWall);
+        
+        // Floor - Pavimento camera
         const floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(20, 20),
+            new THREE.PlaneGeometry(roomSize, roomSize),
             new THREE.MeshStandardMaterial({ 
-                color: 0x2a2a2a,
-                roughness: 0.8
+                color: 0xd4d4d4,
+                roughness: 0.9
             })
         );
         floor.rotation.x = -Math.PI / 2;
-        floor.position.set(5, 0, 5);
+        floor.position.set(roomSize/2, 0, roomSize/2);
         floor.receiveShadow = true;
         scene.add(floor);
         
-        // Base più visibile (grid pattern)
-        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x333333);
-        gridHelper.position.set(5, 0.01, 5);
+        // Grid helper per orientamento
+        const gridHelper = new THREE.GridHelper(roomSize, 10, 0x888888, 0xaaaaaa);
+        gridHelper.position.set(roomSize/2, 0.01, roomSize/2);
         scene.add(gridHelper);
         
-        // Keys (3 golden spheres)
+        // Keys array (vuoto per ora, non servono nella camera)
         const keys = [];
-        const keyPositions = [[2,2], [5,5], [8,8]];
-        keyPositions.forEach(pos => {
-            const key = new THREE.Mesh(
-                new THREE.SphereGeometry(0.2, 16, 16),
-                new THREE.MeshStandardMaterial({ 
-                    color: 0xffd700,
-                    emissive: 0xffaa00,
-                    emissiveIntensity: 0.5
-                })
-            );
-            key.position.set(pos[0], 0.5, pos[1]);
-            key.userData.collected = false;
-            scene.add(key);
-            keys.push(key);
-        });
         
         // Load 3D models for bedroom
-        console.log('📦 Caricamento modelli 3D...');
+        console.log('📦 Caricamento modelli 3D della camera...');
         
-        // Laptop on desk
+        // Tavolino (Desk) - Posizionato davanti al giocatore
+        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
+            const desk = gltf.scene;
+            desk.position.set(5, 0, 7); // Davanti al giocatore (z=7)
+            desk.scale.set(1.2, 0.7, 0.7);
+            desk.rotation.y = 0; // Rivolto verso il giocatore
+            desk.castShadow = true;
+            desk.receiveShadow = true;
+            scene.add(desk);
+            console.log('✅ Tavolino caricato');
+        }, undefined, (error) => {
+            console.warn('⚠️ Tavolino non caricato, uso placeholder');
+            // Placeholder tavolino
+            const deskPlaceholder = new THREE.Mesh(
+                new THREE.BoxGeometry(1.5, 0.7, 0.8),
+                new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+            );
+            deskPlaceholder.position.set(5, 0.35, 7);
+            deskPlaceholder.castShadow = true;
+            scene.add(deskPlaceholder);
+        });
+        
+        // Computer (Laptop) - Posizionato sopra il tavolino
         gltfLoader.load('/3d/laptop_free.glb', (gltf) => {
             pcMesh = gltf.scene;
-            pcMesh.position.set(7, 0.8, 3);
-            pcMesh.scale.set(0.5, 0.5, 0.5);
-            pcMesh.rotation.y = Math.PI;
+            pcMesh.position.set(5, 0.8, 7); // Sopra il tavolino
+            pcMesh.scale.set(0.6, 0.6, 0.6);
+            pcMesh.rotation.y = Math.PI; // Rivolto verso il giocatore
             pcMesh.userData.interactable = true;
             pcMesh.userData.type = 'pc';
+            pcMesh.castShadow = true;
             scene.add(pcMesh);
-            console.log('✅ Laptop caricato');
+            console.log('✅ Computer caricato');
             
             // Add glow to PC
-            const pcLight = new THREE.PointLight(0x3b82f6, 0.5, 3);
+            const pcLight = new THREE.PointLight(0x3b82f6, 0.6, 4);
             pcLight.position.set(0, 0.2, 0);
             pcMesh.add(pcLight);
         }, undefined, (error) => {
-            console.warn('⚠️ Laptop non caricato, uso placeholder');
+            console.warn('⚠️ Computer non caricato, uso placeholder');
             // Placeholder: box blu per il PC
             pcMesh = new THREE.Mesh(
                 new THREE.BoxGeometry(0.8, 0.5, 0.6),
                 new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.3 })
             );
-            pcMesh.position.set(7, 0.8, 3);
+            pcMesh.position.set(5, 0.8, 7);
             pcMesh.userData.interactable = true;
             pcMesh.userData.type = 'pc';
             scene.add(pcMesh);
         });
         
-        // Sofa
+        // Divano - Posizionato a sinistra del giocatore
         gltfLoader.load('/3d/old_sofa_free.glb', (gltf) => {
             const sofa = gltf.scene;
-            sofa.position.set(2, 0, 7);
+            sofa.position.set(2, 0, 3); // A sinistra del giocatore
             sofa.scale.set(0.8, 0.8, 0.8);
-            sofa.rotation.y = Math.PI / 4;
+            sofa.rotation.y = Math.PI / 2; // Rivolto verso il centro
+            sofa.castShadow = true;
             scene.add(sofa);
             console.log('✅ Divano caricato');
         }, undefined, (error) => {
             console.warn('⚠️ Divano non caricato');
         });
         
-        // Desk (use bench as desk)
-        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
-            const desk = gltf.scene;
-            desk.position.set(7, 0, 3);
-            desk.scale.set(1.5, 0.8, 0.8);
-            scene.add(desk);
-            console.log('✅ Scrivania caricata');
-        }, undefined, (error) => {
-            console.warn('⚠️ Scrivania non caricata');
-        });
-        
         // Controls
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let euler = new THREE.Euler(0, 0, 0, 'YXZ');
         let isLocked = false;
-        let keysCollected = 0;
         let startTime = 0;
         
         let canJump = true;
@@ -346,28 +363,9 @@
                     canJump = true;
                 }
                 
-                // Keep in bounds
-                camera.position.x = Math.max(1, Math.min(9, camera.position.x));
-                camera.position.z = Math.max(1, Math.min(9, camera.position.z));
-                
-                // Check key collection
-                keys.forEach(key => {
-                    if (!key.userData.collected) {
-                        const dist = camera.position.distanceTo(key.position);
-                        if (dist < 0.5) {
-                            key.userData.collected = true;
-                            scene.remove(key);
-                            keysCollected++;
-                            document.getElementById('keys').textContent = keysCollected + '/3';
-                            console.log('🔑 Chiave raccolta!', keysCollected);
-                            
-                            if (keysCollected >= 3) {
-                                alert('🎉 Hai vinto! Tempo: ' + ((Date.now() - startTime) / 1000).toFixed(2) + 's');
-                                document.exitPointerLock();
-                            }
-                        }
-                    }
-                });
+                // Keep in bounds (dentro la camera)
+                camera.position.x = Math.max(0.5, Math.min(9.5, camera.position.x));
+                camera.position.z = Math.max(0.5, Math.min(9.5, camera.position.z));
                 
                 // Update timer
                 if (startTime > 0) {
@@ -379,13 +377,13 @@
                 }
             }
             
-            // Animate keys
-            keys.forEach(key => {
-                if (!key.userData.collected) {
-                    key.rotation.y += delta * 2;
-                    key.position.y = 0.5 + Math.sin(Date.now() * 0.002) * 0.1;
+            // Animate PC glow (optional)
+            if (pcMesh && pcMesh.children.length > 0) {
+                const pcLight = pcMesh.children.find(child => child instanceof THREE.PointLight);
+                if (pcLight) {
+                    pcLight.intensity = 0.6 + Math.sin(Date.now() * 0.001) * 0.1;
                 }
-            });
+            }
             
             renderer.render(scene, camera);
         }
