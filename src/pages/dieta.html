@@ -2074,10 +2074,146 @@
             return false;
         }
 
+        // Filtra ricette in base alle preferenze (esclude ingredienti non graditi)
+        function filterRecipesByPreferences(recipes, profile) {
+            if (!profile) return recipes;
+            
+            const excludedFoodIds = new Set();
+            const excludedCategories = new Set();
+            
+            // Mappa excludeFromDiet a foodId e categorie
+            const exclusionMap = {
+                'Frutta': { foodIds: ['mela', 'banana', 'fragole', 'mirtilli', 'kiwi', 'arancia'], categories: [] },
+                'Verdura': { foodIds: ['spinaci', 'broccoli', 'zucchine', 'pomodori', 'insalata', 'carote', 'peperoni', 'cavolfiore', 'asparagi', 'cetrioli'], categories: [] },
+                'Carne': { foodIds: ['pollo', 'manzo', 'bistecca', 'tacchino', 'maiale', 'pancetta', 'prosciutto', 'salame'], categories: [] },
+                'Carne rossa': { foodIds: ['manzo', 'bistecca', 'maiale'], categories: [] },
+                'Pesce': { foodIds: ['salmone', 'tonno', 'orata', 'pesce', 'branzino', 'merluzzo', 'gamberi'], categories: [] },
+                'Latticini': { foodIds: ['yogurt', 'formaggio', 'latte', 'mozzarella', 'parmigiano', 'ricotta', 'burro'], categories: [] },
+                'Legumi': { foodIds: ['ceci', 'lenticchie', 'fagioli', 'legumi'], categories: [] },
+                'Carboidrati': { foodIds: ['pasta', 'riso', 'pane', 'quinoa', 'farro', 'avena', 'patate'], categories: [] },
+                'Zuccheri raffinati': { foodIds: ['zucchero', 'miele', 'sciroppo'], categories: [] },
+                'Glutine': { foodIds: ['pasta', 'pane', 'farro', 'avena'], categories: [] },
+                'Lattosio': { foodIds: ['yogurt', 'latte', 'formaggio', 'mozzarella', 'parmigiano'], categories: [] }
+            };
+            
+            // Raccogli tutti i foodId esclusi
+            if (profile.excludeFromDiet && profile.excludeFromDiet.length > 0) {
+                profile.excludeFromDiet.forEach(exclusion => {
+                    const mapping = exclusionMap[exclusion];
+                    if (mapping) {
+                        mapping.foodIds.forEach(id => excludedFoodIds.add(id));
+                    }
+                });
+            }
+            
+            // Raccogli allergeni
+            const allergenMap = {
+                'Lattosio': ['latte', 'yogurt', 'formaggio', 'mozzarella', 'parmigiano', 'ricotta', 'burro'],
+                'Glutine': ['pasta', 'pane', 'farro', 'avena'],
+                'Frutta secca': ['mandorle', 'noci', 'nocciole', 'pistacchi'],
+                'Crostacei': ['gamberi', 'gamberetti', 'aragosta', 'granchio'],
+                'Uova': ['uova', 'uovo'],
+                'Soia': ['soia', 'tofu'],
+                'Pesce': ['salmone', 'tonno', 'orata', 'pesce', 'branzino', 'merluzzo'],
+                'Arachidi': ['arachidi', 'burro-arachidi'],
+                'Sesamo': ['sesamo']
+            };
+            
+            if (profile.allergies && profile.allergies.length > 0) {
+                profile.allergies.forEach(allergy => {
+                    const allergens = allergenMap[allergy];
+                    if (allergens) {
+                        allergens.forEach(id => excludedFoodIds.add(id));
+                    }
+                });
+            }
+            
+            // Filtra ricette che NON contengono ingredienti esclusi
+            return recipes.filter(recipe => {
+                return !recipe.ingredients.some(ing => {
+                    const foodId = ing.foodId.toLowerCase();
+                    // Controlla se l'ingrediente è escluso
+                    return Array.from(excludedFoodIds).some(excluded => 
+                        foodId.includes(excluded.toLowerCase()) || excluded.toLowerCase().includes(foodId)
+                    );
+                });
+            });
+        }
+        
+        // Genera diete settimanali dal ricettario filtrato
+        function generateDietsFromRecipes(profile) {
+            if (!profile || !recipesDatabase || recipesDatabase.length === 0) {
+                return [];
+            }
+            
+            // Filtra ricette in base alle preferenze
+            const filteredRecipes = filterRecipesByPreferences(recipesDatabase, profile);
+            
+            if (filteredRecipes.length === 0) {
+                return [];
+            }
+            
+            // Separa ricette per categoria
+            const primi = filteredRecipes.filter(r => r.category === 'primo');
+            const secondi = filteredRecipes.filter(r => r.category === 'secondo');
+            const contorni = filteredRecipes.filter(r => r.category === 'contorno' || r.category === 'secondo');
+            
+            // Genera 3 diete diverse
+            const diets = [];
+            const weekDays = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+            
+            for (let i = 0; i < 3; i++) {
+                const weekPlan = {};
+                let totalCalories = 0;
+                
+                weekDays.forEach((day, dayIndex) => {
+                    const primoIndex = (dayIndex + i) % Math.max(primi.length, 1);
+                    const secondoIndex = (dayIndex + i * 2) % Math.max(secondi.length, 1);
+                    
+                    const primo = primi[primoIndex] || { name: 'Piatto a scelta' };
+                    const secondo = secondi[secondoIndex] || { name: 'Piatto a scelta' };
+                    
+                    weekPlan[day] = {
+                        breakfast: 'Colazione bilanciata',
+                        snack1: 'Spuntino proteico',
+                        lunch: `${primo.name} + ${secondo.name}`,
+                        snack2: 'Frutta o yogurt',
+                        dinner: secondo.name || 'Cena leggera',
+                        calories: 1800 + (i * 100) // Varia calorie tra le diete
+                    };
+                    
+                    totalCalories += weekPlan[day].calories;
+                });
+                
+                const avgCalories = Math.round(totalCalories / 7);
+                
+                diets.push({
+                    id: `diet-from-recipes-${i + 1}`,
+                    name: `Dieta Personalizzata ${i + 1}`,
+                    description: `Generata dal ricettario in base alle tue preferenze`,
+                    duration: '4 settimane',
+                    difficulty: 'Media',
+                    targetCalories: avgCalories,
+                    benefits: ['Personalizzata', 'Basata su ricette disponibili', 'Rispetta le tue preferenze'],
+                    weekPlan: weekPlan,
+                    suitableFor: {
+                        bodyTypes: ['tutti'],
+                        excludes: profile.excludeFromDiet || []
+                    },
+                    source: 'recipes' // Indica che è generata dal ricettario
+                });
+            }
+            
+            return diets;
+        }
+        
         function getRecommendedDiets(profile) {
             if (!profile) return [];
             
-            // Filtra le diete che contengono cibi esclusi
+            // PRIMA: Genera diete dal ricettario filtrato
+            const generatedDiets = generateDietsFromRecipes(profile);
+            
+            // SECONDA: Filtra anche le diete hardcoded (come fallback se non ci sono abbastanza ricette)
             let filteredDiets = allDietPlans.filter(diet => {
                 if (profile.excludeFromDiet && profile.excludeFromDiet.length > 0) {
                     return !dietContainsExcludedFoods(diet, profile.excludeFromDiet);
@@ -2085,17 +2221,25 @@
                 return true;
             });
             
-            // Se dopo il filtro non ci sono diete, mostra tutte (fallback)
-            if (filteredDiets.length === 0) {
-                filteredDiets = allDietPlans;
+            // Combina diete generate + diete filtrate (priorità alle generate)
+            const allFilteredDiets = [...generatedDiets, ...filteredDiets];
+            
+            // Se non ci sono diete, usa fallback
+            if (allFilteredDiets.length === 0) {
+                return allDietPlans.slice(0, 3);
             }
             
             // Calcola score per ogni dieta
-            const scored = filteredDiets.map(diet => {
+            const scored = allFilteredDiets.map(diet => {
                 let score = 0;
                 
+                // Priorità alle diete generate dal ricettario
+                if (diet.source === 'recipes') {
+                    score += 50;
+                }
+                
                 // Score per esclusioni compatibili
-                if (diet.suitableFor.excludes) {
+                if (diet.suitableFor && diet.suitableFor.excludes) {
                     const matching = diet.suitableFor.excludes.filter(exc => 
                         profile.excludeFromDiet && profile.excludeFromDiet.includes(exc)
                     );
@@ -2103,7 +2247,7 @@
                 }
                 
                 // Score per body type
-                if (diet.suitableFor.bodyTypes) {
+                if (diet.suitableFor && diet.suitableFor.bodyTypes) {
                     if (diet.suitableFor.bodyTypes.includes('tutti') || 
                         diet.suitableFor.bodyTypes.includes(profile.bodyType)) {
                         score += 5;
