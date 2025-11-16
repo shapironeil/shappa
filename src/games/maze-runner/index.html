@@ -204,68 +204,125 @@
         console.log('📦 Caricamento modelli 3D della camera...');
         
         // Tavolino (Desk) - Posizionato davanti al giocatore
-        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
-            const desk = gltf.scene;
-            desk.position.set(5, 0, 7); // Davanti al giocatore (z=7)
-            desk.scale.set(1.2, 0.7, 0.7);
-            desk.rotation.y = 0; // Rivolto verso il giocatore
-            desk.castShadow = true;
-            desk.receiveShadow = true;
-            scene.add(desk);
-            console.log('✅ Tavolino caricato');
-        }, undefined, (error) => {
-            console.warn('⚠️ Tavolino non caricato, uso placeholder');
-            // Placeholder tavolino
-            const deskPlaceholder = new THREE.Mesh(
-                new THREE.BoxGeometry(1.5, 0.7, 0.8),
-                new THREE.MeshStandardMaterial({ color: 0x8b4513 })
-            );
-            deskPlaceholder.position.set(5, 0.35, 7);
-            deskPlaceholder.castShadow = true;
-            scene.add(deskPlaceholder);
-        });
+        gltfLoader.load(
+            '/3d/bench_model_free.glb',
+            (gltf) => {
+                console.log('📦 GLB tavolino caricato, processando...');
+                const desk = gltf.scene;
+                
+                // Traversa tutti i mesh e assicurati che siano visibili
+                desk.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
+                    }
+                });
+                
+                desk.position.set(5, 0, 7); // Davanti al giocatore (z=7)
+                desk.scale.set(1.2, 0.7, 0.7);
+                desk.rotation.y = 0; // Rivolto verso il giocatore
+                desk.castShadow = true;
+                desk.receiveShadow = true;
+                scene.add(desk);
+                console.log('✅ Tavolino caricato e aggiunto alla scena');
+            },
+            (progress) => {
+                console.log('📥 Caricamento tavolino:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
+            },
+            (error) => {
+                console.error('❌ ERRORE caricamento tavolino:', error);
+                console.warn('⚠️ Tavolino non caricato, uso placeholder');
+                // Placeholder tavolino
+                const deskPlaceholder = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.5, 0.7, 0.8),
+                    new THREE.MeshStandardMaterial({ color: 0x8b4513 })
+                );
+                deskPlaceholder.position.set(5, 0.35, 7);
+                deskPlaceholder.castShadow = true;
+                scene.add(deskPlaceholder);
+            }
+        );
         
         // Computer (Laptop) - Posizionato sopra il tavolino
-        gltfLoader.load('/3d/laptop_free.glb', (gltf) => {
-            pcMesh = gltf.scene;
-            pcMesh.position.set(5, 0.8, 7); // Sopra il tavolino
-            pcMesh.scale.set(0.6, 0.6, 0.6);
-            pcMesh.rotation.y = Math.PI; // Rivolto verso il giocatore
-            pcMesh.userData.interactable = true;
-            pcMesh.userData.type = 'pc';
-            pcMesh.castShadow = true;
-            scene.add(pcMesh);
-            console.log('✅ Computer caricato');
-            
-            // Add glow to PC
-            const pcLight = new THREE.PointLight(0x3b82f6, 0.6, 4);
-            pcLight.position.set(0, 0.2, 0);
-            pcMesh.add(pcLight);
-        }, undefined, (error) => {
-            console.warn('⚠️ Computer non caricato, uso placeholder');
-            // Placeholder: box blu per il PC
-            pcMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(0.8, 0.5, 0.6),
-                new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.3 })
-            );
-            pcMesh.position.set(5, 0.8, 7);
-            pcMesh.userData.interactable = true;
-            pcMesh.userData.type = 'pc';
-            scene.add(pcMesh);
-        });
+        gltfLoader.load(
+            '/3d/laptop_free.glb',
+            (gltf) => {
+                console.log('📦 GLB computer caricato, processando...');
+                pcMesh = gltf.scene;
+                
+                // Traversa tutti i mesh e assicurati che siano visibili
+                pcMesh.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
+                    }
+                });
+                
+                pcMesh.position.set(5, 0.8, 7); // Sopra il tavolino
+                pcMesh.scale.set(0.6, 0.6, 0.6);
+                pcMesh.rotation.y = Math.PI; // Rivolto verso il giocatore
+                pcMesh.userData.interactable = true;
+                pcMesh.userData.type = 'pc';
+                pcMesh.castShadow = true;
+                scene.add(pcMesh);
+                console.log('✅ Computer caricato e aggiunto alla scena');
+                
+                // Add glow to PC
+                const pcLight = new THREE.PointLight(0x3b82f6, 0.6, 4);
+                pcLight.position.set(0, 0.2, 0);
+                pcMesh.add(pcLight);
+            },
+            (progress) => {
+                console.log('📥 Caricamento computer:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
+            },
+            (error) => {
+                console.error('❌ ERRORE caricamento computer:', error);
+                console.warn('⚠️ Computer non caricato, uso placeholder');
+                // Placeholder: box blu per il PC
+                pcMesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.8, 0.5, 0.6),
+                    new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.3 })
+                );
+                pcMesh.position.set(5, 0.8, 7);
+                pcMesh.userData.interactable = true;
+                pcMesh.userData.type = 'pc';
+                scene.add(pcMesh);
+            }
+        );
         
         // Divano - Posizionato a sinistra del giocatore
-        gltfLoader.load('/3d/old_sofa_free.glb', (gltf) => {
-            const sofa = gltf.scene;
-            sofa.position.set(2, 0, 3); // A sinistra del giocatore
-            sofa.scale.set(0.8, 0.8, 0.8);
-            sofa.rotation.y = Math.PI / 2; // Rivolto verso il centro
-            sofa.castShadow = true;
-            scene.add(sofa);
-            console.log('✅ Divano caricato');
-        }, undefined, (error) => {
-            console.warn('⚠️ Divano non caricato');
-        });
+        gltfLoader.load(
+            '/3d/old_sofa_free.glb',
+            (gltf) => {
+                console.log('📦 GLB divano caricato, processando...');
+                const sofa = gltf.scene;
+                
+                // Traversa tutti i mesh e assicurati che siano visibili
+                sofa.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
+                    }
+                });
+                
+                sofa.position.set(2, 0, 3); // A sinistra del giocatore
+                sofa.scale.set(0.8, 0.8, 0.8);
+                sofa.rotation.y = Math.PI / 2; // Rivolto verso il centro
+                sofa.castShadow = true;
+                scene.add(sofa);
+                console.log('✅ Divano caricato e aggiunto alla scena');
+            },
+            (progress) => {
+                console.log('📥 Caricamento divano:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
+            },
+            (error) => {
+                console.error('❌ ERRORE caricamento divano:', error);
+                console.warn('⚠️ Divano non caricato');
+            }
+        );
         
         // Controls
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
