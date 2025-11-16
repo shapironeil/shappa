@@ -4015,6 +4015,160 @@ app.post('/api/diet/selected-diet/:userId', async (req, res) => {
 });
 
 /**
+ * ========== GIALLO ZAFFERANO RECIPES API ==========
+ * Scraping ricette da Giallo Zafferano
+ */
+const cheerio = require('cheerio');
+
+/**
+ * GET /api/recipes/giallozafferano/search
+ * Cerca ricette su Giallo Zafferano
+ */
+app.get('/api/recipes/giallozafferano/search', async (req, res) => {
+    try {
+        const { query, limit = 10 } = req.query;
+        
+        if (!query) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Query parameter is required' 
+            });
+        }
+        
+        // URL di ricerca Giallo Zafferano
+        const searchUrl = `https://www.giallozafferano.it/ricette-cerca/?q=${encodeURIComponent(query)}`;
+        
+        console.log(`🔍 Searching Giallo Zafferano for: ${query}`);
+        
+        // Fetch della pagina
+        const response = await axios.get(searchUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+        
+        const $ = cheerio.load(response.data);
+        const recipes = [];
+        
+        // Estrai ricette dalla pagina (adatta i selettori CSS in base alla struttura del sito)
+        $('.gz-card-recipe, .recipe-card, article.recipe').slice(0, parseInt(limit)).each((i, elem) => {
+            const $elem = $(elem);
+            const title = $elem.find('h2, h3, .recipe-title, a').first().text().trim();
+            const link = $elem.find('a').first().attr('href');
+            const image = $elem.find('img').first().attr('src') || $elem.find('img').first().attr('data-src');
+            const description = $elem.find('.recipe-description, .excerpt, p').first().text().trim();
+            
+            if (title && link) {
+                recipes.push({
+                    id: `gz_${Date.now()}_${i}`,
+                    title,
+                    description: description || '',
+                    url: link.startsWith('http') ? link : `https://www.giallozafferano.it${link}`,
+                    image: image || '',
+                    source: 'Giallo Zafferano'
+                });
+            }
+        });
+        
+        console.log(`✅ Found ${recipes.length} recipes`);
+        
+        return res.json({ 
+            success: true, 
+            recipes,
+            query,
+            count: recipes.length
+        });
+        
+    } catch (error) {
+        console.error('❌ Error searching Giallo Zafferano:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Error searching recipes' 
+        });
+    }
+});
+
+/**
+ * GET /api/recipes/giallozafferano/:recipeId
+ * Ottiene dettagli completi di una ricetta
+ */
+app.get('/api/recipes/giallozafferano/:recipeId', async (req, res) => {
+    try {
+        const { recipeId } = req.params;
+        const { url } = req.query;
+        
+        if (!url) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'URL parameter is required' 
+            });
+        }
+        
+        console.log(`📖 Fetching recipe from: ${url}`);
+        
+        // Fetch della pagina ricetta
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+        
+        const $ = cheerio.load(response.data);
+        
+        // Estrai dettagli ricetta (adatta i selettori CSS)
+        const title = $('h1, .recipe-title').first().text().trim();
+        const description = $('.recipe-description, .recipe-intro, p').first().text().trim();
+        const image = $('.recipe-image img, .recipe-photo img').first().attr('src') || '';
+        
+        const ingredients = [];
+        $('.ingredient, .recipe-ingredient, li.ingredient').each((i, elem) => {
+            const ingredient = $(elem).text().trim();
+            if (ingredient) ingredients.push(ingredient);
+        });
+        
+        const instructions = [];
+        $('.recipe-step, .step, .instruction').each((i, elem) => {
+            const step = $(elem).text().trim();
+            if (step) instructions.push(step);
+        });
+        
+        const prepTime = $('.prep-time, .tempo-preparazione').first().text().trim();
+        const cookTime = $('.cook-time, .tempo-cottura').first().text().trim();
+        const servings = $('.servings, .porzioni').first().text().trim();
+        const difficulty = $('.difficulty, .difficolta').first().text().trim();
+        
+        const recipe = {
+            id: recipeId,
+            title,
+            description,
+            image,
+            ingredients,
+            instructions,
+            prepTime,
+            cookTime,
+            servings,
+            difficulty,
+            url,
+            source: 'Giallo Zafferano'
+        };
+        
+        console.log(`✅ Recipe fetched: ${title}`);
+        
+        return res.json({ 
+            success: true, 
+            recipe 
+        });
+        
+    } catch (error) {
+        console.error('❌ Error fetching recipe:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Error fetching recipe' 
+        });
+    }
+});
+
+/**
  * ========== GAMING API ENDPOINTS ==========
  * Gestione profili gaming, livelli, esperienza, statistiche
  */
@@ -5324,6 +5478,8 @@ if (!app._staticFilesConfigured) {
     app.use(express.static(__dirname));
     // Serve assets
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
+    // Serve modelli 3D
+    app.use('/3d', express.static(path.join(__dirname, '3d')));
     // Serve file da src/pages
     app.use('/src/pages', express.static(path.join(__dirname, 'src', 'pages')));
     // Serve file da src/styles
