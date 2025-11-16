@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbitrage Hub - Listings Attivi</title>
+    <title>Arbitrage Hub - Listings & Monitor</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/venus.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -93,6 +95,46 @@
             overflow: hidden;
         }
         
+        .table-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        }
+        
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-action {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+        }
+        
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -110,11 +152,12 @@
             color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.2);
         }
         
         td {
             padding: 16px;
-            border-top: 1px solid rgba(34, 197, 94, 0.1);
+            border-bottom: 1px solid rgba(34, 197, 94, 0.1);
         }
         
         tbody tr {
@@ -125,37 +168,43 @@
             background: rgba(34, 197, 94, 0.05);
         }
         
-        .listing-image {
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .product-thumbnail {
             width: 60px;
             height: 60px;
             border-radius: 8px;
             object-fit: cover;
             background: rgba(31, 41, 55, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
         }
         
-        .listing-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
+        .product-details {
+            flex: 1;
         }
         
-        .listing-title {
+        .product-title {
             font-weight: 600;
             margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
         
-        .listing-sku {
+        .product-meta {
             font-size: 12px;
             color: #6b7280;
         }
         
         .status-badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 12px;
@@ -168,9 +217,19 @@
             color: #4ade80;
         }
         
+        .status-monitoring {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+        
         .status-paused {
             background: rgba(234, 179, 8, 0.2);
             color: #eab308;
+        }
+        
+        .status-draft {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9ca3af;
         }
         
         .status-outofstock {
@@ -178,14 +237,10 @@
             color: #fca5a5;
         }
         
-        .price {
-            font-weight: 600;
-            color: #22c55e;
-        }
-        
         .actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
         
         .btn-icon {
@@ -200,12 +255,19 @@
             color: #9ca3af;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 16px;
         }
         
         .btn-icon:hover {
             background: rgba(34, 197, 94, 0.1);
             border-color: rgba(34, 197, 94, 0.4);
             color: #4ade80;
+        }
+        
+        .btn-icon.btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
         }
         
         .empty-state {
@@ -247,6 +309,74 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
         }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid rgba(34, 197, 94, 0.1);
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-page {
+            padding: 8px 16px;
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 6px;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+        }
+
+        .btn-page:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Monitor Control Badge */
+        .monitor-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .monitor-indicator.active {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .monitor-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -256,37 +386,75 @@
                 <span>←</span>
                 <span>Torna alla Dashboard</span>
             </a>
-            <h1>📦 Listings Attivi</h1>
-            <p class="description">Monitora e gestisci tutti i tuoi listing pubblicati</p>
+            <h1>📦 Listings & Monitor</h1>
+            <p class="description">Gestisci i tuoi listing e monitora prodotti in tempo reale</p>
         </div>
         
         <div class="stats-bar">
             <div class="stat-card">
-                <div class="stat-value" id="totalActive">0</div>
-                <div class="stat-label">Listing Attivi</div>
+                <div class="stat-value" id="totalMonitors">0</div>
+                <div class="stat-label">Monitor Attivi</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalListings">0</div>
+                <div class="stat-label">Listings</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalRevenue">€0</div>
-                <div class="stat-label">Revenue Totale</div>
+                <div class="stat-label">Revenue</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="avgROI">0%</div>
                 <div class="stat-label">ROI Medio</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="totalSold">0</div>
-                <div class="stat-label">Prodotti Venduti</div>
-            </div>
         </div>
         
         <div class="listings-table" id="listingsContainer">
-            <div class="empty-state">
-                <div class="empty-icon">📦</div>
-                <div class="empty-title">Nessun listing attivo</div>
-                <div class="empty-description">Pubblica il tuo primo listing dal workshop</div>
-                <button class="btn-add" onclick="window.location.href='arbitrage-workshop.html'">
-                    Vai al Workshop
-                </button>
+            <div class="table-header">
+                <h2 class="table-title">📋 Prodotti Monitorati</h2>
+                <div class="table-actions">
+                    <button class="btn-action" onclick="showAddMonitorModal()">
+                        ➕ Aggiungi Monitor
+                    </button>
+                    <button class="btn-action" onclick="refreshMonitors()">
+                        🔄 Aggiorna
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th>Prodotto</th>
+                            <th style="width: 150px;">Status</th>
+                            <th style="width: 150px;">Data</th>
+                            <th style="width: 220px;">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listingsTableBody">
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-icon">📦</div>
+                                    <p>Caricamento monitor...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <div class="pagination-info" id="paginationInfo">0 risultati</div>
+                <div class="pagination-controls">
+                    <button class="btn-page" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+                    <span id="pageInfo" style="color: #9ca3af; font-size: 14px;">Pag 1 di 1</span>
+                    <button class="btn-page" id="nextBtn" onclick="changePage(1)">Next →</button>
+                </div>
             </div>
         </div>
     </div>
@@ -299,128 +467,426 @@
     <script>
         const authSystem = new ShappaAuth();
         const arbitrageCore = window.ArbitrageCore;
+        const API_BASE = window.location.origin;
         
         if (!authSystem.isLoggedIn()) {
             window.location.href = 'arbitrage-hub-login.html';
         }
         
-        async function loadListings() {
-            const result = await arbitrageCore.getListings();
-            const container = document.getElementById('listingsContainer');
+        // Pagination
+        let CURRENT_PAGE = 1;
+        const PAGE_SIZE = 10;
+        let ALL_INTERESTS = [];
+        let FILTERED_INTERESTS = [];
+        
+        // Load data on page load
+        async function init() {
+            await loadInterestsTable();
+            updateStats();
+        }
+        
+        /**
+         * Carica interessi/monitor dal SERVER
+         */
+        async function loadInterestsTable() {
+            try {
+                const user = authSystem.getCurrentUser();
+                if (!user || !user.id) {
+                    console.error('User not authenticated');
+                    showEmptyState();
+                    return;
+                }
+                
+                const response = await fetch(`${API_BASE}/api/interests/${user.id}`);
+                const data = await response.json();
+                
+                if (data.success && Array.isArray(data.interests)) {
+                    ALL_INTERESTS = data.interests;
+                    FILTERED_INTERESTS = ALL_INTERESTS;
+                    renderTable();
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading interests:', error);
+                showEmptyState();
+            }
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById('listingsTableBody');
             
-            if (!result.success || result.listings.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📦</div>
-                        <div class="empty-title">Nessun listing attivo</div>
-                        <div class="empty-description">Pubblica il tuo primo listing dal workshop</div>
-                        <button class="btn-add" onclick="window.location.href='arbitrage-workshop.html'">
-                            Vai al Workshop
-                        </button>
-                    </div>
-                `;
-                updateStats({ totalActive: 0, totalRevenue: 0, avgROI: 0, totalSold: 0 });
+            if (!tbody) return;
+            
+            if (FILTERED_INTERESTS.length === 0) {
+                showEmptyState();
                 return;
             }
             
-            // Calculate stats
-            const stats = {
-                totalActive: result.listings.filter(l => l.status === 'active').length,
-                totalRevenue: result.listings.reduce((sum, l) => sum + (l.revenue || 0), 0),
-                avgROI: result.listings.length > 0 
-                    ? result.listings.reduce((sum, l) => sum + (l.roi || 0), 0) / result.listings.length 
-                    : 0,
-                totalSold: result.listings.reduce((sum, l) => sum + (l.sold || 0), 0)
-            };
+            const totalPages = Math.ceil(FILTERED_INTERESTS.length / PAGE_SIZE);
+            CURRENT_PAGE = Math.min(CURRENT_PAGE, totalPages);
             
-            updateStats(stats);
+            const startIndex = (CURRENT_PAGE - 1) * PAGE_SIZE;
+            const endIndex = startIndex + PAGE_SIZE;
+            const pageItems = FILTERED_INTERESTS.slice(startIndex, endIndex);
             
-            container.innerHTML = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Prodotto</th>
-                            <th>SKU</th>
-                            <th>Status</th>
-                            <th>Prezzo</th>
-                            <th>Stock</th>
-                            <th>Venduti</th>
-                            <th>ROI</th>
-                            <th>Azioni</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${result.listings.map(listing => `
-                            <tr>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 12px;">
-                                        <div class="listing-image">
-                                            ${listing.image ? `<img src="${listing.image}" alt="${listing.title}">` : '📦'}
-                                        </div>
-                                        <div>
-                                            <div class="listing-title">${listing.title || 'N/A'}</div>
-                                            <div class="listing-sku">${listing.marketplace || 'N/A'}</div>
-                                        </div>
+            tbody.innerHTML = pageItems.map(interest => {
+                const imageUrl = interest.sourceData?.image || interest.image || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='100%' height='100%' fill='%23e9ecef'/></svg>";
+                const title = interest.name || interest.title || 'Senza titolo';
+                const asin = interest.asin || interest.sourceData?.asin || '-';
+                const monitorActive = interest.monitorStatus === 'active';
+                const statusClass = monitorActive ? 'status-monitoring' : 'status-paused';
+                const statusText = monitorActive ? 'Monitoring' : 'Paused';
+                const date = interest.createdAt ? new Date(interest.createdAt).toLocaleDateString('it-IT') : '-';
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="listing-checkbox" value="${interest.id}">
+                        </td>
+                        <td>
+                            <div class="product-info">
+                                <img src="${imageUrl}" alt="${title}" class="product-thumbnail" 
+                                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 120 120\\'><rect width=\\'100%\\' height=\\'100%\\' fill=\\'%23e9ecef\\'/></svg>'">
+                                <div class="product-details">
+                                    <div class="product-title">${title}</div>
+                                    <div class="product-meta">
+                                        ${asin !== '-' ? `ASIN: ${asin}` : 'No ASIN'}
+                                        ${monitorActive ? '<span class="monitor-indicator active"><span class="monitor-dot"></span>LIVE</span>' : ''}
                                     </div>
-                                </td>
-                                <td><code>${listing.sku || 'N/A'}</code></td>
-                                <td>
-                                    <span class="status-badge status-${listing.status || 'active'}">
-                                        ${listing.status || 'Active'}
-                                    </span>
-                                </td>
-                                <td class="price">€${(listing.price || 0).toFixed(2)}</td>
-                                <td>${listing.stock || 0}</td>
-                                <td>${listing.sold || 0}</td>
-                                <td>${(listing.roi || 0).toFixed(1)}%</td>
-                                <td>
-                                    <div class="actions">
-                                        <button class="btn-icon" onclick="editListing('${listing.id}')" title="Modifica">
-                                            ✏️
-                                        </button>
-                                        <button class="btn-icon" onclick="pauseListing('${listing.id}')" title="Pausa">
-                                            ⏸️
-                                        </button>
-                                        <button class="btn-icon" onclick="deleteListing('${listing.id}')" title="Elimina">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                ${monitorActive ? '🟢' : '⏸️'} ${statusText}
+                            </span>
+                        </td>
+                        <td>${date}</td>
+                        <td>
+                            <div class="actions">
+                                ${monitorActive ? 
+                                    `<button class="btn-icon" onclick="stopMonitor('${interest.id}')" title="Ferma Monitor">⏸️</button>` :
+                                    `<button class="btn-icon" onclick="startMonitor('${interest.id}')" title="Avvia Monitor">▶️</button>`
+                                }
+                                <button class="btn-icon" onclick="viewDetails('${interest.id}')" title="Dettagli">👁️</button>
+                                <button class="btn-icon" onclick="editMonitor('${interest.id}')" title="Modifica">✏️</button>
+                                <button class="btn-icon btn-danger" onclick="deleteMonitor('${interest.id}')" title="Elimina">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            updatePagination();
+        }
+        
+        function showEmptyState() {
+            const tbody = document.getElementById('listingsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <div class="empty-icon">📦</div>
+                            <div class="empty-title">Nessun monitor attivo</div>
+                            <div class="empty-description">Inizia aggiungendo prodotti da monitorare</div>
+                            <button class="btn-add" onclick="showAddMonitorModal()">
+                                Aggiungi Monitor
+                            </button>
+                        </div>
+                    </td>
+                </tr>
             `;
         }
         
-        function updateStats(stats) {
-            document.getElementById('totalActive').textContent = stats.totalActive;
-            document.getElementById('totalRevenue').textContent = `€${stats.totalRevenue.toFixed(2)}`;
-            document.getElementById('avgROI').textContent = `${stats.avgROI.toFixed(1)}%`;
-            document.getElementById('totalSold').textContent = stats.totalSold;
+        function updatePagination() {
+            const totalPages = Math.ceil(FILTERED_INTERESTS.length / PAGE_SIZE);
+            const info = document.getElementById('paginationInfo');
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (info) info.textContent = `${FILTERED_INTERESTS.length} risultati`;
+            if (pageInfo) pageInfo.textContent = `Pag ${CURRENT_PAGE} di ${totalPages || 1}`;
+            if (prevBtn) prevBtn.disabled = CURRENT_PAGE <= 1;
+            if (nextBtn) nextBtn.disabled = CURRENT_PAGE >= totalPages;
         }
         
-        function editListing(listingId) {
-            alert('Modifica listing - Coming soon!');
-        }
-        
-        async function pauseListing(listingId) {
-            if (confirm('Mettere in pausa questo listing?')) {
-                await arbitrageCore.updateListing(listingId, { status: 'paused' });
-                loadListings();
+        function changePage(delta) {
+            const totalPages = Math.ceil(FILTERED_INTERESTS.length / PAGE_SIZE);
+            const newPage = CURRENT_PAGE + delta;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                CURRENT_PAGE = newPage;
+                renderTable();
             }
         }
         
-        async function deleteListing(listingId) {
-            if (confirm('Eliminare definitivamente questo listing?')) {
-                await arbitrageCore.deleteListing(listingId);
-                loadListings();
+        function toggleSelectAll(checkbox) {
+            const checkboxes = document.querySelectorAll('.listing-checkbox');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+        }
+        
+        function updateStats() {
+            const activeMonitors = ALL_INTERESTS.filter(i => i.monitorStatus === 'active').length;
+            document.getElementById('totalMonitors').textContent = activeMonitors;
+            document.getElementById('totalListings').textContent = ALL_INTERESTS.length;
+        }
+        
+        /**
+         * MONITOR FUNCTIONS
+         */
+        
+        async function startMonitor(interestId) {
+            try {
+                const user = authSystem.getCurrentUser();
+                if (!user) return;
+                
+                showNotification('Avvio monitor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/monitors/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        interestId: interestId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Monitor avviato con successo!', 'success');
+                    await loadInterestsTable();
+                } else {
+                    showNotification('Errore avvio monitor: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error starting monitor:', error);
+                showNotification('Errore di connessione', 'error');
             }
         }
         
-        loadListings();
+        async function stopMonitor(interestId) {
+            try {
+                const user = authSystem.getCurrentUser();
+                if (!user) return;
+                
+                showNotification('Arresto monitor...', 'info');
+                
+                const response = await fetch(`${API_BASE}/api/monitors/stop/${interestId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: user.id })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Monitor fermato', 'success');
+                    await loadInterestsTable();
+                } else {
+                    showNotification('Errore: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error stopping monitor:', error);
+                showNotification('Errore di connessione', 'error');
+            }
+        }
+        
+        async function deleteMonitor(interestId) {
+            if (!confirm('Eliminare definitivamente questo monitor?')) return;
+            
+            try {
+                const user = authSystem.getCurrentUser();
+                if (!user) return;
+                
+                // Prima ferma il monitor
+                await stopMonitor(interestId);
+                
+                // Poi elimina l'interesse
+                const response = await fetch(`${API_BASE}/api/interests/${user.id}/${interestId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification('Monitor eliminato', 'success');
+                    await loadInterestsTable();
+                } else {
+                    showNotification('Errore eliminazione', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting monitor:', error);
+                showNotification('Errore di connessione', 'error');
+            }
+        }
+        
+        function viewDetails(interestId) {
+            const interest = ALL_INTERESTS.find(i => i.id === interestId);
+            if (!interest) return;
+            
+            const modal = `
+                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="this.remove()">
+                    <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%;" onclick="event.stopPropagation()">
+                        <h2 style="font-size: 24px; margin-bottom: 20px;">📦 ${interest.name || interest.title}</h2>
+                        <div style="margin-bottom: 16px;">
+                            <strong>Status:</strong> ${interest.monitorStatus === 'active' ? '🟢 Attivo' : '⏸️ Paused'}
+                        </div>
+                        ${interest.url ? `<div style="margin-bottom: 16px;"><strong>URL:</strong> <a href="${interest.url}" target="_blank" style="color: #4ade80;">${interest.url}</a></div>` : ''}
+                        ${interest.asin ? `<div style="margin-bottom: 16px;"><strong>ASIN:</strong> ${interest.asin}</div>` : ''}
+                        ${interest.type ? `<div style="margin-bottom: 16px;"><strong>Tipo:</strong> ${interest.type}</div>` : ''}
+                        <div style="margin-bottom: 16px;">
+                            <strong>Creato:</strong> ${new Date(interest.createdAt).toLocaleString('it-IT')}
+                        </div>
+                        ${interest.lastCheck ? `<div style="margin-bottom: 16px;"><strong>Ultimo Check:</strong> ${new Date(interest.lastCheck).toLocaleString('it-IT')}</div>` : ''}
+                        <button style="width: 100%; padding: 12px; background: rgba(34, 197, 94, 0.2); border: none; border-radius: 8px; color: #4ade80; font-weight: 600; cursor: pointer; margin-top: 20px;" onclick="this.parentElement.parentElement.remove()">Chiudi</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+        
+        function editMonitor(interestId) {
+            showNotification('Modifica monitor - Coming soon!', 'info');
+        }
+        
+        async function refreshMonitors() {
+            showNotification('Aggiornamento in corso...', 'info');
+            await loadInterestsTable();
+            showNotification('Monitor aggiornati!', 'success');
+        }
+        
+        function showAddMonitorModal() {
+            const modal = `
+                <div style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;" onclick="this.remove()" id="addMonitorModal">
+                    <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 32px; max-width: 600px; width: 100%;" onclick="event.stopPropagation()">
+                        <h2 style="font-size: 24px; margin-bottom: 20px;">➕ Aggiungi Monitor</h2>
+                        <form onsubmit="handleAddMonitor(event)">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">Nome Prodotto</label>
+                                <input type="text" id="monitorName" placeholder="es. Nike Air Max" required 
+                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">URL Prodotto (opzionale)</label>
+                                <input type="url" id="monitorUrl" placeholder="https://amazon.it/dp/..." 
+                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">ASIN (opzionale)</label>
+                                <input type="text" id="monitorAsin" placeholder="B01ABC1234" 
+                                       style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+                            </div>
+                            <div style="margin-bottom: 24px;">
+                                <label style="display: block; margin-bottom: 8px; color: #d1d5db; font-size: 14px;">Tipo Monitor</label>
+                                <select id="monitorType" 
+                                        style="width: 100%; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #fff; font-size: 14px;">
+                                    <option value="price">Monitoraggio Prezzo</option>
+                                    <option value="stock">Monitoraggio Stock</option>
+                                    <option value="releasing">Monitoraggio Release</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <button type="button" onclick="document.getElementById('addMonitorModal').remove()" 
+                                        style="flex: 1; padding: 12px; background: rgba(31, 41, 55, 0.6); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px; color: #9ca3af; font-weight: 600; cursor: pointer;">
+                                    Annulla
+                                </button>
+                                <button type="submit" 
+                                        style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e 0%, #10b981 100%); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">
+                                    Aggiungi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+        
+        async function handleAddMonitor(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('monitorName').value.trim();
+            const url = document.getElementById('monitorUrl').value.trim();
+            const asin = document.getElementById('monitorAsin').value.trim();
+            const type = document.getElementById('monitorType').value;
+            
+            const user = authSystem.getCurrentUser();
+            if (!user) return;
+            
+            const interest = {
+                id: `monitor_${Date.now()}`,
+                name,
+                url,
+                asin,
+                type,
+                status: 'active',
+                monitorStatus: 'paused',
+                createdAt: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/interests/${user.id}/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(interest)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('addMonitorModal').remove();
+                    showNotification('Monitor aggiunto!', 'success');
+                    await loadInterestsTable();
+                    
+                    // Avvia automaticamente il monitor
+                    if (confirm('Vuoi avviare subito il monitor?')) {
+                        await startMonitor(interest.id);
+                    }
+                } else {
+                    showNotification('Errore: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error adding monitor:', error);
+                showNotification('Errore di connessione', 'error');
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const colors = {
+                success: 'rgba(34, 197, 94, 0.9)',
+                error: 'rgba(239, 68, 68, 0.9)',
+                info: 'rgba(59, 130, 246, 0.9)'
+            };
+            
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 24px;
+                background: ${colors[type]};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 500;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Initialize
+        init();
     </script>
 </body>
 </html>
-
-
