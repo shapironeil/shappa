@@ -36,6 +36,26 @@
             border-radius: 10px;
             text-align: center;
         }
+        #pc-menu {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+        }
+        #interaction-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(139, 92, 246, 0.9);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -48,11 +68,34 @@
     
     <div id="instructions">
         <strong>Click per iniziare</strong><br>
-        WASD = Movimento | Mouse = Guarda
+        WASD = Movimento | Mouse = Guarda | Spazio = Salta | E = Interagisci
+    </div>
+    
+    <div id="interaction-hint"></div>
+    
+    <!-- PC Menu -->
+    <div id="pc-menu" style="display: none;">
+        <div style="background: rgba(17, 24, 39, 0.95); padding: 40px; border-radius: 20px; border: 2px solid #8b5cf6; max-width: 500px;">
+            <h2 style="font-size: 32px; margin-bottom: 30px; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                💻 Menu Gioco
+            </h2>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button onclick="startStory()" style="padding: 15px; font-size: 18px; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    📖 Avvia Storia
+                </button>
+                <button onclick="changeLevel()" style="padding: 15px; font-size: 18px; background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    🎮 Cambia Livello
+                </button>
+                <button onclick="exitPC()" style="padding: 15px; font-size: 18px; background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    ← Esci
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Three.js Local -->
     <script src="lib/three.min.js"></script>
+    <script src="lib/GLTFLoader.js"></script>
     
     <script>
         console.log('🎮 Inizializzazione...');
@@ -64,6 +107,13 @@
         }
         
         console.log('✅ THREE.js OK:', THREE.REVISION);
+        
+        // GLTFLoader
+        const gltfLoader = new THREE.GLTFLoader();
+        
+        // Interactables
+        let pcMesh = null;
+        let usingPC = false;
         
         // Setup
         const canvas = document.getElementById('game-canvas');
@@ -109,15 +159,23 @@
             }
         }
         
-        // Floor
+        // Floor (più grande e con pattern)
         const floor = new THREE.Mesh(
-            new THREE.PlaneGeometry(10, 10),
-            new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
+            new THREE.PlaneGeometry(20, 20),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x2a2a2a,
+                roughness: 0.8
+            })
         );
         floor.rotation.x = -Math.PI / 2;
         floor.position.set(5, 0, 5);
         floor.receiveShadow = true;
         scene.add(floor);
+        
+        // Base più visibile (grid pattern)
+        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x333333);
+        gridHelper.position.set(5, 0.01, 5);
+        scene.add(gridHelper);
         
         // Keys (3 golden spheres)
         const keys = [];
@@ -137,6 +195,60 @@
             keys.push(key);
         });
         
+        // Load 3D models for bedroom
+        console.log('📦 Caricamento modelli 3D...');
+        
+        // Laptop on desk
+        gltfLoader.load('/3d/laptop_free.glb', (gltf) => {
+            pcMesh = gltf.scene;
+            pcMesh.position.set(7, 0.8, 3);
+            pcMesh.scale.set(0.5, 0.5, 0.5);
+            pcMesh.rotation.y = Math.PI;
+            pcMesh.userData.interactable = true;
+            pcMesh.userData.type = 'pc';
+            scene.add(pcMesh);
+            console.log('✅ Laptop caricato');
+            
+            // Add glow to PC
+            const pcLight = new THREE.PointLight(0x3b82f6, 0.5, 3);
+            pcLight.position.set(0, 0.2, 0);
+            pcMesh.add(pcLight);
+        }, undefined, (error) => {
+            console.warn('⚠️ Laptop non caricato, uso placeholder');
+            // Placeholder: box blu per il PC
+            pcMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 0.5, 0.6),
+                new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.3 })
+            );
+            pcMesh.position.set(7, 0.8, 3);
+            pcMesh.userData.interactable = true;
+            pcMesh.userData.type = 'pc';
+            scene.add(pcMesh);
+        });
+        
+        // Sofa
+        gltfLoader.load('/3d/old_sofa_free.glb', (gltf) => {
+            const sofa = gltf.scene;
+            sofa.position.set(2, 0, 7);
+            sofa.scale.set(0.8, 0.8, 0.8);
+            sofa.rotation.y = Math.PI / 4;
+            scene.add(sofa);
+            console.log('✅ Divano caricato');
+        }, undefined, (error) => {
+            console.warn('⚠️ Divano non caricato');
+        });
+        
+        // Desk (use bench as desk)
+        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
+            const desk = gltf.scene;
+            desk.position.set(7, 0, 3);
+            desk.scale.set(1.5, 0.8, 0.8);
+            scene.add(desk);
+            console.log('✅ Scrivania caricata');
+        }, undefined, (error) => {
+            console.warn('⚠️ Scrivania non caricata');
+        });
+        
         // Controls
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
         let euler = new THREE.Euler(0, 0, 0, 'YXZ');
@@ -144,18 +256,33 @@
         let keysCollected = 0;
         let startTime = 0;
         
+        let canJump = true;
+        let velocityY = 0;
+        const gravity = -9.8;
+        const jumpForce = 5;
+        
         document.addEventListener('keydown', (e) => {
+            if (usingPC) return; // Ignora input se stai usando il PC
+            
             if (e.code === 'KeyW') moveForward = true;
             if (e.code === 'KeyS') moveBackward = true;
-            if (e.code === 'KeyA') moveLeft = true;
-            if (e.code === 'KeyD') moveRight = true;
+            if (e.code === 'KeyA') moveRight = true;  // Invertito
+            if (e.code === 'KeyD') moveLeft = true;   // Invertito
+            if (e.code === 'Space' && canJump && isLocked) {
+                e.preventDefault();
+                velocityY = jumpForce;
+                canJump = false;
+            }
+            if (e.code === 'KeyE') {
+                interactWithNearestObject();
+            }
         });
         
         document.addEventListener('keyup', (e) => {
             if (e.code === 'KeyW') moveForward = false;
             if (e.code === 'KeyS') moveBackward = false;
-            if (e.code === 'KeyA') moveLeft = false;
-            if (e.code === 'KeyD') moveRight = false;
+            if (e.code === 'KeyA') moveRight = false;  // Invertito
+            if (e.code === 'KeyD') moveLeft = false;   // Invertito
         });
         
         canvas.addEventListener('click', () => {
@@ -191,7 +318,7 @@
             const speed = 5 * delta;
             
             // Movement
-            if (isLocked) {
+            if (isLocked && !usingPC) {
                 const forward = new THREE.Vector3();
                 camera.getWorldDirection(forward);
                 forward.y = 0;
@@ -205,7 +332,19 @@
                 if (moveRight) camera.position.add(right.multiplyScalar(speed));
                 if (moveLeft) camera.position.add(right.multiplyScalar(-speed));
                 
-                camera.position.y = 1.6;
+                // Check if near PC
+                checkNearPC();
+                
+                // Gravity and jump
+                velocityY += gravity * delta;
+                camera.position.y += velocityY * delta;
+                
+                // Ground collision
+                if (camera.position.y <= 1.6) {
+                    camera.position.y = 1.6;
+                    velocityY = 0;
+                    canJump = true;
+                }
                 
                 // Keep in bounds
                 camera.position.x = Math.max(1, Math.min(9, camera.position.x));
@@ -261,6 +400,71 @@
         });
         
         console.log('✅ Gioco pronto! Click per iniziare');
+        
+        // ========== INTERACTION SYSTEM ==========
+        
+        function interactWithNearestObject() {
+            if (!pcMesh || usingPC) return;
+            
+            const dist = camera.position.distanceTo(pcMesh.position);
+            if (dist < 2.0) {
+                usePC();
+            }
+        }
+        
+        function checkNearPC() {
+            if (!pcMesh || usingPC) {
+                document.getElementById('interaction-hint').style.display = 'none';
+                return;
+            }
+            
+            const dist = camera.position.distanceTo(pcMesh.position);
+            const hint = document.getElementById('interaction-hint');
+            
+            if (dist < 2.0) {
+                hint.textContent = '[E] Usa il PC';
+                hint.style.display = 'block';
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+        
+        function usePC() {
+            console.log('💻 Usando PC...');
+            usingPC = true;
+            
+            // Release pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            }
+            
+            // Show PC menu
+            document.getElementById('pc-menu').style.display = 'flex';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('interaction-hint').style.display = 'none';
+        }
+        
+        function exitPC() {
+            console.log('← Uscita dal PC');
+            usingPC = false;
+            
+            // Hide PC menu
+            document.getElementById('pc-menu').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+        }
+        
+        function startStory() {
+            alert('🎮 Avvio Storia... (da implementare)');
+            exitPC();
+        }
+        
+        function changeLevel() {
+            const level = prompt('Scegli livello (1-10):', '1');
+            if (level) {
+                alert('Livello ' + level + ' selezionato!');
+            }
+            exitPC();
+        }
     </script>
 </body>
 </html>
