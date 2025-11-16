@@ -3736,10 +3736,14 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         
         // Aggiorna solo preferences (mantiene altri dati)
         dietData.preferences = preferences;
-        dietData.updatedAt = new Date().toISOString();
+        // Non impostare updatedAt qui, upsertOne lo gestisce automaticamente
+        
+        // Rimuovi createdAt e updatedAt dal documento prima dell'upsert
+        // perché upsertOne li gestisce automaticamente
+        const { createdAt, updatedAt, ...dataToSave } = dietData;
         
         // Salva in MongoDB (upsert) - pattern come fridge
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
+        await mongoDB.upsertOne('diet_data', { userId }, dataToSave);
         
         // Notifica UserProfileAgent (pattern come fridge)
         try {
