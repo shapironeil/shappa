@@ -87,7 +87,7 @@ app.post('/api/ebay/list', express.json(), async (req, res) => {
         return res.json({ success: true, listingId, message: 'Mock listing creato (sandbox)' });
     } catch (err) {
         console.error('ebay list error', err);
-        return res.status(500).json({ success: false, error: 'internal_error' });
+        return res.status(503).json({ success: false, error: 'internal_error' });
     }
 });
 // app.use('/assets', express.static(path.join(__dirname, 'assets'))); // Spostato dopo gli endpoint API
@@ -341,7 +341,7 @@ app.get('/api/ebay/status', async (req, res) => {
         }
         return res.json({ connected: true, expiresAt: data.expiresAt, secondsLeft });
     } catch (e) {
-        return res.status(500).json({ connected: false, error: e.message });
+        return res.status(503).json({ connected: false, error: e.message });
     }
 });
 
@@ -380,7 +380,7 @@ app.post('/api/ebay/refresh', async (req, res) => {
         return res.json({ success: true, expiresAt: payload.expiresAt });
     } catch (e) {
         console.error('Refresh token failed:', e.response?.data || e.message);
-        return res.status(500).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
+        return res.status(503).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
     }
 });
 
@@ -439,7 +439,7 @@ app.get('/api/ebay/profile', async (req, res) => {
             return res.status(404).json({ success: false, error: 'profile_not_found' });
         }
         console.error('profile error:', data || e.message);
-        return res.status(500).json({ success: false, error: 'profile_failed', details: data || e.message });
+        return res.status(503).json({ success: false, error: 'profile_failed', details: data || e.message });
     }
 });
 
@@ -483,7 +483,7 @@ app.get('/api/ebay/account-info', async (req, res) => {
 
         return res.json(results);
     } catch (e) {
-        return res.status(500).json({ success: false, error: e.message });
+        return res.status(503).json({ success: false, error: e.message });
     }
 });
 
@@ -496,7 +496,7 @@ app.get('/api/ebay/token-info', async (req, res) => {
         const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
         return res.json({ exists: true, userId, scope: saved.scope, expiresAt: saved.expiresAt });
     } catch (e) {
-        return res.status(500).json({ error: e.message });
+        return res.status(503).json({ error: e.message });
     }
 });
 
@@ -509,7 +509,7 @@ app.post('/api/ebay/disconnect', async (req, res) => {
         if (fs.existsSync(tokenPath)) await fsPromises.unlink(tokenPath);
         return res.json({ success: true });
     } catch (e) {
-        return res.status(500).json({ success: false, error: e.message });
+        return res.status(503).json({ success: false, error: e.message });
     }
 });
 
@@ -707,7 +707,7 @@ app.get('/api/amazon/scrape', async (req, res) => {
         return res.json({ success: true, product });
     } catch (err) {
         console.error('Scrape error:', err);
-        return res.status(500).json({ success: false, error: err.message || 'scrape_failed' });
+        return res.status(503).json({ success: false, error: err.message || 'scrape_failed' });
     }
 });
 
@@ -788,7 +788,7 @@ app.post('/api/products/save', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error saving product:', error);
-        return res.status(500).json({ 
+        return res.status(503).json({ 
             success: false, 
             error: 'Errore nel salvataggio del prodotto' 
         });
@@ -1023,7 +1023,7 @@ app.get('/api/products/saved', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error getting saved products:', error);
-        return res.status(500).json({ 
+        return res.status(503).json({ 
             success: false, 
             error: 'Errore nel recupero dei prodotti salvati' 
         });
@@ -1293,7 +1293,7 @@ app.delete('/api/products/saved/:asin', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error deleting product:', error);
-        return res.status(500).json({ 
+        return res.status(503).json({ 
             success: false, 
             error: 'Errore nell\'eliminazione del prodotto' 
         });
@@ -1311,7 +1311,7 @@ app.post('/api/monitor/add', (req, res) => {
         }});
         return res.json({ success: true, monitor: info });
     } catch (err) {
-        return res.status(500).json({ success: false, error: err.message });
+        return res.status(503).json({ success: false, error: err.message });
     }
 });
 
@@ -1436,7 +1436,7 @@ app.post('/api/admin/clear-cache', (req, res) => {
         // Nessuna cache da pulire (SerpApi rimosso)
         return res.json({ success: true, message: 'No cache to clear (SerpApi removed)' });
     } catch (err) {
-        return res.status(500).json({ success: false, error: err.message || 'failed' });
+        return res.status(503).json({ success: false, error: err.message || 'failed' });
     }
 });
 
@@ -1494,7 +1494,7 @@ app.get('/api/interests/:userId', async (req, res) => {
         return res.json({ success: true, interests });
     } catch (error) {
         console.error('âŒ Error reading interests:', error);
-        return res.status(500).json({ success: false, error: 'Failed to read interests' });
+        return res.status(503).json({ success: false, error: 'Failed to read interests' });
     }
 });
 
@@ -1533,7 +1533,7 @@ app.post('/api/interests/:userId', async (req, res) => {
         return res.json({ success: true, count: interests.length });
     } catch (error) {
         console.error('âŒ Error saving interests:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save interests' });
+        return res.status(503).json({ success: false, error: 'Failed to save interests' });
     }
 });
 
@@ -1562,7 +1562,7 @@ app.post('/api/interests/:userId/add', async (req, res) => {
         return res.json({ success: true, interest, total: interests.length });
     } catch (error) {
         console.error('âŒ Error adding interest:', error);
-        return res.status(500).json({ success: false, error: 'Failed to add interest' });
+        return res.status(503).json({ success: false, error: 'Failed to add interest' });
     }
 });
 
@@ -1594,7 +1594,7 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
         return res.json({ success: true, remaining: filtered.length });
     } catch (error) {
         console.error('âŒ Error deleting interest:', error);
-        return res.status(500).json({ success: false, error: 'Failed to delete interest' });
+        return res.status(503).json({ success: false, error: 'Failed to delete interest' });
     }
 });
 
@@ -1622,7 +1622,7 @@ app.get('/api/webhooks/:userId', async (req, res) => {
         return res.json({ success: true, webhook: webhookData.url });
     } catch (error) {
         console.error('âŒ Error reading webhook:', error);
-        return res.status(500).json({ success: false, error: 'Failed to read webhook' });
+        return res.status(503).json({ success: false, error: 'Failed to read webhook' });
     }
 });
 
@@ -1667,7 +1667,7 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         return res.json({ success: true });
     } catch (error) {
         console.error('âŒ Error saving webhook:', error);
-        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
+        return res.status(503).json({ success: false, error: 'Failed to save webhook' });
     }
 });
 
@@ -1787,7 +1787,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     } catch (error) {
         console.error('âŒ Error during registration:', error);
-        return res.status(500).json({ success: false, error: 'Registration failed' });
+        return res.status(503).json({ success: false, error: 'Registration failed' });
     }
 });
 
@@ -1823,7 +1823,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (error) {
         console.error('âŒ Error during login:', error);
-        return res.status(500).json({ success: false, error: 'Login failed' });
+        return res.status(503).json({ success: false, error: 'Login failed' });
     }
 });
 
@@ -1845,7 +1845,7 @@ app.get('/api/auth/user/:userId', async (req, res) => {
 
     } catch (error) {
         console.error('âŒ Error fetching user:', error);
-        return res.status(500).json({ success: false, error: 'Failed to fetch user' });
+        return res.status(503).json({ success: false, error: 'Failed to fetch user' });
     }
 });
 
@@ -1880,7 +1880,7 @@ app.put('/api/auth/user/:userId', async (req, res) => {
 
     } catch (error) {
         console.error('âŒ Error updating user:', error);
-        return res.status(500).json({ success: false, error: 'Failed to update user' });
+        return res.status(503).json({ success: false, error: 'Failed to update user' });
     }
 });
 
@@ -1908,7 +1908,7 @@ app.post('/api/auth/logout', async (req, res) => {
 
     } catch (error) {
         console.error('âŒ Error during logout:', error);
-        return res.status(500).json({ success: false, error: 'Failed to logout' });
+        return res.status(503).json({ success: false, error: 'Failed to logout' });
     }
 });
 
@@ -1961,7 +1961,7 @@ app.post('/api/monitors/start', async (req, res) => {
         return res.json(result);
     } catch (error) {
         console.error('âŒ Error starting monitor:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -1996,7 +1996,7 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
         return res.json(result);
     } catch (error) {
         console.error('âŒ Error stopping monitor:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2036,7 +2036,7 @@ app.post('/api/monitors/stop-all', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error stopping all monitors:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2050,7 +2050,7 @@ app.get('/api/monitors/stats', (req, res) => {
         return res.json({ success: true, ...stats });
     } catch (error) {
         console.error('âŒ Error getting monitor stats:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2065,7 +2065,7 @@ app.get('/api/monitors/user/:userId', (req, res) => {
         return res.json({ success: true, monitors });
     } catch (error) {
         console.error('âŒ Error getting user monitors:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2131,7 +2131,7 @@ app.get('/api/admin/server-data', async (req, res) => {
         
     } catch (error) {
         console.error('âŒ Error getting admin data:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2183,7 +2183,7 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         
     } catch (error) {
         console.error('âŒ Error deleting user:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2248,7 +2248,7 @@ app.post('/api/sport/profile', async (req, res) => {
         return res.json({ success: true, message: 'Profile saved successfully' });
     } catch (error) {
         console.error('âŒ Error saving sport profile:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2300,7 +2300,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error getting all profiles:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2318,7 +2318,7 @@ app.get('/api/sport/profile/:userId', async (req, res) => {
         return res.json({ success: true, data });
     } catch (error) {
         console.error('âŒ Error loading sport profile:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2364,7 +2364,7 @@ app.post('/api/sport/program', async (req, res) => {
         return res.json({ success: true, message: 'Program saved successfully' });
     } catch (error) {
         console.error('âŒ Error saving program:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2382,7 +2382,7 @@ app.get('/api/sport/program/:userId', async (req, res) => {
         return res.json({ success: true, data });
     } catch (error) {
         console.error('âŒ Error loading program:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2423,7 +2423,7 @@ app.post('/api/sport/workout-completed', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error marking workout completed:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2461,7 +2461,7 @@ app.get('/api/sport/stats/:userId', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error getting stats:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2528,7 +2528,7 @@ app.post('/api/sport/stats', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error updating stats:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2585,7 +2585,7 @@ app.post('/api/sport/test-webhook', async (req, res) => {
         return res.json({ success: true, message: 'Test webhook sent' });
     } catch (error) {
         console.error('âŒ Error sending test webhook:', error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2600,7 +2600,7 @@ app.get('/api/sport/webhook', async (req, res) => {
         });
     } catch (error) {
         console.error('âŒ Error getting webhook:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -2777,7 +2777,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
         
     } catch (error) {
         console.error('âŒ Error getting unified user data:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -3676,7 +3676,7 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
         return res.json({ success: true, count: dietData.fridge.length });
     } catch (error) {
         console.error('Error saving fridge:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -3702,7 +3702,7 @@ app.get('/api/diet/preferences/:userId', async (req, res) => {
         return res.json({ success: true, preferences: null });
     } catch (error) {
         console.error('Error loading diet preferences:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -3738,11 +3738,24 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         const mongoDB = getMongoDB();
         
         // Verifica connessione MongoDB
-        if (!mongoDB) {
-            console.error('âŒ MongoDB non disponibile');
-            return res.status(500).json({ 
+        let db;
+        try {
+            db = await mongoDB.connect();
+        } catch (dbError) {
+            console.error('❌ Errore connessione MongoDB:', dbError.message);
+            return res.status(503).json({ 
                 success: false, 
-                error: 'Database non disponibile' 
+                error: 'Impossibile connettersi al database',
+                details: dbError.message
+            });
+        }
+        
+        if (!db) {
+            console.error('âŒ MongoDB non disponibile');
+            return res.status(503).json({ 
+                success: false, 
+                error: 'Database non disponibile. Configura MONGODB_URI in .env.private e riavvia il server.',
+                hint: 'Vedi RISOLUZIONE_404.md per istruzioni complete' 
             });
         }
         
@@ -3808,7 +3821,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
     } catch (error) {
         console.error('âŒ Error saving preferences:', error);
         console.error('   Stack:', error.stack);
-        return res.status(500).json({ 
+        return res.status(503).json({ 
             success: false, 
             error: error.message || 'Errore nel salvataggio delle preferenze' 
         });
@@ -3875,7 +3888,7 @@ app.post('/api/diet/weight/:userId', async (req, res) => {
         return res.json({ success: true });
     } catch (error) {
         console.error('Error saving weight:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -3954,7 +3967,7 @@ app.post('/api/diet/calories/:userId', async (req, res) => {
         return res.json({ success: true });
     } catch (error) {
         console.error('Error saving calories:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4007,7 +4020,7 @@ app.post('/api/diet/shopping-list/:userId', async (req, res) => {
         return res.json({ success: true, count: dietData.shoppingList.length });
     } catch (error) {
         console.error('Error saving shopping list:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4060,7 +4073,7 @@ app.post('/api/diet/selected-diet/:userId', async (req, res) => {
         return res.json({ success: true });
     } catch (error) {
         console.error('Error saving selected diet:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4103,7 +4116,7 @@ app.get('/api/gaming/profile/:userId', async (req, res) => {
         }
     } catch (error) {
         console.error('Error loading gaming profile:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4146,7 +4159,7 @@ app.post('/api/gaming/profile/:userId', async (req, res) => {
         return res.json({ success: true, data: profile });
     } catch (error) {
         console.error('Error saving gaming profile:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4213,7 +4226,7 @@ app.post('/api/gaming/profile/:userId/add-experience', async (req, res) => {
         });
     } catch (error) {
         console.error('Error adding experience:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4385,7 +4398,7 @@ app.get('/api/calendar/events/:userId', async (req, res) => {
         });
     } catch (error) {
         console.error('Error loading calendar events:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4461,7 +4474,7 @@ app.post('/api/calendar/events/:userId', async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving calendar event:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
@@ -4492,7 +4505,7 @@ app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
         return res.json({ success: true, message: 'Event deleted' });
     } catch (error) {
         console.error('Error deleting calendar event:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(503).json({ success: false, error: error.message });
     }
 });
 
