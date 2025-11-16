@@ -1,5 +1,5 @@
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+// Note: questo ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -64,7 +64,7 @@ const { coordinator } = initializeAgents({
     }
 });
 
-console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¤ÃƒÂ¢Ã‚â‚¬Ã‚â€œ Agent AI Committee System initialized');
+console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬Å“ Agent AI Committee System initialized');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,12 +72,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â IMPORTANTE: express.static deve essere DOPO gli endpoint API
+// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â IMPORTANTE: express.static deve essere DOPO gli endpoint API
 // per evitare che intercetti le richieste API
 // app.use(express.static(__dirname)); // Spostato dopo gli endpoint API
 
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+// Note: questo ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 app.post('/api/ebay/list', express.json(), async (req, res) => {
     try {
         const { id, title, price, automation } = req.body || {};
@@ -141,7 +141,7 @@ function buildAllScopes(custom) {
     for (const s of merged) { if (!seen.has(s)) { seen.add(s); uniq.push(s); } }
     return uniq.join(' ');
 }
-// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â .
+// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â .
 const SCOPE_PROFILES = {
     basic: [
         'https://api.ebay.com/oauth/api_scope',
@@ -160,11 +160,11 @@ function getScopesForProfile(profile, custom) {
     return uniq.join(' ');
 }
 
-// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  dove veniva usato.
+// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  dove veniva usato.
 const FULL_SCOPES = getScopesForProfile('full', EBAY_CONFIG.scopes);
 
 if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
-    console.warn('eBay redirectUri is using http:// ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â€šÃ‚Â¬ÃƒÂ¢Ã‚â‚¬Ã‚Â this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
+    console.warn('eBay redirectUri is using http:// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
 }
 
 // Amazon scraper (Playwright)
@@ -373,7 +373,7 @@ app.post('/api/ebay/refresh', async (req, res) => {
             access_token: tokenData.access_token,
             refresh_token: refreshToken, // eBay typically returns same refresh token
             token_type: tokenData.token_type,
-            // preserva scope precedente; eBay puÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â² non restituirlo nel refresh
+            // preserva scope precedente; eBay puÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² non restituirlo nel refresh
             scope: (JSON.parse(await fsPromises.readFile(tokenPath, 'utf8')).scope) || FULL_SCOPES
         };
         await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
@@ -590,7 +590,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-1',
                 url: 'https://amazon.it/dp/DEMO-1',
                 title: `${query} (Demo) Esempio 1`,
-                price: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â‚¬Ã‚Å¡Ãƒâ€šÃ‚Â¬29,99',
+                price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬29,99',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Demo+1',
                 rating: '4,3 su 5 stelle',
@@ -600,7 +600,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-2',
                 url: 'https://amazon.it/dp/DEMO-2',
                 title: `${query} (Demo) Esempio 2`,
-                price: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â‚¬Ã‚Å¡Ãƒâ€šÃ‚Â¬19,90',
+                price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬19,90',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Demo+2',
                 rating: '4,1 su 5 stelle',
@@ -617,7 +617,7 @@ app.get('/api/amazon/search', async (req, res) => {
     });
 });
 
-// Stub search endpoints per altri provider (placeholder finchÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â© non implementati)
+// Stub search endpoints per altri provider (placeholder finchÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© non implementati)
 app.get('/api/aliexpress/search', async (req, res) => {
     const query = req.query.q || req.query.query || '';
     return res.json({ success: true, products: [], source: 'stub', provider: 'aliexpress', message: 'Motore Aliexpress non ancora disponibile', query });
@@ -652,8 +652,8 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             asin,
             title: `Prodotto ${asin} - Dettagli Completi`,
             brand: 'BrandDemo',
-            price: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â‚¬Ã‚Å¡Ãƒâ€šÃ‚Â¬39,99',
-            originalPrice: 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â‚¬Ã‚Å¡Ãƒâ€šÃ‚Â¬49,99',
+            price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬39,99',
+            originalPrice: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬49,99',
             rating: '4.5 su 5 stelle',
             reviewsCount: '1,234',
             mainImage: 'https://via.placeholder.com/500x500/4A90E2/FFFFFF?text=Prodotto+Dettaglio',
@@ -665,7 +665,7 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             ],
             features: [
                 'Caratteristica principale del prodotto con descrizione dettagliata',
-                'Materiali di alta qualitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  utilizzati nella costruzione',
+                'Materiali di alta qualitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  utilizzati nella costruzione',
                 'Design ergonomico per il massimo comfort',
                 'Compatibile con diversi sistemi e dispositivi',
                 'Garanzia di 2 anni inclusa'
@@ -881,7 +881,7 @@ async function downloadProductImages(req, res) {
         const metadataPath = path.join(imagesDir, 'metadata.json');
         await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
         
-        console.log(`[ImageDownloader] ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
+        console.log(`[ImageDownloader] ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
         
         return res.json({
             success: true,
@@ -1053,7 +1053,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
       const files = fs.readdirSync(productDir).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
       
       // Se ci sono file ma nessun metadata, potrebbe essere un download interrotto
-      // Controlla l'etÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  dei file per determinare se ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ ancora in corso
+      // Controlla l'etÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  dei file per determinare se ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ ancora in corso
       if (files.length > 0) {
         const newestFile = files.map(f => ({
           name: f,
@@ -1062,7 +1062,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
         
         const ageMinutes = (Date.now() - newestFile.mtime.getTime()) / (1000 * 60);
         
-        // Se il file piÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¹ recente ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ piÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¹ vecchio di 5 minuti, considera il download fallito
+        // Se il file piÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ recente ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ piÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ vecchio di 5 minuti, considera il download fallito
         const downloading = ageMinutes < 5;
         
         return res.json({
@@ -1451,17 +1451,17 @@ const USERS_DIR = path.join(__dirname, 'data', 'users');
 // Ensure directories exist
 if (!fs.existsSync(INTERESTS_DIR)) {
     fs.mkdirSync(INTERESTS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â Created interests directory');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created interests directory');
 }
 
 if (!fs.existsSync(WEBHOOKS_DIR)) {
     fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â Created webhooks directory');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created webhooks directory');
 }
 
 if (!fs.existsSync(USERS_DIR)) {
     fs.mkdirSync(USERS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â Created users directory');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created users directory');
 }
 
 // Get user interests file path
@@ -1493,7 +1493,7 @@ app.get('/api/interests/:userId', async (req, res) => {
         
         return res.json({ success: true, interests });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error reading interests:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading interests:', error);
         return res.status(503).json({ success: false, error: 'Failed to read interests' });
     }
 });
@@ -1515,7 +1515,7 @@ app.post('/api/interests/:userId', async (req, res) => {
         const filePath = getUserInterestsPath(userId);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â„¢Ãƒâ€šÃ‚Â¾ Saved ${interests.length} interests for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ Saved ${interests.length} interests for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -1532,7 +1532,7 @@ app.post('/api/interests/:userId', async (req, res) => {
         
         return res.json({ success: true, count: interests.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error saving interests:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving interests:', error);
         return res.status(503).json({ success: false, error: 'Failed to save interests' });
     }
 });
@@ -1558,10 +1558,10 @@ app.post('/api/interests/:userId/add', async (req, res) => {
         interests.push(interest);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Added interest "${interest.name}" for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Added interest "${interest.name}" for user ${userId}`);
         return res.json({ success: true, interest, total: interests.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error adding interest:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error adding interest:', error);
         return res.status(503).json({ success: false, error: 'Failed to add interest' });
     }
 });
@@ -1587,13 +1587,13 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
         
-        // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂºÃƒÂ¢Ã‚â‚¬Ã‚Ëœ FERMA IL MONITOR se attivo
+        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ FERMA IL MONITOR se attivo
         monitorManager.stopMonitor(interestId);
         
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Deleted interest ${interestId} for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted interest ${interestId} for user ${userId}`);
         return res.json({ success: true, remaining: filtered.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error deleting interest:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error deleting interest:', error);
         return res.status(503).json({ success: false, error: 'Failed to delete interest' });
     }
 });
@@ -1621,7 +1621,7 @@ app.get('/api/webhooks/:userId', async (req, res) => {
         
         return res.json({ success: true, webhook: webhookData.url });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error reading webhook:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading webhook:', error);
         return res.status(503).json({ success: false, error: 'Failed to read webhook' });
     }
 });
@@ -1649,7 +1649,7 @@ app.post('/api/webhooks/:userId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â„¢Ãƒâ€šÃ‚Â¾ Saved Discord webhook for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ Saved Discord webhook for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -1666,7 +1666,7 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         
         return res.json({ success: true });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error saving webhook:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving webhook:', error);
         return res.status(503).json({ success: false, error: 'Failed to save webhook' });
     }
 });
@@ -1687,7 +1687,7 @@ function initUsersDatabase() {
             lastModified: new Date().toISOString()
         };
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(defaultData, null, 2), 'utf8');
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚Å¾ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Users database initialized');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Users database initialized');
     }
 }
 
@@ -1701,7 +1701,7 @@ function getUsers() {
         const db = JSON.parse(data);
         return db.users || [];
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error reading users database:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading users database:', error);
         return [];
     }
 }
@@ -1717,7 +1717,7 @@ function saveUsers(users) {
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(db, null, 2), 'utf8');
         return true;
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error saving users database:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving users database:', error);
         return false;
     }
 }
@@ -1766,7 +1766,7 @@ app.post('/api/auth/register', async (req, res) => {
             id: generateUserId(),
             username: username.trim(),
             email: email.trim().toLowerCase(),
-            password: password, // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â In produzione: hash con bcrypt!
+            password: password, // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â In produzione: hash con bcrypt!
             createdAt: new Date().toISOString(),
             lastLogin: null,
             profile: {
@@ -1779,14 +1779,14 @@ app.post('/api/auth/register', async (req, res) => {
         users.push(newUser);
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Registered new user: ${username}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Registered new user: ${username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = newUser;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error during registration:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during registration:', error);
         return res.status(503).json({ success: false, error: 'Registration failed' });
     }
 });
@@ -1815,14 +1815,14 @@ app.post('/api/auth/login', async (req, res) => {
         user.lastLogin = new Date().toISOString();
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ User logged in: ${user.username}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ User logged in: ${user.username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error during login:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during login:', error);
         return res.status(503).json({ success: false, error: 'Login failed' });
     }
 });
@@ -1844,7 +1844,7 @@ app.get('/api/auth/user/:userId', async (req, res) => {
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error fetching user:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error fetching user:', error);
         return res.status(503).json({ success: false, error: 'Failed to fetch user' });
     }
 });
@@ -1872,14 +1872,14 @@ app.put('/api/auth/user/:userId', async (req, res) => {
 
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Updated user profile: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Updated user profile: ${userId}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = users[userIndex];
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error updating user:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error updating user:', error);
         return res.status(503).json({ success: false, error: 'Failed to update user' });
     }
 });
@@ -1893,12 +1893,12 @@ app.post('/api/auth/logout', async (req, res) => {
             return res.status(400).json({ success: false, error: 'userId required' });
         }
 
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Âª Logout richiesto per utente: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª Logout richiesto per utente: ${userId}`);
 
         // Stoppa tutti i monitor dell'utente
         const result = monitorManager.stopUserMonitors(userId);
         
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
 
         return res.json({ 
             success: true, 
@@ -1907,7 +1907,7 @@ app.post('/api/auth/logout', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error during logout:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during logout:', error);
         return res.status(503).json({ success: false, error: 'Failed to logout' });
     }
 });
@@ -1955,12 +1955,12 @@ app.post('/api/monitors/start', async (req, res) => {
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
 
-        // ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
+        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
         // Se riscriviamo, perdiamo statusMessage e nextCheckTime che il monitor ha appena aggiunto
 
         return res.json(result);
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error starting monitor:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error starting monitor:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -1995,7 +1995,7 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
 
         return res.json(result);
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error stopping monitor:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error stopping monitor:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2006,13 +2006,13 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
  */
 app.post('/api/monitors/stop-all', async (req, res) => {
     try {
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂºÃƒÂ¢Ã‚â‚¬Ã‚Ëœ Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
         
         const result = monitorManager.stopAllMonitors();
         
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Tutti i monitor fermati: ${result.stopped}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Tutti i monitor fermati: ${result.stopped}`);
         
-        // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Elimina tutti i file interests
+        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Elimina tutti i file interests
         const interestsDir = path.join(__dirname, 'data', 'interests');
         const files = fs.readdirSync(interestsDir);
         let deletedCount = 0;
@@ -2022,11 +2022,11 @@ app.post('/api/monitors/stop-all', async (req, res) => {
                 const filePath = path.join(interestsDir, file);
                 fs.writeFileSync(filePath, '[]', 'utf8'); // Svuota invece di eliminare
                 deletedCount++;
-                console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Svuotato file interests: ${file}`);
+                console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Svuotato file interests: ${file}`);
             }
         }
         
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ ${deletedCount} file interests svuotati`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ ${deletedCount} file interests svuotati`);
         
         return res.json({ 
             success: true, 
@@ -2035,7 +2035,7 @@ app.post('/api/monitors/stop-all', async (req, res) => {
             interestsCleared: deletedCount
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error stopping all monitors:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error stopping all monitors:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2049,7 +2049,7 @@ app.get('/api/monitors/stats', (req, res) => {
         const stats = monitorManager.getStats();
         return res.json({ success: true, ...stats });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting monitor stats:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting monitor stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2064,7 +2064,7 @@ app.get('/api/monitors/user/:userId', (req, res) => {
         const monitors = monitorManager.getUserMonitors(userId);
         return res.json({ success: true, monitors });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting user monitors:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting user monitors:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2130,7 +2130,7 @@ app.get('/api/admin/server-data', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting admin data:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting admin data:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2152,27 +2152,27 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         const userFile = path.join(__dirname, 'data', 'users', `${userId}.json`);
         try {
             await fs.unlink(userFile);
-            console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Deleted user file: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted user file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â User file not found: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â User file not found: ${userId}`);
         }
         
         // 3. Elimina interests
         const interestsFile = path.join(__dirname, 'data', 'interests', `interests_${userId}.json`);
         try {
             await fs.unlink(interestsFile);
-            console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Deleted interests file: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted interests file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Interests file not found: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Interests file not found: ${userId}`);
         }
         
         // 4. Elimina webhooks
         const webhooksFile = path.join(__dirname, 'data', 'webhooks', `webhooks_${userId}.json`);
         try {
             await fs.unlink(webhooksFile);
-            console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â€ÃƒÂ¢Ã‚â‚¬Ã‚ËœÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Deleted webhooks file: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted webhooks file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Webhooks file not found: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Webhooks file not found: ${userId}`);
         }
         
         return res.json({
@@ -2182,7 +2182,7 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error deleting user:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error deleting user:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2206,7 +2206,7 @@ function getSportWebhookUrl() {
             return config.webhookUrl || null;
         }
     } catch (error) {
-        console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Could not read webhook config:', error.message);
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Could not read webhook config:', error.message);
     }
     return null;
 }
@@ -2230,7 +2230,7 @@ app.post('/api/sport/profile', async (req, res) => {
         };
 
         fs.writeFileSync(sportProfilePath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚â„¢Ãƒâ€šÃ‚Âª Sport profile saved for user: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª Sport profile saved for user: ${userId}`);
 
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -2247,7 +2247,7 @@ app.post('/api/sport/profile', async (req, res) => {
 
         return res.json({ success: true, message: 'Profile saved successfully' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error saving sport profile:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving sport profile:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2287,7 +2287,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
                                       (programData?.programData?.estimatedCalories || 400)
                     });
                 } catch (err) {
-                    console.warn(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Could not parse ${file}:`, err.message);
+                    console.warn(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Could not parse ${file}:`, err.message);
                 }
             }
         }
@@ -2299,7 +2299,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
             )
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting all profiles:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting all profiles:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2317,7 +2317,7 @@ app.get('/api/sport/profile/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(sportProfilePath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error loading sport profile:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error loading sport profile:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2344,26 +2344,26 @@ app.post('/api/sport/program', async (req, res) => {
         };
 
         fs.writeFileSync(programPath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚ÂÃƒÂ¢Ã‚â‚¬Ã‚Â¹ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Program ${programId} saved for user: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Program ${programId} saved for user: ${userId}`);
 
         // Invia webhook notifica
         try {
             const webhookUrl = getSportWebhookUrl();
             if (webhookUrl) {
                 await axios.post(webhookUrl, {
-                    content: `ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€šÃ‚Â¯ **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
+                    content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
                 });
-                console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â¢ Webhook inviato per nuovo programma');
+                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Webhook inviato per nuovo programma');
             } else {
-                console.log('ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã‚â‚¬Ã‚Å¾Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Nessun webhook configurato');
+                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Nessun webhook configurato');
             }
         } catch (webhookError) {
-            console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Webhook failed:', webhookError.message);
+            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Webhook failed:', webhookError.message);
         }
 
         return res.json({ success: true, message: 'Program saved successfully' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error saving program:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving program:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2381,7 +2381,7 @@ app.get('/api/sport/program/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(programPath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error loading program:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error loading program:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2415,14 +2415,14 @@ app.post('/api/sport/workout-completed', async (req, res) => {
         });
 
         fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Workout completed for user: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Workout completed for user: ${userId}`);
 
         return res.json({ 
             success: true, 
             totalCompleted: programData.completedWorkouts.length 
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error marking workout completed:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error marking workout completed:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2460,7 +2460,7 @@ app.get('/api/sport/stats/:userId', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting stats:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2500,7 +2500,7 @@ app.post('/api/sport/stats', async (req, res) => {
                 completedAt: new Date().toISOString(),
                 dayIndex: dayIndex
             });
-            console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Workout completed for user: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Workout completed for user: ${userId}`);
         } else if (workoutSkipped) {
             // Aggiungi workout saltato
             programData.skippedWorkouts.push({
@@ -2508,7 +2508,7 @@ app.post('/api/sport/stats', async (req, res) => {
                 skippedAt: new Date().toISOString(),
                 dayIndex: dayIndex
             });
-            console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Workout skipped for user: ${userId}`);
+            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Workout skipped for user: ${userId}`);
         }
 
         // Salva i dati
@@ -2527,7 +2527,7 @@ app.post('/api/sport/stats', async (req, res) => {
             stats
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error updating stats:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error updating stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2578,13 +2578,13 @@ app.post('/api/sport/test-webhook', async (req, res) => {
 
         // Invia notifica di test
         await axios.post(webhookUrl, {
-            content: `ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â§Ãƒâ€šÃ‚Âª **Test Webhook Sport & Fitness**\n\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\nÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“ÃƒÂ¢Ã‚â‚¬Ã‚Â¦ ${new Date().toLocaleString('it-IT')}`
+            content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª **Test Webhook Sport & Fitness**\n\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ ${new Date().toLocaleString('it-IT')}`
         });
 
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â¢ Test webhook sent successfully');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Test webhook sent successfully');
         return res.json({ success: true, message: 'Test webhook sent' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error sending test webhook:', error.message);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error sending test webhook:', error.message);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2599,7 +2599,7 @@ app.get('/api/sport/webhook', async (req, res) => {
             configured: !!webhookUrl
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting webhook:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting webhook:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2768,7 +2768,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
             console.log(`No monitor data for ${userId}`);
         }
 
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Unified user data retrieved for: ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Unified user data retrieved for: ${userId}`);
         
         return res.json({
             success: true,
@@ -2776,7 +2776,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Error getting unified user data:', error);
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting unified user data:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2811,7 +2811,7 @@ app.post('/api/automations/sport', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Sport automations saved for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Sport automations saved for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -2904,7 +2904,7 @@ app.post('/api/automations/habits', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Habit settings saved for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Habit settings saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -2984,7 +2984,7 @@ app.post('/api/automations/notifications', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Notification settings saved for user ${userId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Notification settings saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -3432,7 +3432,7 @@ app.get('/api/agents/communication-stats', async (req, res) => {
  * Get unified user profile (profilo unificato)
  */
 app.get('/api/user-profile/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â¥ GET /api/user-profile/${req.params.userId}`);
+    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/user-profile/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { forceRefresh } = req.query;
@@ -3445,7 +3445,7 @@ app.get('/api/user-profile/:userId', async (req, res) => {
         
         // Se il task fallisce, ritorna struttura vuota invece di errore
         if (!result || !result.success) {
-            console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â UserProfileAgent returned error, returning empty profile');
+            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â UserProfileAgent returned error, returning empty profile');
             return res.json({
                 success: true,
                 data: {
@@ -3564,11 +3564,11 @@ if (!fs.existsSync(DIET_DATA_DIR)) {
     fs.mkdirSync(DIET_DATA_DIR, { recursive: true });
 }
 
-console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Diet API endpoints directory initialized:', DIET_DATA_DIR);
+console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Diet API endpoints directory initialized:', DIET_DATA_DIR);
 
 // Test endpoint per verificare che gli endpoint API siano registrati
 app.get('/api/diet/test', (req, res) => {
-    console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Test endpoint /api/diet/test called');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Test endpoint /api/diet/test called');
     return res.json({ success: true, message: 'Diet API endpoints are working!' });
 });
 
@@ -3577,13 +3577,13 @@ app.get('/api/diet/test', (req, res) => {
  * Ottiene tutti i dati dieta per un utente (MongoDB online-first)
  */
 app.get('/api/diet/data/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â¥ GET /api/diet/data/${req.params.userId}`);
+    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/diet/data/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { getMongoDB } = require('./lib/db/mongodb');
         const mongoDB = getMongoDB();
         
-        // Verifica se MongoDB ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ disponibile
+        // Verifica se MongoDB ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ disponibile
         try {
             // Cerca dati dieta in MongoDB
             const dietData = await mongoDB.findOne('diet_data', { userId });
@@ -3595,7 +3595,7 @@ app.get('/api/diet/data/:userId', async (req, res) => {
             }
         } catch (mongoError) {
             // MongoDB non disponibile o errore di connessione - ritorna dati vuoti (graceful degradation)
-            console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â MongoDB not available, returning empty diet data:', mongoError.message);
+            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MongoDB not available, returning empty diet data:', mongoError.message);
         }
         
         // Se non esiste o MongoDB non disponibile, ritorna struttura vuota
@@ -3685,7 +3685,7 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
  * Ottiene preferenze alimentari (MongoDB online-first)
  */
 app.get('/api/diet/preferences/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â¥ GET /api/diet/preferences/${req.params.userId}`);
+    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/diet/preferences/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { getMongoDB } = require('./lib/db/mongodb');
@@ -4019,7 +4019,7 @@ const GAMING_DATA_DIR = path.join(__dirname, 'data', 'gaming');
 if (!fs.existsSync(GAMING_DATA_DIR)) {
     fs.mkdirSync(GAMING_DATA_DIR, { recursive: true });
 }
-console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
+console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
 
 /**
  * GET /api/gaming/profile/:userId
@@ -4088,7 +4088,7 @@ app.post('/api/gaming/profile/:userId', async (req, res) => {
             });
         }
         
-        console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Gaming profile saved for user:', userId);
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Gaming profile saved for user:', userId);
         return res.json({ success: true, data: profile });
     } catch (error) {
         console.error('Error saving gaming profile:', error);
@@ -4172,7 +4172,7 @@ const MAZE_DATA_DIR = path.join(__dirname, 'data', 'gaming', 'maze');
 if (!fs.existsSync(MAZE_DATA_DIR)) {
     fs.mkdirSync(MAZE_DATA_DIR, { recursive: true });
 }
-console.log('ÃƒÂ¢Ã‚Å“Ã‚â€¦ Maze Runner API endpoints directory initialized:', MAZE_DATA_DIR);
+console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ…â€œÃƒâ€šÃ¢â‚¬Â¦ Maze Runner API endpoints directory initialized:', MAZE_DATA_DIR);
 
 /**
  * GET /api/maze/progress/:userId
@@ -4271,7 +4271,7 @@ app.post('/api/maze/complete/:userId', async (req, res) => {
         fs.writeFileSync(leaderboardPath, JSON.stringify(leaderboard, null, 2), 'utf8');
         
         // Aggiungi esperienza al profilo gaming
-        const experienceGained = Math.floor(100 - (time / 10)); // PiÃƒÂ¹ veloce = piÃƒÂ¹ exp
+        const experienceGained = Math.floor(100 - (time / 10)); // PiÃƒÆ’Ã‚Â¹ veloce = piÃƒÆ’Ã‚Â¹ exp
         if (coordinator) {
             try {
                 await coordinator.assignTask({
@@ -4291,7 +4291,7 @@ app.post('/api/maze/complete/:userId', async (req, res) => {
             }
         }
         
-        console.log('ÃƒÂ¢Ã‚Å“Ã‚â€¦ Maze completion saved for user:', userId, 'Time:', time);
+        console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ…â€œÃƒâ€šÃ¢â‚¬Â¦ Maze completion saved for user:', userId, 'Time:', time);
         return res.json({ 
             success: true, 
             data: progress,
@@ -4377,7 +4377,7 @@ const CALENDAR_DATA_DIR = path.join(__dirname, 'data', 'calendar');
 if (!fs.existsSync(CALENDAR_DATA_DIR)) {
     fs.mkdirSync(CALENDAR_DATA_DIR, { recursive: true });
 }
-console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
+console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
 
 /**
  * GET /api/calendar/events/:userId
@@ -4449,8 +4449,8 @@ app.get('/api/calendar/events/:userId', async (req, res) => {
                     
                     // Mappa giorni italiani a dayIndex (0=Lun, 6=Dom)
                     const dayMap = {
-                        'LunedÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬': 0, 'MartedÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬': 1, 'MercoledÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬': 2, 'GiovedÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬': 3,
-                        'VenerdÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬': 4, 'Sabato': 5, 'Domenica': 6
+                        'LunedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 0, 'MartedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 1, 'MercoledÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 2, 'GiovedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 3,
+                        'VenerdÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 4, 'Sabato': 5, 'Domenica': 6
                     };
                     
                     // Per ogni giorno della settimana nella dieta
@@ -4649,7 +4649,7 @@ app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
 
 /**
  * Helper: Converte dayIndex (0=Lun, 6=Dom) in date ricorrenti per un range di date
- * @param {number} dayIndex - 0=LunedÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¬, 6=Domenica
+ * @param {number} dayIndex - 0=LunedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬, 6=Domenica
  * @param {Date} startDate - Data inizio range
  * @param {Date} endDate - Data fine range
  * @returns {string[]} Array di date ISO (YYYY-MM-DD)
@@ -4773,7 +4773,7 @@ app.post('/api/ai/extract-structured-data', async (req, res) => {
 
 /**
  * POST /api/ai/extract-entities
- * Estrae entitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  da testo
+ * Estrae entitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  da testo
  */
 app.post('/api/ai/extract-entities', async (req, res) => {
     try {
@@ -4842,9 +4842,9 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
     try {
         const { fileKey = 'qEikXdYIE1SPArKu66qw0m', nodeId = '0-1' } = req.body;
         
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€šÃ‚Â¨ Applicando design Figma alla pagina dieta...`);
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“ÃƒÂ¢Ã‚â‚¬Ã‚Â¹ File Key: ${fileKey}`);
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚Å“Ãƒâ€šÃ‚Â Node ID: ${nodeId}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ Applicando design Figma alla pagina dieta...`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¹ File Key: ${fileKey}`);
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Node ID: ${nodeId}`);
 
         // Step 1: Recupera file Figma
         const fileResult = await coordinator.assignTask({
@@ -4885,7 +4885,7 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
         const sidebarMatch = existingContent.match(/(<aside class="venus-sidebar"[\s\S]*?<\/aside>)/);
         const sidebar = sidebarMatch ? sidebarMatch[1] : '';
 
-        // Estrai stili esistenti (funzionalitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  specifiche)
+        // Estrai stili esistenti (funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  specifiche)
         const existingStyles = extractDietaStyles(existingContent);
 
         // Step 5: Costruisci nuova pagina
@@ -4921,7 +4921,7 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
 });
 
 /**
- * Estrae stili funzionalitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  specifiche dalla pagina dieta
+ * Estrae stili funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  specifiche dalla pagina dieta
  */
 function extractDietaStyles(content) {
     const styleMatches = content.match(/<style>([\s\S]*?)<\/style>/g);
@@ -4930,7 +4930,7 @@ function extractDietaStyles(content) {
     let styles = '';
     styleMatches.forEach(match => {
         const styleContent = match.replace(/<\/?style>/g, '');
-        // Mantieni solo stili per funzionalitÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â  (calendario, ricette, tracker)
+        // Mantieni solo stili per funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  (calendario, ricette, tracker)
         if (styleContent.includes('calendar') || 
             styleContent.includes('recipe') || 
             styleContent.includes('tracker') ||
@@ -4955,7 +4955,7 @@ function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles
     <title>Cookin'Shappa - Dieta & Salute</title>
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/venus.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã‚â€šÃ‚Â¬</text></svg">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬</text></svg">
     <!-- 
         Figma Design Reference:
         File: Health-Diet-Dashboard--Copy-
@@ -5012,7 +5012,7 @@ function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles
         
         // Inizializza funzioni dopo caricamento
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€šÃ‚Â¨ Pagina dieta caricata con design Figma');
+            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ Pagina dieta caricata con design Figma');
             
             if (typeof setupCalendar === 'function') {
                 setupCalendar();
@@ -5047,7 +5047,7 @@ app.post('/api/figma/fetch-make-file', async (req, res) => {
             type: 'fetch_figma_file',
             fileKey,
             nodeIds,
-            isMakeFile: true // Indica che ÃƒÆ’Ã‚Æ’Ãƒâ€šÃ‚Â¨ un file /make/
+            isMakeFile: true // Indica che ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un file /make/
         });
 
         res.json(result);
@@ -5328,16 +5328,16 @@ if (!app._staticFilesConfigured) {
     app.use('/src/utils', express.static(path.join(__dirname, 'src', 'utils')));
     
     app._staticFilesConfigured = true;
-    console.log('âœ… Static files middleware configured (after API routes)');
+    console.log('Ã¢Å“â€¦ Static files middleware configured (after API routes)');
 }
 
 function startHttp() {
-    console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã‚â€šÃ‚Â¬ Starting HTTP server as fallback...');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
-    console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Shappa Backend Server Running (HTTP)');
-    console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚â€™Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚â€™Ãƒâ€šÃ‚Â URL: http://localhost:' + PORT);
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Shappa Backend Server Running (HTTP)');
+    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â URL: http://localhost:' + PORT);
     });
 }
 
@@ -5350,31 +5350,31 @@ try {
         try {
             httpsOptions.pfx = fs.readFileSync(pfxPath);
             httpsOptions.passphrase = process.env.DEV_PFX_PASSPHRASE || 'shappa-dev';
-            console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂÃƒâ€šÃ‚Â Using PFX for HTTPS from', pfxPath);
+            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Using PFX for HTTPS from', pfxPath);
         } catch (e) {
-            console.warn('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Failed to read PFX, falling back to PEM if available', e.message);
+            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Failed to read PFX, falling back to PEM if available', e.message);
         }
     }
     if (!httpsOptions.pfx && fs.existsSync(pemKeyPath) && fs.existsSync(pemCertPath)) {
         httpsOptions.key = fs.readFileSync(pemKeyPath);
         httpsOptions.cert = fs.readFileSync(pemCertPath);
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂÃƒâ€šÃ‚Â Using PEM key/cert for HTTPS from ssl folder');
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Using PEM key/cert for HTTPS from ssl folder');
     }
-    console.log('ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚Â½ Starting HTTPS server...');
+    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½ Starting HTTPS server...');
     const httpsServer = https.createServer(httpsOptions, app);
     httpsServer.on('error', (err) => {
-        console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ HTTPS server error:', err.message);
-        console.warn('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂÃƒÂ¢Ã‚â‚¬Ã‚Å¾ Falling back to HTTP...');
+        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ HTTPS server error:', err.message);
+        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ Falling back to HTTP...');
         startHttp();
     });
     httpsServer.listen(PORT, '0.0.0.0', () => {
         const addr = httpsServer.address();
-        console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚â€œÃƒÂ¢Ã‚â‚¬Ã‚Â¦ Shappa Backend Server Running (HTTPS)');
-        console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚â€™Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚â€™Ãƒâ€šÃ‚Â URL: https://localhost:' + PORT);
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Shappa Backend Server Running (HTTPS)');
+        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â URL: https://localhost:' + PORT);
         try {
             priceMonitor.startPriceMonitor();
-            console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â±ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Price monitor started (every 30m)');
+            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Price monitor started (every 30m)');
         } catch (e) {
             console.log('Price monitor failed to start:', e.message);
         }
@@ -5382,15 +5382,15 @@ try {
         // Carica monitor attivi al boot
         monitorManager.loadAllMonitors().then(result => {
             if (result.success) {
-                console.log(`ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã‚â€šÃ‚Â¬ Loaded ${result.loaded} active monitors`);
+                console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ Loaded ${result.loaded} active monitors`);
             }
         }).catch(err => {
-            console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ Failed to load monitors:', err.message);
+            console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Failed to load monitors:', err.message);
         });
     });
 } catch (err) {
-    console.error('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã‚â€™ HTTPS startup failed:', err.message);
-    console.warn('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã‚â‚¬Ã‚ÂÃƒÂ¢Ã‚â‚¬Ã‚Å¾ Falling back to HTTP...');
+    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ HTTPS startup failed:', err.message);
+    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ Falling back to HTTP...');
     startHttp();
 }
 
