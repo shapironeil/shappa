@@ -123,19 +123,42 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
         camera.position.set(5, 1.6, 5); // Centro della camera
         
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        const renderer = new THREE.WebGLRenderer({ 
+            canvas: canvas, 
+            antialias: true,
+            powerPreference: 'high-performance'
+        });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        console.log('✅ Renderer configurato con ottimizzazioni');
         
-        // Lights - Illuminazione camera
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        // Lights - Illuminazione camera (ESSENZIALI - senza queste i GLB appaiono neri)
+        // METODO IDENTICO AL COMPONENTE REACT FUNZIONANTE
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
+        console.log('✅ AmbientLight aggiunta (intensity: 0.8)');
         
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        sunLight.position.set(5, 8, 5);
-        sunLight.castShadow = true;
-        scene.add(sunLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        directionalLight.position.set(-5, 8, 5); // Stessa posizione del componente React
+        directionalLight.castShadow = true;
+        directionalLight.shadow.camera.left = -10;
+        directionalLight.shadow.camera.right = 10;
+        directionalLight.shadow.camera.top = 10;
+        directionalLight.shadow.camera.bottom = -10;
+        directionalLight.shadow.mapSize.width = 2048;
+        directionalLight.shadow.mapSize.height = 2048;
+        scene.add(directionalLight);
+        console.log('✅ DirectionalLight aggiunta (intensity: 1.0)');
+        
+        const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+        hemisphereLight.position.set(0, 10, 0);
+        scene.add(hemisphereLight);
+        console.log('✅ HemisphereLight aggiunta (intensity: 0.6)');
         
         // Camera walls - Pareti della camera (10x10 metri)
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
@@ -206,49 +229,60 @@
                 gltfLoader.load(
                     path,
                     (gltf) => {
-                        const model = gltf.scene;
+                        // USA LO STESSO METODO DEL COMPONENTE REACT FUNZIONANTE
+                        const model = gltf.scene; // NON clonare - usa direttamente la scena
                         const modelName = path.split('/').pop();
                         console.log(`📦 GLB ${modelName} caricato, processando...`);
                         
-                        // Calcola bounding box per normalizzare la scala
+                        // Bounding box PRIMA di scaling
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
                         console.log(`  📐 Bounding box ${modelName}:`, size, 'Center:', center);
                         
-                        // Traversa tutti i mesh e assicurati che siano visibili
+                        // SCALING PRIMA (come nel componente React funzionante)
+                        const maxSize = Math.max(size.x, size.y, size.z);
+                        if (maxSize > 0) {
+                            const scale = targetSize / maxSize;
+                            model.scale.set(scale, scale, scale);
+                            console.log(`  🔍 Scaling applicato: ${scale.toFixed(3)}`);
+                        }
+                        
+                        // Ricalcola bounding box DOPO scaling
+                        const boxAfter = new THREE.Box3().setFromObject(model);
+                        const centerAfter = boxAfter.getCenter(new THREE.Vector3());
+                        
+                        // POSIZIONE DOPO scaling (come nel componente React)
+                        model.position.set(...position);
+                        model.position.sub(centerAfter);
+                        console.log(`  📍 Posizione finale:`, model.position);
+                        
+                        // Rotazione
+                        if (rotation) {
+                            model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
+                            console.log(`  🔄 Rotazione:`, rotation);
+                        }
+                        
+                        // Materiali (METODO ESATTO DEL COMPONENTE REACT FUNZIONANTE)
                         model.traverse((child) => {
-                            if (child.isMesh) {
+                            if (child instanceof THREE.Mesh) {
+                                child.visible = true;
                                 child.castShadow = true;
                                 child.receiveShadow = true;
-                                // Assicurati che i materiali siano visibili
+                                
                                 if (child.material) {
-                                    if (Array.isArray(child.material)) {
-                                        child.material.forEach(mat => {
+                                    const mats = Array.isArray(child.material) ? child.material : [child.material];
+                                    mats.forEach((mat) => {
+                                        mat.needsUpdate = true;
+                                        if (mat instanceof THREE.MeshStandardMaterial) {
                                             mat.transparent = false;
-                                            mat.opacity = 1;
-                                        });
-                                    } else {
-                                        child.material.transparent = false;
-                                        child.material.opacity = 1;
-                                    }
+                                            mat.opacity = 1.0;
+                                            if (mat.map) mat.map.needsUpdate = true;
+                                        }
+                                    });
                                 }
                             }
                         });
-                        
-                        // Normalizza la posizione rispetto al centro
-                        model.position.copy(position);
-                        model.position.sub(center);
-                        
-                        // Scala basata sulla dimensione massima
-                        const maxSize = Math.max(size.x, size.y, size.z);
-                        const scaleFactor = targetSize / maxSize;
-                        model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                        
-                        // Applica rotazione
-                        if (rotation) {
-                            model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
-                        }
                         
                         // Applica opzioni
                         if (options.interactable) {
@@ -256,19 +290,13 @@
                             model.userData.type = options.type || 'object';
                         }
                         
-                        model.castShadow = true;
-                        model.receiveShadow = true;
-                        model.updateMatrixWorld(true);
-                        
+                        // Assicura visibilità e aggiungi alla scena (come nel componente React)
+                        model.visible = true;
                         scene.add(model);
                         
-                        // Helper per debug (rimuovere in produzione)
-                        if (options.showHelper !== false) {
-                            const boxHelper = new THREE.BoxHelper(model, options.helperColor || 0xffff00);
-                            scene.add(boxHelper);
-                        }
+                        // RIMOSSO BoxHelper - mostrava solo parallelepipedi invece dei modelli
                         
-                        console.log(`✅ ${modelName} caricato - Scale:`, model.scale, 'Position:', model.position);
+                        console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
                         resolve(model);
                     },
                     (progress) => {
@@ -287,7 +315,7 @@
         console.log('📦 Caricamento modelli 3D della camera...');
         
         // Tavolino (Desk) - Posizionato davanti al giocatore
-        loadModel('/3d/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { helperColor: 0xff0000 })
+        loadModel('/3d/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: false })
             .catch(() => {
                 console.warn('⚠️ Tavolino non caricato, uso placeholder');
                 const deskPlaceholder = new THREE.Mesh(
@@ -302,8 +330,8 @@
         // Computer (Laptop) - Posizionato sopra il tavolino
         loadModel('/3d/laptop_free.glb', new THREE.Vector3(5, 0.8, 7), { y: Math.PI }, 0.5, { 
             interactable: true, 
-            type: 'pc', 
-            helperColor: 0x0000ff 
+            type: 'pc',
+            showHelper: false
         }).then((model) => {
             pcMesh = model;
             // Add glow to PC
@@ -323,16 +351,16 @@
         });
         
         // Divano - Posizionato a sinistra del giocatore
-        loadModel('/3d/old_sofa_free.glb', new THREE.Vector3(2, 0, 3), { y: Math.PI / 2 }, 1.2, { helperColor: 0x00ff00 });
+        loadModel('/3d/old_sofa_free.glb', new THREE.Vector3(2, 0, 3), { y: Math.PI / 2 }, 1.2, { showHelper: false });
         
         // Libreria - Posizionata a destra
-        loadModel('/3d/chocolate_beech_bookshelf_free.glb', new THREE.Vector3(8, 0, 5), { y: -Math.PI / 2 }, 1.5, { helperColor: 0xff00ff });
+        loadModel('/3d/chocolate_beech_bookshelf_free.glb', new THREE.Vector3(8, 0, 5), { y: -Math.PI / 2 }, 1.5, { showHelper: false });
         
         // TV Vintage - Posizionata di fronte al divano
-        loadModel('/3d/vintage_tv_free.glb', new THREE.Vector3(2, 0.5, 6), { y: Math.PI }, 0.8, { helperColor: 0x00ffff });
+        loadModel('/3d/vintage_tv_free.glb', new THREE.Vector3(2, 0.5, 6), { y: Math.PI }, 0.8, { showHelper: false });
         
         // Libreria vecchia - Posizionata dietro
-        loadModel('/3d/dusty_old_bookshelf_free.glb', new THREE.Vector3(8, 0, 2), { y: Math.PI / 2 }, 1.5, { helperColor: 0xffff00 });
+        loadModel('/3d/dusty_old_bookshelf_free.glb', new THREE.Vector3(8, 0, 2), { y: Math.PI / 2 }, 1.5, { showHelper: false });
         
         // Controls
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
