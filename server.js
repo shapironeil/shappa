@@ -1,5 +1,5 @@
-﻿// Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo Ã¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+ï»¿// Endpoint placeholder: listare un prodotto su eBay (sandbox)
+// Note: questo ÃÂ¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -64,7 +64,7 @@ const { coordinator } = initializeAgents({
     }
 });
 
-console.log('ðŸ¤– Agent AI Committee System initialized');
+console.log('Ã°Å¸Â¤â Agent AI Committee System initialized');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,12 +72,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// âš ï¸ IMPORTANTE: express.static deve essere DOPO gli endpoint API
+// Ã¢Å¡Â Ã¯Â¸Â IMPORTANTE: express.static deve essere DOPO gli endpoint API
 // per evitare che intercetti le richieste API
 // app.use(express.static(__dirname)); // Spostato dopo gli endpoint API
 
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo Ã¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+// Note: questo ÃÂ¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 app.post('/api/ebay/list', express.json(), async (req, res) => {
     try {
         const { id, title, price, automation } = req.body || {};
@@ -141,7 +141,7 @@ function buildAllScopes(custom) {
     for (const s of merged) { if (!seen.has(s)) { seen.add(s); uniq.push(s); } }
     return uniq.join(' ');
 }
-// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalitÃ .
+// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalitÃÂ .
 const SCOPE_PROFILES = {
     basic: [
         'https://api.ebay.com/oauth/api_scope',
@@ -160,11 +160,11 @@ function getScopesForProfile(profile, custom) {
     return uniq.join(' ');
 }
 
-// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilitÃ  dove veniva usato.
+// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilitÃÂ  dove veniva usato.
 const FULL_SCOPES = getScopesForProfile('full', EBAY_CONFIG.scopes);
 
 if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
-    console.warn('eBay redirectUri is using http:// â€” this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
+    console.warn('eBay redirectUri is using http:// Ã¢â¬â this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
 }
 
 // Amazon scraper (Playwright)
@@ -373,7 +373,7 @@ app.post('/api/ebay/refresh', async (req, res) => {
             access_token: tokenData.access_token,
             refresh_token: refreshToken, // eBay typically returns same refresh token
             token_type: tokenData.token_type,
-            // preserva scope precedente; eBay puÃ² non restituirlo nel refresh
+            // preserva scope precedente; eBay puÃÂ² non restituirlo nel refresh
             scope: (JSON.parse(await fsPromises.readFile(tokenPath, 'utf8')).scope) || FULL_SCOPES
         };
         await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
@@ -590,7 +590,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-1',
                 url: 'https://amazon.it/dp/DEMO-1',
                 title: `${query} (Demo) Esempio 1`,
-                price: 'â‚¬29,99',
+                price: 'Ã¢âÂ¬29,99',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Demo+1',
                 rating: '4,3 su 5 stelle',
@@ -600,7 +600,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-2',
                 url: 'https://amazon.it/dp/DEMO-2',
                 title: `${query} (Demo) Esempio 2`,
-                price: 'â‚¬19,90',
+                price: 'Ã¢âÂ¬19,90',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Demo+2',
                 rating: '4,1 su 5 stelle',
@@ -617,7 +617,7 @@ app.get('/api/amazon/search', async (req, res) => {
     });
 });
 
-// Stub search endpoints per altri provider (placeholder finchÃ© non implementati)
+// Stub search endpoints per altri provider (placeholder finchÃÂ© non implementati)
 app.get('/api/aliexpress/search', async (req, res) => {
     const query = req.query.q || req.query.query || '';
     return res.json({ success: true, products: [], source: 'stub', provider: 'aliexpress', message: 'Motore Aliexpress non ancora disponibile', query });
@@ -652,8 +652,8 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             asin,
             title: `Prodotto ${asin} - Dettagli Completi`,
             brand: 'BrandDemo',
-            price: 'â‚¬39,99',
-            originalPrice: 'â‚¬49,99',
+            price: 'Ã¢âÂ¬39,99',
+            originalPrice: 'Ã¢âÂ¬49,99',
             rating: '4.5 su 5 stelle',
             reviewsCount: '1,234',
             mainImage: 'https://via.placeholder.com/500x500/4A90E2/FFFFFF?text=Prodotto+Dettaglio',
@@ -665,7 +665,7 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             ],
             features: [
                 'Caratteristica principale del prodotto con descrizione dettagliata',
-                'Materiali di alta qualitÃ  utilizzati nella costruzione',
+                'Materiali di alta qualitÃÂ  utilizzati nella costruzione',
                 'Design ergonomico per il massimo comfort',
                 'Compatibile con diversi sistemi e dispositivi',
                 'Garanzia di 2 anni inclusa'
@@ -881,7 +881,7 @@ async function downloadProductImages(req, res) {
         const metadataPath = path.join(imagesDir, 'metadata.json');
         await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
         
-        console.log(`[ImageDownloader] âœ… Completed: ${downloadedImages.length} HD images saved for ${asin}`);
+        console.log(`[ImageDownloader] Ã¢Åâ¦ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
         
         return res.json({
             success: true,
@@ -1053,7 +1053,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
       const files = fs.readdirSync(productDir).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
       
       // Se ci sono file ma nessun metadata, potrebbe essere un download interrotto
-      // Controlla l'etÃ  dei file per determinare se Ã¨ ancora in corso
+      // Controlla l'etÃÂ  dei file per determinare se ÃÂ¨ ancora in corso
       if (files.length > 0) {
         const newestFile = files.map(f => ({
           name: f,
@@ -1062,7 +1062,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
         
         const ageMinutes = (Date.now() - newestFile.mtime.getTime()) / (1000 * 60);
         
-        // Se il file piÃ¹ recente Ã¨ piÃ¹ vecchio di 5 minuti, considera il download fallito
+        // Se il file piÃÂ¹ recente ÃÂ¨ piÃÂ¹ vecchio di 5 minuti, considera il download fallito
         const downloading = ageMinutes < 5;
         
         return res.json({
@@ -1451,17 +1451,17 @@ const USERS_DIR = path.join(__dirname, 'data', 'users');
 // Ensure directories exist
 if (!fs.existsSync(INTERESTS_DIR)) {
     fs.mkdirSync(INTERESTS_DIR, { recursive: true });
-    console.log('ðŸ“ Created interests directory');
+    console.log('Ã°Å¸âÂ Created interests directory');
 }
 
 if (!fs.existsSync(WEBHOOKS_DIR)) {
     fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
-    console.log('ðŸ“ Created webhooks directory');
+    console.log('Ã°Å¸âÂ Created webhooks directory');
 }
 
 if (!fs.existsSync(USERS_DIR)) {
     fs.mkdirSync(USERS_DIR, { recursive: true });
-    console.log('ðŸ“ Created users directory');
+    console.log('Ã°Å¸âÂ Created users directory');
 }
 
 // Get user interests file path
@@ -1493,7 +1493,7 @@ app.get('/api/interests/:userId', async (req, res) => {
         
         return res.json({ success: true, interests });
     } catch (error) {
-        console.error('âŒ Error reading interests:', error);
+        console.error('Ã¢ÂÅ Error reading interests:', error);
         return res.status(503).json({ success: false, error: 'Failed to read interests' });
     }
 });
@@ -1515,7 +1515,7 @@ app.post('/api/interests/:userId', async (req, res) => {
         const filePath = getUserInterestsPath(userId);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`ðŸ’¾ Saved ${interests.length} interests for user ${userId}`);
+        console.log(`Ã°Å¸âÂ¾ Saved ${interests.length} interests for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -1532,7 +1532,7 @@ app.post('/api/interests/:userId', async (req, res) => {
         
         return res.json({ success: true, count: interests.length });
     } catch (error) {
-        console.error('âŒ Error saving interests:', error);
+        console.error('Ã¢ÂÅ Error saving interests:', error);
         return res.status(503).json({ success: false, error: 'Failed to save interests' });
     }
 });
@@ -1558,10 +1558,10 @@ app.post('/api/interests/:userId/add', async (req, res) => {
         interests.push(interest);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`âœ… Added interest "${interest.name}" for user ${userId}`);
+        console.log(`Ã¢Åâ¦ Added interest "${interest.name}" for user ${userId}`);
         return res.json({ success: true, interest, total: interests.length });
     } catch (error) {
-        console.error('âŒ Error adding interest:', error);
+        console.error('Ã¢ÂÅ Error adding interest:', error);
         return res.status(503).json({ success: false, error: 'Failed to add interest' });
     }
 });
@@ -1587,13 +1587,13 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
         
-        // ðŸ›‘ FERMA IL MONITOR se attivo
+        // Ã°Å¸âºâ FERMA IL MONITOR se attivo
         monitorManager.stopMonitor(interestId);
         
-        console.log(`ðŸ—‘ï¸ Deleted interest ${interestId} for user ${userId}`);
+        console.log(`Ã°Å¸ââÃ¯Â¸Â Deleted interest ${interestId} for user ${userId}`);
         return res.json({ success: true, remaining: filtered.length });
     } catch (error) {
-        console.error('âŒ Error deleting interest:', error);
+        console.error('Ã¢ÂÅ Error deleting interest:', error);
         return res.status(503).json({ success: false, error: 'Failed to delete interest' });
     }
 });
@@ -1621,7 +1621,7 @@ app.get('/api/webhooks/:userId', async (req, res) => {
         
         return res.json({ success: true, webhook: webhookData.url });
     } catch (error) {
-        console.error('âŒ Error reading webhook:', error);
+        console.error('Ã¢ÂÅ Error reading webhook:', error);
         return res.status(503).json({ success: false, error: 'Failed to read webhook' });
     }
 });
@@ -1649,7 +1649,7 @@ app.post('/api/webhooks/:userId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
         
-        console.log(`ðŸ’¾ Saved Discord webhook for user ${userId}`);
+        console.log(`Ã°Å¸âÂ¾ Saved Discord webhook for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -1666,7 +1666,7 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         
         return res.json({ success: true });
     } catch (error) {
-        console.error('âŒ Error saving webhook:', error);
+        console.error('Ã¢ÂÅ Error saving webhook:', error);
         return res.status(503).json({ success: false, error: 'Failed to save webhook' });
     }
 });
@@ -1687,7 +1687,7 @@ function initUsersDatabase() {
             lastModified: new Date().toISOString()
         };
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(defaultData, null, 2), 'utf8');
-        console.log('ðŸ—„ï¸ Users database initialized');
+        console.log('Ã°Å¸ââÃ¯Â¸Â Users database initialized');
     }
 }
 
@@ -1701,7 +1701,7 @@ function getUsers() {
         const db = JSON.parse(data);
         return db.users || [];
     } catch (error) {
-        console.error('âŒ Error reading users database:', error);
+        console.error('Ã¢ÂÅ Error reading users database:', error);
         return [];
     }
 }
@@ -1717,7 +1717,7 @@ function saveUsers(users) {
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(db, null, 2), 'utf8');
         return true;
     } catch (error) {
-        console.error('âŒ Error saving users database:', error);
+        console.error('Ã¢ÂÅ Error saving users database:', error);
         return false;
     }
 }
@@ -1766,7 +1766,7 @@ app.post('/api/auth/register', async (req, res) => {
             id: generateUserId(),
             username: username.trim(),
             email: email.trim().toLowerCase(),
-            password: password, // âš ï¸ In produzione: hash con bcrypt!
+            password: password, // Ã¢Å¡Â Ã¯Â¸Â In produzione: hash con bcrypt!
             createdAt: new Date().toISOString(),
             lastLogin: null,
             profile: {
@@ -1779,14 +1779,14 @@ app.post('/api/auth/register', async (req, res) => {
         users.push(newUser);
         saveUsers(users);
 
-        console.log(`âœ… Registered new user: ${username}`);
+        console.log(`Ã¢Åâ¦ Registered new user: ${username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = newUser;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('âŒ Error during registration:', error);
+        console.error('Ã¢ÂÅ Error during registration:', error);
         return res.status(503).json({ success: false, error: 'Registration failed' });
     }
 });
@@ -1815,14 +1815,14 @@ app.post('/api/auth/login', async (req, res) => {
         user.lastLogin = new Date().toISOString();
         saveUsers(users);
 
-        console.log(`âœ… User logged in: ${user.username}`);
+        console.log(`Ã¢Åâ¦ User logged in: ${user.username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('âŒ Error during login:', error);
+        console.error('Ã¢ÂÅ Error during login:', error);
         return res.status(503).json({ success: false, error: 'Login failed' });
     }
 });
@@ -1844,7 +1844,7 @@ app.get('/api/auth/user/:userId', async (req, res) => {
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('âŒ Error fetching user:', error);
+        console.error('Ã¢ÂÅ Error fetching user:', error);
         return res.status(503).json({ success: false, error: 'Failed to fetch user' });
     }
 });
@@ -1872,14 +1872,14 @@ app.put('/api/auth/user/:userId', async (req, res) => {
 
         saveUsers(users);
 
-        console.log(`âœ… Updated user profile: ${userId}`);
+        console.log(`Ã¢Åâ¦ Updated user profile: ${userId}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = users[userIndex];
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('âŒ Error updating user:', error);
+        console.error('Ã¢ÂÅ Error updating user:', error);
         return res.status(503).json({ success: false, error: 'Failed to update user' });
     }
 });
@@ -1893,12 +1893,12 @@ app.post('/api/auth/logout', async (req, res) => {
             return res.status(400).json({ success: false, error: 'userId required' });
         }
 
-        console.log(`ðŸšª Logout richiesto per utente: ${userId}`);
+        console.log(`Ã°Å¸Å¡Âª Logout richiesto per utente: ${userId}`);
 
         // Stoppa tutti i monitor dell'utente
         const result = monitorManager.stopUserMonitors(userId);
         
-        console.log(`âœ… Logout completato: ${userId} - ${result.stopped} monitor fermati`);
+        console.log(`Ã¢Åâ¦ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
 
         return res.json({ 
             success: true, 
@@ -1907,7 +1907,7 @@ app.post('/api/auth/logout', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('âŒ Error during logout:', error);
+        console.error('Ã¢ÂÅ Error during logout:', error);
         return res.status(503).json({ success: false, error: 'Failed to logout' });
     }
 });
@@ -1955,12 +1955,12 @@ app.post('/api/monitors/start', async (req, res) => {
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
 
-        // âš ï¸ NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
+        // Ã¢Å¡Â Ã¯Â¸Â NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
         // Se riscriviamo, perdiamo statusMessage e nextCheckTime che il monitor ha appena aggiunto
 
         return res.json(result);
     } catch (error) {
-        console.error('âŒ Error starting monitor:', error);
+        console.error('Ã¢ÂÅ Error starting monitor:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -1995,7 +1995,7 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
 
         return res.json(result);
     } catch (error) {
-        console.error('âŒ Error stopping monitor:', error);
+        console.error('Ã¢ÂÅ Error stopping monitor:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2006,13 +2006,13 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
  */
 app.post('/api/monitors/stop-all', async (req, res) => {
     try {
-        console.log('ðŸ›‘ Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
+        console.log('Ã°Å¸âºâ Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
         
         const result = monitorManager.stopAllMonitors();
         
-        console.log(`âœ… Tutti i monitor fermati: ${result.stopped}`);
+        console.log(`Ã¢Åâ¦ Tutti i monitor fermati: ${result.stopped}`);
         
-        // ðŸ—‘ï¸ Elimina tutti i file interests
+        // Ã°Å¸ââÃ¯Â¸Â Elimina tutti i file interests
         const interestsDir = path.join(__dirname, 'data', 'interests');
         const files = fs.readdirSync(interestsDir);
         let deletedCount = 0;
@@ -2022,11 +2022,11 @@ app.post('/api/monitors/stop-all', async (req, res) => {
                 const filePath = path.join(interestsDir, file);
                 fs.writeFileSync(filePath, '[]', 'utf8'); // Svuota invece di eliminare
                 deletedCount++;
-                console.log(`ðŸ—‘ï¸ Svuotato file interests: ${file}`);
+                console.log(`Ã°Å¸ââÃ¯Â¸Â Svuotato file interests: ${file}`);
             }
         }
         
-        console.log(`âœ… ${deletedCount} file interests svuotati`);
+        console.log(`Ã¢Åâ¦ ${deletedCount} file interests svuotati`);
         
         return res.json({ 
             success: true, 
@@ -2035,7 +2035,7 @@ app.post('/api/monitors/stop-all', async (req, res) => {
             interestsCleared: deletedCount
         });
     } catch (error) {
-        console.error('âŒ Error stopping all monitors:', error);
+        console.error('Ã¢ÂÅ Error stopping all monitors:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2049,7 +2049,7 @@ app.get('/api/monitors/stats', (req, res) => {
         const stats = monitorManager.getStats();
         return res.json({ success: true, ...stats });
     } catch (error) {
-        console.error('âŒ Error getting monitor stats:', error);
+        console.error('Ã¢ÂÅ Error getting monitor stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2064,7 +2064,7 @@ app.get('/api/monitors/user/:userId', (req, res) => {
         const monitors = monitorManager.getUserMonitors(userId);
         return res.json({ success: true, monitors });
     } catch (error) {
-        console.error('âŒ Error getting user monitors:', error);
+        console.error('Ã¢ÂÅ Error getting user monitors:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2130,7 +2130,7 @@ app.get('/api/admin/server-data', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('âŒ Error getting admin data:', error);
+        console.error('Ã¢ÂÅ Error getting admin data:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2152,27 +2152,27 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         const userFile = path.join(__dirname, 'data', 'users', `${userId}.json`);
         try {
             await fs.unlink(userFile);
-            console.log(`ðŸ—‘ï¸ Deleted user file: ${userId}`);
+            console.log(`Ã°Å¸ââÃ¯Â¸Â Deleted user file: ${userId}`);
         } catch (err) {
-            console.log(`âš ï¸ User file not found: ${userId}`);
+            console.log(`Ã¢Å¡Â Ã¯Â¸Â User file not found: ${userId}`);
         }
         
         // 3. Elimina interests
         const interestsFile = path.join(__dirname, 'data', 'interests', `interests_${userId}.json`);
         try {
             await fs.unlink(interestsFile);
-            console.log(`ðŸ—‘ï¸ Deleted interests file: ${userId}`);
+            console.log(`Ã°Å¸ââÃ¯Â¸Â Deleted interests file: ${userId}`);
         } catch (err) {
-            console.log(`âš ï¸ Interests file not found: ${userId}`);
+            console.log(`Ã¢Å¡Â Ã¯Â¸Â Interests file not found: ${userId}`);
         }
         
         // 4. Elimina webhooks
         const webhooksFile = path.join(__dirname, 'data', 'webhooks', `webhooks_${userId}.json`);
         try {
             await fs.unlink(webhooksFile);
-            console.log(`ðŸ—‘ï¸ Deleted webhooks file: ${userId}`);
+            console.log(`Ã°Å¸ââÃ¯Â¸Â Deleted webhooks file: ${userId}`);
         } catch (err) {
-            console.log(`âš ï¸ Webhooks file not found: ${userId}`);
+            console.log(`Ã¢Å¡Â Ã¯Â¸Â Webhooks file not found: ${userId}`);
         }
         
         return res.json({
@@ -2182,7 +2182,7 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('âŒ Error deleting user:', error);
+        console.error('Ã¢ÂÅ Error deleting user:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2206,7 +2206,7 @@ function getSportWebhookUrl() {
             return config.webhookUrl || null;
         }
     } catch (error) {
-        console.warn('âš ï¸ Could not read webhook config:', error.message);
+        console.warn('Ã¢Å¡Â Ã¯Â¸Â Could not read webhook config:', error.message);
     }
     return null;
 }
@@ -2230,7 +2230,7 @@ app.post('/api/sport/profile', async (req, res) => {
         };
 
         fs.writeFileSync(sportProfilePath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ðŸ’ª Sport profile saved for user: ${userId}`);
+        console.log(`Ã°Å¸âÂª Sport profile saved for user: ${userId}`);
 
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -2247,7 +2247,7 @@ app.post('/api/sport/profile', async (req, res) => {
 
         return res.json({ success: true, message: 'Profile saved successfully' });
     } catch (error) {
-        console.error('âŒ Error saving sport profile:', error);
+        console.error('Ã¢ÂÅ Error saving sport profile:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2287,7 +2287,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
                                       (programData?.programData?.estimatedCalories || 400)
                     });
                 } catch (err) {
-                    console.warn(`âš ï¸ Could not parse ${file}:`, err.message);
+                    console.warn(`Ã¢Å¡Â Ã¯Â¸Â Could not parse ${file}:`, err.message);
                 }
             }
         }
@@ -2299,7 +2299,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
             )
         });
     } catch (error) {
-        console.error('âŒ Error getting all profiles:', error);
+        console.error('Ã¢ÂÅ Error getting all profiles:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2317,7 +2317,7 @@ app.get('/api/sport/profile/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(sportProfilePath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('âŒ Error loading sport profile:', error);
+        console.error('Ã¢ÂÅ Error loading sport profile:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2344,26 +2344,26 @@ app.post('/api/sport/program', async (req, res) => {
         };
 
         fs.writeFileSync(programPath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ðŸ‹ï¸ Program ${programId} saved for user: ${userId}`);
+        console.log(`Ã°Å¸Ââ¹Ã¯Â¸Â Program ${programId} saved for user: ${userId}`);
 
         // Invia webhook notifica
         try {
             const webhookUrl = getSportWebhookUrl();
             if (webhookUrl) {
                 await axios.post(webhookUrl, {
-                    content: `ðŸŽ¯ **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
+                    content: `Ã°Å¸Å½Â¯ **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
                 });
-                console.log('ðŸ“¢ Webhook inviato per nuovo programma');
+                console.log('Ã°Å¸âÂ¢ Webhook inviato per nuovo programma');
             } else {
-                console.log('â„¹ï¸ Nessun webhook configurato');
+                console.log('Ã¢âÂ¹Ã¯Â¸Â Nessun webhook configurato');
             }
         } catch (webhookError) {
-            console.warn('âš ï¸ Webhook failed:', webhookError.message);
+            console.warn('Ã¢Å¡Â Ã¯Â¸Â Webhook failed:', webhookError.message);
         }
 
         return res.json({ success: true, message: 'Program saved successfully' });
     } catch (error) {
-        console.error('âŒ Error saving program:', error);
+        console.error('Ã¢ÂÅ Error saving program:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2381,7 +2381,7 @@ app.get('/api/sport/program/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(programPath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('âŒ Error loading program:', error);
+        console.error('Ã¢ÂÅ Error loading program:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2415,14 +2415,14 @@ app.post('/api/sport/workout-completed', async (req, res) => {
         });
 
         fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
-        console.log(`âœ… Workout completed for user: ${userId}`);
+        console.log(`Ã¢Åâ¦ Workout completed for user: ${userId}`);
 
         return res.json({ 
             success: true, 
             totalCompleted: programData.completedWorkouts.length 
         });
     } catch (error) {
-        console.error('âŒ Error marking workout completed:', error);
+        console.error('Ã¢ÂÅ Error marking workout completed:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2460,7 +2460,7 @@ app.get('/api/sport/stats/:userId', async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('âŒ Error getting stats:', error);
+        console.error('Ã¢ÂÅ Error getting stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2500,7 +2500,7 @@ app.post('/api/sport/stats', async (req, res) => {
                 completedAt: new Date().toISOString(),
                 dayIndex: dayIndex
             });
-            console.log(`âœ… Workout completed for user: ${userId}`);
+            console.log(`Ã¢Åâ¦ Workout completed for user: ${userId}`);
         } else if (workoutSkipped) {
             // Aggiungi workout saltato
             programData.skippedWorkouts.push({
@@ -2508,7 +2508,7 @@ app.post('/api/sport/stats', async (req, res) => {
                 skippedAt: new Date().toISOString(),
                 dayIndex: dayIndex
             });
-            console.log(`âš ï¸ Workout skipped for user: ${userId}`);
+            console.log(`Ã¢Å¡Â Ã¯Â¸Â Workout skipped for user: ${userId}`);
         }
 
         // Salva i dati
@@ -2527,7 +2527,7 @@ app.post('/api/sport/stats', async (req, res) => {
             stats
         });
     } catch (error) {
-        console.error('âŒ Error updating stats:', error);
+        console.error('Ã¢ÂÅ Error updating stats:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2578,13 +2578,13 @@ app.post('/api/sport/test-webhook', async (req, res) => {
 
         // Invia notifica di test
         await axios.post(webhookUrl, {
-            content: `ðŸ§ª **Test Webhook Sport & Fitness**\n\nâœ… Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\nðŸ“… ${new Date().toLocaleString('it-IT')}`
+            content: `Ã°Å¸Â§Âª **Test Webhook Sport & Fitness**\n\nÃ¢Åâ¦ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\nÃ°Å¸ââ¦ ${new Date().toLocaleString('it-IT')}`
         });
 
-        console.log('ðŸ“¢ Test webhook sent successfully');
+        console.log('Ã°Å¸âÂ¢ Test webhook sent successfully');
         return res.json({ success: true, message: 'Test webhook sent' });
     } catch (error) {
-        console.error('âŒ Error sending test webhook:', error.message);
+        console.error('Ã¢ÂÅ Error sending test webhook:', error.message);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2599,7 +2599,7 @@ app.get('/api/sport/webhook', async (req, res) => {
             configured: !!webhookUrl
         });
     } catch (error) {
-        console.error('âŒ Error getting webhook:', error);
+        console.error('Ã¢ÂÅ Error getting webhook:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2768,7 +2768,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
             console.log(`No monitor data for ${userId}`);
         }
 
-        console.log(`âœ… Unified user data retrieved for: ${userId}`);
+        console.log(`Ã¢Åâ¦ Unified user data retrieved for: ${userId}`);
         
         return res.json({
             success: true,
@@ -2776,7 +2776,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('âŒ Error getting unified user data:', error);
+        console.error('Ã¢ÂÅ Error getting unified user data:', error);
         return res.status(503).json({ success: false, error: error.message });
     }
 });
@@ -2811,7 +2811,7 @@ app.post('/api/automations/sport', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`âœ… Sport automations saved for user ${userId}`);
+        console.log(`Ã¢Åâ¦ Sport automations saved for user ${userId}`);
         
         // Notifica UserProfileAgent del cambiamento
         try {
@@ -2904,7 +2904,7 @@ app.post('/api/automations/habits', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`âœ… Habit settings saved for user ${userId}`);
+        console.log(`Ã¢Åâ¦ Habit settings saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -2984,7 +2984,7 @@ app.post('/api/automations/notifications', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`âœ… Notification settings saved for user ${userId}`);
+        console.log(`Ã¢Åâ¦ Notification settings saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -3432,7 +3432,7 @@ app.get('/api/agents/communication-stats', async (req, res) => {
  * Get unified user profile (profilo unificato)
  */
 app.get('/api/user-profile/:userId', async (req, res) => {
-    console.log(`ðŸ“¥ GET /api/user-profile/${req.params.userId}`);
+    console.log(`Ã°Å¸âÂ¥ GET /api/user-profile/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { forceRefresh } = req.query;
@@ -3445,7 +3445,7 @@ app.get('/api/user-profile/:userId', async (req, res) => {
         
         // Se il task fallisce, ritorna struttura vuota invece di errore
         if (!result || !result.success) {
-            console.warn('âš ï¸ UserProfileAgent returned error, returning empty profile');
+            console.warn('Ã¢Å¡Â Ã¯Â¸Â UserProfileAgent returned error, returning empty profile');
             return res.json({
                 success: true,
                 data: {
@@ -3564,11 +3564,11 @@ if (!fs.existsSync(DIET_DATA_DIR)) {
     fs.mkdirSync(DIET_DATA_DIR, { recursive: true });
 }
 
-console.log('âœ… Diet API endpoints directory initialized:', DIET_DATA_DIR);
+console.log('Ã¢Åâ¦ Diet API endpoints directory initialized:', DIET_DATA_DIR);
 
 // Test endpoint per verificare che gli endpoint API siano registrati
 app.get('/api/diet/test', (req, res) => {
-    console.log('âœ… Test endpoint /api/diet/test called');
+    console.log('Ã¢Åâ¦ Test endpoint /api/diet/test called');
     return res.json({ success: true, message: 'Diet API endpoints are working!' });
 });
 
@@ -3577,13 +3577,13 @@ app.get('/api/diet/test', (req, res) => {
  * Ottiene tutti i dati dieta per un utente (MongoDB online-first)
  */
 app.get('/api/diet/data/:userId', async (req, res) => {
-    console.log(`ðŸ“¥ GET /api/diet/data/${req.params.userId}`);
+    console.log(`Ã°Å¸âÂ¥ GET /api/diet/data/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { getMongoDB } = require('./lib/db/mongodb');
         const mongoDB = getMongoDB();
         
-        // Verifica se MongoDB Ã¨ disponibile
+        // Verifica se MongoDB ÃÂ¨ disponibile
         try {
             // Cerca dati dieta in MongoDB
             const dietData = await mongoDB.findOne('diet_data', { userId });
@@ -3595,7 +3595,7 @@ app.get('/api/diet/data/:userId', async (req, res) => {
             }
         } catch (mongoError) {
             // MongoDB non disponibile o errore di connessione - ritorna dati vuoti (graceful degradation)
-            console.warn('âš ï¸ MongoDB not available, returning empty diet data:', mongoError.message);
+            console.warn('Ã¢Å¡Â Ã¯Â¸Â MongoDB not available, returning empty diet data:', mongoError.message);
         }
         
         // Se non esiste o MongoDB non disponibile, ritorna struttura vuota
@@ -3685,7 +3685,7 @@ app.post('/api/diet/fridge/:userId', async (req, res) => {
  * Ottiene preferenze alimentari (MongoDB online-first)
  */
 app.get('/api/diet/preferences/:userId', async (req, res) => {
-    console.log(`ðŸ“¥ GET /api/diet/preferences/${req.params.userId}`);
+    console.log(`Ã°Å¸âÂ¥ GET /api/diet/preferences/${req.params.userId}`);
     try {
         const { userId } = req.params;
         const { getMongoDB } = require('./lib/db/mongodb');
@@ -3712,8 +3712,8 @@ app.get('/api/diet/preferences/:userId', async (req, res) => {
  * Metodo pulito e robusto per salvataggio preferenze utente
  */
 app.post('/api/diet/preferences/:userId', async (req, res) => {
-    console.log(`ðŸ“¥ POST /api/diet/preferences/${req.params.userId}`);
-    console.log('ðŸ“‹ Dati ricevuti:', JSON.stringify(req.body, null, 2));
+    console.log(`Ã°Å¸âÂ¥ POST /api/diet/preferences/${req.params.userId}`);
+    console.log('Ã°Å¸ââ¹ Dati ricevuti:', JSON.stringify(req.body, null, 2));
     
     try {
         const { userId } = req.params;
@@ -3723,7 +3723,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         if (!userId) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'UserId Ã¨ obbligatorio' 
+                error: 'UserId ÃÂ¨ obbligatorio' 
             });
         }
         
@@ -3742,7 +3742,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         try {
             db = await mongoDB.connect();
         } catch (dbError) {
-            console.error('❌ Errore connessione MongoDB:', dbError.message);
+            console.error('â Errore connessione MongoDB:', dbError.message);
             return res.status(503).json({ 
                 success: false, 
                 error: 'Impossibile connettersi al database',
@@ -3751,7 +3751,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         }
         
         if (!db) {
-            console.error('âŒ MongoDB non disponibile');
+            console.error('Ã¢ÂÅ MongoDB non disponibile');
             return res.status(503).json({ 
                 success: false, 
                 error: 'Database non disponibile. Configura MONGODB_URI in .env.private e riavvia il server.',
@@ -3789,9 +3789,9 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
             { upsert: true }
         );
         
-        console.log('âœ… Preferenze salvate in MongoDB');
-        console.log(`   - Modificato: ${updateResult.modifiedCount > 0 ? 'SÃ¬' : 'No'}`);
-        console.log(`   - Creato: ${updateResult.upsertedCount > 0 ? 'SÃ¬' : 'No'}`);
+        console.log('Ã¢Åâ¦ Preferenze salvate in MongoDB');
+        console.log(`   - Modificato: ${updateResult.modifiedCount > 0 ? 'SÃÂ¬' : 'No'}`);
+        console.log(`   - Creato: ${updateResult.upsertedCount > 0 ? 'SÃÂ¬' : 'No'}`);
         console.log(`   - Campi salvati: ${Object.keys(preferencesData).join(', ')}`);
         
         // Recupera il documento aggiornato per la notifica
@@ -3808,7 +3808,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
                     source: 'diet_preferences_endpoint'
                 });
             } catch (err) {
-                console.warn('âš ï¸ Error notifying UserProfileAgent (non critico):', err.message);
+                console.warn('Ã¢Å¡Â Ã¯Â¸Â Error notifying UserProfileAgent (non critico):', err.message);
             }
         }
         
@@ -3819,7 +3819,7 @@ app.post('/api/diet/preferences/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('âŒ Error saving preferences:', error);
+        console.error('Ã¢ÂÅ Error saving preferences:', error);
         console.error('   Stack:', error.stack);
         return res.status(503).json({ 
             success: false, 
@@ -4086,7 +4086,7 @@ const GAMING_DATA_DIR = path.join(__dirname, 'data', 'gaming');
 if (!fs.existsSync(GAMING_DATA_DIR)) {
     fs.mkdirSync(GAMING_DATA_DIR, { recursive: true });
 }
-console.log('âœ… Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
+console.log('Ã¢Åâ¦ Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
 
 /**
  * GET /api/gaming/profile/:userId
@@ -4155,7 +4155,7 @@ app.post('/api/gaming/profile/:userId', async (req, res) => {
             });
         }
         
-        console.log('âœ… Gaming profile saved for user:', userId);
+        console.log('Ã¢Åâ¦ Gaming profile saved for user:', userId);
         return res.json({ success: true, data: profile });
     } catch (error) {
         console.error('Error saving gaming profile:', error);
@@ -4231,6 +4231,211 @@ app.post('/api/gaming/profile/:userId/add-experience', async (req, res) => {
 });
 
 /**
+ * ========== MAZE RUNNER API ENDPOINTS ==========
+ * Gestione progressi e leaderboard per Maze Runner
+ */
+
+const MAZE_DATA_DIR = path.join(__dirname, 'data', 'gaming', 'maze');
+if (!fs.existsSync(MAZE_DATA_DIR)) {
+    fs.mkdirSync(MAZE_DATA_DIR, { recursive: true });
+}
+console.log('â Maze Runner API endpoints directory initialized:', MAZE_DATA_DIR);
+
+/**
+ * GET /api/maze/progress/:userId
+ * Ottiene i progressi del giocatore
+ */
+app.get('/api/maze/progress/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
+        
+        if (fs.existsSync(progressPath)) {
+            const progressData = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
+            return res.json({ success: true, data: progressData });
+        } else {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'No progress found' 
+            });
+        }
+    } catch (error) {
+        console.error('Error loading maze progress:', error);
+        return res.status(503).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/maze/complete/:userId
+ * Salva completamento livello
+ */
+app.post('/api/maze/complete/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { level, time, keysCollected, completedAt } = req.body;
+        
+        if (!level || !time) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Level and time are required' 
+            });
+        }
+        
+        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
+        
+        // Carica progresso esistente o crea nuovo
+        let progress = {
+            userId,
+            bestTime: null,
+            completedLevels: [],
+            totalCompletions: 0,
+            totalTime: 0,
+            createdAt: new Date().toISOString()
+        };
+        
+        if (fs.existsSync(progressPath)) {
+            progress = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
+        }
+        
+        // Aggiorna statistiche
+        const isNewBest = !progress.bestTime || time < progress.bestTime;
+        if (isNewBest) {
+            progress.bestTime = time;
+        }
+        
+        if (!progress.completedLevels.includes(level)) {
+            progress.completedLevels.push(level);
+        }
+        
+        progress.totalCompletions = (progress.totalCompletions || 0) + 1;
+        progress.totalTime = (progress.totalTime || 0) + time;
+        progress.lastPlayed = completedAt || new Date().toISOString();
+        progress.updatedAt = new Date().toISOString();
+        
+        // Salva progresso
+        fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2), 'utf8');
+        
+        // Aggiungi a leaderboard
+        const leaderboardPath = path.join(MAZE_DATA_DIR, `leaderboard_level${level}.json`);
+        let leaderboard = [];
+        
+        if (fs.existsSync(leaderboardPath)) {
+            leaderboard = JSON.parse(fs.readFileSync(leaderboardPath, 'utf8'));
+        }
+        
+        // Aggiungi nuova entry
+        leaderboard.push({
+            userId,
+            time,
+            keysCollected,
+            completedAt: completedAt || new Date().toISOString()
+        });
+        
+        // Ordina per tempo e mantieni solo top 100
+        leaderboard.sort((a, b) => a.time - b.time);
+        leaderboard = leaderboard.slice(0, 100);
+        
+        fs.writeFileSync(leaderboardPath, JSON.stringify(leaderboard, null, 2), 'utf8');
+        
+        // Aggiungi esperienza al profilo gaming
+        const experienceGained = Math.floor(100 - (time / 10)); // Più veloce = più exp
+        if (coordinator) {
+            try {
+                await coordinator.assignTask({
+                    type: 'monitor_data_changes',
+                    userId,
+                    dataType: 'gaming',
+                    data: { 
+                        game: 'maze-runner',
+                        level,
+                        time,
+                        experienceGained 
+                    },
+                    source: 'maze_completion_endpoint'
+                });
+            } catch (err) {
+                console.warn('Could not notify coordinator:', err.message);
+            }
+        }
+        
+        console.log('â Maze completion saved for user:', userId, 'Time:', time);
+        return res.json({ 
+            success: true, 
+            data: progress,
+            isNewBest,
+            experienceGained
+        });
+    } catch (error) {
+        console.error('Error saving maze completion:', error);
+        return res.status(503).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * GET /api/maze/leaderboard/:level
+ * Ottiene la leaderboard per un livello
+ */
+app.get('/api/maze/leaderboard/:level', async (req, res) => {
+    try {
+        const { level } = req.params;
+        const { limit = 10 } = req.query;
+        
+        const leaderboardPath = path.join(MAZE_DATA_DIR, `leaderboard_level${level}.json`);
+        
+        if (fs.existsSync(leaderboardPath)) {
+            const leaderboard = JSON.parse(fs.readFileSync(leaderboardPath, 'utf8'));
+            const topEntries = leaderboard.slice(0, parseInt(limit));
+            
+            return res.json({ 
+                success: true, 
+                data: topEntries,
+                total: leaderboard.length
+            });
+        } else {
+            return res.json({ 
+                success: true, 
+                data: [],
+                total: 0
+            });
+        }
+    } catch (error) {
+        console.error('Error loading leaderboard:', error);
+        return res.status(503).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /api/maze/stats/:userId
+ * Aggiorna statistiche generali
+ */
+app.post('/api/maze/stats/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const stats = req.body;
+        
+        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
+        
+        let progress = {};
+        if (fs.existsSync(progressPath)) {
+            progress = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
+        }
+        
+        progress = {
+            ...progress,
+            ...stats,
+            updatedAt: new Date().toISOString()
+        };
+        
+        fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2), 'utf8');
+        
+        return res.json({ success: true, data: progress });
+    } catch (error) {
+        console.error('Error updating maze stats:', error);
+        return res.status(503).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * ========== CALENDAR API ENDPOINTS ==========
  * Gestione eventi calendario unificati (Sport, Impegni, Dieta)
  */
@@ -4239,7 +4444,7 @@ const CALENDAR_DATA_DIR = path.join(__dirname, 'data', 'calendar');
 if (!fs.existsSync(CALENDAR_DATA_DIR)) {
     fs.mkdirSync(CALENDAR_DATA_DIR, { recursive: true });
 }
-console.log('âœ… Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
+console.log('Ã¢Åâ¦ Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
 
 /**
  * GET /api/calendar/events/:userId
@@ -4311,8 +4516,8 @@ app.get('/api/calendar/events/:userId', async (req, res) => {
                     
                     // Mappa giorni italiani a dayIndex (0=Lun, 6=Dom)
                     const dayMap = {
-                        'LunedÃ¬': 0, 'MartedÃ¬': 1, 'MercoledÃ¬': 2, 'GiovedÃ¬': 3,
-                        'VenerdÃ¬': 4, 'Sabato': 5, 'Domenica': 6
+                        'LunedÃÂ¬': 0, 'MartedÃÂ¬': 1, 'MercoledÃÂ¬': 2, 'GiovedÃÂ¬': 3,
+                        'VenerdÃÂ¬': 4, 'Sabato': 5, 'Domenica': 6
                     };
                     
                     // Per ogni giorno della settimana nella dieta
@@ -4511,7 +4716,7 @@ app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
 
 /**
  * Helper: Converte dayIndex (0=Lun, 6=Dom) in date ricorrenti per un range di date
- * @param {number} dayIndex - 0=LunedÃ¬, 6=Domenica
+ * @param {number} dayIndex - 0=LunedÃÂ¬, 6=Domenica
  * @param {Date} startDate - Data inizio range
  * @param {Date} endDate - Data fine range
  * @returns {string[]} Array di date ISO (YYYY-MM-DD)
@@ -4635,7 +4840,7 @@ app.post('/api/ai/extract-structured-data', async (req, res) => {
 
 /**
  * POST /api/ai/extract-entities
- * Estrae entitÃ  da testo
+ * Estrae entitÃÂ  da testo
  */
 app.post('/api/ai/extract-entities', async (req, res) => {
     try {
@@ -4704,9 +4909,9 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
     try {
         const { fileKey = 'qEikXdYIE1SPArKu66qw0m', nodeId = '0-1' } = req.body;
         
-        console.log(`ðŸŽ¨ Applicando design Figma alla pagina dieta...`);
-        console.log(`ðŸ“‹ File Key: ${fileKey}`);
-        console.log(`ðŸ“ Node ID: ${nodeId}`);
+        console.log(`Ã°Å¸Å½Â¨ Applicando design Figma alla pagina dieta...`);
+        console.log(`Ã°Å¸ââ¹ File Key: ${fileKey}`);
+        console.log(`Ã°Å¸âÂ Node ID: ${nodeId}`);
 
         // Step 1: Recupera file Figma
         const fileResult = await coordinator.assignTask({
@@ -4747,7 +4952,7 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
         const sidebarMatch = existingContent.match(/(<aside class="venus-sidebar"[\s\S]*?<\/aside>)/);
         const sidebar = sidebarMatch ? sidebarMatch[1] : '';
 
-        // Estrai stili esistenti (funzionalitÃ  specifiche)
+        // Estrai stili esistenti (funzionalitÃÂ  specifiche)
         const existingStyles = extractDietaStyles(existingContent);
 
         // Step 5: Costruisci nuova pagina
@@ -4783,7 +4988,7 @@ app.post('/api/figma/apply-to-dieta', async (req, res) => {
 });
 
 /**
- * Estrae stili funzionalitÃ  specifiche dalla pagina dieta
+ * Estrae stili funzionalitÃÂ  specifiche dalla pagina dieta
  */
 function extractDietaStyles(content) {
     const styleMatches = content.match(/<style>([\s\S]*?)<\/style>/g);
@@ -4792,7 +4997,7 @@ function extractDietaStyles(content) {
     let styles = '';
     styleMatches.forEach(match => {
         const styleContent = match.replace(/<\/?style>/g, '');
-        // Mantieni solo stili per funzionalitÃ  (calendario, ricette, tracker)
+        // Mantieni solo stili per funzionalitÃÂ  (calendario, ricette, tracker)
         if (styleContent.includes('calendar') || 
             styleContent.includes('recipe') || 
             styleContent.includes('tracker') ||
@@ -4817,7 +5022,7 @@ function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles
     <title>Cookin'Shappa - Dieta & Salute</title>
     <link rel="stylesheet" href="../styles/main.css">
     <link rel="stylesheet" href="../styles/venus.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸš€</text></svg">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>Ã°Å¸Å¡â¬</text></svg">
     <!-- 
         Figma Design Reference:
         File: Health-Diet-Dashboard--Copy-
@@ -4874,7 +5079,7 @@ function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles
         
         // Inizializza funzioni dopo caricamento
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('ðŸŽ¨ Pagina dieta caricata con design Figma');
+            console.log('Ã°Å¸Å½Â¨ Pagina dieta caricata con design Figma');
             
             if (typeof setupCalendar === 'function') {
                 setupCalendar();
@@ -4909,7 +5114,7 @@ app.post('/api/figma/fetch-make-file', async (req, res) => {
             type: 'fetch_figma_file',
             fileKey,
             nodeIds,
-            isMakeFile: true // Indica che Ã¨ un file /make/
+            isMakeFile: true // Indica che ÃÂ¨ un file /make/
         });
 
         res.json(result);
@@ -5176,12 +5381,12 @@ app.post('/api/figma/generate-code', async (req, res) => {
 
 
 function startHttp() {
-    console.log('ðŸš€ Starting HTTP server as fallback...');
+    console.log('Ã°Å¸Å¡â¬ Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
-    console.log('âœ… Shappa Backend Server Running (HTTP)');
-    console.log(`ðŸŒ Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ðŸŒ URL: http://localhost:' + PORT);
+    console.log('Ã¢Åâ¦ Shappa Backend Server Running (HTTP)');
+    console.log(`Ã°Å¸ÅÂ Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('Ã°Å¸ÅÂ URL: http://localhost:' + PORT);
     });
 }
 
@@ -5194,31 +5399,31 @@ try {
         try {
             httpsOptions.pfx = fs.readFileSync(pfxPath);
             httpsOptions.passphrase = process.env.DEV_PFX_PASSPHRASE || 'shappa-dev';
-            console.log('ðŸ” Using PFX for HTTPS from', pfxPath);
+            console.log('Ã°Å¸âÂ Using PFX for HTTPS from', pfxPath);
         } catch (e) {
-            console.warn('âš ï¸ Failed to read PFX, falling back to PEM if available', e.message);
+            console.warn('Ã¢Å¡Â Ã¯Â¸Â Failed to read PFX, falling back to PEM if available', e.message);
         }
     }
     if (!httpsOptions.pfx && fs.existsSync(pemKeyPath) && fs.existsSync(pemCertPath)) {
         httpsOptions.key = fs.readFileSync(pemKeyPath);
         httpsOptions.cert = fs.readFileSync(pemCertPath);
-        console.log('ðŸ” Using PEM key/cert for HTTPS from ssl folder');
+        console.log('Ã°Å¸âÂ Using PEM key/cert for HTTPS from ssl folder');
     }
-    console.log('ï¿½ Starting HTTPS server...');
+    console.log('Ã¯Â¿Â½ Starting HTTPS server...');
     const httpsServer = https.createServer(httpsOptions, app);
     httpsServer.on('error', (err) => {
-        console.error('âŒ HTTPS server error:', err.message);
-        console.warn('ðŸ”„ Falling back to HTTP...');
+        console.error('Ã¢ÂÅ HTTPS server error:', err.message);
+        console.warn('Ã°Å¸ââ Falling back to HTTP...');
         startHttp();
     });
     httpsServer.listen(PORT, '0.0.0.0', () => {
         const addr = httpsServer.address();
-        console.log('âœ… Shappa Backend Server Running (HTTPS)');
-        console.log(`ðŸŒ Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ðŸŒ URL: https://localhost:' + PORT);
+        console.log('Ã¢Åâ¦ Shappa Backend Server Running (HTTPS)');
+        console.log(`Ã°Å¸ÅÂ Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('Ã°Å¸ÅÂ URL: https://localhost:' + PORT);
         try {
             priceMonitor.startPriceMonitor();
-            console.log('â±ï¸ Price monitor started (every 30m)');
+            console.log('Ã¢ÂÂ±Ã¯Â¸Â Price monitor started (every 30m)');
         } catch (e) {
             console.log('Price monitor failed to start:', e.message);
         }
@@ -5226,15 +5431,15 @@ try {
         // Carica monitor attivi al boot
         monitorManager.loadAllMonitors().then(result => {
             if (result.success) {
-                console.log(`ðŸš€ Loaded ${result.loaded} active monitors`);
+                console.log(`Ã°Å¸Å¡â¬ Loaded ${result.loaded} active monitors`);
             }
         }).catch(err => {
-            console.error('âŒ Failed to load monitors:', err.message);
+            console.error('Ã¢ÂÅ Failed to load monitors:', err.message);
         });
     });
 } catch (err) {
-    console.error('âŒ HTTPS startup failed:', err.message);
-    console.warn('ðŸ”„ Falling back to HTTP...');
+    console.error('Ã¢ÂÅ HTTPS startup failed:', err.message);
+    console.warn('Ã°Å¸ââ Falling back to HTTP...');
     startHttp();
 }
 

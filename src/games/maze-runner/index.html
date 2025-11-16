@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Runner - GameHub</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
+    <link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Canvas 3D -->
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- UI Overlay -->
+        <div id="game-ui">
+            <!-- Top Bar -->
+            <div id="top-bar">
+                <h1 id="game-title">🧩 Maze Runner</h1>
+                
+                <div id="game-stats">
+                    <div class="stat" id="timer-stat">
+                        <span class="stat-label">⏱️</span>
+                        <span class="stat-value" id="timer">00:00.00</span>
+                    </div>
+                    
+                    <div class="stat" id="keys-stat">
+                        <span class="stat-label">🔑</span>
+                        <span class="stat-value" id="keys-collected">0/3</span>
+                    </div>
+                    
+                    <div id="top-controls">
+                        <button class="control-btn" id="back-to-menu" title="Torna alla Dashboard">
+                            ←
+                        </button>
+                        <button class="control-btn" id="restart-game" title="Ricomincia">
+                            ↻
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div id="instructions">
+                <h3>💡 Come Giocare</h3>
+                <p>
+                    Raccogli tutte le <strong>chiavi dorate</strong> 🔑 e trova il <strong>portale viola</strong> per uscire dal labirinto!
+                </p>
+                <div class="controls">
+                    <span class="key">WASD</span>
+                    <span class="key">Mouse</span>
+                    <span class="key">Click per iniziare</span>
+                </div>
+            </div>
+            
+            <!-- Message Display -->
+            <div id="message"></div>
+        </div>
+        
+        <!-- Victory Screen -->
+        <div id="victory-screen">
+            <div class="victory-content">
+                <div class="victory-icon">🏆</div>
+                <h1 class="victory-title">Complimenti!</h1>
+                <p style="color: #9ca3af; font-size: 16px; margin-bottom: 20px;">
+                    Hai completato il labirinto!
+                </p>
+                
+                <div class="victory-stats">
+                    <div class="victory-stat">
+                        ⏱️ Tempo: <strong id="victory-time">00:00.00</strong>
+                    </div>
+                    <div class="victory-stat" id="best-time">
+                        🏅 Caricamento miglior tempo...
+                    </div>
+                </div>
+                
+                <div class="victory-buttons">
+                    <button class="btn btn-secondary" id="victory-back">
+                        ← Dashboard
+                    </button>
+                    <button class="btn btn-primary" id="victory-restart">
+                        ↻ Riprova
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.min.js"></script>
+    
+    <!-- Game Scripts -->
+    <script src="js/MazeGenerator.js"></script>
+    <script src="js/CollisionDetector.js"></script>
+    <script src="js/PlayerController.js"></script>
+    <script src="js/SaveManager.js"></script>
+    <script src="js/MazeEngine.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+
