@@ -132,12 +132,9 @@ class AgentBase extends EventEmitter {
      * Gli agenti possono sovrascrivere questo metodo per gestire comunicazioni specifiche
      */
     onCommunication(message) {
-        // Default: emetti evento per logging
-        this.emit('agentCommunication', {
-            agent: this.name,
-            message,
-            timestamp: new Date().toISOString()
-        });
+        // Default: log silenzioso, non emettere evento per evitare loop
+        // Gli agenti che vogliono reagire a comunicazioni devono sovrascrivere questo metodo
+        // Solo per debug: console.log(`[${this.name}] Received:`, message);
     }
 
     /**

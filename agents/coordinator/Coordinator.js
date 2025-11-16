@@ -14,6 +14,7 @@ const path = require('path');
 class Coordinator extends EventEmitter {
     constructor() {
         super();
+        this.setMaxListeners(50); // Aumenta il limite per molti agenti
         this.agents = new Map(); // agentName -> agent instance
         this.taskQueue = [];
         this.processingTasks = new Set();
