@@ -24,8 +24,9 @@ class MazeEngine {
         // Settings
         this.cellSize = 2;
         this.wallHeight = 4;
-        this.mazeWidth = 15;
-        this.mazeHeight = 15;
+        // Default to easy (10x10) to match HTML active button
+        this.mazeWidth = 10;
+        this.mazeHeight = 10;
         
         // Collectibles
         this.keys = [];

@@ -14,42 +14,10 @@ let victoryScreen = null;
 let victoryTimeEl = null;
 let bestTimeEl = null;
 
-// Loading & Menu
-let loadingScreen = null;
-let loadingProgress = null;
-let loadingStatus = null;
-let mainMenu = null;
-
-// Game Settings
-let gameSettings = {
-    difficulty: 'medium', // easy, medium, hard
-    mazeSize: 15,
-    audioEnabled: true,
-    hintsEnabled: true,
-    quality: 'medium'
-};
-
-// Initialize game - Wait for Three.js to load
+// Initialize game
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🎮 Maze Runner - Inizializzazione...');
     
-    // Wait for THREE.js to load
-    if (typeof THREE === 'undefined') {
-        console.log('⏳ Aspetto che Three.js si carichi...');
-        const checkThree = setInterval(() => {
-            if (typeof THREE !== 'undefined') {
-                clearInterval(checkThree);
-                console.log('✅ Three.js caricato');
-                initializeGame();
-            }
-        }, 100);
-        return;
-    }
-    
-    initializeGame();
-});
-
-async function initializeGame() {
     // Get UI elements
     timerEl = document.getElementById('timer');
     keysEl = document.getElementById('keys-collected');
@@ -58,16 +26,8 @@ async function initializeGame() {
     victoryTimeEl = document.getElementById('victory-time');
     bestTimeEl = document.getElementById('best-time');
     
-    loadingScreen = document.getElementById('loading-screen');
-    loadingProgress = document.getElementById('loading-progress');
-    loadingStatus = document.getElementById('loading-status');
-    mainMenu = document.getElementById('main-menu');
-    
     // Check authentication
     checkAuth();
-    
-    // Update loading: 20%
-    updateLoading(20, 'Inizializzazione motore grafico...');
     
     // Initialize game engine
     const canvas = document.getElementById('game-canvas');
@@ -92,47 +52,23 @@ async function initializeGame() {
         await handleGameComplete(time, keys);
     };
     
-    // Update loading: 40%
-    updateLoading(40, 'Caricamento modelli 3D...');
-    
-    // Preload assets in background
-    await loadAssetsInBackground();
-    
-    // Update loading: 80%
-    updateLoading(80, 'Preparazione menu...');
-    
-    // Setup menu controls
-    setupMenuControls();
-    
-    // Load best time
-    await loadBestTime();
-    
-    // Update loading: 100%
-    updateLoading(100, 'Completato!');
-    
-    // Show main menu after short delay
-    setTimeout(() => {
-        hideLoading();
-        showMainMenu();
-    }, 500);
+    // Build maze (async per caricare modelli 3D)
+    initGame();
     
     // Handle resize
     window.addEventListener('resize', () => {
-        if (gameEngine) {
-            gameEngine.handleResize();
-        }
+        gameEngine.handleResize();
     });
     
-    // Back to menu button (in-game)
+    // Back to menu button
     const backBtn = document.getElementById('back-to-menu');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
-            pauseGame();
-            showMainMenu();
+            window.location.href = '../../pages/gaming-hub-dashboard.html';
         });
     }
     
-    // Restart button (in-game)
+    // Restart button
     const restartBtn = document.getElementById('restart-game');
     if (restartBtn) {
         restartBtn.addEventListener('click', () => {
@@ -157,7 +93,8 @@ async function initializeGame() {
     }
     
     console.log('✅ Maze Runner pronto!');
-}
+    console.log('💡 Clicca sullo schermo per iniziare');
+});
 
 function checkAuth() {
     // Simple auth check - use same system as gaming hub
@@ -279,172 +216,6 @@ function formatTime(seconds) {
     return `${minutes}:${secs.padStart(5, '0')}`;
 }
 
-// ========== LOADING FUNCTIONS ==========
-
-function updateLoading(percent, status) {
-    if (loadingProgress) {
-        loadingProgress.style.width = percent + '%';
-    }
-    if (loadingStatus) {
-        loadingStatus.textContent = status;
-    }
-}
-
-function hideLoading() {
-    if (loadingScreen) {
-        loadingScreen.style.opacity = '0';
-        loadingScreen.style.transition = 'opacity 0.5s ease';
-        setTimeout(() => {
-            loadingScreen.style.display = 'none';
-        }, 500);
-    }
-}
-
-async function loadAssetsInBackground() {
-    try {
-        // Aspetta che AssetManager sia pronto
-        if (!gameEngine || !gameEngine.assetManager) {
-            console.log('⏳ Aspetto AssetManager...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        // Carica asset in background (non bloccante)
-        console.log('📦 Preload asset in background...');
-    } catch (error) {
-        console.error('Errore preload asset:', error);
-    }
-}
-
-async function loadBestTime() {
-    if (saveManager && currentUser.username !== 'guest') {
-        try {
-            const progress = await saveManager.loadProgress();
-            if (progress && progress.bestTime) {
-                const bestTimeDisplay = document.getElementById('best-time-display');
-                if (bestTimeDisplay) {
-                    bestTimeDisplay.textContent = `🏆 Miglior Tempo: ${formatTime(progress.bestTime)}`;
-                }
-            }
-        } catch (error) {
-            console.log('Nessun record precedente');
-        }
-    }
-}
-
-// ========== MENU FUNCTIONS ==========
-
-function showMainMenu() {
-    if (mainMenu) {
-        mainMenu.style.display = 'flex';
-        mainMenu.style.opacity = '0';
-        setTimeout(() => {
-            mainMenu.style.transition = 'opacity 0.5s ease';
-            mainMenu.style.opacity = '1';
-        }, 50);
-    }
-}
-
-function hideMainMenu() {
-    if (mainMenu) {
-        mainMenu.style.opacity = '0';
-        setTimeout(() => {
-            mainMenu.style.display = 'none';
-        }, 300);
-    }
-}
-
-function setupMenuControls() {
-    // Difficulty selection
-    const difficultyBtns = document.querySelectorAll('.difficulty-btn');
-    difficultyBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove active from all
-            difficultyBtns.forEach(b => b.classList.remove('active'));
-            // Add active to clicked
-            btn.classList.add('active');
-            
-            const difficulty = btn.dataset.difficulty;
-            gameSettings.difficulty = difficulty;
-            
-            // Update maze size
-            if (difficulty === 'easy') gameSettings.mazeSize = 10;
-            else if (difficulty === 'medium') gameSettings.mazeSize = 15;
-            else if (difficulty === 'hard') gameSettings.mazeSize = 20;
-            
-            console.log('Difficoltà:', difficulty, 'Maze:', gameSettings.mazeSize);
-        });
-    });
-    
-    // Settings checkboxes
-    const audioCheckbox = document.getElementById('audio-enabled');
-    if (audioCheckbox) {
-        audioCheckbox.addEventListener('change', (e) => {
-            gameSettings.audioEnabled = e.target.checked;
-        });
-    }
-    
-    const hintsCheckbox = document.getElementById('hints-enabled');
-    if (hintsCheckbox) {
-        hintsCheckbox.addEventListener('change', (e) => {
-            gameSettings.hintsEnabled = e.target.checked;
-        });
-    }
-    
-    const qualitySelect = document.getElementById('quality-setting');
-    if (qualitySelect) {
-        qualitySelect.addEventListener('change', (e) => {
-            gameSettings.quality = e.target.value;
-        });
-    }
-    
-    // Start game button
-    const startBtn = document.getElementById('start-game-btn');
-    if (startBtn) {
-        startBtn.addEventListener('click', () => {
-            startGameWithSettings();
-        });
-    }
-    
-    // Back to dashboard button
-    const backDashboardBtn = document.getElementById('back-dashboard-btn');
-    if (backDashboardBtn) {
-        backDashboardBtn.addEventListener('click', () => {
-            window.location.href = '../../pages/gaming-hub-dashboard.html';
-        });
-    }
-}
-
-async function startGameWithSettings() {
-    console.log('🎮 Avvio gioco con impostazioni:', gameSettings);
-    
-    hideMainMenu();
-    
-    // Show canvas and UI
-    const canvas = document.getElementById('game-canvas');
-    const gameUI = document.getElementById('game-ui');
-    if (canvas) canvas.style.display = 'block';
-    if (gameUI) gameUI.style.display = 'block';
-    
-    // Apply settings to engine
-    if (gameEngine) {
-        gameEngine.mazeWidth = gameSettings.mazeSize;
-        gameEngine.mazeHeight = gameSettings.mazeSize;
-        
-        // Build maze with 3D models
-        showMessage('🏗️ Generazione labirinto...', 'info');
-        await gameEngine.buildMaze();
-        showMessage('✅ Pronto! Click per iniziare', 'success');
-    }
-}
-
-function pauseGame() {
-    if (gameEngine && gameEngine.isRunning) {
-        gameEngine.pause();
-    }
-}
-
-// ========== GAME FUNCTIONS ==========
-
 // Initialize game (async)
 async function initGame() {
     try {
@@ -463,4 +234,3 @@ window.addEventListener('beforeunload', () => {
         gameEngine.destroy();
     }
 });
-

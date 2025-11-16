@@ -9,104 +9,11 @@
 </head>
 <body>
     <div id="game-container">
-        <!-- Loading Screen -->
-        <div id="loading-screen">
-            <div class="loading-content">
-                <div class="loading-logo">🧩</div>
-                <h1 class="loading-title">Maze Runner</h1>
-                <p class="loading-subtitle">Caricamento...</p>
-                
-                <div class="loading-bar">
-                    <div class="loading-progress" id="loading-progress"></div>
-                </div>
-                
-                <p class="loading-status" id="loading-status">Inizializzazione Three.js...</p>
-            </div>
-        </div>
-        
-        <!-- Main Menu -->
-        <div id="main-menu" style="display: none;">
-            <div class="menu-content">
-                <div class="menu-header">
-                    <div class="menu-logo">🧩</div>
-                    <h1 class="menu-title">Maze Runner</h1>
-                    <p class="menu-subtitle">Raccogli gli occhi e trova la spada!</p>
-                </div>
-                
-                <div class="menu-options">
-                    <div class="menu-section">
-                        <h3>Difficoltà</h3>
-                        <div class="difficulty-buttons">
-                            <button class="difficulty-btn active" data-difficulty="easy">
-                                <span class="diff-icon">😊</span>
-                                <span>Facile</span>
-                                <small>10x10</small>
-                            </button>
-                            <button class="difficulty-btn" data-difficulty="medium">
-                                <span class="diff-icon">😐</span>
-                                <span>Medio</span>
-                                <small>15x15</small>
-                            </button>
-                            <button class="difficulty-btn" data-difficulty="hard">
-                                <span class="diff-icon">😰</span>
-                                <span>Difficile</span>
-                                <small>20x20</small>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="menu-section">
-                        <h3>Impostazioni</h3>
-                        <div class="settings-grid">
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="audio-enabled" checked>
-                                    <span>🔊 Audio</span>
-                                </label>
-                            </div>
-                            <div class="setting-item">
-                                <label>
-                                    <input type="checkbox" id="hints-enabled" checked>
-                                    <span>💡 Suggerimenti</span>
-                                </label>
-                            </div>
-                            <div class="setting-item">
-                                <label>
-                                    <span>🎨 Qualità</span>
-                                    <select id="quality-setting">
-                                        <option value="low">Bassa</option>
-                                        <option value="medium" selected>Media</option>
-                                        <option value="high">Alta</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="menu-actions">
-                    <button class="menu-btn-primary" id="start-game-btn">
-                        <span class="btn-icon">🎮</span>
-                        <span>Inizia Gioco</span>
-                    </button>
-                    
-                    <button class="menu-btn-secondary" id="back-dashboard-btn">
-                        <span class="btn-icon">←</span>
-                        <span>Torna alla Dashboard</span>
-                    </button>
-                </div>
-                
-                <div class="menu-footer">
-                    <p id="best-time-display">🏆 Miglior Tempo: --:--</p>
-                </div>
-            </div>
-        </div>
-        
         <!-- Canvas 3D -->
-        <canvas id="game-canvas" style="display: none;"></canvas>
+        <canvas id="game-canvas"></canvas>
         
         <!-- UI Overlay -->
-        <div id="game-ui" style="display: none;">
+        <div id="game-ui">
             <!-- Top Bar -->
             <div id="top-bar">
                 <h1 id="game-title">🧩 Maze Runner</h1>
