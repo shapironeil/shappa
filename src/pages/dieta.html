@@ -2642,48 +2642,92 @@
         async function savePersonalCardPreferences(event) {
             event.preventDefault();
             
-            // Update form data from selects
-            personalCardFormData.dietaryPreference = document.getElementById('dietaryPreference').value;
-            personalCardFormData.bodyType = document.getElementById('bodyType').value;
-
+            // Disabilita il pulsante durante il salvataggio
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton ? submitButton.textContent : '';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = '⏳ Salvataggio...';
+            }
+            
             try {
+                // Update form data from selects
+                personalCardFormData.dietaryPreference = document.getElementById('dietaryPreference').value;
+                personalCardFormData.bodyType = document.getElementById('bodyType').value;
+                
+                // Validazione base lato client
+                if (!personalCardFormData.dietaryPreference || !personalCardFormData.bodyType) {
+                    throw new Error('Compila tutti i campi obbligatori');
+                }
+                
+                console.log('📤 Invio preferenze al server:', personalCardFormData);
+                
                 const response = await fetch(`/api/diet/preferences/${userId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(personalCardFormData)
                 });
                 
+                // Leggi la risposta anche se lo status non è OK per vedere l'errore
+                const result = await response.json();
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(result.error || `Errore HTTP ${response.status}`);
                 }
                 
-                const result = await response.json();
                 if (result.success) {
-                    // Aggiungi timestamp per tracciare quando sono state salvate
-                    const prefsWithTimestamp = {
+                    // Usa i dati restituiti dal server (che includono il timestamp)
+                    const savedPreferences = result.preferences || {
                         ...personalCardFormData,
                         updatedAt: new Date().toISOString()
                     };
                     
-                    dietData.preferences = prefsWithTimestamp;
-                    userProfile = prefsWithTimestamp;
+                    // Aggiorna i dati locali solo dopo conferma dal server
+                    dietData.preferences = savedPreferences;
+                    userProfile = savedPreferences;
                     
-                    console.log('✅ Preferenze salvate sul server via API:', Object.keys(prefsWithTimestamp));
+                    console.log('✅ Preferenze salvate con successo sul server');
+                    console.log('   Campi salvati:', Object.keys(savedPreferences));
                     
-                    closePersonalCardDialog();
-                    // Aggiorna UI
-                    renderPersonalCard();
-                    renderDietProposals(); // Aggiorna le raccomandazioni
+                    // Mostra messaggio di successo
+                    if (submitButton) {
+                        submitButton.textContent = '✓ Salvato!';
+                        setTimeout(() => {
+                            closePersonalCardDialog();
+                            // Aggiorna UI
+                            renderPersonalCard();
+                            renderDietProposals(); // Aggiorna le raccomandazioni
+                        }, 500);
+                    } else {
+                        closePersonalCardDialog();
+                        renderPersonalCard();
+                        renderDietProposals();
+                    }
                 } else {
-                    throw new Error('Failed to save preferences');
+                    throw new Error(result.error || 'Salvataggio fallito');
                 }
             } catch (error) {
-                console.error('❌ Error saving preferences to server:', error);
+                console.error('❌ Errore nel salvare le preferenze:', error);
+                console.error('   Dettagli:', error.message);
+                
+                // Riabilita il pulsante
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                }
+                
                 // NON aggiornare dati in memoria se API fallisce
                 // Ricarica dati dal server per evitare inconsistenze
-                await loadDietData();
-                await loadUserProfile();
-                alert('❌ Errore nel salvare le preferenze sul server. I dati sono stati ripristinati. Riprova più tardi.');
+                try {
+                    await loadDietData();
+                    await loadUserProfile();
+                } catch (reloadError) {
+                    console.error('Errore nel ricaricare i dati:', reloadError);
+                }
+                
+                // Mostra messaggio di errore all'utente
+                const errorMessage = error.message || 'Errore nel salvare le preferenze sul server. Riprova più tardi.';
+                alert(`❌ ${errorMessage}\n\nI dati sono stati ripristinati ai valori salvati sul server.`);
             }
         }
 

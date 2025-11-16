@@ -3709,56 +3709,109 @@ app.get('/api/diet/preferences/:userId', async (req, res) => {
 /**
  * POST /api/diet/preferences/:userId
  * Salva preferenze alimentari (MongoDB online-first)
+ * Metodo pulito e robusto per salvataggio preferenze utente
  */
 app.post('/api/diet/preferences/:userId', async (req, res) => {
     console.log(`📥 POST /api/diet/preferences/${req.params.userId}`);
+    console.log('📋 Dati ricevuti:', JSON.stringify(req.body, null, 2));
+    
     try {
         const { userId } = req.params;
         const preferences = req.body;
+        
+        // Validazione base
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'UserId è obbligatorio' 
+            });
+        }
+        
+        if (!preferences || typeof preferences !== 'object') {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Dati preferenze non validi' 
+            });
+        }
+        
         const { getMongoDB } = require('./lib/db/mongodb');
         const mongoDB = getMongoDB();
         
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        dietData.preferences = preferences;
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        console.log('✅ Preferenze salvate in MongoDB:', Object.keys(preferences));
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_preferences_endpoint'
+        // Verifica connessione MongoDB
+        if (!mongoDB) {
+            console.error('❌ MongoDB non disponibile');
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Database non disponibile' 
             });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
         }
         
-        return res.json({ success: true });
+        // Prepara i dati delle preferenze con timestamp
+        const preferencesData = {
+            ...preferences,
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Usa updateOne con upsert per aggiornare solo il campo preferences
+        // Mantiene gli altri dati esistenti (fridge, weight, etc.)
+        const collection = await mongoDB.getCollection('diet_data');
+        
+        const updateResult = await collection.updateOne(
+            { userId },
+            {
+                $set: {
+                    preferences: preferencesData,
+                    updatedAt: new Date().toISOString()
+                },
+                $setOnInsert: {
+                    userId,
+                    fridge: [],
+                    weight: [],
+                    calories: [],
+                    shoppingList: [],
+                    selectedDiet: null,
+                    createdAt: new Date().toISOString()
+                }
+            },
+            { upsert: true }
+        );
+        
+        console.log('✅ Preferenze salvate in MongoDB');
+        console.log(`   - Modificato: ${updateResult.modifiedCount > 0 ? 'Sì' : 'No'}`);
+        console.log(`   - Creato: ${updateResult.upsertedCount > 0 ? 'Sì' : 'No'}`);
+        console.log(`   - Campi salvati: ${Object.keys(preferencesData).join(', ')}`);
+        
+        // Recupera il documento aggiornato per la notifica
+        const updatedDietData = await mongoDB.findOne('diet_data', { userId });
+        
+        // Notifica UserProfileAgent (non bloccare se fallisce)
+        if (updatedDietData) {
+            try {
+                await coordinator.assignTask({
+                    type: 'monitor_data_changes',
+                    userId,
+                    dataType: 'diet',
+                    data: updatedDietData,
+                    source: 'diet_preferences_endpoint'
+                });
+            } catch (err) {
+                console.warn('⚠️ Error notifying UserProfileAgent (non critico):', err.message);
+            }
+        }
+        
+        return res.json({ 
+            success: true,
+            message: 'Preferenze salvate con successo',
+            preferences: preferencesData
+        });
+        
     } catch (error) {
-        console.error('Error saving preferences:', error);
-        return res.status(500).json({ success: false, error: error.message });
+        console.error('❌ Error saving preferences:', error);
+        console.error('   Stack:', error.stack);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || 'Errore nel salvataggio delle preferenze' 
+        });
     }
 });
 
