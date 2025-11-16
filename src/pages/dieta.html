@@ -996,6 +996,21 @@
                             </div>
                         </div>
 
+                        <!-- Diet Proposals -->
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <span>💡</span>
+                                    <h2>Proposte Dieta</h2>
+                                </div>
+                            </div>
+                            <div id="dietProposalsContent">
+                                <div class="empty-state">
+                                    <p class="empty-state-text">Caricamento proposte dieta...</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Urgent Items & Fridge -->
                         <div class="card">
                             <div class="card-header">
@@ -1021,21 +1036,6 @@
                                         <span>+</span>
                                         Aggiungi ingredienti
                                     </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Diet Proposals -->
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">
-                                    <span>💡</span>
-                                    <h2>Proposte Dieta</h2>
-                                </div>
-                            </div>
-                            <div id="dietProposalsContent">
-                                <div class="empty-state">
-                                    <p class="empty-state-text">Caricamento proposte dieta...</p>
                                 </div>
                             </div>
                         </div>
@@ -2355,7 +2355,7 @@
                         return `
                             <div class="${cardStyle} p-4 rounded-lg border-2 transition-all cursor-pointer" 
                                 style="background: ${bgColor}; border-color: ${borderColor};"
-                                onclick="selectDiet('${plan.id}')"
+                                onclick="openDietDialog('${plan.id}')"
                                 data-diet-id="${plan.id}">
                                 <div class="flex items-start justify-between mb-2">
                                     <div class="flex-1">
@@ -2572,6 +2572,9 @@
                         updateDietName();
                         renderCalendar();
                         renderDietProposals(); // Re-render per mostrare lo stato selezionato
+                        
+                        // Aggiorna calendario con eventi dieta
+                        await updateCalendarWithDiet(diet);
                     } else {
                         throw new Error('Failed to save diet');
                     }
