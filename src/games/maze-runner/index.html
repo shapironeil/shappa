@@ -3,108 +3,468 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Runner - GameHub</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧩</text></svg>">
-    <link rel="stylesheet" href="styles/game.css">
+    <title>Maze Runner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+        #game-canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(139, 92, 246, 0.9);
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #pc-menu {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+        }
+        #interaction-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(139, 92, 246, 0.9);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <!-- Canvas 3D -->
-        <canvas id="game-canvas"></canvas>
-        
-        <!-- UI Overlay -->
-        <div id="game-ui">
-            <!-- Top Bar -->
-            <div id="top-bar">
-                <h1 id="game-title">🧩 Maze Runner</h1>
-                
-                <div id="game-stats">
-                    <div class="stat" id="timer-stat">
-                        <span class="stat-label">⏱️</span>
-                        <span class="stat-value" id="timer">00:00.00</span>
-                    </div>
-                    
-                    <div class="stat" id="keys-stat">
-                        <span class="stat-label">🔑</span>
-                        <span class="stat-value" id="keys-collected">0/3</span>
-                    </div>
-                    
-                    <div id="top-controls">
-                        <button class="control-btn" id="back-to-menu" title="Torna alla Dashboard">
-                            ←
-                        </button>
-                        <button class="control-btn" id="restart-game" title="Ricomincia">
-                            ↻
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Instructions -->
-            <div id="instructions">
-                <h3>💡 Come Giocare</h3>
-                <p>
-                    Raccogli tutte le <strong>chiavi dorate</strong> 🔑 e trova il <strong>portale viola</strong> per uscire dal labirinto!
-                </p>
-                <div class="controls">
-                    <span class="key">WASD</span>
-                    <span class="key">Mouse</span>
-                    <span class="key">Click per iniziare</span>
-                </div>
-            </div>
-            
-            <!-- Message Display -->
-            <div id="message"></div>
-            
-            <!-- Interaction Hint -->
-            <div id="interaction-hint" style="display: none;"></div>
-        </div>
-        
-        <!-- Victory Screen -->
-        <div id="victory-screen">
-            <div class="victory-content">
-                <div class="victory-icon">🏆</div>
-                <h1 class="victory-title">Complimenti!</h1>
-                <p style="color: #9ca3af; font-size: 16px; margin-bottom: 20px;">
-                    Hai completato il labirinto!
-                </p>
-                
-                <div class="victory-stats">
-                    <div class="victory-stat">
-                        ⏱️ Tempo: <strong id="victory-time">00:00.00</strong>
-                    </div>
-                    <div class="victory-stat" id="best-time">
-                        🏅 Caricamento miglior tempo...
-                    </div>
-                </div>
-                
-                <div class="victory-buttons">
-                    <button class="btn btn-secondary" id="victory-back">
-                        ← Dashboard
-                    </button>
-                    <button class="btn btn-primary" id="victory-restart">
-                        ↻ Riprova
-                    </button>
-                </div>
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="ui">
+        <div>⏱️ <span id="timer">00:00</span></div>
+        <div>🔑 <span id="keys">0/3</span></div>
+    </div>
+    
+    <div id="instructions">
+        <strong>Click per iniziare</strong><br>
+        WASD = Movimento | Mouse = Guarda | Spazio = Salta | E = Interagisci
+    </div>
+    
+    <div id="interaction-hint"></div>
+    
+    <!-- PC Menu -->
+    <div id="pc-menu" style="display: none;">
+        <div style="background: rgba(17, 24, 39, 0.95); padding: 40px; border-radius: 20px; border: 2px solid #8b5cf6; max-width: 500px;">
+            <h2 style="font-size: 32px; margin-bottom: 30px; text-align: center; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                💻 Menu Gioco
+            </h2>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button onclick="startStory()" style="padding: 15px; font-size: 18px; background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%); border: none; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    📖 Avvia Storia
+                </button>
+                <button onclick="changeLevel()" style="padding: 15px; font-size: 18px; background: rgba(59, 130, 246, 0.2); border: 2px solid #3b82f6; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    🎮 Cambia Livello
+                </button>
+                <button onclick="exitPC()" style="padding: 15px; font-size: 18px; background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; border-radius: 10px; color: white; cursor: pointer; font-weight: 600;">
+                    ← Esci
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Three.js Local (no CDN issues) -->
+    <!-- Three.js Local -->
     <script src="lib/three.min.js"></script>
     <script src="lib/GLTFLoader.js"></script>
     
-    <!-- Shared Systems -->
-    <script src="../shared/AssetManager.js"></script>
-    <script src="../shared/InteractionSystem.js"></script>
-    
-    <!-- Game Scripts -->
-    <script src="js/MazeGenerator.js"></script>
-    <script src="js/CollisionDetector.js"></script>
-    <script src="js/PlayerController.js"></script>
-    <script src="js/SaveManager.js"></script>
-    <script src="js/MazeEngine.js"></script>
-    <script src="js/main.js"></script>
+    <script>
+        console.log('🎮 Inizializzazione...');
+        
+        // Check THREE
+        if (typeof THREE === 'undefined') {
+            alert('THREE.js non caricato!');
+            throw new Error('THREE.js missing');
+        }
+        
+        console.log('✅ THREE.js OK:', THREE.REVISION);
+        
+        // GLTFLoader
+        const gltfLoader = new THREE.GLTFLoader();
+        
+        // Interactables
+        let pcMesh = null;
+        let usingPC = false;
+        
+        // Setup
+        const canvas = document.getElementById('game-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB);
+        scene.fog = new THREE.Fog(0x87CEEB, 10, 50);
+        
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(5, 1.6, 5);
+        
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        
+        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        sunLight.position.set(10, 20, 10);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+        
+        // Simple maze (5x5)
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+        const wallHeight = 4;
+        const cellSize = 2;
+        
+        // Create simple walls
+        for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 5; j++) {
+                // Outer walls only
+                if (i === 0 || i === 4 || j === 0 || j === 4) {
+                    const wall = new THREE.Mesh(
+                        new THREE.BoxGeometry(cellSize, wallHeight, 0.2),
+                        wallMaterial
+                    );
+                    wall.position.set(i * cellSize, wallHeight / 2, j * cellSize);
+                    wall.castShadow = true;
+                    scene.add(wall);
+                }
+            }
+        }
+        
+        // Floor (più grande e con pattern)
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(20, 20),
+            new THREE.MeshStandardMaterial({ 
+                color: 0x2a2a2a,
+                roughness: 0.8
+            })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(5, 0, 5);
+        floor.receiveShadow = true;
+        scene.add(floor);
+        
+        // Base più visibile (grid pattern)
+        const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x333333);
+        gridHelper.position.set(5, 0.01, 5);
+        scene.add(gridHelper);
+        
+        // Keys (3 golden spheres)
+        const keys = [];
+        const keyPositions = [[2,2], [5,5], [8,8]];
+        keyPositions.forEach(pos => {
+            const key = new THREE.Mesh(
+                new THREE.SphereGeometry(0.2, 16, 16),
+                new THREE.MeshStandardMaterial({ 
+                    color: 0xffd700,
+                    emissive: 0xffaa00,
+                    emissiveIntensity: 0.5
+                })
+            );
+            key.position.set(pos[0], 0.5, pos[1]);
+            key.userData.collected = false;
+            scene.add(key);
+            keys.push(key);
+        });
+        
+        // Load 3D models for bedroom
+        console.log('📦 Caricamento modelli 3D...');
+        
+        // Laptop on desk
+        gltfLoader.load('/3d/laptop_free.glb', (gltf) => {
+            pcMesh = gltf.scene;
+            pcMesh.position.set(7, 0.8, 3);
+            pcMesh.scale.set(0.5, 0.5, 0.5);
+            pcMesh.rotation.y = Math.PI;
+            pcMesh.userData.interactable = true;
+            pcMesh.userData.type = 'pc';
+            scene.add(pcMesh);
+            console.log('✅ Laptop caricato');
+            
+            // Add glow to PC
+            const pcLight = new THREE.PointLight(0x3b82f6, 0.5, 3);
+            pcLight.position.set(0, 0.2, 0);
+            pcMesh.add(pcLight);
+        }, undefined, (error) => {
+            console.warn('⚠️ Laptop non caricato, uso placeholder');
+            // Placeholder: box blu per il PC
+            pcMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.8, 0.5, 0.6),
+                new THREE.MeshStandardMaterial({ color: 0x3b82f6, emissive: 0x1e40af, emissiveIntensity: 0.3 })
+            );
+            pcMesh.position.set(7, 0.8, 3);
+            pcMesh.userData.interactable = true;
+            pcMesh.userData.type = 'pc';
+            scene.add(pcMesh);
+        });
+        
+        // Sofa
+        gltfLoader.load('/3d/old_sofa_free.glb', (gltf) => {
+            const sofa = gltf.scene;
+            sofa.position.set(2, 0, 7);
+            sofa.scale.set(0.8, 0.8, 0.8);
+            sofa.rotation.y = Math.PI / 4;
+            scene.add(sofa);
+            console.log('✅ Divano caricato');
+        }, undefined, (error) => {
+            console.warn('⚠️ Divano non caricato');
+        });
+        
+        // Desk (use bench as desk)
+        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
+            const desk = gltf.scene;
+            desk.position.set(7, 0, 3);
+            desk.scale.set(1.5, 0.8, 0.8);
+            scene.add(desk);
+            console.log('✅ Scrivania caricata');
+        }, undefined, (error) => {
+            console.warn('⚠️ Scrivania non caricata');
+        });
+        
+        // Controls
+        let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+        let euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        let isLocked = false;
+        let keysCollected = 0;
+        let startTime = 0;
+        
+        let canJump = true;
+        let velocityY = 0;
+        const gravity = -9.8;
+        const jumpForce = 5;
+        
+        document.addEventListener('keydown', (e) => {
+            if (usingPC) return; // Ignora input se stai usando il PC
+            
+            if (e.code === 'KeyW') moveForward = true;
+            if (e.code === 'KeyS') moveBackward = true;
+            if (e.code === 'KeyA') moveRight = true;  // Invertito
+            if (e.code === 'KeyD') moveLeft = true;   // Invertito
+            if (e.code === 'Space' && canJump && isLocked) {
+                e.preventDefault();
+                velocityY = jumpForce;
+                canJump = false;
+            }
+            if (e.code === 'KeyE') {
+                interactWithNearestObject();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyW') moveForward = false;
+            if (e.code === 'KeyS') moveBackward = false;
+            if (e.code === 'KeyA') moveRight = false;  // Invertito
+            if (e.code === 'KeyD') moveLeft = false;   // Invertito
+        });
+        
+        canvas.addEventListener('click', () => {
+            if (!isLocked) {
+                canvas.requestPointerLock();
+            }
+        });
+        
+        document.addEventListener('pointerlockchange', () => {
+            isLocked = document.pointerLockElement === canvas;
+            if (isLocked && startTime === 0) {
+                startTime = Date.now();
+            }
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isLocked) return;
+            
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= e.movementX * 0.002;
+            euler.x -= e.movementY * 0.002;
+            euler.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, euler.x));
+            camera.quaternion.setFromEuler(euler);
+        });
+        
+        // Game loop
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            const speed = 5 * delta;
+            
+            // Movement
+            if (isLocked && !usingPC) {
+                const forward = new THREE.Vector3();
+                camera.getWorldDirection(forward);
+                forward.y = 0;
+                forward.normalize();
+                
+                const right = new THREE.Vector3();
+                right.crossVectors(camera.up, forward).normalize();
+                
+                if (moveForward) camera.position.add(forward.multiplyScalar(speed));
+                if (moveBackward) camera.position.add(forward.multiplyScalar(-speed));
+                if (moveRight) camera.position.add(right.multiplyScalar(speed));
+                if (moveLeft) camera.position.add(right.multiplyScalar(-speed));
+                
+                // Check if near PC
+                checkNearPC();
+                
+                // Gravity and jump
+                velocityY += gravity * delta;
+                camera.position.y += velocityY * delta;
+                
+                // Ground collision
+                if (camera.position.y <= 1.6) {
+                    camera.position.y = 1.6;
+                    velocityY = 0;
+                    canJump = true;
+                }
+                
+                // Keep in bounds
+                camera.position.x = Math.max(1, Math.min(9, camera.position.x));
+                camera.position.z = Math.max(1, Math.min(9, camera.position.z));
+                
+                // Check key collection
+                keys.forEach(key => {
+                    if (!key.userData.collected) {
+                        const dist = camera.position.distanceTo(key.position);
+                        if (dist < 0.5) {
+                            key.userData.collected = true;
+                            scene.remove(key);
+                            keysCollected++;
+                            document.getElementById('keys').textContent = keysCollected + '/3';
+                            console.log('🔑 Chiave raccolta!', keysCollected);
+                            
+                            if (keysCollected >= 3) {
+                                alert('🎉 Hai vinto! Tempo: ' + ((Date.now() - startTime) / 1000).toFixed(2) + 's');
+                                document.exitPointerLock();
+                            }
+                        }
+                    }
+                });
+                
+                // Update timer
+                if (startTime > 0) {
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = Math.floor(elapsed % 60);
+                    document.getElementById('timer').textContent = 
+                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                }
+            }
+            
+            // Animate keys
+            keys.forEach(key => {
+                if (!key.userData.collected) {
+                    key.rotation.y += delta * 2;
+                    key.position.y = 0.5 + Math.sin(Date.now() * 0.002) * 0.1;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log('✅ Gioco pronto! Click per iniziare');
+        
+        // ========== INTERACTION SYSTEM ==========
+        
+        function interactWithNearestObject() {
+            if (!pcMesh || usingPC) return;
+            
+            const dist = camera.position.distanceTo(pcMesh.position);
+            if (dist < 2.0) {
+                usePC();
+            }
+        }
+        
+        function checkNearPC() {
+            if (!pcMesh || usingPC) {
+                document.getElementById('interaction-hint').style.display = 'none';
+                return;
+            }
+            
+            const dist = camera.position.distanceTo(pcMesh.position);
+            const hint = document.getElementById('interaction-hint');
+            
+            if (dist < 2.0) {
+                hint.textContent = '[E] Usa il PC';
+                hint.style.display = 'block';
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+        
+        function usePC() {
+            console.log('💻 Usando PC...');
+            usingPC = true;
+            
+            // Release pointer lock
+            if (document.exitPointerLock) {
+                document.exitPointerLock();
+            }
+            
+            // Show PC menu
+            document.getElementById('pc-menu').style.display = 'flex';
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('interaction-hint').style.display = 'none';
+        }
+        
+        function exitPC() {
+            console.log('← Uscita dal PC');
+            usingPC = false;
+            
+            // Hide PC menu
+            document.getElementById('pc-menu').style.display = 'none';
+            document.getElementById('instructions').style.display = 'block';
+        }
+        
+        function startStory() {
+            alert('🎮 Avvio Storia... (da implementare)');
+            exitPC();
+        }
+        
+        function changeLevel() {
+            const level = prompt('Scegli livello (1-10):', '1');
+            if (level) {
+                alert('Livello ' + level + ' selezionato!');
+            }
+            exitPC();
+        }
+    </script>
 </body>
 </html>
-
