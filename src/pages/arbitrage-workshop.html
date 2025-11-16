@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrage Hub - Workshop</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔨</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0f1e;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            padding: 32px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(34, 197, 94, 0.2);
+            transform: translateX(-4px);
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .description {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+        
+        .workshop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+        
+        .workshop-card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .workshop-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
+        }
+        
+        .card-image {
+            width: 100%;
+            height: 200px;
+            background: rgba(31, 41, 55, 0.6);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            overflow: hidden;
+        }
+        
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 24px;
+            color: #9ca3af;
+        }
+        
+        .empty-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+        
+        .empty-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #d1d5db;
+        }
+        
+        .empty-description {
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .btn-add {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="arbitrage-hub-dashboard.html" class="back-btn">
+                <span>←</span>
+                <span>Torna alla Dashboard</span>
+            </a>
+            <h1>🔨 Workshop</h1>
+            <p class="description">Gestisci i tuoi listing in bozza prima di pubblicarli</p>
+        </div>
+        
+        <div class="workshop-grid" id="workshopGrid">
+            <div class="empty-state">
+                <div class="empty-icon">🔨</div>
+                <div class="empty-title">Nessun prodotto in lavorazione</div>
+                <div class="empty-description">Inizia aggiungendo prodotti dai tuoi fornitori</div>
+                <button class="btn-add" onclick="window.location.href='arbitrage-suppliers.html'">
+                    Cerca Prodotti
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../core/dataManager.js"></script>
+    <script src="../core/userDataSync.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    <script src="../js/arbitrage-config.js"></script>
+    <script src="../js/arbitrage-core.js"></script>
+    <script>
+        const authSystem = new ShappaAuth();
+        const arbitrageCore = window.ArbitrageCore;
+        
+        if (!authSystem.isLoggedIn()) {
+            window.location.href = 'arbitrage-hub-login.html';
+        }
+        
+        async function loadWorkshop() {
+            const result = await arbitrageCore.getWorkshopItems();
+            const container = document.getElementById('workshopGrid');
+            
+            if (!result.success || result.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔨</div>
+                        <div class="empty-title">Nessun prodotto in lavorazione</div>
+                        <div class="empty-description">Inizia aggiungendo prodotti dai tuoi fornitori</div>
+                        <button class="btn-add" onclick="window.location.href='arbitrage-suppliers.html'">
+                            Cerca Prodotti
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = result.items.map(item => `
+                <div class="workshop-card">
+                    <div class="card-image">
+                        ${item.image ? `<img src="${item.image}" alt="${item.title}">` : '📦'}
+                    </div>
+                    <div class="card-title">${item.title || 'Prodotto senza titolo'}</div>
+                    <div class="card-meta">
+                        <span>${item.sourceSupplier || 'N/A'}</span>
+                        <span>${new Date(item.createdAt).toLocaleDateString('it-IT')}</span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" onclick="editItem('${item.id}')">Modifica</button>
+                        <button class="btn btn-secondary" onclick="deleteItem('${item.id}')">Elimina</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function editItem(itemId) {
+            alert('Editor listing - Coming soon!');
+        }
+        
+        async function deleteItem(itemId) {
+            if (confirm('Eliminare questo item dal workshop?')) {
+                await arbitrageCore.deleteWorkshopItem(itemId);
+                loadWorkshop();
+            }
+        }
+        
+        loadWorkshop();
+    </script>
+</body>
+</html>
+

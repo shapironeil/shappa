@@ -2651,10 +2651,10 @@
             }
             
             try {
-                // Update form data from selects
-                personalCardFormData.dietaryPreference = document.getElementById('dietaryPreference').value;
-                personalCardFormData.bodyType = document.getElementById('bodyType').value;
-                
+            // Update form data from selects
+            personalCardFormData.dietaryPreference = document.getElementById('dietaryPreference').value;
+            personalCardFormData.bodyType = document.getElementById('bodyType').value;
+
                 // Validazione base lato client
                 if (!personalCardFormData.dietaryPreference || !personalCardFormData.bodyType) {
                     throw new Error('Compila tutti i campi obbligatori');
@@ -2693,12 +2693,12 @@
                     if (submitButton) {
                         submitButton.textContent = '✓ Salvato!';
                         setTimeout(() => {
-                            closePersonalCardDialog();
-                            // Aggiorna UI
-                            renderPersonalCard();
-                            renderDietProposals(); // Aggiorna le raccomandazioni
+                    closePersonalCardDialog();
+                    // Aggiorna UI
+                    renderPersonalCard();
+                    renderDietProposals(); // Aggiorna le raccomandazioni
                         }, 500);
-                    } else {
+                } else {
                         closePersonalCardDialog();
                         renderPersonalCard();
                         renderDietProposals();
@@ -2719,8 +2719,8 @@
                 // NON aggiornare dati in memoria se API fallisce
                 // Ricarica dati dal server per evitare inconsistenze
                 try {
-                    await loadDietData();
-                    await loadUserProfile();
+                await loadDietData();
+                await loadUserProfile();
                 } catch (reloadError) {
                     console.error('Errore nel ricaricare i dati:', reloadError);
                 }

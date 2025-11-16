@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrage Hub - Fornitori</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>">
+    <link rel="stylesheet" href="../styles/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0f1e;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .page-container {
+            padding: 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .back-button:hover {
+            background: rgba(34, 197, 94, 0.2);
+            transform: translateX(-4px);
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .suppliers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .supplier-card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .supplier-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
+        }
+
+        .supplier-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .supplier-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .supplier-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .supplier-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .supplier-info {
+            flex: 1;
+        }
+
+        .supplier-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .supplier-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-enabled {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .status-disabled {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+
+        .supplier-markets {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(34, 197, 94, 0.1);
+        }
+
+        .markets-title {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        .markets-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .market-tag {
+            padding: 4px 8px;
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #93c5fd;
+        }
+
+        .supplier-actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #9ca3af;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .my-suppliers-section {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 32px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #9ca3af;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #d1d5db;
+        }
+
+        .empty-description {
+            font-size: 14px;
+        }
+
+        .connected-suppliers-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .connected-supplier {
+            background: rgba(31, 41, 55, 0.6);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connected-supplier-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .connected-supplier-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .connected-supplier-details h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .connected-supplier-meta {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .connected-supplier-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="page-header">
+            <a href="arbitrage-hub-dashboard.html" class="back-button">
+                <span>←</span>
+                <span>Torna alla Dashboard</span>
+            </a>
+            <h1>🏪 Fornitori</h1>
+            <p class="page-description">Collega i tuoi fornitori per iniziare a trovare prodotti profittevoli</p>
+        </div>
+
+        <div class="section-title">
+            <span>📦</span>
+            <span>Fornitori Disponibili</span>
+        </div>
+
+        <div class="suppliers-grid" id="suppliersGrid"></div>
+
+        <div class="my-suppliers-section">
+            <div class="section-title">
+                <span>✅</span>
+                <span>I Miei Fornitori</span>
+            </div>
+            <div id="connectedSuppliers"></div>
+        </div>
+    </div>
+
+    <script src="../core/dataManager.js"></script>
+    <script src="../core/userDataSync.js"></script>
+    <script src="../utils/auth-v2.js"></script>
+    <script src="../js/arbitrage-config.js"></script>
+    <script src="../js/arbitrage-core.js"></script>
+    <script>
+        const authSystem = new ShappaAuth();
+        const arbitrageCore = window.ArbitrageCore;
+
+        // Check auth
+        if (!authSystem.isLoggedIn()) {
+            window.location.href = 'arbitrage-hub-login.html';
+        }
+
+        // Load suppliers
+        const config = window.ArbitrageConfig;
+        const suppliers = config.suppliers;
+
+        function renderSuppliers() {
+            const container = document.getElementById('suppliersGrid');
+            
+            container.innerHTML = Object.entries(suppliers).map(([key, supplier]) => {
+                const disabled = !supplier.enabled;
+                return `
+                    <div class="supplier-card ${disabled ? 'disabled' : ''}" ${!disabled ? `onclick="connectSupplier('${key}')"` : ''}>
+                        <div class="supplier-header">
+                            <div class="supplier-icon" style="background: ${supplier.color}22; border: 2px solid ${supplier.color}44;">
+                                ${supplier.icon}
+                            </div>
+                            <div class="supplier-info">
+                                <div class="supplier-name">${supplier.name}</div>
+                                <span class="supplier-status ${supplier.enabled ? 'status-enabled' : 'status-disabled'}">
+                                    <span>${supplier.enabled ? '🟢' : '⚫'}</span>
+                                    <span>${supplier.enabled ? 'Disponibile' : 'Presto disponibile'}</span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="supplier-markets">
+                            <div class="markets-title">Mercati supportati:</div>
+                            <div class="markets-list">
+                                ${supplier.markets.map(market => `
+                                    <span class="market-tag">${market}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        ${supplier.enabled ? `
+                            <div class="supplier-actions">
+                                <button class="btn btn-primary" onclick="connectSupplier('${key}'); event.stopPropagation();">
+                                    Connetti
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewSupplierInfo('${key}'); event.stopPropagation();">
+                                    Info
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="supplier-actions">
+                                <button class="btn btn-secondary" disabled>
+                                    Non disponibile
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function connectSupplier(supplierKey) {
+            const supplier = suppliers[supplierKey];
+            if (!supplier || !supplier.enabled) return;
+            
+            showNotification(`Connessione a ${supplier.name}...`, 'info');
+            
+            // Simulate API connection
+            const result = await arbitrageCore.addSupplier({
+                key: supplierKey,
+                name: supplier.name,
+                icon: supplier.icon,
+                color: supplier.color,
+                markets: supplier.markets,
+                connectedAt: new Date().toISOString(),
+                status: 'active'
+            });
+            
+            if (result.success) {
+                showNotification(`${supplier.name} connesso con successo!`, 'success');
+                loadConnectedSuppliers();
+            } else {
+                showNotification(`Errore nella connessione a ${supplier.name}`, 'error');
+            }
+        }
+
+        function viewSupplierInfo(supplierKey) {
+            const supplier = suppliers[supplierKey];
+            alert(`📋 Informazioni ${supplier.name}\n\nMercati: ${supplier.markets.join(', ')}\nStato: ${supplier.enabled ? 'Disponibile' : 'Presto disponibile'}`);
+        }
+
+        async function loadConnectedSuppliers() {
+            const result = await arbitrageCore.getSuppliers();
+            const container = document.getElementById('connectedSuppliers');
+            
+            if (!result.success || result.suppliers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <div class="empty-title">Nessun fornitore connesso</div>
+                        <div class="empty-description">Connetti un fornitore per iniziare a cercare prodotti</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="connected-suppliers-list">
+                    ${result.suppliers.map(supplier => `
+                        <div class="connected-supplier">
+                            <div class="connected-supplier-info">
+                                <div class="connected-supplier-icon" style="background: ${supplier.color}22; border: 2px solid ${supplier.color}44;">
+                                    ${supplier.icon}
+                                </div>
+                                <div class="connected-supplier-details">
+                                    <h4>${supplier.name}</h4>
+                                    <div class="connected-supplier-meta">
+                                        Connesso il ${new Date(supplier.connectedAt).toLocaleDateString('it-IT')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="connected-supplier-actions">
+                                <button class="btn btn-primary btn-small" onclick="searchProducts('${supplier.key}')">
+                                    Cerca Prodotti
+                                </button>
+                                <button class="btn btn-secondary btn-small" onclick="disconnectSupplier('${supplier.key}')">
+                                    Disconnetti
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function searchProducts(supplierKey) {
+            showNotification('Funzionalità di ricerca prodotti in arrivo!', 'info');
+        }
+
+        function disconnectSupplier(supplierKey) {
+            if (confirm('Sei sicuro di voler disconnettere questo fornitore?')) {
+                showNotification('Fornitore disconnesso', 'success');
+                loadConnectedSuppliers();
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 16px 24px;
+                background: ${type === 'success' ? 'rgba(34, 197, 94, 0.9)' : type === 'error' ? 'rgba(239, 68, 68, 0.9)' : 'rgba(59, 130, 246, 0.9)'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 500;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        renderSuppliers();
+        loadConnectedSuppliers();
+    </script>
+</body>
+</html>
+
