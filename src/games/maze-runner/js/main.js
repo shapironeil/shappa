@@ -14,10 +14,27 @@ let victoryScreen = null;
 let victoryTimeEl = null;
 let bestTimeEl = null;
 
-// Initialize game
+// Initialize game - Wait for Three.js to load
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🎮 Maze Runner - Inizializzazione...');
     
+    // Wait for THREE.js to load
+    if (typeof THREE === 'undefined') {
+        console.log('⏳ Aspetto che Three.js si carichi...');
+        const checkThree = setInterval(() => {
+            if (typeof THREE !== 'undefined') {
+                clearInterval(checkThree);
+                console.log('✅ Three.js caricato');
+                initializeGame();
+            }
+        }, 100);
+        return;
+    }
+    
+    initializeGame();
+});
+
+function initializeGame() {
     // Get UI elements
     timerEl = document.getElementById('timer');
     keysEl = document.getElementById('keys-collected');
@@ -94,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('✅ Maze Runner pronto!');
     console.log('💡 Clicca sullo schermo per iniziare');
-});
+}
 
 function checkAuth() {
     // Simple auth check - use same system as gaming hub
