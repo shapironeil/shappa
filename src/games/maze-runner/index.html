@@ -210,22 +210,46 @@
                 console.log('📦 GLB tavolino caricato, processando...');
                 const desk = gltf.scene;
                 
+                // Calcola bounding box per normalizzare la scala
+                const box = new THREE.Box3().setFromObject(desk);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+                console.log('  📐 Bounding box tavolino:', size, 'Center:', center);
+                
                 // Traversa tutti i mesh e assicurati che siano visibili
                 desk.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
-                        console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
+                        // Assicurati che i materiali siano visibili
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => {
+                                    mat.transparent = false;
+                                    mat.opacity = 1;
+                                });
+                            } else {
+                                child.material.transparent = false;
+                                child.material.opacity = 1;
+                            }
+                        }
+                        console.log('  ✓ Mesh trovato:', child.name || 'unnamed', 'Size:', size);
                     }
                 });
                 
-                desk.position.set(5, 0, 7); // Davanti al giocatore (z=7)
-                desk.scale.set(1.2, 0.7, 0.7);
-                desk.rotation.y = 0; // Rivolto verso il giocatore
+                // Normalizza la posizione rispetto al centro
+                desk.position.set(5, 0, 7);
+                desk.position.sub(center);
+                
+                // Scala più grande per essere visibile
+                const targetHeight = 0.7;
+                const scaleFactor = targetHeight / size.y;
+                desk.scale.set(scaleFactor * 1.5, scaleFactor * 1.5, scaleFactor * 1.5);
+                desk.rotation.y = 0;
                 desk.castShadow = true;
                 desk.receiveShadow = true;
                 scene.add(desk);
-                console.log('✅ Tavolino caricato e aggiunto alla scena');
+                console.log('✅ Tavolino caricato - Scale:', desk.scale, 'Position:', desk.position);
             },
             (progress) => {
                 console.log('📥 Caricamento tavolino:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
@@ -251,23 +275,47 @@
                 console.log('📦 GLB computer caricato, processando...');
                 pcMesh = gltf.scene;
                 
+                // Calcola bounding box per normalizzare la scala
+                const boxPC = new THREE.Box3().setFromObject(pcMesh);
+                const sizePC = boxPC.getSize(new THREE.Vector3());
+                const centerPC = boxPC.getCenter(new THREE.Vector3());
+                console.log('  📐 Bounding box computer:', sizePC, 'Center:', centerPC);
+                
                 // Traversa tutti i mesh e assicurati che siano visibili
                 pcMesh.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        // Assicurati che i materiali siano visibili
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => {
+                                    mat.transparent = false;
+                                    mat.opacity = 1;
+                                });
+                            } else {
+                                child.material.transparent = false;
+                                child.material.opacity = 1;
+                            }
+                        }
                         console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
                     }
                 });
                 
-                pcMesh.position.set(5, 0.8, 7); // Sopra il tavolino
-                pcMesh.scale.set(0.6, 0.6, 0.6);
+                // Normalizza la posizione rispetto al centro
+                pcMesh.position.set(5, 0.8, 7);
+                pcMesh.position.sub(centerPC);
+                
+                // Scala più grande per essere visibile
+                const targetHeightPC = 0.3;
+                const scaleFactorPC = targetHeightPC / sizePC.y;
+                pcMesh.scale.set(scaleFactorPC * 2, scaleFactorPC * 2, scaleFactorPC * 2);
                 pcMesh.rotation.y = Math.PI; // Rivolto verso il giocatore
                 pcMesh.userData.interactable = true;
                 pcMesh.userData.type = 'pc';
                 pcMesh.castShadow = true;
                 scene.add(pcMesh);
-                console.log('✅ Computer caricato e aggiunto alla scena');
+                console.log('✅ Computer caricato - Scale:', pcMesh.scale, 'Position:', pcMesh.position);
                 
                 // Add glow to PC
                 const pcLight = new THREE.PointLight(0x3b82f6, 0.6, 4);
@@ -299,21 +347,45 @@
                 console.log('📦 GLB divano caricato, processando...');
                 const sofa = gltf.scene;
                 
+                // Calcola bounding box per normalizzare la scala
+                const boxSofa = new THREE.Box3().setFromObject(sofa);
+                const sizeSofa = boxSofa.getSize(new THREE.Vector3());
+                const centerSofa = boxSofa.getCenter(new THREE.Vector3());
+                console.log('  📐 Bounding box divano:', sizeSofa, 'Center:', centerSofa);
+                
                 // Traversa tutti i mesh e assicurati che siano visibili
                 sofa.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
+                        // Assicurati che i materiali siano visibili
+                        if (child.material) {
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(mat => {
+                                    mat.transparent = false;
+                                    mat.opacity = 1;
+                                });
+                            } else {
+                                child.material.transparent = false;
+                                child.material.opacity = 1;
+                            }
+                        }
                         console.log('  ✓ Mesh trovato:', child.name || 'unnamed');
                     }
                 });
                 
-                sofa.position.set(2, 0, 3); // A sinistra del giocatore
-                sofa.scale.set(0.8, 0.8, 0.8);
+                // Normalizza la posizione rispetto al centro
+                sofa.position.set(2, 0, 3);
+                sofa.position.sub(centerSofa);
+                
+                // Scala più grande per essere visibile
+                const targetHeightSofa = 0.8;
+                const scaleFactorSofa = targetHeightSofa / sizeSofa.y;
+                sofa.scale.set(scaleFactorSofa * 1.5, scaleFactorSofa * 1.5, scaleFactorSofa * 1.5);
                 sofa.rotation.y = Math.PI / 2; // Rivolto verso il centro
                 sofa.castShadow = true;
                 scene.add(sofa);
-                console.log('✅ Divano caricato e aggiunto alla scena');
+                console.log('✅ Divano caricato - Scale:', sofa.scale, 'Position:', sofa.position);
             },
             (progress) => {
                 console.log('📥 Caricamento divano:', (progress.loaded / progress.total * 100).toFixed(0) + '%');
