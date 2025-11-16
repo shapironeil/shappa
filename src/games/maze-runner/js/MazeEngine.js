@@ -16,6 +16,11 @@ class MazeEngine {
         this.playerController = null;
         this.collisionDetector = null;
         
+        // 3D Asset Systems
+        this.assetManager = null;
+        this.interactionSystem = null;
+        this.assetsLoaded = false;
+        
         // Settings
         this.cellSize = 2;
         this.wallHeight = 4;
@@ -91,13 +96,52 @@ class MazeEngine {
             }
         };
         
+        // Initialize 3D systems
+        this.initAssetSystems();
+        
         console.log('✅ MazeEngine initialized');
     }
     
     /**
-     * Genera e costruisce il labirinto
+     * Inizializza sistemi per asset 3D
      */
-    buildMaze() {
+    async initAssetSystems() {
+        console.log('🎨 Inizializzazione sistemi 3D...');
+        
+        // Asset Manager
+        this.assetManager = new AssetManager();
+        
+        // Interaction System
+        this.interactionSystem = new InteractionSystem(this.camera, this.scene);
+        
+        // Setup callbacks
+        this.interactionSystem.onItemCollected = (data, count) => {
+            this.onKeyCollected(count, this.totalKeys);
+        };
+        
+        this.interactionSystem.onInteractionAvailable = (data, distance) => {
+            if (data) {
+                this.showInteractionHint(`[E] Raccogli ${data.name}`);
+            } else {
+                this.hideInteractionHint();
+            }
+        };
+        
+        // Preload asset essenziali
+        try {
+            await this.assetManager.preloadForGame('maze-runner');
+            this.assetsLoaded = true;
+            console.log('✅ Asset 3D caricati');
+        } catch (error) {
+            console.error('❌ Errore caricamento asset:', error);
+            this.assetsLoaded = false;
+        }
+    }
+    
+    /**
+     * Genera e costruisce il labirinto (async per caricare modelli 3D)
+     */
+    async buildMaze() {
         // Genera labirinto
         this.mazeGenerator = new MazeGenerator(this.mazeWidth, this.mazeHeight);
         const grid = this.mazeGenerator.generate();
@@ -111,8 +155,8 @@ class MazeEngine {
         // Crea pavimento
         this.createFloor();
         
-        // Posiziona oggetti collezionabili
-        this.placeCollectibles();
+        // Posiziona oggetti collezionabili (async - carica modelli 3D)
+        await this.placeCollectibles();
         
         // Posiziona giocatore
         const startPos = this.mazeGenerator.getStartPosition(this.exit.position);
@@ -122,7 +166,7 @@ class MazeEngine {
             startPos.z * this.cellSize + this.cellSize / 2
         );
         
-        console.log('✅ Labirinto costruito');
+        console.log('✅ Labirinto costruito con modelli 3D');
     }
     
     createMazeMesh(grid) {
@@ -218,14 +262,14 @@ class MazeEngine {
         this.scene.add(floor);
     }
     
-    placeCollectibles() {
+    async placeCollectibles() {
         // Posiziona chiavi
         const positions = this.mazeGenerator.getRandomPositions(this.totalKeys + 1);
         
-        // Le prime N posizioni sono per le chiavi
+        // Le prime N posizioni sono per le chiavi (async)
         for (let i = 0; i < this.totalKeys; i++) {
             const pos = positions[i];
-            const key = this.createKey(
+            const key = await this.createKey(
                 pos.x * this.cellSize + this.cellSize / 2,
                 pos.y,
                 pos.z * this.cellSize + this.cellSize / 2
@@ -234,20 +278,61 @@ class MazeEngine {
             this.scene.add(key);
         }
         
-        // L'ultima posizione è per l'uscita
+        // L'ultima posizione è per l'uscita (async)
         const exitPos = positions[this.totalKeys];
-        this.exit = this.createExit(
+        this.exit = await this.createExit(
             exitPos.x * this.cellSize + this.cellSize / 2,
             0,
             exitPos.z * this.cellSize + this.cellSize / 2
         );
         this.scene.add(this.exit);
         
-        console.log('✅ Oggetti posizionati:', this.totalKeys, 'chiavi + uscita');
+        console.log('✅ Oggetti 3D posizionati:', this.totalKeys, 'occhi + spada');
     }
     
-    createKey(x, y, z) {
-        // Chiave come sfera dorata
+    async createKey(x, y, z) {
+        let key;
+        
+        if (this.assetsLoaded && this.assetManager) {
+            try {
+                // Usa modello 3D dell'occhio blu
+                key = await this.assetManager.loadAsset('collectibles', 'eyeball');
+                key.position.set(x, y, z);
+                key.scale.set(0.3, 0.3, 0.3); // Scala appropriata
+            } catch (error) {
+                console.error('Fallback to placeholder key:', error);
+                key = this.createPlaceholderKey(x, y, z);
+            }
+        } else {
+            // Fallback: sfera dorata
+            key = this.createPlaceholderKey(x, y, z);
+        }
+        
+        key.castShadow = true;
+        key.userData.collected = false;
+        key.userData.type = 'key';
+        
+        // Aggiungi punto luce azzurra (per l'occhio blu)
+        const light = new THREE.PointLight(0x00a8ff, 0.8, 3);
+        light.position.set(0, 0, 0);
+        key.add(light);
+        
+        // Registra come interattivo
+        if (this.interactionSystem) {
+            this.interactionSystem.registerInteractable(key, {
+                type: 'collectible',
+                name: 'Occhio Misterioso',
+                description: 'Un occhio blu luminoso...',
+                canCollect: true,
+                metadata: { keyIndex: this.keys.length }
+            });
+        }
+        
+        return key;
+    }
+    
+    createPlaceholderKey(x, y, z) {
+        // Fallback: sfera dorata
         const geometry = new THREE.SphereGeometry(0.2, 16, 16);
         const material = new THREE.MeshStandardMaterial({
             color: 0xffd700,
@@ -259,20 +344,40 @@ class MazeEngine {
         
         const key = new THREE.Mesh(geometry, material);
         key.position.set(x, y, z);
-        key.castShadow = true;
-        key.userData.collected = false;
-        key.userData.type = 'key';
-        
-        // Aggiungi punto luce
-        const light = new THREE.PointLight(0xffd700, 0.5, 3);
-        light.position.set(0, 0, 0);
-        key.add(light);
-        
         return key;
     }
     
-    createExit(x, y, z) {
-        // Uscita come portale viola
+    async createExit(x, y, z) {
+        let exit;
+        
+        if (this.assetsLoaded && this.assetManager) {
+            try {
+                // Usa modello 3D della spada come premio finale
+                exit = await this.assetManager.loadAsset('weapons', 'sword');
+                exit.position.set(x, y + 1.2, z);
+                exit.scale.set(0.5, 0.5, 0.5);
+                exit.rotation.x = Math.PI / 4; // Inclinata
+            } catch (error) {
+                console.error('Fallback to placeholder exit:', error);
+                exit = this.createPlaceholderExit(x, y, z);
+            }
+        } else {
+            // Fallback: portale viola
+            exit = this.createPlaceholderExit(x, y, z);
+        }
+        
+        exit.userData.type = 'exit';
+        
+        // Aggiungi punto luce dorata (spada magica)
+        const light = new THREE.PointLight(0xffd700, 1.5, 6);
+        light.position.set(0, 0, 0);
+        exit.add(light);
+        
+        return exit;
+    }
+    
+    createPlaceholderExit(x, y, z) {
+        // Fallback: portale viola
         const geometry = new THREE.CylinderGeometry(0.8, 0.8, 3, 32);
         const material = new THREE.MeshStandardMaterial({
             color: 0x8b5cf6,
@@ -286,13 +391,6 @@ class MazeEngine {
         
         const exit = new THREE.Mesh(geometry, material);
         exit.position.set(x, y + 1.5, z);
-        exit.userData.type = 'exit';
-        
-        // Aggiungi punto luce
-        const light = new THREE.PointLight(0x8b5cf6, 1, 5);
-        light.position.set(0, 0, 0);
-        exit.add(light);
-        
         return exit;
     }
     
@@ -334,6 +432,11 @@ class MazeEngine {
         this.playerController.update(deltaTime, (pos) => {
             return this.collisionDetector.checkCollision(pos);
         });
+        
+        // Update interaction system
+        if (this.interactionSystem) {
+            this.interactionSystem.update();
+        }
         
         // Animate keys
         this.keys.forEach(key => {
@@ -440,6 +543,27 @@ class MazeEngine {
         }
         
         console.log('✅ MazeEngine destroyed');
+    }
+    
+    /**
+     * Mostra hint di interazione
+     */
+    showInteractionHint(text) {
+        const hintEl = document.getElementById('interaction-hint');
+        if (hintEl) {
+            hintEl.textContent = text;
+            hintEl.style.display = 'block';
+        }
+    }
+    
+    /**
+     * Nascondi hint di interazione
+     */
+    hideInteractionHint() {
+        const hintEl = document.getElementById('interaction-hint');
+        if (hintEl) {
+            hintEl.style.display = 'none';
+        }
     }
 }
 

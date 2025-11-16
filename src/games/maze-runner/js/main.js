@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await handleGameComplete(time, keys);
     };
     
-    // Build maze
-    gameEngine.buildMaze();
+    // Build maze (async per caricare modelli 3D)
+    initGame();
     
     // Handle resize
     window.addEventListener('resize', () => {
@@ -214,6 +214,18 @@ function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secs = (seconds % 60).toFixed(2);
     return `${minutes}:${secs.padStart(5, '0')}`;
+}
+
+// Initialize game (async)
+async function initGame() {
+    try {
+        showMessage('🎨 Caricamento modelli 3D...', 'info');
+        await gameEngine.buildMaze();
+        showMessage('✅ Gioco pronto! Click per iniziare', 'success');
+    } catch (error) {
+        console.error('Errore inizializzazione gioco:', error);
+        showMessage('⚠️ Errore caricamento. Usa fallback.', 'warning');
+    }
 }
 
 // Cleanup on page unload
