@@ -310,8 +310,12 @@
         
         document.addEventListener('pointerlockchange', () => {
             isLocked = document.pointerLockElement === canvas;
+            console.log('🔒 Pointer Lock:', isLocked ? 'ATTIVO' : 'DISATTIVATO');
             if (isLocked && startTime === 0) {
                 startTime = Date.now();
+                document.getElementById('instructions').style.display = 'none';
+            } else if (!isLocked) {
+                document.getElementById('instructions').style.display = 'block';
             }
         });
         
@@ -366,15 +370,6 @@
                 // Keep in bounds (dentro la camera)
                 camera.position.x = Math.max(0.5, Math.min(9.5, camera.position.x));
                 camera.position.z = Math.max(0.5, Math.min(9.5, camera.position.z));
-                
-                // Update timer
-                if (startTime > 0) {
-                    const elapsed = (Date.now() - startTime) / 1000;
-                    const minutes = Math.floor(elapsed / 60);
-                    const seconds = Math.floor(elapsed % 60);
-                    document.getElementById('timer').textContent = 
-                        minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-                }
             }
             
             // Animate PC glow (optional)
