@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Runner - Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #test-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(17, 24, 39, 0.9);
+            border-radius: 20px;
+            border: 2px solid #8b5cf6;
+            max-width: 600px;
+        }
+        h1 { 
+            font-size: 48px; 
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .status { 
+            font-size: 18px; 
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(31, 41, 55, 0.8);
+            border-radius: 8px;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .info { color: #3b82f6; }
+        button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="test-container">
+        <h1>🧩 Maze Runner Test</h1>
+        <div id="status-container"></div>
+        <button onclick="goToGame()">Vai al Gioco</button>
+    </div>
+
+    <script src="lib/three.min.js"></script>
+    <script>
+        const statusContainer = document.getElementById('status-container');
+        
+        function addStatus(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'status ' + type;
+            div.textContent = message;
+            statusContainer.appendChild(div);
+        }
+        
+        // Test 1: Document loaded
+        addStatus('✅ HTML caricato', 'success');
+        
+        // Test 2: Three.js
+        if (typeof THREE !== 'undefined') {
+            addStatus('✅ THREE.js caricato (versione ' + THREE.REVISION + ')', 'success');
+        } else {
+            addStatus('❌ THREE.js NON caricato', 'error');
+        }
+        
+        // Test 3: Test Three.js funziona
+        try {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            addStatus('✅ THREE.js funziona correttamente', 'success');
+        } catch (e) {
+            addStatus('❌ Errore Three.js: ' + e.message, 'error');
+        }
+        
+        // Test 4: File locali accessibili
+        fetch('../shared/AssetManager.js')
+            .then(response => {
+                if (response.ok) {
+                    addStatus('✅ AssetManager.js accessibile', 'success');
+                } else {
+                    addStatus('❌ AssetManager.js NON accessibile ('+response.status+')', 'error');
+                }
+            })
+            .catch(e => {
+                addStatus('❌ Errore fetch AssetManager: ' + e.message, 'error');
+            });
+        
+        // Test 5: Modelli 3D accessibili
+        fetch('/3d/blue_eyeball_free.glb', { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    addStatus('✅ Modelli 3D accessibili', 'success');
+                } else {
+                    addStatus('❌ Modelli 3D NON accessibili ('+response.status+')', 'error');
+                }
+            })
+            .catch(e => {
+                addStatus('❌ Errore 3D models: ' + e.message, 'error');
+            });
+        
+        function goToGame() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
+
