@@ -315,7 +315,7 @@
         console.log('📦 Caricamento modelli 3D della camera...');
         
         // Tavolino (Desk) - Posizionato davanti al giocatore
-        loadModel('/3d/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: false })
+        loadModel('/api/models/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: false })
             .catch(() => {
                 console.warn('⚠️ Tavolino non caricato, uso placeholder');
                 const deskPlaceholder = new THREE.Mesh(
@@ -328,7 +328,7 @@
             });
         
         // Computer (Laptop) - Posizionato sopra il tavolino
-        loadModel('/3d/laptop_free.glb', new THREE.Vector3(5, 0.8, 7), { y: Math.PI }, 0.5, { 
+        loadModel('/api/models/laptop_free.glb', new THREE.Vector3(5, 0.8, 7), { y: Math.PI }, 0.5, { 
             interactable: true, 
             type: 'pc',
             showHelper: false
@@ -351,16 +351,16 @@
         });
         
         // Divano - Posizionato a sinistra del giocatore
-        loadModel('/3d/old_sofa_free.glb', new THREE.Vector3(2, 0, 3), { y: Math.PI / 2 }, 1.2, { showHelper: false });
+        loadModel('/api/models/old_sofa_free.glb', new THREE.Vector3(2, 0, 3), { y: Math.PI / 2 }, 1.2, { showHelper: false });
         
         // Libreria - Posizionata a destra
-        loadModel('/3d/chocolate_beech_bookshelf_free.glb', new THREE.Vector3(8, 0, 5), { y: -Math.PI / 2 }, 1.5, { showHelper: false });
+        loadModel('/api/models/chocolate_beech_bookshelf_free.glb', new THREE.Vector3(8, 0, 5), { y: -Math.PI / 2 }, 1.5, { showHelper: false });
         
         // TV Vintage - Posizionata di fronte al divano
-        loadModel('/3d/vintage_tv_free.glb', new THREE.Vector3(2, 0.5, 6), { y: Math.PI }, 0.8, { showHelper: false });
+        loadModel('/api/models/vintage_tv_free.glb', new THREE.Vector3(2, 0.5, 6), { y: Math.PI }, 0.8, { showHelper: false });
         
         // Libreria vecchia - Posizionata dietro
-        loadModel('/3d/dusty_old_bookshelf_free.glb', new THREE.Vector3(8, 0, 2), { y: Math.PI / 2 }, 1.5, { showHelper: false });
+        loadModel('/api/models/dusty_old_bookshelf_free.glb', new THREE.Vector3(8, 0, 2), { y: Math.PI / 2 }, 1.5, { showHelper: false });
         
         // Controls
         let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
