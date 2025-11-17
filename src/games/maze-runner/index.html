@@ -126,8 +126,17 @@
         scene.fog = new THREE.Fog(0xe8e8e8, 15, 30);
         
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(5, 1.6, 5); // Centro della camera
+        camera.position.set(5, 1.6, 5); // Centro della camera (altezza occhi: 1.6m)
         camera.lookAt(5, 1, 5); // Guarda verso il centro della camera
+        
+        // TEST: Log posizione camera iniziale
+        console.log(`📷 Camera inizializzata:`);
+        console.log(`  📍 Posizione: x=${camera.position.x}, y=${camera.position.y}, z=${camera.position.z}`);
+        console.log(`  👁️ LookAt: x=5, y=1, z=5`);
+        console.log(`  ⚠️ ATTENZIONE: I controlli FPS potrebbero spostare la camera!`);
+        
+        // Salva posizione iniziale per debug
+        const initialCameraPos = camera.position.clone();
         
         const renderer = new THREE.WebGLRenderer({ 
             canvas: canvas, 
