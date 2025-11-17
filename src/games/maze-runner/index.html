@@ -253,7 +253,7 @@
                         const centerAfter = boxAfter.getCenter(new THREE.Vector3());
                         
                         // POSIZIONE DOPO scaling (come nel componente React)
-                        model.position.set(...position);
+                        model.position.set(position.x, position.y, position.z);
                         model.position.sub(centerAfter);
                         console.log(`  📍 Posizione finale:`, model.position);
                         
