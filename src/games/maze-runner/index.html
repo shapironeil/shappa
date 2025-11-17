@@ -236,51 +236,41 @@
                 gltfLoader.load(
                     path,
                     (gltf) => {
-                        console.log(`✅ GLB parsed successfully: ${path}`);
-                        // METODO ESATTO DEL COMPONENTE REACT FUNZIONANTE
+                        // METODO ESATTO COPIA DAL COMPONENTE REACT FUNZIONANTE (RoomViewerFixed.tsx)
                         const model = gltf.scene;
-                        if (!model) {
-                            console.error(`❌ gltf.scene è null per ${path}`);
-                            reject(new Error('gltf.scene is null'));
-                            return;
-                        }
                         const modelName = path.split('/').pop();
                         console.log(`📦 GLB ${modelName} caricato, processando...`);
-                        
+
                         // Bounding box
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
-                        console.log(`  📐 Bounding box: x=${size.x.toFixed(2)}, y=${size.y.toFixed(2)}, z=${size.z.toFixed(2)}`);
-                        console.log(`  📍 Center: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
-                        
-                        // Scaling (come React funzionante)
+
+                        // Scaling
                         const maxSize = Math.max(size.x, size.y, size.z);
                         if (maxSize > 0) {
                             const scale = targetSize / maxSize;
                             model.scale.set(scale, scale, scale);
-                            console.log(`  🔍 Scaling: ${scale.toFixed(3)}`);
                         }
-                        
-                        // Posizione (come React funzionante)
+
+                        // Posizione
                         const boxAfter = new THREE.Box3().setFromObject(model);
                         const centerAfter = boxAfter.getCenter(new THREE.Vector3());
                         model.position.set(position.x, position.y, position.z);
                         model.position.sub(centerAfter);
-                        console.log(`  📍 Posizione: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
-                        
+
                         // Rotazione
                         if (rotation) {
                             model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
                         }
-                        
-                        // Materiali (METODO SEMPLICE COME REACT - FUNZIONA!)
+
+                        // Materiali (ESATTO COME REACT FUNZIONANTE)
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
                                 child.visible = true;
                                 child.castShadow = true;
                                 child.receiveShadow = true;
-                                
+
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
@@ -294,66 +284,18 @@
                                 }
                             }
                         });
-                        
+
                         // Applica opzioni
                         if (options.interactable) {
                             model.userData.interactable = true;
                             model.userData.type = options.type || 'object';
                         }
-                        
-                        // Aggiungi alla scena (come React funzionante)
+
+                        // Aggiungi alla scena (ESATTO COME REACT)
                         model.visible = true;
                         scene.add(model);
-                        console.log(`  ➕ Modello aggiunto alla scena. Scene children: ${scene.children.length}`);
                         
-                        // Debug finale
-                        const finalBox = new THREE.Box3().setFromObject(model);
-                        const finalSize = finalBox.getSize(new THREE.Vector3());
-                        console.log(`✅ ${modelName} caricato`);
-                        console.log(`  📐 Dimensione finale: x=${finalSize.x.toFixed(2)}, y=${finalSize.y.toFixed(2)}, z=${finalSize.z.toFixed(2)}`);
-                        console.log(`  📏 Distanza camera: ${camera.position.distanceTo(model.position).toFixed(2)}`);
-                        
-                        // DEBUG: Verifica mesh e geometrie
-                        let meshCount = 0;
-                        let geometryCount = 0;
-                        model.traverse((child) => {
-                            if (child instanceof THREE.Mesh) {
-                                meshCount++;
-                                if (child.geometry) {
-                                    geometryCount++;
-                                    console.log(`  🔷 Mesh ${meshCount}: geometria presente, vertici: ${child.geometry.attributes.position?.count || 0}`);
-                                } else {
-                                    console.warn(`  ⚠️ Mesh ${meshCount}: NESSUNA GEOMETRIA!`);
-                                }
-                            }
-                        });
-                        console.log(`  📊 Totale: ${meshCount} mesh, ${geometryCount} geometrie`);
-                        
-                        // DEBUG: Verifica texture
-                        let hasTexture = false;
-                        let textureCount = 0;
-                        model.traverse((child) => {
-                            if (child instanceof THREE.Mesh && child.material) {
-                                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                                mats.forEach((mat) => {
-                                    if (mat.map) {
-                                        hasTexture = true;
-                                        textureCount++;
-                                        console.log(`  🖼️ Texture ${textureCount}: ${mat.map.image ? 'Immagine caricata ✓' : 'NO immagine ✗'}`);
-                                    }
-                                });
-                            }
-                        });
-                        if (!hasTexture) {
-                            console.warn(`  ⚠️ ${modelName}: NESSUNA TEXTURE TROVATA`);
-                        } else {
-                            console.log(`  ✅ ${textureCount} texture trovate`);
-                        }
-                        
-                        // FORZA render immediato
-                        renderer.render(scene, camera);
-                        console.log(`  🎨 Render forzato`);
-                        
+                        console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
                         resolve(model);
                     },
                     (progress) => {
