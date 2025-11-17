@@ -132,6 +132,7 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.autoUpdate = true;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
@@ -238,7 +239,8 @@
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
-                        console.log(`  📐 Bounding box ${modelName}:`, size, 'Center:', center);
+                        console.log(`  📐 Bounding box ${modelName}: x=${size.x.toFixed(2)}, y=${size.y.toFixed(2)}, z=${size.z.toFixed(2)}`);
+                        console.log(`  📍 Center originale: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
                         
                         // SCALING PRIMA (come nel componente React funzionante)
                         const maxSize = Math.max(size.x, size.y, size.z);
@@ -331,6 +333,23 @@
                         
                         console.log(`  📊 Statistiche: ${meshCount} mesh, ${materialCount} materiali`);
                         
+                        // Debug texture e materiali
+                        let textureCount = 0;
+                        let hasTexture = false;
+                        model.traverse((child) => {
+                            if (child instanceof THREE.Mesh && child.material) {
+                                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                                mats.forEach((mat) => {
+                                    if (mat.map) {
+                                        textureCount++;
+                                        hasTexture = true;
+                                        console.log(`  🖼️ Texture trovata: ${mat.map.image ? 'SÌ' : 'NO'}`);
+                                    }
+                                });
+                            }
+                        });
+                        console.log(`  🖼️ Texture totali: ${textureCount}, Ha texture: ${hasTexture}`);
+                        
                         // Applica opzioni
                         if (options.interactable) {
                             model.userData.interactable = true;
@@ -344,14 +363,19 @@
                         
                         // RIMOSSO BoxHelper - mostrava solo parallelepipedi invece dei modelli
                         
-                        // Debug finale
+                        // Debug finale con valori espliciti
                         const finalBox = new THREE.Box3().setFromObject(model);
                         const finalSize = finalBox.getSize(new THREE.Vector3());
                         console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
-                        console.log(`  📍 Posizione finale:`, model.position);
-                        console.log(`  🔍 Scala finale:`, model.scale);
-                        console.log(`  📐 Dimensione finale:`, finalSize);
+                        console.log(`  📍 Posizione finale: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
+                        console.log(`  🔍 Scala finale: x=${model.scale.x.toFixed(3)}, y=${model.scale.y.toFixed(3)}, z=${model.scale.z.toFixed(3)}`);
+                        console.log(`  📐 Dimensione finale: x=${finalSize.x.toFixed(2)}, y=${finalSize.y.toFixed(2)}, z=${finalSize.z.toFixed(2)}`);
                         console.log(`  👁️ Visibile:`, model.visible);
+                        console.log(`  📦 Camera posizione: x=${camera.position.x.toFixed(2)}, y=${camera.position.y.toFixed(2)}, z=${camera.position.z.toFixed(2)}`);
+                        
+                        // Verifica se il modello è nella vista della camera
+                        const distance = camera.position.distanceTo(model.position);
+                        console.log(`  📏 Distanza dalla camera: ${distance.toFixed(2)}`);
                         
                         // FORZA render per vedere immediatamente
                         renderer.render(scene, camera);
