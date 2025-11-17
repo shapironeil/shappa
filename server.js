@@ -5478,8 +5478,19 @@ if (!app._staticFilesConfigured) {
     app.use(express.static(__dirname));
     // Serve assets
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
-    // Serve modelli 3D
+    // Serve modelli 3D (fallback locale se non su Spaces)
     app.use('/3d', express.static(path.join(__dirname, '3d')));
+    
+    // Endpoint per servire modelli da Digital Ocean Spaces (se configurato)
+    if (process.env.DO_SPACES_ENDPOINT && process.env.DO_SPACES_BUCKET) {
+        app.get('/api/models/:filename', (req, res) => {
+            const { filename } = req.params;
+            const spacesUrl = `${process.env.DO_SPACES_ENDPOINT}/${process.env.DO_SPACES_BUCKET}/models/${filename}`;
+            // Redirect a Digital Ocean Spaces
+            res.redirect(302, spacesUrl);
+        });
+        console.log('✅ Endpoint /api/models/* configurato per Digital Ocean Spaces');
+    }
     // Serve file da src/pages
     app.use('/src/pages', express.static(path.join(__dirname, 'src', 'pages')));
     // Serve file da src/styles

@@ -425,17 +425,45 @@ loadModel('/3d/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5)
 
 ## 📁 Path dei File
 
-### Per React/Vite
+### Opzione 1: File Locali (Sviluppo)
+
+**Per React/Vite**:
 ```
 frontend/public/models/model.glb
 → Path: '/models/model.glb'
 ```
 
-### Per Server Express
+**Per Server Express**:
 ```
 3d/model.glb
 → Path: '/3d/model.glb'
 ```
+
+### Opzione 2: Digital Ocean Spaces (Produzione) ⭐ RACCOMANDATO
+
+I file GLB sono troppo pesanti per GitHub. Usa Digital Ocean Spaces:
+
+**Setup**:
+1. Crea Space su Digital Ocean
+2. Carica file con: `node scripts/upload-glb-to-spaces.js`
+3. Configura variabili in `.env.private`:
+   ```env
+   DO_SPACES_ENDPOINT=https://nyc3.digitaloceanspaces.com
+   DO_SPACES_BUCKET=shappa-assets
+   DO_SPACES_KEY=your_key
+   DO_SPACES_SECRET=your_secret
+   ```
+
+**Path da usare**:
+```javascript
+// URL diretto a Spaces
+'https://shappa-assets.nyc3.cdn.digitaloceanspaces.com/models/model.glb'
+
+// Oppure endpoint API (redirect)
+'/api/models/model.glb'
+```
+
+**Vedi**: `docs/SPACES_GLB_SETUP.md` per setup completo
 
 ### Verifica Path
 ```javascript
