@@ -230,125 +230,58 @@
                 gltfLoader.load(
                     path,
                     (gltf) => {
-                        // USA LO STESSO METODO DEL COMPONENTE REACT FUNZIONANTE
-                        const model = gltf.scene; // NON clonare - usa direttamente la scena
+                        // METODO ESATTO DEL COMPONENTE REACT FUNZIONANTE
+                        const model = gltf.scene;
                         const modelName = path.split('/').pop();
                         console.log(`📦 GLB ${modelName} caricato, processando...`);
                         
-                        // Bounding box PRIMA di scaling
+                        // Bounding box
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
-                        console.log(`  📐 Bounding box ${modelName}: x=${size.x.toFixed(2)}, y=${size.y.toFixed(2)}, z=${size.z.toFixed(2)}`);
-                        console.log(`  📍 Center originale: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
+                        console.log(`  📐 Bounding box: x=${size.x.toFixed(2)}, y=${size.y.toFixed(2)}, z=${size.z.toFixed(2)}`);
+                        console.log(`  📍 Center: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
                         
-                        // SCALING PRIMA (come nel componente React funzionante)
+                        // Scaling (come React funzionante)
                         const maxSize = Math.max(size.x, size.y, size.z);
                         if (maxSize > 0) {
                             const scale = targetSize / maxSize;
                             model.scale.set(scale, scale, scale);
-                            console.log(`  🔍 Scaling applicato: ${scale.toFixed(3)}`);
+                            console.log(`  🔍 Scaling: ${scale.toFixed(3)}`);
                         }
                         
-                        // Ricalcola bounding box DOPO scaling
+                        // Posizione (come React funzionante)
                         const boxAfter = new THREE.Box3().setFromObject(model);
                         const centerAfter = boxAfter.getCenter(new THREE.Vector3());
-                        
-                        // POSIZIONE DOPO scaling (come nel componente React)
                         model.position.set(position.x, position.y, position.z);
                         model.position.sub(centerAfter);
-                        console.log(`  📍 Posizione finale:`, model.position);
+                        console.log(`  📍 Posizione: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
                         
                         // Rotazione
                         if (rotation) {
                             model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
-                            console.log(`  🔄 Rotazione:`, rotation);
                         }
                         
-                        // Materiali (METODO COMPLETO - GARANTISCE VISIBILITÀ)
-                        let meshCount = 0;
-                        let materialCount = 0;
+                        // Materiali (METODO SEMPLICE COME REACT - FUNZIONA!)
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
-                                meshCount++;
-                                child.visible = true; // FORZA visibilità
+                                child.visible = true;
                                 child.castShadow = true;
                                 child.receiveShadow = true;
-                                
-                                // Verifica geometria
-                                if (!child.geometry) {
-                                    console.warn(`  ⚠️ ${modelName}: Mesh senza geometria`);
-                                    return;
-                                }
                                 
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
-                                        materialCount++;
                                         mat.needsUpdate = true;
-                                        
-                                        // Gestisci tutti i tipi di materiale
-                                        if (mat instanceof THREE.MeshStandardMaterial || 
-                                            mat instanceof THREE.MeshPhysicalMaterial ||
-                                            mat instanceof THREE.MeshLambertMaterial ||
-                                            mat instanceof THREE.MeshPhongMaterial) {
+                                        if (mat instanceof THREE.MeshStandardMaterial) {
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
-                                            mat.visible = true;
-                                            
-                                            // Texture
                                             if (mat.map) mat.map.needsUpdate = true;
-                                            if (mat.normalMap) mat.normalMap.needsUpdate = true;
-                                            if (mat.roughnessMap) mat.roughnessMap.needsUpdate = true;
-                                            if (mat.metalnessMap) mat.metalnessMap.needsUpdate = true;
-                                            
-                                            // Se colore è nero/scuro e non ha texture, correggi
-                                            if (!mat.map && mat.color) {
-                                                const colorHex = mat.color.getHex();
-                                                if (colorHex === 0x000000 || colorHex === 0x111111) {
-                                                    mat.color = new THREE.Color(0x888888);
-                                                    console.log(`  ⚠️ Materiale nero corretto a grigio per ${modelName}`);
-                                                }
-                                            }
-                                        } else {
-                                            // Altri tipi di materiale
-                                            if ('transparent' in mat) mat.transparent = false;
-                                            if ('opacity' in mat) mat.opacity = 1.0;
-                                            if ('visible' in mat) mat.visible = true;
-                                            mat.needsUpdate = true;
                                         }
                                     });
-                                } else {
-                                    // Materiale mancante - aggiungi default
-                                    child.material = new THREE.MeshStandardMaterial({
-                                        color: 0x888888,
-                                        roughness: 0.7,
-                                        metalness: 0.1,
-                                    });
-                                    materialCount++;
-                                    console.warn(`  ⚠️ ${modelName}: Mesh senza materiale, aggiunto default`);
                                 }
                             }
                         });
-                        
-                        console.log(`  📊 Statistiche: ${meshCount} mesh, ${materialCount} materiali`);
-                        
-                        // Debug texture e materiali
-                        let textureCount = 0;
-                        let hasTexture = false;
-                        model.traverse((child) => {
-                            if (child instanceof THREE.Mesh && child.material) {
-                                const mats = Array.isArray(child.material) ? child.material : [child.material];
-                                mats.forEach((mat) => {
-                                    if (mat.map) {
-                                        textureCount++;
-                                        hasTexture = true;
-                                        console.log(`  🖼️ Texture trovata: ${mat.map.image ? 'SÌ' : 'NO'}`);
-                                    }
-                                });
-                            }
-                        });
-                        console.log(`  🖼️ Texture totali: ${textureCount}, Ha texture: ${hasTexture}`);
                         
                         // Applica opzioni
                         if (options.interactable) {
@@ -356,29 +289,16 @@
                             model.userData.type = options.type || 'object';
                         }
                         
-                        // Assicura visibilità e aggiungi alla scena
+                        // Aggiungi alla scena (come React funzionante)
                         model.visible = true;
-                        model.updateMatrixWorld(true); // FORZA aggiornamento matrice
                         scene.add(model);
                         
-                        // RIMOSSO BoxHelper - mostrava solo parallelepipedi invece dei modelli
-                        
-                        // Debug finale con valori espliciti
+                        // Debug finale
                         const finalBox = new THREE.Box3().setFromObject(model);
                         const finalSize = finalBox.getSize(new THREE.Vector3());
-                        console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
-                        console.log(`  📍 Posizione finale: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
-                        console.log(`  🔍 Scala finale: x=${model.scale.x.toFixed(3)}, y=${model.scale.y.toFixed(3)}, z=${model.scale.z.toFixed(3)}`);
+                        console.log(`✅ ${modelName} caricato`);
                         console.log(`  📐 Dimensione finale: x=${finalSize.x.toFixed(2)}, y=${finalSize.y.toFixed(2)}, z=${finalSize.z.toFixed(2)}`);
-                        console.log(`  👁️ Visibile:`, model.visible);
-                        console.log(`  📦 Camera posizione: x=${camera.position.x.toFixed(2)}, y=${camera.position.y.toFixed(2)}, z=${camera.position.z.toFixed(2)}`);
-                        
-                        // Verifica se il modello è nella vista della camera
-                        const distance = camera.position.distanceTo(model.position);
-                        console.log(`  📏 Distanza dalla camera: ${distance.toFixed(2)}`);
-                        
-                        // FORZA render per vedere immediatamente
-                        renderer.render(scene, camera);
+                        console.log(`  📏 Distanza camera: ${camera.position.distanceTo(model.position).toFixed(2)}`);
                         
                         resolve(model);
                     },
