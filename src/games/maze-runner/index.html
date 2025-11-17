@@ -295,7 +295,23 @@
                         model.visible = true;
                         scene.add(model);
                         
+                        // DEBUG: Verifica che il modello sia effettivamente nella scena
                         console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
+                        console.log(`  📊 Scene children: ${scene.children.length}`);
+                        console.log(`  👁️ Model visible: ${model.visible}`);
+                        console.log(`  📍 Model position: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
+                        console.log(`  🔍 Model scale: x=${model.scale.x.toFixed(3)}, y=${model.scale.y.toFixed(3)}, z=${model.scale.z.toFixed(3)}`);
+                        
+                        // Verifica mesh
+                        let meshCount = 0;
+                        model.traverse((child) => {
+                            if (child instanceof THREE.Mesh) {
+                                meshCount++;
+                                console.log(`  🔷 Mesh ${meshCount}: visible=${child.visible}, geometry=${child.geometry ? 'YES' : 'NO'}, material=${child.material ? 'YES' : 'NO'}`);
+                            }
+                        });
+                        console.log(`  📊 Totale mesh: ${meshCount}`);
+                        
                         resolve(model);
                     },
                     (progress) => {
@@ -310,11 +326,20 @@
             });
         }
         
+        // TEST: Aggiungi un cubo semplice per verificare il rendering
+        const testCube = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1, 1),
+            new THREE.MeshStandardMaterial({ color: 0xff0000 })
+        );
+        testCube.position.set(5, 1, 5);
+        scene.add(testCube);
+        console.log('🔴 TEST: Cubo rosso aggiunto alla scena per verificare rendering');
+        
         // Load 3D models for bedroom
         console.log('📦 Caricamento modelli 3D della camera...');
         
         // Tavolino (Desk) - Posizionato davanti al giocatore
-        loadModel('/api/models/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: true })
+        loadModel('/api/models/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: false })
             .catch(() => {
                 console.warn('⚠️ Tavolino non caricato, uso placeholder');
                 const deskPlaceholder = new THREE.Mesh(
