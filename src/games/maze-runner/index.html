@@ -288,6 +288,11 @@
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
+                                        // DEBUG: Log informazioni materiale originale
+                                        const originalColor = mat.color ? mat.color.getHex() : null;
+                                        const hasMap = !!mat.map;
+                                        console.log(`  🔍 Materiale ${modelName}: colore=#${originalColor ? originalColor.toString(16) : 'null'}, texture=${hasMap ? 'SÌ' : 'NO'}, roughness=${mat.roughness}, metalness=${mat.metalness}`);
+                                        
                                         // FORZA aggiornamento materiale
                                         mat.needsUpdate = true;
                                         
@@ -325,34 +330,63 @@
                                                 mat.emissiveMap.flipY = false;
                                             }
                                             
-                                            // SE NON HA TEXTURE: Applica colore di base al materiale
+                                            // USA TUTTE LE INFORMAZIONI DEL MATERIALE DAL GLB
+                                            // Se il materiale ha un colore, assicurati che sia visibile
+                                            const currentColor = mat.color ? mat.color.getHex() : 0xffffff;
+                                            
+                                            // Se non ha texture E il colore è bianco/nero/grigio, applica colore appropriato
                                             if (!mat.map) {
-                                                // Se il materiale ha già un colore, mantienilo
-                                                // Altrimenti applica un colore neutro visibile
-                                                if (!mat.color || mat.color.getHex() === 0xffffff || mat.color.getHex() === 0x000000) {
-                                                    // Colori di default per oggetti comuni
-                                                    const defaultColors = {
-                                                        'bench': 0x8b4513,      // Marrone per tavoli
-                                                        'laptop': 0x2c2c2c,     // Grigio scuro per PC
-                                                        'sofa': 0x654321,       // Marrone per divani
-                                                        'tv': 0x1a1a1a,         // Nero per TV
-                                                        'bookshelf': 0x8b7355,  // Marrone chiaro per librerie
-                                                    };
-                                                    
-                                                    let defaultColor = 0x888888; // Grigio neutro
-                                                    for (const [key, color] of Object.entries(defaultColors)) {
-                                                        if (modelName.toLowerCase().includes(key)) {
-                                                            defaultColor = color;
-                                                            break;
-                                                        }
+                                                // Colori di default per oggetti comuni basati sul nome
+                                                const defaultColors = {
+                                                    'bench': 0x8b4513,      // Marrone per tavoli
+                                                    'laptop': 0x2c2c2c,     // Grigio scuro per PC
+                                                    'sofa': 0x654321,       // Marrone per divani
+                                                    'tv': 0x1a1a1a,         // Nero per TV
+                                                    'bookshelf': 0x8b7355,  // Marrone chiaro per librerie
+                                                    'chocolate': 0x8b7355,  // Marrone cioccolato
+                                                    'dusty': 0x6b5b4f,      // Marrone polveroso
+                                                    'vintage': 0x2c2c2c,    // Grigio scuro vintage
+                                                };
+                                                
+                                                let defaultColor = null;
+                                                const modelNameLower = modelName.toLowerCase();
+                                                for (const [key, color] of Object.entries(defaultColors)) {
+                                                    if (modelNameLower.includes(key)) {
+                                                        defaultColor = color;
+                                                        break;
                                                     }
-                                                    
+                                                }
+                                                
+                                                // Se trovato un colore di default, applicalo
+                                                if (defaultColor) {
                                                     mat.color = new THREE.Color(defaultColor);
+                                                    console.log(`  🎨 Colore applicato a ${modelName}: #${defaultColor.toString(16)}`);
+                                                } else if (currentColor === 0xffffff || currentColor === 0x000000 || currentColor === 0x808080) {
+                                                    // Se il colore è bianco/nero/grigio neutro, usa grigio visibile
+                                                    mat.color = new THREE.Color(0x888888);
+                                                    console.log(`  🎨 Colore neutro applicato a ${modelName} (era: #${currentColor.toString(16)})`);
+                                                } else {
+                                                    // Mantieni il colore esistente ma assicurati che sia visibile
+                                                    console.log(`  🎨 Colore esistente mantenuto per ${modelName}: #${currentColor.toString(16)}`);
+                                                }
+                                                
+                                                // Assicura che roughness e metalness siano impostati
+                                                if (mat.roughness === undefined || mat.roughness === 0) {
                                                     mat.roughness = 0.7;
+                                                }
+                                                if (mat.metalness === undefined) {
                                                     mat.metalness = 0.1;
-                                                    console.log(`  🎨 Colore di base applicato a ${modelName}: #${defaultColor.toString(16)}`);
+                                                }
+                                            } else {
+                                                // Ha texture - assicura che il colore di base sia bianco per texture corrette
+                                                if (currentColor === 0x000000) {
+                                                    mat.color = new THREE.Color(0xffffff);
+                                                    console.log(`  🎨 Colore corretto a bianco per texture in ${modelName}`);
                                                 }
                                             }
+                                            
+                                            // FORZA aggiornamento finale
+                                            mat.needsUpdate = true;
                                         } else if (mat instanceof THREE.MeshPhysicalMaterial || 
                                                    mat instanceof THREE.MeshLambertMaterial ||
                                                    mat instanceof THREE.MeshPhongMaterial) {
