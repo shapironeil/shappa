@@ -255,14 +255,14 @@
                         console.log(`  📍 Center: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
                         
                         // Scaling (come React funzionante)
-                        const maxSize = Math.max(size.x, size.y, size.z);
-                        if (maxSize > 1000) {
-                            console.warn(`  ⚠️ MODELLO GIGANTE! Dimensione: ${maxSize.toFixed(2)}`);
-                        } else if (maxSize < 0.01) {
-                            console.warn(`  ⚠️ MODELLO MINUSCOLO! Dimensione: ${maxSize.toFixed(4)}`);
+                        const modelMaxSize = Math.max(size.x, size.y, size.z);
+                        if (modelMaxSize > 1000) {
+                            console.warn(`  ⚠️ MODELLO GIGANTE! Dimensione: ${modelMaxSize.toFixed(2)}`);
+                        } else if (modelMaxSize < 0.01) {
+                            console.warn(`  ⚠️ MODELLO MINUSCOLO! Dimensione: ${modelMaxSize.toFixed(4)}`);
                         }
-                        if (maxSize > 0) {
-                            const scale = targetSize / maxSize;
+                        if (modelMaxSize > 0) {
+                            const scale = targetSize / modelMaxSize;
                             model.scale.set(scale, scale, scale);
                             console.log(`  🔍 Scaling: ${scale.toFixed(3)}`);
                         }
