@@ -108,7 +108,7 @@
             });
         
         // Test 5: Modelli 3D accessibili
-        fetch('/3d/blue_eyeball_free.glb', { method: 'HEAD' })
+        fetch('/api/models/blue_eyeball_free.glb', { method: 'HEAD' })
             .then(response => {
                 if (response.ok) {
                     addStatus('✅ Modelli 3D accessibili', 'success');

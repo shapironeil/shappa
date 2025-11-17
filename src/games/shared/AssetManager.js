@@ -7,7 +7,7 @@ class AssetManager {
     constructor() {
         this.assets = new Map();
         this.loader = new THREE.GLTFLoader();
-        this.basePath = '../../../3d/'; // Path relativo alla cartella 3d
+        this.basePath = '/api/models/'; // Path unico per tutti i modelli 3D
         
         // Catalogo asset organizzato per categoria
         this.catalog = {

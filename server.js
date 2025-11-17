@@ -5478,22 +5478,17 @@ if (!app._staticFilesConfigured) {
     app.use(express.static(__dirname));
     // Serve assets
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
-    // Serve modelli 3D dal droplet (GRATIS - usa spazio disponibile)
-    app.use('/3d', express.static(path.join(__dirname, '3d')));
-    // Serve modelli da frontend/public/models
+    // Serve modelli 3D da frontend/public/models (UNICA CARTELLA)
     app.use('/models', express.static(path.join(__dirname, 'frontend', 'public', 'models')));
     
     // Endpoint API per servire modelli (dal server locale - GRATIS)
     app.get('/api/models/:filename', (req, res) => {
         const { filename } = req.params;
-        // Prova prima in frontend/public/models, poi in 3d
-        const modelPath1 = path.join(__dirname, 'frontend', 'public', 'models', filename);
-        const modelPath2 = path.join(__dirname, '3d', filename);
+        // Cerca solo in frontend/public/models
+        const modelPath = path.join(__dirname, 'frontend', 'public', 'models', filename);
         
-        if (fs.existsSync(modelPath1)) {
-            res.sendFile(path.resolve(modelPath1));
-        } else if (fs.existsSync(modelPath2)) {
-            res.sendFile(path.resolve(modelPath2));
+        if (fs.existsSync(modelPath)) {
+            res.sendFile(path.resolve(modelPath));
         } else {
             res.status(404).json({ error: 'Model not found', filename });
         }

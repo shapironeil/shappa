@@ -199,7 +199,7 @@
         console.log('📦 Caricamento modelli 3D...');
         
         // Laptop on desk
-        gltfLoader.load('/3d/laptop_free.glb', (gltf) => {
+        gltfLoader.load('/api/models/laptop_free.glb', (gltf) => {
             pcMesh = gltf.scene;
             pcMesh.position.set(7, 0.8, 3);
             pcMesh.scale.set(0.5, 0.5, 0.5);
@@ -227,7 +227,7 @@
         });
         
         // Sofa
-        gltfLoader.load('/3d/old_sofa_free.glb', (gltf) => {
+        gltfLoader.load('/api/models/old_sofa_free.glb', (gltf) => {
             const sofa = gltf.scene;
             sofa.position.set(2, 0, 7);
             sofa.scale.set(0.8, 0.8, 0.8);
@@ -239,7 +239,7 @@
         });
         
         // Desk (use bench as desk)
-        gltfLoader.load('/3d/bench_model_free.glb', (gltf) => {
+        gltfLoader.load('/api/models/bench_model_free.glb', (gltf) => {
             const desk = gltf.scene;
             desk.position.set(7, 0, 3);
             desk.scale.set(1.5, 0.8, 0.8);
