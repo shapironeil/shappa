@@ -245,8 +245,10 @@
         // SEGUE BEST PRACTICES PER CARICAMENTO GLB IN FPS
         function loadModel(path, position, rotation, targetSize, options = {}) {
             return new Promise((resolve, reject) => {
-                // DEBUG: Verifica path
+                // DEBUG: Verifica path (TEST DEFINITIVO)
                 console.log(`📥 Tentativo caricamento: ${path}`);
+                console.log(`  🔍 TEST: Apri nel browser: ${window.location.origin}${path}`);
+                console.log(`  🔍 Se NON scarica il GLB → path sbagliato!`);
                 
                 gltfLoader.load(
                     path,
@@ -266,7 +268,7 @@
                             console.warn(`  ⚠️ GLB ${modelName} NON contiene texture embedded`);
                         }
 
-                        // DEBUG: Bounding box per verificare dimensioni (BEST PRACTICE)
+                        // DEBUG: Bounding box per verificare dimensioni (TEST DEFINITIVO)
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
@@ -276,6 +278,20 @@
                             size: size,
                             center: center
                         });
+                        
+                        // TEST: Verifica se modello è enorme o minuscolo
+                        const maxSize = Math.max(Math.abs(box.min.x), Math.abs(box.max.x), 
+                                                 Math.abs(box.min.y), Math.abs(box.max.y),
+                                                 Math.abs(box.min.z), Math.abs(box.max.z));
+                        if (maxSize > 1000) {
+                            console.warn(`  ⚠️ MODELLO GIGANTE! Dimensione max: ${maxSize.toFixed(2)}`);
+                            console.warn(`  💡 Fix: model.scale.set(0.01, 0.01, 0.01);`);
+                        } else if (maxSize < 0.01) {
+                            console.warn(`  ⚠️ MODELLO MINUSCOLO! Dimensione max: ${maxSize.toFixed(4)}`);
+                            console.warn(`  💡 Fix: model.scale.set(100, 100, 100);`);
+                        } else {
+                            console.log(`  ✅ Dimensione modello OK: ${maxSize.toFixed(2)}`);
+                        }
 
                         // Scaling
                         const maxSize = Math.max(size.x, size.y, size.z);
@@ -461,11 +477,27 @@
                         });
                         console.log(`  📊 Statistiche: ${meshCount} mesh, ${geometryCount} geometrie, ${materialCount} materiali`);
                         
-                        // Verifica distanza dalla camera
+                        // TEST: Verifica distanza dalla camera (TEST DEFINITIVO)
                         const distance = camera.position.distanceTo(model.position);
                         console.log(`  📏 Distanza dalla camera: ${distance.toFixed(2)}`);
                         if (distance > 50) {
                             console.warn(`  ⚠️ Modello molto lontano dalla camera! Potrebbe non essere visibile.`);
+                            console.warn(`  💡 Fix: model.position.set(0, 1.6, -2); // Davanti agli occhi`);
+                        } else if (distance < 0.1) {
+                            console.warn(`  ⚠️ Modello troppo vicino alla camera!`);
+                        } else {
+                            console.log(`  ✅ Distanza OK`);
+                        }
+                        
+                        // TEST: Verifica se modello è nella vista della camera
+                        const cameraDirection = new THREE.Vector3();
+                        camera.getWorldDirection(cameraDirection);
+                        const modelDirection = new THREE.Vector3().subVectors(model.position, camera.position).normalize();
+                        const dot = cameraDirection.dot(modelDirection);
+                        if (dot < 0) {
+                            console.warn(`  ⚠️ Modello DIETRO la camera! Non visibile.`);
+                        } else {
+                            console.log(`  ✅ Modello nella vista della camera`);
                         }
                         
                         resolve(model);
@@ -491,14 +523,20 @@
             });
         }
         
-        // TEST: Aggiungi un cubo semplice per verificare il rendering
+        // TEST DEFINITIVO: Cubo di debug per verificare rendering/camera/luci
         const testCube = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
             new THREE.MeshStandardMaterial({ color: 0xff0000 })
         );
-        testCube.position.set(5, 1, 5);
+        testCube.position.set(5, 1.6, 5); // Davanti alla camera (altezza occhi)
         scene.add(testCube);
         console.log('🔴 TEST: Cubo rosso aggiunto alla scena per verificare rendering');
+        console.log(`  📍 Posizione cubo: x=${testCube.position.x}, y=${testCube.position.y}, z=${testCube.position.z}`);
+        console.log(`  📍 Posizione camera: x=${camera.position.x}, y=${camera.position.y}, z=${camera.position.z}`);
+        console.log(`  📏 Distanza cubo-camera: ${camera.position.distanceTo(testCube.position).toFixed(2)}`);
+        
+        // Se il cubo NON si vede → problema camera/luci/rendering
+        // Se il cubo SI vede ma i modelli no → problema modelli
         
         // Load 3D models for bedroom
         console.log('📦 Caricamento modelli 3D della camera...');
