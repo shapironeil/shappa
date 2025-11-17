@@ -263,26 +263,73 @@
                             console.log(`  🔄 Rotazione:`, rotation);
                         }
                         
-                        // Materiali (METODO ESATTO DEL COMPONENTE REACT FUNZIONANTE)
+                        // Materiali (METODO COMPLETO - GARANTISCE VISIBILITÀ)
+                        let meshCount = 0;
+                        let materialCount = 0;
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
-                                child.visible = true;
+                                meshCount++;
+                                child.visible = true; // FORZA visibilità
                                 child.castShadow = true;
                                 child.receiveShadow = true;
+                                
+                                // Verifica geometria
+                                if (!child.geometry) {
+                                    console.warn(`  ⚠️ ${modelName}: Mesh senza geometria`);
+                                    return;
+                                }
                                 
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
+                                        materialCount++;
                                         mat.needsUpdate = true;
-                                        if (mat instanceof THREE.MeshStandardMaterial) {
+                                        
+                                        // Gestisci tutti i tipi di materiale
+                                        if (mat instanceof THREE.MeshStandardMaterial || 
+                                            mat instanceof THREE.MeshPhysicalMaterial ||
+                                            mat instanceof THREE.MeshLambertMaterial ||
+                                            mat instanceof THREE.MeshPhongMaterial) {
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
+                                            mat.visible = true;
+                                            
+                                            // Texture
                                             if (mat.map) mat.map.needsUpdate = true;
+                                            if (mat.normalMap) mat.normalMap.needsUpdate = true;
+                                            if (mat.roughnessMap) mat.roughnessMap.needsUpdate = true;
+                                            if (mat.metalnessMap) mat.metalnessMap.needsUpdate = true;
+                                            
+                                            // Se colore è nero/scuro e non ha texture, correggi
+                                            if (!mat.map && mat.color) {
+                                                const colorHex = mat.color.getHex();
+                                                if (colorHex === 0x000000 || colorHex === 0x111111) {
+                                                    mat.color = new THREE.Color(0x888888);
+                                                    console.log(`  ⚠️ Materiale nero corretto a grigio per ${modelName}`);
+                                                }
+                                            }
+                                        } else {
+                                            // Altri tipi di materiale
+                                            if ('transparent' in mat) mat.transparent = false;
+                                            if ('opacity' in mat) mat.opacity = 1.0;
+                                            if ('visible' in mat) mat.visible = true;
+                                            mat.needsUpdate = true;
                                         }
                                     });
+                                } else {
+                                    // Materiale mancante - aggiungi default
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0x888888,
+                                        roughness: 0.7,
+                                        metalness: 0.1,
+                                    });
+                                    materialCount++;
+                                    console.warn(`  ⚠️ ${modelName}: Mesh senza materiale, aggiunto default`);
                                 }
                             }
                         });
+                        
+                        console.log(`  📊 Statistiche: ${meshCount} mesh, ${materialCount} materiali`);
                         
                         // Applica opzioni
                         if (options.interactable) {
@@ -290,13 +337,25 @@
                             model.userData.type = options.type || 'object';
                         }
                         
-                        // Assicura visibilità e aggiungi alla scena (come nel componente React)
+                        // Assicura visibilità e aggiungi alla scena
                         model.visible = true;
+                        model.updateMatrixWorld(true); // FORZA aggiornamento matrice
                         scene.add(model);
                         
                         // RIMOSSO BoxHelper - mostrava solo parallelepipedi invece dei modelli
                         
+                        // Debug finale
+                        const finalBox = new THREE.Box3().setFromObject(model);
+                        const finalSize = finalBox.getSize(new THREE.Vector3());
                         console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
+                        console.log(`  📍 Posizione finale:`, model.position);
+                        console.log(`  🔍 Scala finale:`, model.scale);
+                        console.log(`  📐 Dimensione finale:`, finalSize);
+                        console.log(`  👁️ Visibile:`, model.visible);
+                        
+                        // FORZA render per vedere immediatamente
+                        renderer.render(scene, camera);
+                        
                         resolve(model);
                     },
                     (progress) => {
