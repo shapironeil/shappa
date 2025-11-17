@@ -5478,19 +5478,27 @@ if (!app._staticFilesConfigured) {
     app.use(express.static(__dirname));
     // Serve assets
     app.use('/assets', express.static(path.join(__dirname, 'assets')));
-    // Serve modelli 3D (fallback locale se non su Spaces)
+    // Serve modelli 3D dal droplet (GRATIS - usa spazio disponibile)
     app.use('/3d', express.static(path.join(__dirname, '3d')));
+    // Serve modelli da frontend/public/models
+    app.use('/models', express.static(path.join(__dirname, 'frontend', 'public', 'models')));
     
-    // Endpoint per servire modelli da Digital Ocean Spaces (se configurato)
-    if (process.env.DO_SPACES_ENDPOINT && process.env.DO_SPACES_BUCKET) {
-        app.get('/api/models/:filename', (req, res) => {
-            const { filename } = req.params;
-            const spacesUrl = `${process.env.DO_SPACES_ENDPOINT}/${process.env.DO_SPACES_BUCKET}/models/${filename}`;
-            // Redirect a Digital Ocean Spaces
-            res.redirect(302, spacesUrl);
-        });
-        console.log('✅ Endpoint /api/models/* configurato per Digital Ocean Spaces');
-    }
+    // Endpoint API per servire modelli (dal server locale - GRATIS)
+    app.get('/api/models/:filename', (req, res) => {
+        const { filename } = req.params;
+        // Prova prima in frontend/public/models, poi in 3d
+        const modelPath1 = path.join(__dirname, 'frontend', 'public', 'models', filename);
+        const modelPath2 = path.join(__dirname, '3d', filename);
+        
+        if (fs.existsSync(modelPath1)) {
+            res.sendFile(path.resolve(modelPath1));
+        } else if (fs.existsSync(modelPath2)) {
+            res.sendFile(path.resolve(modelPath2));
+        } else {
+            res.status(404).json({ error: 'Model not found', filename });
+        }
+    });
+    console.log('✅ Endpoint /api/models/* configurato per servire file dal droplet (GRATIS)');
     // Serve file da src/pages
     app.use('/src/pages', express.static(path.join(__dirname, 'src', 'pages')));
     // Serve file da src/styles
