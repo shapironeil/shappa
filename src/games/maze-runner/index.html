@@ -126,17 +126,8 @@
         scene.fog = new THREE.Fog(0xe8e8e8, 15, 30);
         
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(5, 1.6, 5); // Centro della camera (altezza occhi: 1.6m)
+        camera.position.set(5, 1.6, 5); // Centro della camera
         camera.lookAt(5, 1, 5); // Guarda verso il centro della camera
-        
-        // TEST: Log posizione camera iniziale
-        console.log(`📷 Camera inizializzata:`);
-        console.log(`  📍 Posizione: x=${camera.position.x}, y=${camera.position.y}, z=${camera.position.z}`);
-        console.log(`  👁️ LookAt: x=5, y=1, z=5`);
-        console.log(`  ⚠️ ATTENZIONE: I controlli FPS potrebbero spostare la camera!`);
-        
-        // Salva posizione iniziale per debug
-        const initialCameraPos = camera.position.clone();
         
         const renderer = new THREE.WebGLRenderer({ 
             canvas: canvas, 
@@ -151,10 +142,6 @@
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
-        
-        // IMPORTANTE: Assicura che le texture vengano renderizzate correttamente
-        renderer.useLegacyLights = false; // Usa il nuovo sistema di luci (r150+)
-        
         console.log('✅ Renderer configurato con ottimizzazioni');
         
         // Lights - Illuminazione camera (ESSENZIALI - senza queste i GLB appaiono neri)
@@ -179,13 +166,6 @@
         hemisphereLight.position.set(0, 10, 0);
         scene.add(hemisphereLight);
         console.log('✅ HemisphereLight aggiunta (intensity: 0.6)');
-        
-        // DEBUG: Verifica che le luci siano nella scena (BEST PRACTICE)
-        const lightCount = scene.children.filter(child => child instanceof THREE.Light).length;
-        console.log(`  💡 Totale luci nella scena: ${lightCount} (minimo consigliato: 2 per PBR)`);
-        if (lightCount < 2) {
-            console.warn(`  ⚠️ ATTENZIONE: Pochi luci! I materiali PBR potrebbero non essere visibili.`);
-        }
         
         // Camera walls - Pareti della camera (10x10 metri)
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
@@ -251,307 +231,153 @@
         const keys = [];
         
         // Helper function per caricare modelli 3D con normalizzazione automatica
-        // SEGUE BEST PRACTICES PER CARICAMENTO GLB IN FPS
         function loadModel(path, position, rotation, targetSize, options = {}) {
             return new Promise((resolve, reject) => {
-                // DEBUG: Verifica path (TEST DEFINITIVO)
-                console.log(`📥 Tentativo caricamento: ${path}`);
-                console.log(`  🔍 TEST: Apri nel browser: ${window.location.origin}${path}`);
-                console.log(`  🔍 Se NON scarica il GLB → path sbagliato!`);
-                
                 gltfLoader.load(
                     path,
                     (gltf) => {
-                        // METODO ESATTO COPIA DAL COMPONENTE REACT FUNZIONANTE (RoomViewerFixed.tsx)
+                        console.log(`✅ GLB parsed successfully: ${path}`);
+                        // METODO ESATTO DEL COMPONENTE REACT FUNZIONANTE
                         const model = gltf.scene;
+                        if (!model) {
+                            console.error(`❌ gltf.scene è null per ${path}`);
+                            reject(new Error('gltf.scene is null'));
+                            return;
+                        }
                         const modelName = path.split('/').pop();
                         console.log(`📦 GLB ${modelName} caricato, processando...`);
                         
-                        // DEBUG: Verifica texture nel GLB
-                        if (gltf.textures && gltf.textures.length > 0) {
-                            console.log(`  📦 GLB contiene ${gltf.textures.length} texture`);
-                            gltf.textures.forEach((tex, idx) => {
-                                console.log(`  🖼️ Texture ${idx}: ${tex.image ? 'Immagine caricata ✓' : 'NO immagine ✗'}`);
-                            });
-                        } else {
-                            console.warn(`  ⚠️ GLB ${modelName} NON contiene texture embedded`);
-                        }
-
-                        // DEBUG: Bounding box per verificare dimensioni (TEST DEFINITIVO)
+                        // Bounding box
                         const box = new THREE.Box3().setFromObject(model);
                         const size = box.getSize(new THREE.Vector3());
                         const center = box.getCenter(new THREE.Vector3());
-                        console.log(`  📐 Bounding box originale:`, {
-                            min: box.min,
-                            max: box.max,
-                            size: size,
-                            center: center
-                        });
+                        console.log(`  📐 Bounding box: x=${size.x.toFixed(2)}, y=${size.y.toFixed(2)}, z=${size.z.toFixed(2)}`);
+                        console.log(`  📍 Center: x=${center.x.toFixed(2)}, y=${center.y.toFixed(2)}, z=${center.z.toFixed(2)}`);
                         
-                        // TEST: Verifica se modello è enorme o minuscolo
-                        const maxSize = Math.max(Math.abs(box.min.x), Math.abs(box.max.x), 
-                                                 Math.abs(box.min.y), Math.abs(box.max.y),
-                                                 Math.abs(box.min.z), Math.abs(box.max.z));
-                        if (maxSize > 1000) {
-                            console.warn(`  ⚠️ MODELLO GIGANTE! Dimensione max: ${maxSize.toFixed(2)}`);
-                            console.warn(`  💡 Fix: model.scale.set(0.01, 0.01, 0.01);`);
-                        } else if (maxSize < 0.01) {
-                            console.warn(`  ⚠️ MODELLO MINUSCOLO! Dimensione max: ${maxSize.toFixed(4)}`);
-                            console.warn(`  💡 Fix: model.scale.set(100, 100, 100);`);
-                        } else {
-                            console.log(`  ✅ Dimensione modello OK: ${maxSize.toFixed(2)}`);
-                        }
-
-                        // Scaling
+                        // Scaling (come React funzionante)
                         const maxSize = Math.max(size.x, size.y, size.z);
+                        if (maxSize > 1000) {
+                            console.warn(`  ⚠️ MODELLO GIGANTE! Dimensione: ${maxSize.toFixed(2)}`);
+                        } else if (maxSize < 0.01) {
+                            console.warn(`  ⚠️ MODELLO MINUSCOLO! Dimensione: ${maxSize.toFixed(4)}`);
+                        }
                         if (maxSize > 0) {
                             const scale = targetSize / maxSize;
                             model.scale.set(scale, scale, scale);
+                            console.log(`  🔍 Scaling: ${scale.toFixed(3)}`);
                         }
-
-                        // Posizione
+                        
+                        // Posizione (come React funzionante)
                         const boxAfter = new THREE.Box3().setFromObject(model);
                         const centerAfter = boxAfter.getCenter(new THREE.Vector3());
                         model.position.set(position.x, position.y, position.z);
                         model.position.sub(centerAfter);
-
+                        console.log(`  📍 Posizione: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
+                        
                         // Rotazione
                         if (rotation) {
                             model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
                         }
-
-                        // Materiali (GESTIONE COMPLETA TEXTURE - COME REACT FUNZIONANTE)
+                        
+                        // Materiali (METODO SEMPLICE COME REACT - FUNZIONA!)
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
                                 child.visible = true;
                                 child.castShadow = true;
                                 child.receiveShadow = true;
-
+                                
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
-                                        // DEBUG: Log informazioni materiale originale
-                                        const originalColor = mat.color ? mat.color.getHex() : null;
-                                        const hasMap = !!mat.map;
-                                        console.log(`  🔍 Materiale ${modelName}: colore=#${originalColor ? originalColor.toString(16) : 'null'}, texture=${hasMap ? 'SÌ' : 'NO'}, roughness=${mat.roughness}, metalness=${mat.metalness}`);
-                                        
-                                        // FORZA aggiornamento materiale
                                         mat.needsUpdate = true;
-                                        
-                                        // Gestisci MeshStandardMaterial (PBR)
                                         if (mat instanceof THREE.MeshStandardMaterial) {
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
-                                            
-                                            // TEXTURE: Aggiorna tutte le texture maps
-                                            if (mat.map) {
-                                                mat.map.needsUpdate = true;
-                                                mat.map.flipY = false; // Importante per GLB
-                                                if (mat.map.image) {
-                                                    console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
-                                                }
-                                            }
-                                            if (mat.normalMap) {
-                                                mat.normalMap.needsUpdate = true;
-                                                mat.normalMap.flipY = false;
-                                            }
-                                            if (mat.roughnessMap) {
-                                                mat.roughnessMap.needsUpdate = true;
-                                                mat.roughnessMap.flipY = false;
-                                            }
-                                            if (mat.metalnessMap) {
-                                                mat.metalnessMap.needsUpdate = true;
-                                                mat.metalnessMap.flipY = false;
-                                            }
-                                            if (mat.aoMap) {
-                                                mat.aoMap.needsUpdate = true;
-                                                mat.aoMap.flipY = false;
-                                            }
-                                            if (mat.emissiveMap) {
-                                                mat.emissiveMap.needsUpdate = true;
-                                                mat.emissiveMap.flipY = false;
-                                            }
-                                            
-                                            // USA TUTTE LE INFORMAZIONI DEL MATERIALE DAL GLB
-                                            // Se il materiale ha un colore, assicurati che sia visibile
-                                            const currentColor = mat.color ? mat.color.getHex() : 0xffffff;
-                                            
-                                            // Se non ha texture E il colore è bianco/nero/grigio, applica colore appropriato
-                                            if (!mat.map) {
-                                                // Colori di default per oggetti comuni basati sul nome
-                                                const defaultColors = {
-                                                    'bench': 0x8b4513,      // Marrone per tavoli
-                                                    'laptop': 0x2c2c2c,     // Grigio scuro per PC
-                                                    'sofa': 0x654321,       // Marrone per divani
-                                                    'tv': 0x1a1a1a,         // Nero per TV
-                                                    'bookshelf': 0x8b7355,  // Marrone chiaro per librerie
-                                                    'chocolate': 0x8b7355,  // Marrone cioccolato
-                                                    'dusty': 0x6b5b4f,      // Marrone polveroso
-                                                    'vintage': 0x2c2c2c,    // Grigio scuro vintage
-                                                };
-                                                
-                                                let defaultColor = null;
-                                                const modelNameLower = modelName.toLowerCase();
-                                                for (const [key, color] of Object.entries(defaultColors)) {
-                                                    if (modelNameLower.includes(key)) {
-                                                        defaultColor = color;
-                                                        break;
-                                                    }
-                                                }
-                                                
-                                                // Se trovato un colore di default, applicalo
-                                                if (defaultColor) {
-                                                    mat.color = new THREE.Color(defaultColor);
-                                                    console.log(`  🎨 Colore applicato a ${modelName}: #${defaultColor.toString(16)}`);
-                                                } else if (currentColor === 0xffffff || currentColor === 0x000000 || currentColor === 0x808080) {
-                                                    // Se il colore è bianco/nero/grigio neutro, usa grigio visibile
-                                                    mat.color = new THREE.Color(0x888888);
-                                                    console.log(`  🎨 Colore neutro applicato a ${modelName} (era: #${currentColor.toString(16)})`);
-                                                } else {
-                                                    // Mantieni il colore esistente ma assicurati che sia visibile
-                                                    console.log(`  🎨 Colore esistente mantenuto per ${modelName}: #${currentColor.toString(16)}`);
-                                                }
-                                                
-                                                // Assicura che roughness e metalness siano impostati
-                                                if (mat.roughness === undefined || mat.roughness === 0) {
-                                                    mat.roughness = 0.7;
-                                                }
-                                                if (mat.metalness === undefined) {
-                                                    mat.metalness = 0.1;
-                                                }
-                                            } else {
-                                                // Ha texture - assicura che il colore di base sia bianco per texture corrette
-                                                if (currentColor === 0x000000) {
-                                                    mat.color = new THREE.Color(0xffffff);
-                                                    console.log(`  🎨 Colore corretto a bianco per texture in ${modelName}`);
-                                                }
-                                            }
-                                            
-                                            // FORZA aggiornamento finale
-                                            mat.needsUpdate = true;
-                                        } else if (mat instanceof THREE.MeshPhysicalMaterial || 
-                                                   mat instanceof THREE.MeshLambertMaterial ||
-                                                   mat instanceof THREE.MeshPhongMaterial) {
-                                            // Altri materiali PBR
-                                            mat.transparent = false;
-                                            mat.opacity = 1.0;
-                                            if (mat.map) {
-                                                mat.map.needsUpdate = true;
-                                                mat.map.flipY = false;
-                                            }
+                                            if (mat.map) mat.map.needsUpdate = true;
                                         }
                                     });
                                 }
                             }
                         });
-
+                        
                         // Applica opzioni
                         if (options.interactable) {
                             model.userData.interactable = true;
                             model.userData.type = options.type || 'object';
                         }
-
-                        // Aggiungi alla scena (ESATTO COME REACT)
+                        
+                        // Aggiungi alla scena (come React funzionante)
                         model.visible = true;
                         scene.add(model);
+                        console.log(`  ➕ Modello aggiunto alla scena. Scene children: ${scene.children.length}`);
                         
-                        // DEBUG: BoxHelper per vedere visivamente dove è il modello (BEST PRACTICE)
-                        if (options.showHelper !== false) {
-                            const boxHelper = new THREE.BoxHelper(model, 0xffff00);
-                            scene.add(boxHelper);
-                            console.log(`  📦 BoxHelper aggiunto (giallo) per debug visivo`);
-                        }
-                        
-                        // DEBUG: Verifica finale che il modello sia effettivamente nella scena
+                        // Debug finale
                         const finalBox = new THREE.Box3().setFromObject(model);
                         const finalSize = finalBox.getSize(new THREE.Vector3());
-                        console.log(`✅ ${modelName} caricato e aggiunto alla scena`);
-                        console.log(`  📊 Scene children: ${scene.children.length}`);
-                        console.log(`  👁️ Model visible: ${model.visible}`);
-                        console.log(`  📍 Model position: x=${model.position.x.toFixed(2)}, y=${model.position.y.toFixed(2)}, z=${model.position.z.toFixed(2)}`);
-                        console.log(`  🔍 Model scale: x=${model.scale.x.toFixed(3)}, y=${model.scale.y.toFixed(3)}, z=${model.scale.z.toFixed(3)}`);
+                        console.log(`✅ ${modelName} caricato`);
                         console.log(`  📐 Dimensione finale: x=${finalSize.x.toFixed(2)}, y=${finalSize.y.toFixed(2)}, z=${finalSize.z.toFixed(2)}`);
+                        console.log(`  📏 Distanza camera: ${camera.position.distanceTo(model.position).toFixed(2)}`);
                         
-                        // Verifica mesh
+                        // DEBUG: Verifica mesh e geometrie
                         let meshCount = 0;
                         let geometryCount = 0;
-                        let materialCount = 0;
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
                                 meshCount++;
-                                if (child.geometry) geometryCount++;
-                                if (child.material) materialCount++;
-                                console.log(`  🔷 Mesh ${meshCount}: visible=${child.visible}, geometry=${child.geometry ? 'YES' : 'NO'}, material=${child.material ? 'YES' : 'NO'}`);
+                                if (child.geometry) {
+                                    geometryCount++;
+                                    console.log(`  🔷 Mesh ${meshCount}: geometria presente, vertici: ${child.geometry.attributes.position?.count || 0}`);
+                                } else {
+                                    console.warn(`  ⚠️ Mesh ${meshCount}: NESSUNA GEOMETRIA!`);
+                                }
                             }
                         });
-                        console.log(`  📊 Statistiche: ${meshCount} mesh, ${geometryCount} geometrie, ${materialCount} materiali`);
+                        console.log(`  📊 Totale: ${meshCount} mesh, ${geometryCount} geometrie`);
                         
-                        // TEST: Verifica distanza dalla camera (TEST DEFINITIVO)
-                        const distance = camera.position.distanceTo(model.position);
-                        console.log(`  📏 Distanza dalla camera: ${distance.toFixed(2)}`);
-                        if (distance > 50) {
-                            console.warn(`  ⚠️ Modello molto lontano dalla camera! Potrebbe non essere visibile.`);
-                            console.warn(`  💡 Fix: model.position.set(0, 1.6, -2); // Davanti agli occhi`);
-                        } else if (distance < 0.1) {
-                            console.warn(`  ⚠️ Modello troppo vicino alla camera!`);
+                        // DEBUG: Verifica texture
+                        let hasTexture = false;
+                        let textureCount = 0;
+                        model.traverse((child) => {
+                            if (child instanceof THREE.Mesh && child.material) {
+                                const mats = Array.isArray(child.material) ? child.material : [child.material];
+                                mats.forEach((mat) => {
+                                    if (mat.map) {
+                                        hasTexture = true;
+                                        textureCount++;
+                                        console.log(`  🖼️ Texture ${textureCount}: ${mat.map.image ? 'Immagine caricata ✓' : 'NO immagine ✗'}`);
+                                    }
+                                });
+                            }
+                        });
+                        if (!hasTexture) {
+                            console.warn(`  ⚠️ ${modelName}: NESSUNA TEXTURE TROVATA`);
                         } else {
-                            console.log(`  ✅ Distanza OK`);
+                            console.log(`  ✅ ${textureCount} texture trovate`);
                         }
                         
-                        // TEST: Verifica se modello è nella vista della camera
-                        const cameraDirection = new THREE.Vector3();
-                        camera.getWorldDirection(cameraDirection);
-                        const modelDirection = new THREE.Vector3().subVectors(model.position, camera.position).normalize();
-                        const dot = cameraDirection.dot(modelDirection);
-                        if (dot < 0) {
-                            console.warn(`  ⚠️ Modello DIETRO la camera! Non visibile.`);
-                        } else {
-                            console.log(`  ✅ Modello nella vista della camera`);
-                        }
+                        // FORZA render immediato
+                        renderer.render(scene, camera);
+                        console.log(`  🎨 Render forzato`);
                         
                         resolve(model);
                     },
-                    (xhr) => {
+                    (progress) => {
                         const modelName = path.split('/').pop();
-                        if (xhr.lengthComputable) {
-                            const percentComplete = (xhr.loaded / xhr.total) * 100;
-                            console.log(`📥 Caricamento ${modelName}: ${percentComplete.toFixed(0)}%`);
-                        }
+                        console.log(`📥 Caricamento ${modelName}:`, (progress.loaded / progress.total * 100).toFixed(0) + '%');
                     },
                     (error) => {
                         console.error(`❌ ERRORE caricamento ${path}:`, error);
-                        console.error(`  📍 Path tentato: ${path}`);
-                        console.error(`  🔍 Verifica:`);
-                        console.error(`     - Il file esiste sul server?`);
-                        console.error(`     - Il path è corretto?`);
-                        console.error(`     - C'è un problema CORS?`);
-                        console.error(`     - Il server risponde con status 200?`);
                         reject(error);
                     }
                 );
             });
         }
         
-        // TEST DEFINITIVO: Cubo di debug per verificare rendering/camera/luci
-        const testCube = new THREE.Mesh(
-            new THREE.BoxGeometry(1, 1, 1),
-            new THREE.MeshStandardMaterial({ color: 0xff0000 })
-        );
-        testCube.position.set(5, 1.6, 5); // Davanti alla camera (altezza occhi)
-        scene.add(testCube);
-        console.log('🔴 TEST: Cubo rosso aggiunto alla scena per verificare rendering');
-        console.log(`  📍 Posizione cubo: x=${testCube.position.x}, y=${testCube.position.y}, z=${testCube.position.z}`);
-        console.log(`  📍 Posizione camera: x=${camera.position.x}, y=${camera.position.y}, z=${camera.position.z}`);
-        console.log(`  📏 Distanza cubo-camera: ${camera.position.distanceTo(testCube.position).toFixed(2)}`);
-        
-        // Se il cubo NON si vede → problema camera/luci/rendering
-        // Se il cubo SI vede ma i modelli no → problema modelli
-        
         // Load 3D models for bedroom
         console.log('📦 Caricamento modelli 3D della camera...');
         
         // Tavolino (Desk) - Posizionato davanti al giocatore
-        loadModel('/api/models/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: false })
+        loadModel('/api/models/bench_model_free.glb', new THREE.Vector3(5, 0, 7), { y: 0 }, 1.5, { showHelper: true })
             .catch(() => {
                 console.warn('⚠️ Tavolino non caricato, uso placeholder');
                 const deskPlaceholder = new THREE.Mesh(
@@ -663,20 +489,8 @@
         // Game loop
         const clock = new THREE.Clock();
         
-        // TEST: Monitora posizione camera durante animazione (per verificare se viene spostata)
-        let frameCount = 0;
         function animate() {
             requestAnimationFrame(animate);
-            frameCount++;
-            
-            // Ogni 60 frame (circa 1 secondo), verifica se camera è stata spostata
-            if (frameCount % 60 === 0 && initialCameraPos) {
-                const currentDistance = camera.position.distanceTo(initialCameraPos);
-                if (currentDistance > 0.1) {
-                    console.warn(`⚠️ Camera spostata dai controlli FPS! Distanza da iniziale: ${currentDistance.toFixed(2)}`);
-                    console.warn(`  📍 Posizione attuale: x=${camera.position.x.toFixed(2)}, y=${camera.position.y.toFixed(2)}, z=${camera.position.z.toFixed(2)}`);
-                }
-            }
             
             const delta = clock.getDelta();
             const speed = 5 * delta;
