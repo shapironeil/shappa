@@ -244,6 +244,16 @@
                         const model = gltf.scene;
                         const modelName = path.split('/').pop();
                         console.log(`📦 GLB ${modelName} caricato, processando...`);
+                        
+                        // DEBUG: Verifica texture nel GLB
+                        if (gltf.textures && gltf.textures.length > 0) {
+                            console.log(`  📦 GLB contiene ${gltf.textures.length} texture`);
+                            gltf.textures.forEach((tex, idx) => {
+                                console.log(`  🖼️ Texture ${idx}: ${tex.image ? 'Immagine caricata ✓' : 'NO immagine ✗'}`);
+                            });
+                        } else {
+                            console.warn(`  ⚠️ GLB ${modelName} NON contiene texture embedded`);
+                        }
 
                         // Bounding box
                         const box = new THREE.Box3().setFromObject(model);
@@ -313,8 +323,14 @@
                                             }
                                             
                                             // FORZA rendering texture
-                                            if (mat.map && mat.map.image) {
-                                                console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
+                                            if (mat.map) {
+                                                if (mat.map.image) {
+                                                    console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
+                                                } else {
+                                                    console.warn(`  ⚠️ Texture map presente ma immagine non caricata per ${modelName}`);
+                                                }
+                                            } else {
+                                                console.warn(`  ⚠️ NESSUNA texture map per ${modelName} - materiale potrebbe essere grigio`);
                                             }
                                         } else if (mat instanceof THREE.MeshPhysicalMaterial || 
                                                    mat instanceof THREE.MeshLambertMaterial ||
