@@ -294,6 +294,35 @@
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
                                             if (mat.map) mat.map.needsUpdate = true;
+                                            
+                                            // Se non ha texture, applica colore visibile
+                                            if (!mat.map) {
+                                                const currentColor = mat.color ? mat.color.getHex() : 0xffffff;
+                                                if (currentColor === 0x000000 || currentColor === 0xffffff) {
+                                                    // Colori di default basati sul nome
+                                                    const defaultColors = {
+                                                        'bench': 0x8b4513,
+                                                        'laptop': 0x2c2c2c,
+                                                        'sofa': 0x654321,
+                                                        'tv': 0x1a1a1a,
+                                                        'bookshelf': 0x8b7355,
+                                                        'chocolate': 0x8b7355,
+                                                        'dusty': 0x6b5b4f,
+                                                        'vintage': 0x2c2c2c,
+                                                    };
+                                                    let defaultColor = 0x888888;
+                                                    const modelNameLower = modelName.toLowerCase();
+                                                    for (const [key, color] of Object.entries(defaultColors)) {
+                                                        if (modelNameLower.includes(key)) {
+                                                            defaultColor = color;
+                                                            break;
+                                                        }
+                                                    }
+                                                    mat.color = new THREE.Color(defaultColor);
+                                                    mat.roughness = 0.7;
+                                                    mat.metalness = 0.1;
+                                                }
+                                            }
                                         }
                                     });
                                 }
