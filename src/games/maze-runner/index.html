@@ -142,6 +142,10 @@
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
+        
+        // IMPORTANTE: Assicura che le texture vengano renderizzate correttamente
+        renderer.useLegacyLights = false; // Usa il nuovo sistema di luci (r150+)
+        
         console.log('✅ Renderer configurato con ottimizzazioni');
         
         // Lights - Illuminazione camera (ESSENZIALI - senza queste i GLB appaiono neri)
@@ -264,7 +268,7 @@
                             model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
                         }
 
-                        // Materiali (ESATTO COME REACT FUNZIONANTE)
+                        // Materiali (GESTIONE COMPLETA TEXTURE - COME REACT FUNZIONANTE)
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
                                 child.visible = true;
@@ -274,11 +278,54 @@
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
+                                        // FORZA aggiornamento materiale
                                         mat.needsUpdate = true;
+                                        
+                                        // Gestisci MeshStandardMaterial (PBR)
                                         if (mat instanceof THREE.MeshStandardMaterial) {
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
-                                            if (mat.map) mat.map.needsUpdate = true;
+                                            
+                                            // TEXTURE: Aggiorna tutte le texture maps
+                                            if (mat.map) {
+                                                mat.map.needsUpdate = true;
+                                                mat.map.flipY = false; // Importante per GLB
+                                            }
+                                            if (mat.normalMap) {
+                                                mat.normalMap.needsUpdate = true;
+                                                mat.normalMap.flipY = false;
+                                            }
+                                            if (mat.roughnessMap) {
+                                                mat.roughnessMap.needsUpdate = true;
+                                                mat.roughnessMap.flipY = false;
+                                            }
+                                            if (mat.metalnessMap) {
+                                                mat.metalnessMap.needsUpdate = true;
+                                                mat.metalnessMap.flipY = false;
+                                            }
+                                            if (mat.aoMap) {
+                                                mat.aoMap.needsUpdate = true;
+                                                mat.aoMap.flipY = false;
+                                            }
+                                            if (mat.emissiveMap) {
+                                                mat.emissiveMap.needsUpdate = true;
+                                                mat.emissiveMap.flipY = false;
+                                            }
+                                            
+                                            // FORZA rendering texture
+                                            if (mat.map && mat.map.image) {
+                                                console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
+                                            }
+                                        } else if (mat instanceof THREE.MeshPhysicalMaterial || 
+                                                   mat instanceof THREE.MeshLambertMaterial ||
+                                                   mat instanceof THREE.MeshPhongMaterial) {
+                                            // Altri materiali PBR
+                                            mat.transparent = false;
+                                            mat.opacity = 1.0;
+                                            if (mat.map) {
+                                                mat.map.needsUpdate = true;
+                                                mat.map.flipY = false;
+                                            }
                                         }
                                     });
                                 }
