@@ -5487,10 +5487,17 @@ if (!app._staticFilesConfigured) {
         // Cerca solo in frontend/public/models
         const modelPath = path.join(__dirname, 'frontend', 'public', 'models', filename);
         
+        console.log(`📦 Richiesta modello: ${filename}`);
+        console.log(`   Path: ${modelPath}`);
+        console.log(`   Esiste: ${fs.existsSync(modelPath)}`);
+        
         if (fs.existsSync(modelPath)) {
+            res.setHeader('Content-Type', 'model/gltf-binary');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
             res.sendFile(path.resolve(modelPath));
         } else {
-            res.status(404).json({ error: 'Model not found', filename });
+            console.error(`❌ Modello non trovato: ${filename} in ${modelPath}`);
+            res.status(404).json({ error: 'Model not found', filename, path: modelPath });
         }
     });
     console.log('✅ Endpoint /api/models/* configurato per servire file dal droplet (GRATIS)');
