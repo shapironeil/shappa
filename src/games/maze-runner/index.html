@@ -300,6 +300,9 @@
                                             if (mat.map) {
                                                 mat.map.needsUpdate = true;
                                                 mat.map.flipY = false; // Importante per GLB
+                                                if (mat.map.image) {
+                                                    console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
+                                                }
                                             }
                                             if (mat.normalMap) {
                                                 mat.normalMap.needsUpdate = true;
@@ -322,15 +325,33 @@
                                                 mat.emissiveMap.flipY = false;
                                             }
                                             
-                                            // FORZA rendering texture
-                                            if (mat.map) {
-                                                if (mat.map.image) {
-                                                    console.log(`  🖼️ Texture trovata per ${modelName}: ${mat.map.image.width}x${mat.map.image.height}`);
-                                                } else {
-                                                    console.warn(`  ⚠️ Texture map presente ma immagine non caricata per ${modelName}`);
+                                            // SE NON HA TEXTURE: Applica colore di base al materiale
+                                            if (!mat.map) {
+                                                // Se il materiale ha già un colore, mantienilo
+                                                // Altrimenti applica un colore neutro visibile
+                                                if (!mat.color || mat.color.getHex() === 0xffffff || mat.color.getHex() === 0x000000) {
+                                                    // Colori di default per oggetti comuni
+                                                    const defaultColors = {
+                                                        'bench': 0x8b4513,      // Marrone per tavoli
+                                                        'laptop': 0x2c2c2c,     // Grigio scuro per PC
+                                                        'sofa': 0x654321,       // Marrone per divani
+                                                        'tv': 0x1a1a1a,         // Nero per TV
+                                                        'bookshelf': 0x8b7355,  // Marrone chiaro per librerie
+                                                    };
+                                                    
+                                                    let defaultColor = 0x888888; // Grigio neutro
+                                                    for (const [key, color] of Object.entries(defaultColors)) {
+                                                        if (modelName.toLowerCase().includes(key)) {
+                                                            defaultColor = color;
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    mat.color = new THREE.Color(defaultColor);
+                                                    mat.roughness = 0.7;
+                                                    mat.metalness = 0.1;
+                                                    console.log(`  🎨 Colore di base applicato a ${modelName}: #${defaultColor.toString(16)}`);
                                                 }
-                                            } else {
-                                                console.warn(`  ⚠️ NESSUNA texture map per ${modelName} - materiale potrebbe essere grigio`);
                                             }
                                         } else if (mat instanceof THREE.MeshPhysicalMaterial || 
                                                    mat instanceof THREE.MeshLambertMaterial ||
