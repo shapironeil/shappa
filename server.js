@@ -1,5 +1,5 @@
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+// Note: questo è un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -13,71 +13,16 @@ const { promises: fsPromises } = require('fs');
 // Import Monitor System
 const monitorManager = require('./monitors/MonitorManager');
 
-// Import Agent AI Committee System
-const { initializeAgents, getAgentCoordinator } = require('./agents');
-
-// Initialize Agent AI Committee System
-const { coordinator } = initializeAgents({
-    figma: {
-        figmaApiKey: process.env.FIGMA_API_KEY
-    },
-    userProfile: {
-        priority: 10,
-        verificationIntervalMs: 60000 // Verifica ogni minuto H24
-    },
-    security: {
-        sessionTTL: 3600000, // 1 hour
-        priority: 9
-    },
-    monitor: {
-        priority: 8
-    },
-    sport: {
-        priority: 7
-    },
-    automation: {
-        priority: 6
-    },
-    integration: {
-        priority: 7
-    },
-    frontend: {
-        priority: 7
-    },
-    data: {
-        cacheTTL: 3600000, // 1 hour
-        priority: 6
-    },
-    notification: {
-        priority: 7
-    },
-    ai: {
-        priority: 8,
-        openaiApiKey: process.env.OPENAI_API_KEY,
-        googleVisionApiKey: process.env.GOOGLE_VISION_API_KEY,
-        claudeApiKey: process.env.CLAUDE_API_KEY,
-        qwenApiKey: process.env.QWEN_API_KEY,
-        huggingfaceApiKey: process.env.HUGGINGFACE_API_KEY
-    },
-    bot: {
-        priority: 7
-    }
-});
-
-console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬Å“ Agent AI Committee System initialized');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â IMPORTANTE: express.static deve essere DOPO gli endpoint API
-// per evitare che intercetti le richieste API
-// app.use(express.static(__dirname)); // Spostato dopo gli endpoint API
+app.use(express.static(__dirname));
 
 // Endpoint placeholder: listare un prodotto su eBay (sandbox)
-// Note: questo ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
+// Note: questo è un mock. In futuro integreremo OAuth eBay e chiamate Sell APIs.
 app.post('/api/ebay/list', express.json(), async (req, res) => {
     try {
         const { id, title, price, automation } = req.body || {};
@@ -87,10 +32,21 @@ app.post('/api/ebay/list', express.json(), async (req, res) => {
         return res.json({ success: true, listingId, message: 'Mock listing creato (sandbox)' });
     } catch (err) {
         console.error('ebay list error', err);
-        return res.status(503).json({ success: false, error: 'internal_error' });
+        return res.status(500).json({ success: false, error: 'internal_error' });
     }
 });
-// app.use('/assets', express.static(path.join(__dirname, 'assets'))); // Spostato dopo gli endpoint API
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// Serve 3D models with proper MIME types
+app.use('/api/models', express.static(path.join(__dirname, 'frontend/public/models'), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.glb')) {
+            res.setHeader('Content-Type', 'model/gltf-binary');
+        } else if (filePath.endsWith('.gltf')) {
+            res.setHeader('Content-Type', 'model/gltf+json');
+        }
+    }
+}));
 
 const sessions = new Map();
 
@@ -141,7 +97,7 @@ function buildAllScopes(custom) {
     for (const s of merged) { if (!seen.has(s)) { seen.add(s); uniq.push(s); } }
     return uniq.join(' ');
 }
-// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â .
+// Profili di scope incrementali: "basic" per connessione rapida (identity + sell.account.readonly), "full" per tutte le funzionalità.
 const SCOPE_PROFILES = {
     basic: [
         'https://api.ebay.com/oauth/api_scope',
@@ -160,11 +116,11 @@ function getScopesForProfile(profile, custom) {
     return uniq.join(' ');
 }
 
-// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  dove veniva usato.
+// Manteniamo FULL_SCOPES (profilo completo) per retrocompatibilità dove veniva usato.
 const FULL_SCOPES = getScopesForProfile('full', EBAY_CONFIG.scopes);
 
 if (EBAY_CONFIG.redirectUri && EBAY_CONFIG.redirectUri.startsWith('http://')) {
-    console.warn('eBay redirectUri is using http:// ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
+    console.warn('eBay redirectUri is using http:// — this may fail for OAuth. Prefer https://localhost:3000/auth/ebay/callback for local development.');
 }
 
 // Amazon scraper (Playwright)
@@ -341,7 +297,7 @@ app.get('/api/ebay/status', async (req, res) => {
         }
         return res.json({ connected: true, expiresAt: data.expiresAt, secondsLeft });
     } catch (e) {
-        return res.status(503).json({ connected: false, error: e.message });
+        return res.status(500).json({ connected: false, error: e.message });
     }
 });
 
@@ -373,14 +329,14 @@ app.post('/api/ebay/refresh', async (req, res) => {
             access_token: tokenData.access_token,
             refresh_token: refreshToken, // eBay typically returns same refresh token
             token_type: tokenData.token_type,
-            // preserva scope precedente; eBay puÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â² non restituirlo nel refresh
+            // preserva scope precedente; eBay può non restituirlo nel refresh
             scope: (JSON.parse(await fsPromises.readFile(tokenPath, 'utf8')).scope) || FULL_SCOPES
         };
         await fsPromises.writeFile(tokenPath, JSON.stringify(payload, null, 2));
         return res.json({ success: true, expiresAt: payload.expiresAt });
     } catch (e) {
         console.error('Refresh token failed:', e.response?.data || e.message);
-        return res.status(503).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
+        return res.status(500).json({ success: false, error: 'refresh_failed', details: e.response?.data || e.message });
     }
 });
 
@@ -439,7 +395,7 @@ app.get('/api/ebay/profile', async (req, res) => {
             return res.status(404).json({ success: false, error: 'profile_not_found' });
         }
         console.error('profile error:', data || e.message);
-        return res.status(503).json({ success: false, error: 'profile_failed', details: data || e.message });
+        return res.status(500).json({ success: false, error: 'profile_failed', details: data || e.message });
     }
 });
 
@@ -483,7 +439,7 @@ app.get('/api/ebay/account-info', async (req, res) => {
 
         return res.json(results);
     } catch (e) {
-        return res.status(503).json({ success: false, error: e.message });
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 
@@ -496,7 +452,7 @@ app.get('/api/ebay/token-info', async (req, res) => {
         const saved = JSON.parse(await fsPromises.readFile(tokenPath, 'utf8'));
         return res.json({ exists: true, userId, scope: saved.scope, expiresAt: saved.expiresAt });
     } catch (e) {
-        return res.status(503).json({ error: e.message });
+        return res.status(500).json({ error: e.message });
     }
 });
 
@@ -509,7 +465,7 @@ app.post('/api/ebay/disconnect', async (req, res) => {
         if (fs.existsSync(tokenPath)) await fsPromises.unlink(tokenPath);
         return res.json({ success: true });
     } catch (e) {
-        return res.status(503).json({ success: false, error: e.message });
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 
@@ -590,7 +546,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-1',
                 url: 'https://amazon.it/dp/DEMO-1',
                 title: `${query} (Demo) Esempio 1`,
-                price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬29,99',
+                price: '€29,99',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=Demo+1',
                 rating: '4,3 su 5 stelle',
@@ -600,7 +556,7 @@ app.get('/api/amazon/search', async (req, res) => {
                 asin: 'DEMO-2',
                 url: 'https://amazon.it/dp/DEMO-2',
                 title: `${query} (Demo) Esempio 2`,
-                price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬19,90',
+                price: '€19,90',
                 brand: 'DemoBrand',
                 image: 'https://via.placeholder.com/300x300/50C878/FFFFFF?text=Demo+2',
                 rating: '4,1 su 5 stelle',
@@ -617,7 +573,7 @@ app.get('/api/amazon/search', async (req, res) => {
     });
 });
 
-// Stub search endpoints per altri provider (placeholder finchÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© non implementati)
+// Stub search endpoints per altri provider (placeholder finché non implementati)
 app.get('/api/aliexpress/search', async (req, res) => {
     const query = req.query.q || req.query.query || '';
     return res.json({ success: true, products: [], source: 'stub', provider: 'aliexpress', message: 'Motore Aliexpress non ancora disponibile', query });
@@ -652,8 +608,8 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             asin,
             title: `Prodotto ${asin} - Dettagli Completi`,
             brand: 'BrandDemo',
-            price: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬39,99',
-            originalPrice: 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬49,99',
+            price: '€39,99',
+            originalPrice: '€49,99',
             rating: '4.5 su 5 stelle',
             reviewsCount: '1,234',
             mainImage: 'https://via.placeholder.com/500x500/4A90E2/FFFFFF?text=Prodotto+Dettaglio',
@@ -665,7 +621,7 @@ app.get('/api/amazon/product/:asin', async (req, res) => {
             ],
             features: [
                 'Caratteristica principale del prodotto con descrizione dettagliata',
-                'Materiali di alta qualitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  utilizzati nella costruzione',
+                'Materiali di alta qualità utilizzati nella costruzione',
                 'Design ergonomico per il massimo comfort',
                 'Compatibile con diversi sistemi e dispositivi',
                 'Garanzia di 2 anni inclusa'
@@ -707,7 +663,7 @@ app.get('/api/amazon/scrape', async (req, res) => {
         return res.json({ success: true, product });
     } catch (err) {
         console.error('Scrape error:', err);
-        return res.status(503).json({ success: false, error: err.message || 'scrape_failed' });
+        return res.status(500).json({ success: false, error: err.message || 'scrape_failed' });
     }
 });
 
@@ -788,7 +744,7 @@ app.post('/api/products/save', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error saving product:', error);
-        return res.status(503).json({ 
+        return res.status(500).json({ 
             success: false, 
             error: 'Errore nel salvataggio del prodotto' 
         });
@@ -881,7 +837,7 @@ async function downloadProductImages(req, res) {
         const metadataPath = path.join(imagesDir, 'metadata.json');
         await fsPromises.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
         
-        console.log(`[ImageDownloader] ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
+        console.log(`[ImageDownloader] ✅ Completed: ${downloadedImages.length} HD images saved for ${asin}`);
         
         return res.json({
             success: true,
@@ -1023,7 +979,7 @@ app.get('/api/products/saved', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error getting saved products:', error);
-        return res.status(503).json({ 
+        return res.status(500).json({ 
             success: false, 
             error: 'Errore nel recupero dei prodotti salvati' 
         });
@@ -1053,7 +1009,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
       const files = fs.readdirSync(productDir).filter(f => f.endsWith('.jpg') || f.endsWith('.png'));
       
       // Se ci sono file ma nessun metadata, potrebbe essere un download interrotto
-      // Controlla l'etÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  dei file per determinare se ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ ancora in corso
+      // Controlla l'età dei file per determinare se è ancora in corso
       if (files.length > 0) {
         const newestFile = files.map(f => ({
           name: f,
@@ -1062,7 +1018,7 @@ app.get('/api/images/status/:asin', async (req, res) => {
         
         const ageMinutes = (Date.now() - newestFile.mtime.getTime()) / (1000 * 60);
         
-        // Se il file piÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ recente ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ piÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ vecchio di 5 minuti, considera il download fallito
+        // Se il file più recente è più vecchio di 5 minuti, considera il download fallito
         const downloading = ageMinutes < 5;
         
         return res.json({
@@ -1293,7 +1249,7 @@ app.delete('/api/products/saved/:asin', (req, res) => {
 
     } catch (error) {
         console.error('[API] Error deleting product:', error);
-        return res.status(503).json({ 
+        return res.status(500).json({ 
             success: false, 
             error: 'Errore nell\'eliminazione del prodotto' 
         });
@@ -1311,7 +1267,7 @@ app.post('/api/monitor/add', (req, res) => {
         }});
         return res.json({ success: true, monitor: info });
     } catch (err) {
-        return res.status(503).json({ success: false, error: err.message });
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -1436,7 +1392,7 @@ app.post('/api/admin/clear-cache', (req, res) => {
         // Nessuna cache da pulire (SerpApi rimosso)
         return res.json({ success: true, message: 'No cache to clear (SerpApi removed)' });
     } catch (err) {
-        return res.status(503).json({ success: false, error: err.message || 'failed' });
+        return res.status(500).json({ success: false, error: err.message || 'failed' });
     }
 });
 
@@ -1451,17 +1407,17 @@ const USERS_DIR = path.join(__dirname, 'data', 'users');
 // Ensure directories exist
 if (!fs.existsSync(INTERESTS_DIR)) {
     fs.mkdirSync(INTERESTS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created interests directory');
+    console.log('📁 Created interests directory');
 }
 
 if (!fs.existsSync(WEBHOOKS_DIR)) {
     fs.mkdirSync(WEBHOOKS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created webhooks directory');
+    console.log('📁 Created webhooks directory');
 }
 
 if (!fs.existsSync(USERS_DIR)) {
     fs.mkdirSync(USERS_DIR, { recursive: true });
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Created users directory');
+    console.log('📁 Created users directory');
 }
 
 // Get user interests file path
@@ -1493,8 +1449,8 @@ app.get('/api/interests/:userId', async (req, res) => {
         
         return res.json({ success: true, interests });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading interests:', error);
-        return res.status(503).json({ success: false, error: 'Failed to read interests' });
+        console.error('❌ Error reading interests:', error);
+        return res.status(500).json({ success: false, error: 'Failed to read interests' });
     }
 });
 
@@ -1515,25 +1471,11 @@ app.post('/api/interests/:userId', async (req, res) => {
         const filePath = getUserInterestsPath(userId);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ Saved ${interests.length} interests for user ${userId}`);
-        
-        // Notifica UserProfileAgent del cambiamento
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'interests',
-                data: interests,
-                source: 'interests_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
+        console.log(`💾 Saved ${interests.length} interests for user ${userId}`);
         return res.json({ success: true, count: interests.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving interests:', error);
-        return res.status(503).json({ success: false, error: 'Failed to save interests' });
+        console.error('❌ Error saving interests:', error);
+        return res.status(500).json({ success: false, error: 'Failed to save interests' });
     }
 });
 
@@ -1558,11 +1500,11 @@ app.post('/api/interests/:userId/add', async (req, res) => {
         interests.push(interest);
         await fsPromises.writeFile(filePath, JSON.stringify(interests, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Added interest "${interest.name}" for user ${userId}`);
+        console.log(`✅ Added interest "${interest.name}" for user ${userId}`);
         return res.json({ success: true, interest, total: interests.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error adding interest:', error);
-        return res.status(503).json({ success: false, error: 'Failed to add interest' });
+        console.error('❌ Error adding interest:', error);
+        return res.status(500).json({ success: false, error: 'Failed to add interest' });
     }
 });
 
@@ -1587,14 +1529,14 @@ app.delete('/api/interests/:userId/:interestId', async (req, res) => {
 
         await fsPromises.writeFile(filePath, JSON.stringify(filtered, null, 2), 'utf8');
         
-        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ FERMA IL MONITOR se attivo
+        // 🛑 FERMA IL MONITOR se attivo
         monitorManager.stopMonitor(interestId);
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted interest ${interestId} for user ${userId}`);
+        console.log(`🗑️ Deleted interest ${interestId} for user ${userId}`);
         return res.json({ success: true, remaining: filtered.length });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error deleting interest:', error);
-        return res.status(503).json({ success: false, error: 'Failed to delete interest' });
+        console.error('❌ Error deleting interest:', error);
+        return res.status(500).json({ success: false, error: 'Failed to delete interest' });
     }
 });
 
@@ -1621,8 +1563,8 @@ app.get('/api/webhooks/:userId', async (req, res) => {
         
         return res.json({ success: true, webhook: webhookData.url });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading webhook:', error);
-        return res.status(503).json({ success: false, error: 'Failed to read webhook' });
+        console.error('❌ Error reading webhook:', error);
+        return res.status(500).json({ success: false, error: 'Failed to read webhook' });
     }
 });
 
@@ -1643,31 +1585,16 @@ app.post('/api/webhooks/:userId', async (req, res) => {
         const filePath = getUserWebhookPath(userId);
         const webhookData = {
             url: webhook,
-            savedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
         await fsPromises.writeFile(filePath, JSON.stringify(webhookData, null, 2), 'utf8');
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¾ Saved Discord webhook for user ${userId}`);
-        
-        // Notifica UserProfileAgent del cambiamento
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'webhooks',
-                data: webhookData,
-                source: 'webhooks_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
+        console.log(`💾 Saved Discord webhook for user ${userId}`);
         return res.json({ success: true });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving webhook:', error);
-        return res.status(503).json({ success: false, error: 'Failed to save webhook' });
+        console.error('❌ Error saving webhook:', error);
+        return res.status(500).json({ success: false, error: 'Failed to save webhook' });
     }
 });
 
@@ -1687,7 +1614,7 @@ function initUsersDatabase() {
             lastModified: new Date().toISOString()
         };
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(defaultData, null, 2), 'utf8');
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Users database initialized');
+        console.log('🗄️ Users database initialized');
     }
 }
 
@@ -1701,7 +1628,7 @@ function getUsers() {
         const db = JSON.parse(data);
         return db.users || [];
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error reading users database:', error);
+        console.error('❌ Error reading users database:', error);
         return [];
     }
 }
@@ -1717,7 +1644,7 @@ function saveUsers(users) {
         fs.writeFileSync(USERS_DB_FILE, JSON.stringify(db, null, 2), 'utf8');
         return true;
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving users database:', error);
+        console.error('❌ Error saving users database:', error);
         return false;
     }
 }
@@ -1766,7 +1693,7 @@ app.post('/api/auth/register', async (req, res) => {
             id: generateUserId(),
             username: username.trim(),
             email: email.trim().toLowerCase(),
-            password: password, // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â In produzione: hash con bcrypt!
+            password: password, // ⚠️ In produzione: hash con bcrypt!
             createdAt: new Date().toISOString(),
             lastLogin: null,
             profile: {
@@ -1779,15 +1706,15 @@ app.post('/api/auth/register', async (req, res) => {
         users.push(newUser);
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Registered new user: ${username}`);
+        console.log(`✅ Registered new user: ${username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = newUser;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during registration:', error);
-        return res.status(503).json({ success: false, error: 'Registration failed' });
+        console.error('❌ Error during registration:', error);
+        return res.status(500).json({ success: false, error: 'Registration failed' });
     }
 });
 
@@ -1815,15 +1742,15 @@ app.post('/api/auth/login', async (req, res) => {
         user.lastLogin = new Date().toISOString();
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ User logged in: ${user.username}`);
+        console.log(`✅ User logged in: ${user.username}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = user;
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during login:', error);
-        return res.status(503).json({ success: false, error: 'Login failed' });
+        console.error('❌ Error during login:', error);
+        return res.status(500).json({ success: false, error: 'Login failed' });
     }
 });
 
@@ -1844,8 +1771,8 @@ app.get('/api/auth/user/:userId', async (req, res) => {
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error fetching user:', error);
-        return res.status(503).json({ success: false, error: 'Failed to fetch user' });
+        console.error('❌ Error fetching user:', error);
+        return res.status(500).json({ success: false, error: 'Failed to fetch user' });
     }
 });
 
@@ -1872,15 +1799,15 @@ app.put('/api/auth/user/:userId', async (req, res) => {
 
         saveUsers(users);
 
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Updated user profile: ${userId}`);
+        console.log(`✅ Updated user profile: ${userId}`);
 
         // Return user without password
         const { password: _, ...userWithoutPassword } = users[userIndex];
         return res.json({ success: true, user: userWithoutPassword });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error updating user:', error);
-        return res.status(503).json({ success: false, error: 'Failed to update user' });
+        console.error('❌ Error updating user:', error);
+        return res.status(500).json({ success: false, error: 'Failed to update user' });
     }
 });
 
@@ -1893,12 +1820,12 @@ app.post('/api/auth/logout', async (req, res) => {
             return res.status(400).json({ success: false, error: 'userId required' });
         }
 
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª Logout richiesto per utente: ${userId}`);
+        console.log(`🚪 Logout richiesto per utente: ${userId}`);
 
         // Stoppa tutti i monitor dell'utente
         const result = monitorManager.stopUserMonitors(userId);
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
+        console.log(`✅ Logout completato: ${userId} - ${result.stopped} monitor fermati`);
 
         return res.json({ 
             success: true, 
@@ -1907,8 +1834,8 @@ app.post('/api/auth/logout', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error during logout:', error);
-        return res.status(503).json({ success: false, error: 'Failed to logout' });
+        console.error('❌ Error during logout:', error);
+        return res.status(500).json({ success: false, error: 'Failed to logout' });
     }
 });
 
@@ -1955,13 +1882,13 @@ app.post('/api/monitors/start', async (req, res) => {
         // Avvia monitor
         const result = await monitorManager.startMonitor(interest, userId);
 
-        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
+        // ⚠️ NON riscrivere il file qui! Il monitor gestisce lo status tramite updateMonitorStatus()
         // Se riscriviamo, perdiamo statusMessage e nextCheckTime che il monitor ha appena aggiunto
 
         return res.json(result);
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error starting monitor:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error starting monitor:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -1995,8 +1922,8 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
 
         return res.json(result);
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error stopping monitor:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error stopping monitor:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2006,13 +1933,13 @@ app.post('/api/monitors/stop/:interestId', async (req, res) => {
  */
 app.post('/api/monitors/stop-all', async (req, res) => {
     try {
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
+        console.log('🛑 Richiesta STOP ALL MONITORS + DELETE ALL INTERESTS');
         
         const result = monitorManager.stopAllMonitors();
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Tutti i monitor fermati: ${result.stopped}`);
+        console.log(`✅ Tutti i monitor fermati: ${result.stopped}`);
         
-        // ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Elimina tutti i file interests
+        // 🗑️ Elimina tutti i file interests
         const interestsDir = path.join(__dirname, 'data', 'interests');
         const files = fs.readdirSync(interestsDir);
         let deletedCount = 0;
@@ -2022,11 +1949,11 @@ app.post('/api/monitors/stop-all', async (req, res) => {
                 const filePath = path.join(interestsDir, file);
                 fs.writeFileSync(filePath, '[]', 'utf8'); // Svuota invece di eliminare
                 deletedCount++;
-                console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Svuotato file interests: ${file}`);
+                console.log(`🗑️ Svuotato file interests: ${file}`);
             }
         }
         
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ ${deletedCount} file interests svuotati`);
+        console.log(`✅ ${deletedCount} file interests svuotati`);
         
         return res.json({ 
             success: true, 
@@ -2035,8 +1962,8 @@ app.post('/api/monitors/stop-all', async (req, res) => {
             interestsCleared: deletedCount
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error stopping all monitors:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error stopping all monitors:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2049,8 +1976,8 @@ app.get('/api/monitors/stats', (req, res) => {
         const stats = monitorManager.getStats();
         return res.json({ success: true, ...stats });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting monitor stats:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting monitor stats:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2064,8 +1991,8 @@ app.get('/api/monitors/user/:userId', (req, res) => {
         const monitors = monitorManager.getUserMonitors(userId);
         return res.json({ success: true, monitors });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting user monitors:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting user monitors:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2130,8 +2057,8 @@ app.get('/api/admin/server-data', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting admin data:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting admin data:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2152,27 +2079,27 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         const userFile = path.join(__dirname, 'data', 'users', `${userId}.json`);
         try {
             await fs.unlink(userFile);
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted user file: ${userId}`);
+            console.log(`🗑️ Deleted user file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â User file not found: ${userId}`);
+            console.log(`⚠️ User file not found: ${userId}`);
         }
         
         // 3. Elimina interests
         const interestsFile = path.join(__dirname, 'data', 'interests', `interests_${userId}.json`);
         try {
             await fs.unlink(interestsFile);
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted interests file: ${userId}`);
+            console.log(`🗑️ Deleted interests file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Interests file not found: ${userId}`);
+            console.log(`⚠️ Interests file not found: ${userId}`);
         }
         
         // 4. Elimina webhooks
         const webhooksFile = path.join(__dirname, 'data', 'webhooks', `webhooks_${userId}.json`);
         try {
             await fs.unlink(webhooksFile);
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â‚¬ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‹Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Deleted webhooks file: ${userId}`);
+            console.log(`🗑️ Deleted webhooks file: ${userId}`);
         } catch (err) {
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Webhooks file not found: ${userId}`);
+            console.log(`⚠️ Webhooks file not found: ${userId}`);
         }
         
         return res.json({
@@ -2182,8 +2109,8 @@ app.delete('/api/admin/user/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error deleting user:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error deleting user:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2206,7 +2133,7 @@ function getSportWebhookUrl() {
             return config.webhookUrl || null;
         }
     } catch (error) {
-        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Could not read webhook config:', error.message);
+        console.warn('⚠️ Could not read webhook config:', error.message);
     }
     return null;
 }
@@ -2230,25 +2157,12 @@ app.post('/api/sport/profile', async (req, res) => {
         };
 
         fs.writeFileSync(sportProfilePath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ¢â€žÂ¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª Sport profile saved for user: ${userId}`);
-
-        // Notifica UserProfileAgent del cambiamento
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'sport',
-                data: dataToSave,
-                source: 'sport_profile_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
+        console.log(`💪 Sport profile saved for user: ${userId}`);
 
         return res.json({ success: true, message: 'Profile saved successfully' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving sport profile:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error saving sport profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2287,7 +2201,7 @@ app.get('/api/sport/profiles/all', async (req, res) => {
                                       (programData?.programData?.estimatedCalories || 400)
                     });
                 } catch (err) {
-                    console.warn(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Could not parse ${file}:`, err.message);
+                    console.warn(`⚠️ Could not parse ${file}:`, err.message);
                 }
             }
         }
@@ -2299,8 +2213,8 @@ app.get('/api/sport/profiles/all', async (req, res) => {
             )
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting all profiles:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting all profiles:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2317,8 +2231,8 @@ app.get('/api/sport/profile/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(sportProfilePath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error loading sport profile:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error loading sport profile:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2344,27 +2258,27 @@ app.post('/api/sport/program', async (req, res) => {
         };
 
         fs.writeFileSync(programPath, JSON.stringify(dataToSave, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Program ${programId} saved for user: ${userId}`);
+        console.log(`🏋️ Program ${programId} saved for user: ${userId}`);
 
         // Invia webhook notifica
         try {
             const webhookUrl = getSportWebhookUrl();
             if (webhookUrl) {
                 await axios.post(webhookUrl, {
-                    content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
+                    content: `🎯 **Nuovo Allenamento Scelto!**\n\nUser ID: \`${userId}\`\nProgramma: **${programData?.title || programId}**\nData: ${new Date().toLocaleString('it-IT')}`
                 });
-                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Webhook inviato per nuovo programma');
+                console.log('📢 Webhook inviato per nuovo programma');
             } else {
-                console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Nessun webhook configurato');
+                console.log('ℹ️ Nessun webhook configurato');
             }
         } catch (webhookError) {
-            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Webhook failed:', webhookError.message);
+            console.warn('⚠️ Webhook failed:', webhookError.message);
         }
 
         return res.json({ success: true, message: 'Program saved successfully' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error saving program:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error saving program:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2381,8 +2295,8 @@ app.get('/api/sport/program/:userId', async (req, res) => {
         const data = JSON.parse(fs.readFileSync(programPath, 'utf8'));
         return res.json({ success: true, data });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error loading program:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error loading program:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2415,15 +2329,15 @@ app.post('/api/sport/workout-completed', async (req, res) => {
         });
 
         fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Workout completed for user: ${userId}`);
+        console.log(`✅ Workout completed for user: ${userId}`);
 
         return res.json({ 
             success: true, 
             totalCompleted: programData.completedWorkouts.length 
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error marking workout completed:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error marking workout completed:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2446,89 +2360,20 @@ app.get('/api/sport/stats/:userId', async (req, res) => {
 
         const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
         const completedCount = programData.completedWorkouts?.length || 0;
-        const skippedCount = programData.skippedWorkouts?.length || 0;
-        const estimatedCalories = (programData.completedWorkouts || []).reduce((sum, w) => sum + (w.caloriesBurned || 400), 0);
+        const estimatedCalories = completedCount * (programData.programData?.estimatedCalories || 400);
 
         return res.json({ 
             success: true, 
             stats: {
                 totalWorkouts: completedCount,
-                skippedWorkouts: skippedCount,
-                currentStreak: calculateStreak(programData.completedWorkouts || []),
+                currentStreak: calculateStreak(programData.completedWorkouts),
                 estimatedCalories,
                 programTitle: programData.programData?.title
             }
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting stats:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-// POST /api/sport/stats - Update sport statistics (workout completed or skipped)
-app.post('/api/sport/stats', async (req, res) => {
-    try {
-        const { userId, workoutCompleted, workoutSkipped, caloriesBurned, date, dayIndex } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'userId required' });
-        }
-
-        const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
-        
-        // Se non esiste il file programma, crealo
-        let programData = {};
-        if (fs.existsSync(programPath)) {
-            programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
-        }
-
-        // Inizializza array se non esistono
-        if (!programData.completedWorkouts) {
-            programData.completedWorkouts = [];
-        }
-        if (!programData.skippedWorkouts) {
-            programData.skippedWorkouts = [];
-        }
-
-        const workoutDate = date || new Date().toISOString();
-
-        if (workoutCompleted) {
-            // Aggiungi workout completato
-            programData.completedWorkouts.push({
-                date: workoutDate,
-                caloriesBurned: caloriesBurned || 400,
-                completedAt: new Date().toISOString(),
-                dayIndex: dayIndex
-            });
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Workout completed for user: ${userId}`);
-        } else if (workoutSkipped) {
-            // Aggiungi workout saltato
-            programData.skippedWorkouts.push({
-                date: workoutDate,
-                skippedAt: new Date().toISOString(),
-                dayIndex: dayIndex
-            });
-            console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Workout skipped for user: ${userId}`);
-        }
-
-        // Salva i dati
-        fs.writeFileSync(programPath, JSON.stringify(programData, null, 2), 'utf8');
-
-        // Calcola stats aggiornate
-        const stats = {
-            totalWorkouts: programData.completedWorkouts.length,
-            skippedWorkouts: programData.skippedWorkouts.length,
-            currentStreak: calculateStreak(programData.completedWorkouts),
-            estimatedCalories: programData.completedWorkouts.reduce((sum, w) => sum + (w.caloriesBurned || 400), 0)
-        };
-
-        return res.json({ 
-            success: true, 
-            stats
-        });
-    } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error updating stats:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting stats:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2578,14 +2423,14 @@ app.post('/api/sport/test-webhook', async (req, res) => {
 
         // Invia notifica di test
         await axios.post(webhookUrl, {
-            content: `ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âª **Test Webhook Sport & Fitness**\n\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ ${new Date().toLocaleString('it-IT')}`
+            content: `🧪 **Test Webhook Sport & Fitness**\n\n✅ Webhook configurato correttamente!\n\nRiceverai notifiche quando gli utenti scelgono un programma di allenamento.\n\n📅 ${new Date().toLocaleString('it-IT')}`
         });
 
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ Test webhook sent successfully');
+        console.log('📢 Test webhook sent successfully');
         return res.json({ success: true, message: 'Test webhook sent' });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error sending test webhook:', error.message);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error sending test webhook:', error.message);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2599,8 +2444,8 @@ app.get('/api/sport/webhook', async (req, res) => {
             configured: !!webhookUrl
         });
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting webhook:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting webhook:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2695,15 +2540,10 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
 
         // 4. Webhooks
         try {
-            // Try new format first (webhook_${userId}.json)
-            let webhookPath = path.join(WEBHOOKS_DIR, `webhook_${userId}.json`);
-            if (!fs.existsSync(webhookPath)) {
-                // Try old format (${userId}.json)
-                webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
-            }
+            const webhookPath = path.join(WEBHOOKS_DIR, `${userId}.json`);
             if (fs.existsSync(webhookPath)) {
                 const webhookData = JSON.parse(fs.readFileSync(webhookPath, 'utf8'));
-                userData.data.webhook = webhookData.webhook || webhookData.url || webhookData;
+                userData.data.webhook = webhookData.webhook || webhookData;
             }
         } catch (err) {
             console.log(`No webhook for ${userId}`);
@@ -2736,39 +2576,7 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
             userData.data.ebay = { connected: false };
         }
 
-        // 7. Diet Data (dieta, peso, calorie)
-        userData.data.diet = {};
-        try {
-            // Cerca dati dieta salvati (potrebbero essere in localStorage lato client, 
-            // ma se salvati sul server saranno qui)
-            const dietDataPath = path.join(__dirname, 'data', 'diet', `${userId}.json`);
-            if (fs.existsSync(dietDataPath)) {
-                const dietData = JSON.parse(fs.readFileSync(dietDataPath, 'utf8'));
-                userData.data.diet = {
-                    selectedDiet: dietData.selectedDiet || null,
-                    weightHistory: dietData.weightHistory || [],
-                    calorieHistory: dietData.calorieHistory || [],
-                    currentWeight: dietData.currentWeight || null,
-                    currentCalories: dietData.currentCalories || null,
-                    lastUpdated: dietData.lastUpdated || null
-                };
-            }
-        } catch (err) {
-            console.log(`No diet data for ${userId}`);
-        }
-
-        // 8. Monitor Data (se presente)
-        try {
-            const monitorPath = path.join(__dirname, 'data', 'monitors', `${userId}.json`);
-            if (fs.existsSync(monitorPath)) {
-                const monitorData = JSON.parse(fs.readFileSync(monitorPath, 'utf8'));
-                userData.data.monitors = monitorData.monitors || [];
-            }
-        } catch (err) {
-            console.log(`No monitor data for ${userId}`);
-        }
-
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Unified user data retrieved for: ${userId}`);
+        console.log(`✅ Unified user data retrieved for: ${userId}`);
         
         return res.json({
             success: true,
@@ -2776,8 +2584,8 @@ app.get('/api/admin/user-data/:userId', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Error getting unified user data:', error);
-        return res.status(503).json({ success: false, error: error.message });
+        console.error('❌ Error getting unified user data:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 });
 
@@ -2811,20 +2619,7 @@ app.post('/api/automations/sport', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Sport automations saved for user ${userId}`);
-        
-        // Notifica UserProfileAgent del cambiamento
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'automations',
-                data: existingData,
-                source: 'automations_sport_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
+        console.log(`✅ Sport automations saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -2904,7 +2699,7 @@ app.post('/api/automations/habits', async (req, res) => {
         };
 
         fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Habit settings saved for user ${userId}`);
+        console.log(`✅ Habit settings saved for user ${userId}`);
 
         res.json({
             success: true,
@@ -2954,2571 +2749,13 @@ app.get('/api/automations/habits/:userId', async (req, res) => {
     }
 });
 
-/**
- * POST /api/automations/notifications
- * Save Discord notification settings
- */
-app.post('/api/automations/notifications', async (req, res) => {
-    try {
-        const { userId, settings } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, error: 'Missing userId' });
-        }
-
-        const automationsDir = path.join(DATA_DIR, 'automations');
-        if (!fs.existsSync(automationsDir)) {
-            fs.mkdirSync(automationsDir, { recursive: true });
-        }
-
-        const automationsPath = path.join(automationsDir, `${userId}.json`);
-        let existingData = {};
-        
-        if (fs.existsSync(automationsPath)) {
-            existingData = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        }
-
-        existingData.notifications = {
-            ...settings,
-            lastUpdated: new Date().toISOString()
-        };
-
-        fs.writeFileSync(automationsPath, JSON.stringify(existingData, null, 2));
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Notification settings saved for user ${userId}`);
-
-        res.json({
-            success: true,
-            message: 'Notification settings saved',
-            settings: existingData.notifications
-        });
-    } catch (error) {
-        console.error('Error saving notification settings:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/automations/notifications/:userId
- * Get Discord notification settings
- */
-app.get('/api/automations/notifications/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const automationsPath = path.join(DATA_DIR, 'automations', `${userId}.json`);
-
-        if (!fs.existsSync(automationsPath)) {
-            return res.json({
-                success: true,
-                settings: {
-                    notifyMonitorProducts: true,
-                    notifyWorkouts: true,
-                    notifyHabits: true,
-                    notifyEbay: false,
-                    frequency: 'realtime'
-                }
-            });
-        }
-
-        const data = JSON.parse(fs.readFileSync(automationsPath, 'utf8'));
-        res.json({
-            success: true,
-            settings: data.notifications || {
-                notifyMonitorProducts: true,
-                notifyWorkouts: true,
-                notifyHabits: true,
-                notifyEbay: false,
-                frequency: 'realtime'
-            }
-        });
-    } catch (error) {
-        console.error('Error getting notification settings:', error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-// ============================================
-// AGENT AI COMMITTEE ENDPOINTS
-// ============================================
-
-/**
- * POST /api/agents/task
- * Assign a task to the agent system
- */
-app.post('/api/agents/task', async (req, res) => {
-    try {
-        const task = req.body;
-        
-        if (!task || !task.type) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Task type required' 
-            });
-        }
-
-        const result = await coordinator.assignTask(task);
-        res.json(result);
-    } catch (error) {
-        console.error('Error assigning task:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/agents/queue
- * Queue a task to the agent system
- */
-app.post('/api/agents/queue', async (req, res) => {
-    try {
-        const { task, preferredAgent } = req.body;
-        
-        if (!task || !task.type) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Task type required' 
-            });
-        }
-
-        const taskId = await coordinator.queueTask(task, preferredAgent);
-        res.json({ 
-            success: true, 
-            taskId,
-            message: 'Task queued successfully' 
-        });
-    } catch (error) {
-        console.error('Error queueing task:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/agents/stats
- * Get agent system statistics
- */
-app.get('/api/agents/stats', async (req, res) => {
-    try {
-        const stats = coordinator.getStats();
-        res.json({ 
-            success: true, 
-            stats 
-        });
-    } catch (error) {
-        console.error('Error getting agent stats:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/agents/agent/:agentName
- * Get specific agent status
- */
-app.get('/api/agents/agent/:agentName', async (req, res) => {
-    try {
-        const { agentName } = req.params;
-        const agentStats = coordinator.getAgentStatus(agentName);
-        
-        if (!agentStats) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Agent not found' 
-            });
-        }
-
-        res.json({ 
-            success: true, 
-            agent: agentStats 
-        });
-    } catch (error) {
-        console.error('Error getting agent status:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/figma/create-page
- * Create a page from Figma design
- */
-app.post('/api/figma/create-page', async (req, res) => {
-    try {
-        const { fileKey, nodeId, pageName, pagePath, backendConfig, exportAssets, assetNodeIds } = req.body;
-        
-        if (!fileKey || !pageName) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'fileKey and pageName required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'create_page_from_figma',
-            fileKey,
-            nodeId,
-            pageName,
-            pagePath,
-            backendConfig,
-            exportAssets,
-            assetNodeIds,
-            assetFormat: req.body.assetFormat || 'png'
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error creating page from Figma:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/figma/sync
- * Sync Figma design
- */
-app.post('/api/figma/sync', async (req, res) => {
-    try {
-        const { fileKey, nodeId } = req.body;
-        
-        if (!fileKey) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'fileKey required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'sync_figma_design',
-            fileKey,
-            nodeId
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error syncing Figma design:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/frontend/link-page
- * Link a page to backend APIs
- */
-app.post('/api/frontend/link-page', async (req, res) => {
-    try {
-        const { pagePath, apiConfig } = req.body;
-        
-        if (!pagePath || !apiConfig) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'pagePath and apiConfig required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'link_page_to_api',
-            pagePath,
-            apiConfig
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error linking page to API:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/agents/communicate
- * Communicate with a specific agent
- */
-app.post('/api/agents/communicate', async (req, res) => {
-    try {
-        const { agentName, message } = req.body;
-        
-        if (!agentName || !message) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'agentName and message required' 
-            });
-        }
-
-        const result = await coordinator.communicateWithAgent(agentName, message);
-        res.json({ 
-            success: true, 
-            result 
-        });
-    } catch (error) {
-        console.error('Error communicating with agent:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/agents/broadcast
- * Broadcast message to all agents
- */
-app.post('/api/agents/broadcast', async (req, res) => {
-    try {
-        const { eventType, data, excludeAgent } = req.body;
-        
-        if (!eventType) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'eventType required' 
-            });
-        }
-
-        const result = coordinator.broadcast(eventType, data || {}, excludeAgent || null);
-        res.json({ 
-            success: true, 
-            result 
-        });
-    } catch (error) {
-        console.error('Error broadcasting message:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/agents/subscribe
- * Subscribe agent to event type
- */
-app.post('/api/agents/subscribe', async (req, res) => {
-    try {
-        const { agentName, eventType } = req.body;
-        
-        if (!agentName || !eventType) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'agentName and eventType required' 
-            });
-        }
-
-        coordinator.subscribe(agentName, eventType);
-        res.json({ 
-            success: true, 
-            message: `Agent ${agentName} subscribed to ${eventType}` 
-        });
-    } catch (error) {
-        console.error('Error subscribing agent:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/agents/communications
- * Get communication log
- */
-app.get('/api/agents/communications', async (req, res) => {
-    try {
-        const limit = parseInt(req.query.limit) || 100;
-        const log = coordinator.getCommunicationLog(limit);
-        res.json({ 
-            success: true, 
-            log,
-            total: log.length
-        });
-    } catch (error) {
-        console.error('Error getting communication log:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/agents/verify-data
- * Verify shared data across agents
- */
-app.post('/api/agents/verify-data', async (req, res) => {
-    try {
-        const { dataType, data } = req.body;
-        
-        if (!dataType) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'dataType required' 
-            });
-        }
-
-        const results = await coordinator.verifySharedData(dataType, data || {});
-        res.json({ 
-            success: true, 
-            results 
-        });
-    } catch (error) {
-        console.error('Error verifying data:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/agents/heartbeat
- * Get heartbeat status
- */
-app.get('/api/agents/heartbeat', async (req, res) => {
-    try {
-        const status = coordinator.getHeartbeatStatus();
-        res.json({ 
-            success: true, 
-            status 
-        });
-    } catch (error) {
-        console.error('Error getting heartbeat status:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/agents/communication-stats
- * Get communication statistics
- */
-app.get('/api/agents/communication-stats', async (req, res) => {
-    try {
-        const stats = coordinator.getCommunicationStats();
-        res.json({ 
-            success: true, 
-            stats 
-        });
-    } catch (error) {
-        console.error('Error getting communication stats:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * ========== USER PROFILE AGENT API ENDPOINTS ==========
- * Sistema di memorizzazione e unione dati utente H24
- */
-
-/**
- * GET /api/user-profile/:userId
- * Get unified user profile (profilo unificato)
- */
-app.get('/api/user-profile/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/user-profile/${req.params.userId}`);
-    try {
-        const { userId } = req.params;
-        const { forceRefresh } = req.query;
-        
-        const result = await coordinator.assignTask({
-            type: 'get_unified_profile',
-            userId,
-            forceRefresh: forceRefresh === 'true'
-        });
-        
-        // Se il task fallisce, ritorna struttura vuota invece di errore
-        if (!result || !result.success) {
-            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â UserProfileAgent returned error, returning empty profile');
-            return res.json({
-                success: true,
-                data: {
-                    account: null,
-                    sport: null,
-                    interests: [],
-                    webhook: null,
-                    automations: null,
-                    diet: {
-                        preferences: null,
-                        selectedDiet: null
-                    }
-                }
-            });
-        }
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error getting unified profile:', error);
-        // Ritorna struttura vuota invece di errore 500 (graceful degradation)
-        res.json({
-            success: true,
-            data: {
-                account: null,
-                sport: null,
-                interests: [],
-                webhook: null,
-                automations: null,
-                diet: {
-                    preferences: null,
-                    selectedDiet: null
-                }
-            }
-        });
-    }
-});
-
-/**
- * POST /api/user-profile/:userId/unify
- * Unify all user data into single profile
- */
-app.post('/api/user-profile/:userId/unify', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        
-        const result = await coordinator.assignTask({
-            type: 'unify_user_data',
-            userId
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error unifying user data:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/user-profile/:userId/verify
- * Verify user data consistency (verifica continua H24)
- */
-app.post('/api/user-profile/:userId/verify', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        
-        const result = await coordinator.assignTask({
-            type: 'verify_user_data',
-            userId
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error verifying user data:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * GET /api/user-profile/:userId/history
- * Get user data change history
- */
-app.get('/api/user-profile/:userId/history', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { limit } = req.query;
-        
-        const result = await coordinator.assignTask({
-            type: 'get_user_data_history',
-            userId,
-            limit: limit ? parseInt(limit) : 50
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error getting user data history:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * ========== DIET API ENDPOINTS ==========
- * Gestione dati dieta, frigo, preferenze alimentari (online-first)
- */
-
-const DIET_DATA_DIR = path.join(__dirname, 'data', 'diet');
-if (!fs.existsSync(DIET_DATA_DIR)) {
-    fs.mkdirSync(DIET_DATA_DIR, { recursive: true });
-}
-
-console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Diet API endpoints directory initialized:', DIET_DATA_DIR);
-
-// Test endpoint per verificare che gli endpoint API siano registrati
-app.get('/api/diet/test', (req, res) => {
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Test endpoint /api/diet/test called');
-    return res.json({ success: true, message: 'Diet API endpoints are working!' });
-});
-
-/**
- * GET /api/diet/data/:userId
- * Ottiene tutti i dati dieta per un utente (MongoDB online-first)
- */
-app.get('/api/diet/data/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/diet/data/${req.params.userId}`);
-    try {
-        const { userId } = req.params;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Verifica se MongoDB ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ disponibile
-        try {
-            // Cerca dati dieta in MongoDB
-            const dietData = await mongoDB.findOne('diet_data', { userId });
-            
-            if (dietData) {
-                // Rimuovi _id e userId dal risultato (sono metadati MongoDB)
-                const { _id, userId: __, ...data } = dietData;
-                return res.json({ success: true, data });
-            }
-        } catch (mongoError) {
-            // MongoDB non disponibile o errore di connessione - ritorna dati vuoti (graceful degradation)
-            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â MongoDB not available, returning empty diet data:', mongoError.message);
-        }
-        
-        // Se non esiste o MongoDB non disponibile, ritorna struttura vuota
-        return res.json({ 
-            success: true, 
-            data: {
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null
-            }
-        });
-    } catch (error) {
-        console.error('Error loading diet data:', error);
-        // In caso di errore, ritorna comunque dati vuoti invece di errore 500
-        return res.json({ 
-            success: true, 
-            data: {
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null
-            }
-        });
-    }
-});
-
-/**
- * POST /api/diet/fridge/:userId
- * Salva/carica inventario frigo (MongoDB online-first)
- */
-app.post('/api/diet/fridge/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { items } = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        dietData.fridge = items || [];
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_fridge_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true, count: dietData.fridge.length });
-    } catch (error) {
-        console.error('Error saving fridge:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/diet/preferences/:userId
- * Ottiene preferenze alimentari (MongoDB online-first)
- */
-app.get('/api/diet/preferences/:userId', async (req, res) => {
-    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ GET /api/diet/preferences/${req.params.userId}`);
-    try {
-        const { userId } = req.params;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Cerca dati dieta in MongoDB
-        const dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (dietData && dietData.preferences) {
-            return res.json({ success: true, preferences: dietData.preferences });
-        }
-        
-        // Se non esiste, ritorna null
-        return res.json({ success: true, preferences: null });
-    } catch (error) {
-        console.error('Error loading diet preferences:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/diet/preferences/:userId
- * Salva preferenze alimentari (MongoDB online-first)
- * Metodo pulito e robusto per salvataggio preferenze utente
- */
-app.post('/api/diet/preferences/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const preferences = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo (pattern come fridge)
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        // Aggiorna solo preferences (mantiene altri dati)
-        dietData.preferences = preferences;
-        // Non impostare updatedAt qui, upsertOne lo gestisce automaticamente
-        
-        // Rimuovi createdAt e updatedAt dal documento prima dell'upsert
-        // perché upsertOne li gestisce automaticamente
-        const { createdAt, updatedAt, ...dataToSave } = dietData;
-        
-        // Salva in MongoDB (upsert) - pattern come fridge
-        await mongoDB.upsertOne('diet_data', { userId }, dataToSave);
-        
-        // Notifica UserProfileAgent (pattern come fridge)
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_preferences_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving preferences:', error);
-        return res.status(500).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/diet/weight/:userId
- * Salva entry peso (MongoDB online-first)
- */
-app.post('/api/diet/weight/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { weight, date } = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        if (!dietData.weight) {
-            dietData.weight = [];
-        }
-        
-        dietData.weight.push({
-            weight: parseFloat(weight),
-            date: date || new Date().toISOString().split('T')[0],
-            createdAt: new Date().toISOString()
-        });
-        
-        // Mantieni solo ultimi 30 giorni
-        dietData.weight = dietData.weight.slice(-30);
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_weight_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving weight:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/diet/calories/:userId
- * Salva entry calorie (MongoDB online-first)
- */
-app.post('/api/diet/calories/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { consumed, burned, target, date } = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        if (!dietData.calories) {
-            dietData.calories = [];
-        }
-        
-        const dateStr = date || new Date().toISOString().split('T')[0];
-        const existingIndex = dietData.calories.findIndex(c => c.date === dateStr);
-        
-        if (existingIndex >= 0) {
-            dietData.calories[existingIndex] = {
-                consumed: parseInt(consumed) || 0,
-                burned: parseInt(burned) || 0,
-                target: parseInt(target) || 2000,
-                date: dateStr,
-                updatedAt: new Date().toISOString()
-            };
-        } else {
-            dietData.calories.push({
-                consumed: parseInt(consumed) || 0,
-                burned: parseInt(burned) || 0,
-                target: parseInt(target) || 2000,
-                date: dateStr,
-                createdAt: new Date().toISOString()
-            });
-        }
-        
-        // Mantieni solo ultimi 30 giorni
-        dietData.calories = dietData.calories.slice(-30);
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_calories_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving calories:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/diet/shopping-list/:userId
- * Salva lista spesa (MongoDB online-first)
- */
-app.post('/api/diet/shopping-list/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { items } = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        dietData.shoppingList = items || [];
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_shopping_list_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true, count: dietData.shoppingList.length });
-    } catch (error) {
-        console.error('Error saving shopping list:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/diet/selected-diet/:userId
- * Salva dieta selezionata (MongoDB online-first)
- */
-app.post('/api/diet/selected-diet/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { diet } = req.body;
-        const { getMongoDB } = require('./lib/db/mongodb');
-        const mongoDB = getMongoDB();
-        
-        // Carica dati esistenti o crea nuovo
-        let dietData = await mongoDB.findOne('diet_data', { userId });
-        
-        if (!dietData) {
-            dietData = {
-                userId,
-                fridge: [],
-                preferences: null,
-                weight: [],
-                calories: [],
-                shoppingList: [],
-                selectedDiet: null,
-                createdAt: new Date().toISOString()
-            };
-        }
-        
-        dietData.selectedDiet = diet;
-        dietData.updatedAt = new Date().toISOString();
-        
-        // Salva in MongoDB (upsert)
-        await mongoDB.upsertOne('diet_data', { userId }, dietData);
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'diet',
-                data: dietData,
-                source: 'diet_selected_diet_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ success: true });
-    } catch (error) {
-        console.error('Error saving selected diet:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * ========== GIALLO ZAFFERANO RECIPES API ==========
- * Scraping ricette da Giallo Zafferano
- */
-const cheerio = require('cheerio');
-
-/**
- * GET /api/recipes/giallozafferano/search
- * Cerca ricette su Giallo Zafferano
- */
-app.get('/api/recipes/giallozafferano/search', async (req, res) => {
-    try {
-        const { query, limit = 10 } = req.query;
-        
-        if (!query) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Query parameter is required' 
-            });
-        }
-        
-        // URL di ricerca Giallo Zafferano
-        const searchUrl = `https://www.giallozafferano.it/ricette-cerca/?q=${encodeURIComponent(query)}`;
-        
-        console.log(`🔍 Searching Giallo Zafferano for: ${query}`);
-        
-        // Fetch della pagina
-        const response = await axios.get(searchUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-        });
-        
-        const $ = cheerio.load(response.data);
-        const recipes = [];
-        
-        // Estrai ricette dalla pagina (adatta i selettori CSS in base alla struttura del sito)
-        $('.gz-card-recipe, .recipe-card, article.recipe').slice(0, parseInt(limit)).each((i, elem) => {
-            const $elem = $(elem);
-            const title = $elem.find('h2, h3, .recipe-title, a').first().text().trim();
-            const link = $elem.find('a').first().attr('href');
-            const image = $elem.find('img').first().attr('src') || $elem.find('img').first().attr('data-src');
-            const description = $elem.find('.recipe-description, .excerpt, p').first().text().trim();
-            
-            if (title && link) {
-                recipes.push({
-                    id: `gz_${Date.now()}_${i}`,
-                    title,
-                    description: description || '',
-                    url: link.startsWith('http') ? link : `https://www.giallozafferano.it${link}`,
-                    image: image || '',
-                    source: 'Giallo Zafferano'
-                });
-            }
-        });
-        
-        console.log(`✅ Found ${recipes.length} recipes`);
-        
-        return res.json({ 
-            success: true, 
-            recipes,
-            query,
-            count: recipes.length
-        });
-        
-    } catch (error) {
-        console.error('❌ Error searching Giallo Zafferano:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Error searching recipes' 
-        });
-    }
-});
-
-/**
- * GET /api/recipes/giallozafferano/:recipeId
- * Ottiene dettagli completi di una ricetta
- */
-app.get('/api/recipes/giallozafferano/:recipeId', async (req, res) => {
-    try {
-        const { recipeId } = req.params;
-        const { url } = req.query;
-        
-        if (!url) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'URL parameter is required' 
-            });
-        }
-        
-        console.log(`📖 Fetching recipe from: ${url}`);
-        
-        // Fetch della pagina ricetta
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-        });
-        
-        const $ = cheerio.load(response.data);
-        
-        // Estrai dettagli ricetta (adatta i selettori CSS)
-        const title = $('h1, .recipe-title').first().text().trim();
-        const description = $('.recipe-description, .recipe-intro, p').first().text().trim();
-        const image = $('.recipe-image img, .recipe-photo img').first().attr('src') || '';
-        
-        const ingredients = [];
-        $('.ingredient, .recipe-ingredient, li.ingredient').each((i, elem) => {
-            const ingredient = $(elem).text().trim();
-            if (ingredient) ingredients.push(ingredient);
-        });
-        
-        const instructions = [];
-        $('.recipe-step, .step, .instruction').each((i, elem) => {
-            const step = $(elem).text().trim();
-            if (step) instructions.push(step);
-        });
-        
-        const prepTime = $('.prep-time, .tempo-preparazione').first().text().trim();
-        const cookTime = $('.cook-time, .tempo-cottura').first().text().trim();
-        const servings = $('.servings, .porzioni').first().text().trim();
-        const difficulty = $('.difficulty, .difficolta').first().text().trim();
-        
-        const recipe = {
-            id: recipeId,
-            title,
-            description,
-            image,
-            ingredients,
-            instructions,
-            prepTime,
-            cookTime,
-            servings,
-            difficulty,
-            url,
-            source: 'Giallo Zafferano'
-        };
-        
-        console.log(`✅ Recipe fetched: ${title}`);
-        
-        return res.json({ 
-            success: true, 
-            recipe 
-        });
-        
-    } catch (error) {
-        console.error('❌ Error fetching recipe:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: error.message || 'Error fetching recipe' 
-        });
-    }
-});
-
-/**
- * ========== GAMING API ENDPOINTS ==========
- * Gestione profili gaming, livelli, esperienza, statistiche
- */
-
-const GAMING_DATA_DIR = path.join(__dirname, 'data', 'gaming');
-if (!fs.existsSync(GAMING_DATA_DIR)) {
-    fs.mkdirSync(GAMING_DATA_DIR, { recursive: true });
-}
-console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Gaming API endpoints directory initialized:', GAMING_DATA_DIR);
-
-/**
- * GET /api/gaming/profile/:userId
- * Ottiene il profilo gaming di un utente
- */
-app.get('/api/gaming/profile/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
-        
-        if (fs.existsSync(profilePath)) {
-            const profileData = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
-            return res.json({ success: true, data: profileData });
-        } else {
-            // Return default profile (level 1)
-            const defaultProfile = {
-                level: 1,
-                experience: 0,
-                experienceToNext: 100,
-                totalGames: 0,
-                wins: 0,
-                losses: 0,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            return res.json({ success: true, data: defaultProfile });
-        }
-    } catch (error) {
-        console.error('Error loading gaming profile:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/gaming/profile/:userId
- * Crea o aggiorna il profilo gaming di un utente
- */
-app.post('/api/gaming/profile/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const profileData = req.body;
-        
-        // Ensure default values
-        const profile = {
-            level: profileData.level || 1,
-            experience: profileData.experience || 0,
-            experienceToNext: profileData.experienceToNext || 100,
-            totalGames: profileData.totalGames || 0,
-            wins: profileData.wins || 0,
-            losses: profileData.losses || 0,
-            createdAt: profileData.createdAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        
-        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
-        fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2), 'utf8');
-        
-        // Notify UserProfileAgent
-        if (coordinator) {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'gaming',
-                data: profile,
-                source: 'gaming_profile_endpoint'
-            });
-        }
-        
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Gaming profile saved for user:', userId);
-        return res.json({ success: true, data: profile });
-    } catch (error) {
-        console.error('Error saving gaming profile:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/gaming/profile/:userId/add-experience
- * Aggiunge esperienza e gestisce level up
- */
-app.post('/api/gaming/profile/:userId/add-experience', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { amount } = req.body;
-        
-        if (!amount || amount <= 0) {
-            return res.status(400).json({ success: false, error: 'Invalid experience amount' });
-        }
-        
-        const profilePath = path.join(GAMING_DATA_DIR, `${userId}.json`);
-        let profile = {
-            level: 1,
-            experience: 0,
-            experienceToNext: 100,
-            totalGames: 0,
-            wins: 0,
-            losses: 0,
-            createdAt: new Date().toISOString()
-        };
-        
-        if (fs.existsSync(profilePath)) {
-            profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
-        }
-        
-        // Add experience
-        profile.experience = (profile.experience || 0) + amount;
-        
-        // Check for level up
-        let leveledUp = false;
-        while (profile.experience >= profile.experienceToNext) {
-            profile.experience -= profile.experienceToNext;
-            profile.level = (profile.level || 1) + 1;
-            profile.experienceToNext = Math.floor(profile.experienceToNext * 1.5); // Increase exp needed
-            leveledUp = true;
-        }
-        
-        profile.updatedAt = new Date().toISOString();
-        
-        fs.writeFileSync(profilePath, JSON.stringify(profile, null, 2), 'utf8');
-        
-        // Notify UserProfileAgent
-        if (coordinator) {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'gaming',
-                data: profile,
-                source: 'gaming_experience_endpoint'
-            });
-        }
-        
-        return res.json({ 
-            success: true, 
-            data: profile,
-            leveledUp,
-            newLevel: leveledUp ? profile.level : null
-        });
-    } catch (error) {
-        console.error('Error adding experience:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * ========== MAZE RUNNER API ENDPOINTS ==========
- * Gestione progressi e leaderboard per Maze Runner
- */
-
-const MAZE_DATA_DIR = path.join(__dirname, 'data', 'gaming', 'maze');
-if (!fs.existsSync(MAZE_DATA_DIR)) {
-    fs.mkdirSync(MAZE_DATA_DIR, { recursive: true });
-}
-console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ…â€œÃƒâ€šÃ¢â‚¬Â¦ Maze Runner API endpoints directory initialized:', MAZE_DATA_DIR);
-
-/**
- * GET /api/maze/progress/:userId
- * Ottiene i progressi del giocatore
- */
-app.get('/api/maze/progress/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
-        
-        if (fs.existsSync(progressPath)) {
-            const progressData = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
-            return res.json({ success: true, data: progressData });
-        } else {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'No progress found' 
-            });
-        }
-    } catch (error) {
-        console.error('Error loading maze progress:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/maze/complete/:userId
- * Salva completamento livello
- */
-app.post('/api/maze/complete/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { level, time, keysCollected, completedAt } = req.body;
-        
-        if (!level || !time) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Level and time are required' 
-            });
-        }
-        
-        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
-        
-        // Carica progresso esistente o crea nuovo
-        let progress = {
-            userId,
-            bestTime: null,
-            completedLevels: [],
-            totalCompletions: 0,
-            totalTime: 0,
-            createdAt: new Date().toISOString()
-        };
-        
-        if (fs.existsSync(progressPath)) {
-            progress = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
-        }
-        
-        // Aggiorna statistiche
-        const isNewBest = !progress.bestTime || time < progress.bestTime;
-        if (isNewBest) {
-            progress.bestTime = time;
-        }
-        
-        if (!progress.completedLevels.includes(level)) {
-            progress.completedLevels.push(level);
-        }
-        
-        progress.totalCompletions = (progress.totalCompletions || 0) + 1;
-        progress.totalTime = (progress.totalTime || 0) + time;
-        progress.lastPlayed = completedAt || new Date().toISOString();
-        progress.updatedAt = new Date().toISOString();
-        
-        // Salva progresso
-        fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2), 'utf8');
-        
-        // Aggiungi a leaderboard
-        const leaderboardPath = path.join(MAZE_DATA_DIR, `leaderboard_level${level}.json`);
-        let leaderboard = [];
-        
-        if (fs.existsSync(leaderboardPath)) {
-            leaderboard = JSON.parse(fs.readFileSync(leaderboardPath, 'utf8'));
-        }
-        
-        // Aggiungi nuova entry
-        leaderboard.push({
-            userId,
-            time,
-            keysCollected,
-            completedAt: completedAt || new Date().toISOString()
-        });
-        
-        // Ordina per tempo e mantieni solo top 100
-        leaderboard.sort((a, b) => a.time - b.time);
-        leaderboard = leaderboard.slice(0, 100);
-        
-        fs.writeFileSync(leaderboardPath, JSON.stringify(leaderboard, null, 2), 'utf8');
-        
-        // Aggiungi esperienza al profilo gaming
-        const experienceGained = Math.floor(100 - (time / 10)); // PiÃƒÆ’Ã‚Â¹ veloce = piÃƒÆ’Ã‚Â¹ exp
-        if (coordinator) {
-            try {
-                await coordinator.assignTask({
-                    type: 'monitor_data_changes',
-                    userId,
-                    dataType: 'gaming',
-                    data: { 
-                        game: 'maze-runner',
-                        level,
-                        time,
-                        experienceGained 
-                    },
-                    source: 'maze_completion_endpoint'
-                });
-            } catch (err) {
-                console.warn('Could not notify coordinator:', err.message);
-            }
-        }
-        
-        console.log('ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ…â€œÃƒâ€šÃ¢â‚¬Â¦ Maze completion saved for user:', userId, 'Time:', time);
-        return res.json({ 
-            success: true, 
-            data: progress,
-            isNewBest,
-            experienceGained
-        });
-    } catch (error) {
-        console.error('Error saving maze completion:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * GET /api/maze/leaderboard/:level
- * Ottiene la leaderboard per un livello
- */
-app.get('/api/maze/leaderboard/:level', async (req, res) => {
-    try {
-        const { level } = req.params;
-        const { limit = 10 } = req.query;
-        
-        const leaderboardPath = path.join(MAZE_DATA_DIR, `leaderboard_level${level}.json`);
-        
-        if (fs.existsSync(leaderboardPath)) {
-            const leaderboard = JSON.parse(fs.readFileSync(leaderboardPath, 'utf8'));
-            const topEntries = leaderboard.slice(0, parseInt(limit));
-            
-            return res.json({ 
-                success: true, 
-                data: topEntries,
-                total: leaderboard.length
-            });
-        } else {
-            return res.json({ 
-                success: true, 
-                data: [],
-                total: 0
-            });
-        }
-    } catch (error) {
-        console.error('Error loading leaderboard:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/maze/stats/:userId
- * Aggiorna statistiche generali
- */
-app.post('/api/maze/stats/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const stats = req.body;
-        
-        const progressPath = path.join(MAZE_DATA_DIR, `${userId}_progress.json`);
-        
-        let progress = {};
-        if (fs.existsSync(progressPath)) {
-            progress = JSON.parse(fs.readFileSync(progressPath, 'utf8'));
-        }
-        
-        progress = {
-            ...progress,
-            ...stats,
-            updatedAt: new Date().toISOString()
-        };
-        
-        fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2), 'utf8');
-        
-        return res.json({ success: true, data: progress });
-    } catch (error) {
-        console.error('Error updating maze stats:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * ========== CALENDAR API ENDPOINTS ==========
- * Gestione eventi calendario unificati (Sport, Impegni, Dieta)
- */
-
-const CALENDAR_DATA_DIR = path.join(__dirname, 'data', 'calendar');
-if (!fs.existsSync(CALENDAR_DATA_DIR)) {
-    fs.mkdirSync(CALENDAR_DATA_DIR, { recursive: true });
-}
-console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Calendar API endpoints directory initialized:', CALENDAR_DATA_DIR);
-
-/**
- * GET /api/calendar/events/:userId
- * Ottiene tutti gli eventi calendario per un utente
- * Raccoglie schede settimanali da Sport, Dieta, Impegni e le converte in eventi ricorrenti
- */
-app.get('/api/calendar/events/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { startDate, endDate } = req.query;
-        
-        // Determina range date (mese corrente se non specificato)
-        const today = new Date();
-        const start = startDate ? new Date(startDate) : new Date(today.getFullYear(), today.getMonth(), 1);
-        const end = endDate ? new Date(endDate) : new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        
-        // Normalizza date (solo giorno, senza ora)
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-        
-        let allEvents = [];
-        
-        // ========== SPORT: Leggi weekSchedule e converti in eventi ricorrenti ==========
-        try {
-            const programPath = path.join(SPORT_DATA_DIR, `${userId}_program.json`);
-            if (fs.existsSync(programPath)) {
-                const programData = JSON.parse(fs.readFileSync(programPath, 'utf8'));
-                
-                // weekSchedule contiene array di { dayIndex, workoutId, workoutTitle, workoutType, duration }
-                const weekSchedule = programData.weekSchedule || [];
-                
-                weekSchedule.forEach(workout => {
-                    if (workout.dayIndex !== undefined && workout.dayIndex !== null) {
-                        // Converti dayIndex (0=Lun, 6=Dom) in date ricorrenti per il range
-                        const dates = getRecurringDatesForDayIndex(workout.dayIndex, start, end);
-                        
-                        dates.forEach(date => {
-                            allEvents.push({
-                                id: `sport_${workout.workoutId || 'unknown'}_${workout.dayIndex}_${date}`,
-                                date: date,
-                                startTime: workout.startTime || '09:00',
-                                endTime: workout.endTime || null,
-                                title: workout.workoutTitle || 'Allenamento',
-                                description: workout.workoutType || workout.description || '',
-                                category: 'sport',
-                                source: 'sport',
-                                workoutId: workout.workoutId,
-                                duration: workout.duration,
-                                recurring: true,
-                                dayIndex: workout.dayIndex
-                            });
-                        });
-                    }
-                });
-            }
-        } catch (err) {
-            console.error('Error loading sport events:', err);
-        }
-        
-        // ========== DIETA: Leggi weekPlan e converti in eventi ricorrenti ==========
-        try {
-            const dietPath = path.join(DIET_DATA_DIR, `${userId}.json`);
-            if (fs.existsSync(dietPath)) {
-                const dietData = JSON.parse(fs.readFileSync(dietPath, 'utf8'));
-                
-                // selectedDiet contiene weekPlan con giorni della settimana come chiavi
-                if (dietData.selectedDiet && dietData.selectedDiet.weekPlan) {
-                    const weekPlan = dietData.selectedDiet.weekPlan;
-                    
-                    // Mappa giorni italiani a dayIndex (0=Lun, 6=Dom)
-                    const dayMap = {
-                        'LunedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 0, 'MartedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 1, 'MercoledÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 2, 'GiovedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 3,
-                        'VenerdÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬': 4, 'Sabato': 5, 'Domenica': 6
-                    };
-                    
-                    // Per ogni giorno della settimana nella dieta
-                    Object.keys(weekPlan).forEach(dayName => {
-                        const dayIndex = dayMap[dayName];
-                        if (dayIndex !== undefined) {
-                            const dayPlan = weekPlan[dayName];
-                            
-                            // Converti dayIndex in date ricorrenti per il range
-                            const dates = getRecurringDatesForDayIndex(dayIndex, start, end);
-                            
-                            // Crea eventi per ogni pasto del giorno
-                            const meals = [
-                                { name: 'Colazione', time: '08:00', meal: dayPlan.breakfast },
-                                { name: 'Spuntino 1', time: '11:00', meal: dayPlan.snack1 },
-                                { name: 'Pranzo', time: '13:00', meal: dayPlan.lunch },
-                                { name: 'Spuntino 2', time: '17:00', meal: dayPlan.snack2 },
-                                { name: 'Cena', time: '20:00', meal: dayPlan.dinner }
-                            ];
-                            
-                            dates.forEach(date => {
-                                meals.forEach(mealData => {
-                                    if (mealData.meal && mealData.meal.trim()) {
-                                        allEvents.push({
-                                            id: `diet_${dayName}_${mealData.name}_${date}`,
-                                            date: date,
-                                            startTime: mealData.time,
-                                            endTime: null,
-                                            title: `${mealData.name}: ${mealData.meal.substring(0, 50)}${mealData.meal.length > 50 ? '...' : ''}`,
-                                            description: mealData.meal,
-                                            category: 'dieta',
-                                            source: 'diet',
-                                            recurring: true,
-                                            dayName: dayName,
-                                            calories: dayPlan.calories
-                                        });
-                                    }
-                                });
-                            });
-                        }
-                    });
-                }
-            }
-        } catch (err) {
-            console.error('Error loading diet events:', err);
-        }
-        
-        // ========== IMPEGNI: Leggi eventi personalizzati (non ricorrenti) ==========
-        try {
-            const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
-            if (fs.existsSync(calendarPath)) {
-                const calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
-                const customEvents = (calendarData.events || [])
-                    .filter(event => {
-                        // Filtra eventi nel range
-                        const eventDate = new Date(event.date);
-                        return eventDate >= start && eventDate <= end;
-                    })
-                    .map(event => ({
-                        ...event,
-                        category: event.category || 'impegni',
-                        source: 'custom',
-                        recurring: false
-                    }));
-                
-                allEvents = allEvents.concat(customEvents);
-            }
-        } catch (err) {
-            console.error('Error loading custom events:', err);
-        }
-        
-        // Ordina per data e ora
-        allEvents.sort((a, b) => {
-            const dateCompare = new Date(a.date) - new Date(b.date);
-            if (dateCompare !== 0) return dateCompare;
-            return (a.startTime || '00:00').localeCompare(b.startTime || '00:00');
-        });
-        
-        return res.json({ 
-            success: true, 
-            events: allEvents,
-            count: allEvents.length
-        });
-    } catch (error) {
-        console.error('Error loading calendar events:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * POST /api/calendar/events/:userId
- * Crea o aggiorna un evento calendario
- */
-app.post('/api/calendar/events/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const { id, title, date, startTime, endTime, category, description, allDay } = req.body;
-        
-        if (!title || !date) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Title and date are required' 
-            });
-        }
-        
-        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
-        let calendarData = { events: [] };
-        
-        if (fs.existsSync(calendarPath)) {
-            calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
-        }
-        
-        const eventData = {
-            id: id || `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            title,
-            date,
-            startTime: allDay ? null : (startTime || '09:00'),
-            endTime: allDay ? null : endTime,
-            category: category || 'impegni',
-            description: description || '',
-            allDay: allDay || false,
-            createdAt: id ? undefined : new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
-        
-        if (id) {
-            // Aggiorna evento esistente
-            const index = calendarData.events.findIndex(e => e.id === id);
-            if (index >= 0) {
-                calendarData.events[index] = { ...calendarData.events[index], ...eventData };
-            } else {
-                calendarData.events.push(eventData);
-            }
-        } else {
-            // Crea nuovo evento
-            calendarData.events.push(eventData);
-        }
-        
-        calendarData.updatedAt = new Date().toISOString();
-        
-        fs.writeFileSync(calendarPath, JSON.stringify(calendarData, null, 2), 'utf8');
-        
-        // Notifica UserProfileAgent
-        try {
-            await coordinator.assignTask({
-                type: 'monitor_data_changes',
-                userId,
-                dataType: 'calendar',
-                data: eventData,
-                source: 'calendar_events_endpoint'
-            });
-        } catch (err) {
-            console.error('Error notifying UserProfileAgent:', err);
-        }
-        
-        return res.json({ 
-            success: true, 
-            event: eventData 
-        });
-    } catch (error) {
-        console.error('Error saving calendar event:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * DELETE /api/calendar/events/:userId/:eventId
- * Elimina un evento calendario
- */
-app.delete('/api/calendar/events/:userId/:eventId', async (req, res) => {
-    try {
-        const { userId, eventId } = req.params;
-        
-        const calendarPath = path.join(CALENDAR_DATA_DIR, `${userId}.json`);
-        if (!fs.existsSync(calendarPath)) {
-            return res.status(404).json({ success: false, error: 'Calendar not found' });
-        }
-        
-        const calendarData = JSON.parse(fs.readFileSync(calendarPath, 'utf8'));
-        const initialLength = calendarData.events.length;
-        calendarData.events = calendarData.events.filter(e => e.id !== eventId);
-        
-        if (calendarData.events.length === initialLength) {
-            return res.status(404).json({ success: false, error: 'Event not found' });
-        }
-        
-        calendarData.updatedAt = new Date().toISOString();
-        fs.writeFileSync(calendarPath, JSON.stringify(calendarData, null, 2), 'utf8');
-        
-        return res.json({ success: true, message: 'Event deleted' });
-    } catch (error) {
-        console.error('Error deleting calendar event:', error);
-        return res.status(503).json({ success: false, error: error.message });
-    }
-});
-
-/**
- * Helper: Converte dayIndex (0=Lun, 6=Dom) in date ricorrenti per un range di date
- * @param {number} dayIndex - 0=LunedÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬, 6=Domenica
- * @param {Date} startDate - Data inizio range
- * @param {Date} endDate - Data fine range
- * @returns {string[]} Array di date ISO (YYYY-MM-DD)
- */
-function getRecurringDatesForDayIndex(dayIndex, startDate, endDate) {
-    const dates = [];
-    const current = new Date(startDate);
-    
-    // Trova il primo giorno della settimana corrispondente nel range
-    // dayIndex: 0=Lun, 1=Mar, ..., 6=Dom
-    // current.getDay(): 0=Dom, 1=Lun, ..., 6=Sab
-    
-    // Converti getDay() a formato dayIndex (0=Lun, 6=Dom)
-    const currentDayIndex = (current.getDay() + 6) % 7;
-    
-    // Calcola giorni da aggiungere per arrivare al primo giorno corrispondente
-    let daysToAdd = dayIndex - currentDayIndex;
-    if (daysToAdd < 0) {
-        daysToAdd += 7; // Prossima settimana
-    }
-    
-    current.setDate(current.getDate() + daysToAdd);
-    
-    // Aggiungi tutte le occorrenze settimanali nel range
-    while (current <= endDate) {
-        dates.push(current.toISOString().split('T')[0]);
-        current.setDate(current.getDate() + 7); // Prossima settimana
-    }
-    
-    return dates;
-}
-
-/**
- * ========== AI AGENT API ENDPOINTS ==========
- * Estrazione dati da foto e testi
- */
-
-/**
- * POST /api/ai/extract-text-from-image
- * Estrae testo da immagine (OCR)
- */
-app.post('/api/ai/extract-text-from-image', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'extract_text_from_image',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error extracting text from image:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/analyze-image
- * Analizza immagine e estrae informazioni
- */
-app.post('/api/ai/analyze-image', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'analyze_image',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error analyzing image:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/extract-data-from-text
- * Estrae dati strutturati da testo
- */
-app.post('/api/ai/extract-data-from-text', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'extract_data_from_text',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error extracting data from text:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/extract-structured-data
- * Estrae dati strutturati (generico - da immagine o testo)
- */
-app.post('/api/ai/extract-structured-data', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'extract_structured_data',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error extracting structured data:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/extract-entities
- * Estrae entitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  da testo
- */
-app.post('/api/ai/extract-entities', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'extract_entities',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error extracting entities:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/analyze-sentiment
- * Analizza sentiment di un testo
- */
-app.post('/api/ai/analyze-sentiment', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'analyze_sentiment',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error analyzing sentiment:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/ai/classify-text
- * Classifica testo in categorie
- */
-app.post('/api/ai/classify-text', async (req, res) => {
-    try {
-        const result = await coordinator.assignTask({
-            type: 'classify_text',
-            ...req.body
-        });
-        
-        res.json(result);
-    } catch (error) {
-        console.error('Error classifying text:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/figma/apply-to-dieta
- * Applica design Figma alla pagina dieta mantenendo tutte le funzioni
- */
-app.post('/api/figma/apply-to-dieta', async (req, res) => {
-    try {
-        const { fileKey = 'qEikXdYIE1SPArKu66qw0m', nodeId = '0-1' } = req.body;
-        
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ Applicando design Figma alla pagina dieta...`);
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¹ File Key: ${fileKey}`);
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Node ID: ${nodeId}`);
-
-        // Step 1: Recupera file Figma
-        const fileResult = await coordinator.assignTask({
-            type: 'fetch_figma_file',
-            fileKey,
-            nodeIds: nodeId ? [nodeId] : null,
-            isMakeFile: true
-        });
-
-        if (!fileResult.success) {
-            throw new Error('Failed to fetch Figma file: ' + fileResult.error);
-        }
-
-        // Step 2: Analizza componenti
-        const analysisResult = await coordinator.assignTask({
-            type: 'analyze_figma_components',
-            fileKey,
-            nodeId
-        });
-
-        // Step 3: Genera codice
-        const codeResult = await coordinator.assignTask({
-            type: 'generate_frontend_code',
-            fileKey,
-            nodeId,
-            pageName: 'dieta'
-        });
-
-        // Step 4: Leggi pagina esistente
-        const dietaPath = path.join(__dirname, 'src', 'pages', 'dieta.html');
-        const existingContent = fs.readFileSync(dietaPath, 'utf8');
-
-        // Estrai funzioni JavaScript
-        const jsMatches = existingContent.match(/<script>([\s\S]*?)<\/script>/g);
-        const existingJS = jsMatches ? jsMatches.map(m => m.replace(/<\/?script>/g, '')).join('\n\n') : '';
-
-        // Estrai sidebar
-        const sidebarMatch = existingContent.match(/(<aside class="venus-sidebar"[\s\S]*?<\/aside>)/);
-        const sidebar = sidebarMatch ? sidebarMatch[1] : '';
-
-        // Estrai stili esistenti (funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  specifiche)
-        const existingStyles = extractDietaStyles(existingContent);
-
-        // Step 5: Costruisci nuova pagina
-        const figmaHTML = codeResult.code.html;
-        const figmaCSS = codeResult.code.css;
-        
-        const bodyMatch = figmaHTML.match(/<body>([\s\S]*?)<\/body>/);
-        let figmaBodyContent = bodyMatch ? bodyMatch[1] : '';
-        figmaBodyContent = figmaBodyContent
-            .replace(/<script[\s\S]*?<\/script>/gi, '')
-            .replace(/<style[\s\S]*?<\/style>/gi, '');
-
-        const newPage = buildDietaPage(figmaBodyContent, figmaCSS, existingJS, sidebar, existingStyles, fileKey, nodeId);
-
-        // Step 6: Salva
-        fs.writeFileSync(dietaPath, newPage, 'utf8');
-
-        res.json({
-            success: true,
-            message: 'Design Figma applicato alla pagina dieta',
-            components: codeResult.components,
-            fileKey,
-            nodeId
-        });
-
-    } catch (error) {
-        console.error('Error applying Figma to dieta:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * Estrae stili funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  specifiche dalla pagina dieta
- */
-function extractDietaStyles(content) {
-    const styleMatches = content.match(/<style>([\s\S]*?)<\/style>/g);
-    if (!styleMatches) return '';
-    
-    let styles = '';
-    styleMatches.forEach(match => {
-        const styleContent = match.replace(/<\/?style>/g, '');
-        // Mantieni solo stili per funzionalitÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â  (calendario, ricette, tracker)
-        if (styleContent.includes('calendar') || 
-            styleContent.includes('recipe') || 
-            styleContent.includes('tracker') ||
-            styleContent.includes('meal') ||
-            styleContent.includes('dinner')) {
-            styles += styleContent + '\n';
-        }
-    });
-    
-    return styles;
-}
-
-/**
- * Costruisce pagina dieta combinando design Figma + funzioni esistenti
- */
-function buildDietaPage(figmaBody, figmaCSS, existingJS, sidebar, existingStyles, fileKey, nodeId) {
-    return `<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookin'Shappa - Dieta & Salute</title>
-    <link rel="stylesheet" href="../styles/main.css">
-    <link rel="stylesheet" href="../styles/venus.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬</text></svg">
-    <!-- 
-        Figma Design Reference:
-        File: Health-Diet-Dashboard--Copy-
-        File Key: ${fileKey}
-        URL: https://www.figma.com/make/${fileKey}/Health-Diet-Dashboard--Copy-?node-id=${nodeId}
-        Design applicato da FigmaAgent - ${new Date().toISOString()}
-    -->
-    <style>
-        /* Reset e Base */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--venus-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-            background: linear-gradient(to bottom right, #f0fdf4, #eff6ff, #faf5ff);
-            min-height: 100vh;
-            color: var(--venus-text-primary, #1f2937);
-            line-height: 1.5;
-        }
-
-        .venus-dashboard-layout {
-            display: flex;
-            height: 100vh;
-        }
-
-        .venus-main-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-        }
-
-        /* Figma Generated Styles */
-        ${figmaCSS}
-
-        /* Existing Functionality Styles */
-        ${existingStyles}
-    </style>
-</head>
-<body>
-    <div class="venus-dashboard-layout">
-        ${sidebar}
-        
-        <main class="venus-main-content">
-            ${figmaBody}
-        </main>
-    </div>
-
-    <script src="../utils/auth-v2.js"></script>
-    <script>
-        ${existingJS}
-        
-        // Inizializza funzioni dopo caricamento
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ Pagina dieta caricata con design Figma');
-            
-            if (typeof setupCalendar === 'function') {
-                setupCalendar();
-                renderCalendar();
-            }
-            
-            if (typeof loadDinnerRecipes === 'function') {
-                setTimeout(() => loadDinnerRecipes(), 1000);
-            }
-        });
-    </script>
-</body>
-</html>`;
-}
-
-/**
- * POST /api/figma/fetch-make-file
- * Fetch Figma file da /make/ (community files)
- */
-app.post('/api/figma/fetch-make-file', async (req, res) => {
-    try {
-        const { fileKey, nodeIds } = req.body;
-        
-        if (!fileKey) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'fileKey required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'fetch_figma_file',
-            fileKey,
-            nodeIds,
-            isMakeFile: true // Indica che ÃƒÆ’Ã†â€™Ãƒâ€šÃ†â€™ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¨ un file /make/
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error fetching Figma make file:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * ========== BOT AGENT API ENDPOINTS ==========
- * Gestione comandi e interazioni bot Discord
- */
-
-/**
- * POST /api/bot/command
- * Gestisce comando bot Discord
- */
-app.post('/api/bot/command', async (req, res) => {
-    try {
-        const { command, userId, discordUserId, options } = req.body;
-        
-        if (!command) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'command required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'handle_discord_command',
-            command,
-            userId,
-            discordUserId,
-            options
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error handling bot command:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/bot/interaction
- * Gestisce interazione Discord (button, select, modal)
- */
-app.post('/api/bot/interaction', async (req, res) => {
-    try {
-        const { interactionType, customId, userId, discordUserId, values, data } = req.body;
-        
-        if (!interactionType || !customId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'interactionType and customId required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'handle_discord_interaction',
-            interactionType,
-            customId,
-            userId,
-            discordUserId,
-            values,
-            data
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error handling bot interaction:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/bot/workout-confirm
- * Conferma workout da Discord
- */
-app.post('/api/bot/workout-confirm', async (req, res) => {
-    try {
-        const { userId, workoutId, workoutDate, confirmed } = req.body;
-        
-        if (!userId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'userId required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'handle_workout_confirmation',
-            userId,
-            workoutId,
-            workoutDate,
-            confirmed: confirmed !== false
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error confirming workout:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/bot/product-alert-response
- * Gestisce risposta a alert prodotto
- */
-app.post('/api/bot/product-alert-response', async (req, res) => {
-    try {
-        const { userId, productId, action, interestId, productUrl } = req.body;
-        
-        if (!userId || !action) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'userId and action required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'handle_product_alert_response',
-            userId,
-            productId,
-            action,
-            interestId,
-            productUrl
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error handling product alert response:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/bot/send-response
- * Invia risposta bot a Discord
- */
-app.post('/api/bot/send-response', async (req, res) => {
-    try {
-        const { userId, webhookUrl, message, embeds, components } = req.body;
-        
-        if (!webhookUrl && !userId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'webhookUrl or userId required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'send_bot_response',
-            userId,
-            webhookUrl,
-            message,
-            embeds,
-            components
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error sending bot response:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/bot/process-message
- * Processa messaggio bot (text command)
- */
-app.post('/api/bot/process-message', async (req, res) => {
-    try {
-        const { message, userId, discordUserId } = req.body;
-        
-        if (!message) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'message required' 
-            });
-        }
-
-        const result = await coordinator.assignTask({
-            type: 'process_bot_message',
-            message,
-            userId,
-            discordUserId
-        });
-
-        res.json(result);
-    } catch (error) {
-        console.error('Error processing bot message:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-/**
- * POST /api/figma/generate-code
- * Genera codice da design Figma
- */
-app.post('/api/figma/generate-code', async (req, res) => {
-    try {
-        const { fileKey, nodeId, framework = 'html', outputPath, useTailwind = true } = req.body;
-        
-        if (!fileKey) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'fileKey required' 
-            });
-        }
-
-        // Prima recupera il file Figma
-        const fileResult = await coordinator.assignTask({
-            type: 'fetch_figma_file',
-            fileKey,
-            nodeIds: nodeId ? [nodeId] : null
-        });
-
-        // Poi genera codice
-        const FigmaToCodeGenerator = require('./lib/figma/figmaToCode');
-        const generator = new FigmaToCodeGenerator();
-        
-        const result = await generator.generateFromFigmaJSON(fileResult.fileData, {
-            outputPath,
-            framework,
-            useTailwind,
-            extractAssets: true
-        });
-
-        res.json({
-            success: true,
-            ...result
-        });
-    } catch (error) {
-        console.error('Error generating code from Figma:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
-        });
-    }
-});
-
-// ========== STATIC FILES MIDDLEWARE ==========
-// IMPORTANTE: Questo DEVE essere DOPO tutti gli endpoint API ma PRIMA che il server inizi ad ascoltare
-// Su Vercel, questo viene eseguito immediatamente quando il modulo viene caricato
-if (!app._staticFilesConfigured) {
-    // Serve file statici dalla root (serve automaticamente index.html per /)
-    app.use(express.static(__dirname));
-    // Serve assets
-    app.use('/assets', express.static(path.join(__dirname, 'assets')));
-    // Serve modelli 3D da frontend/public/models (UNICA CARTELLA)
-    app.use('/models', express.static(path.join(__dirname, 'frontend', 'public', 'models')));
-    
-    // Endpoint API per servire modelli (dal server locale - GRATIS)
-    app.get('/api/models/:filename', (req, res) => {
-        const { filename } = req.params;
-        // Cerca solo in frontend/public/models
-        const modelPath = path.join(__dirname, 'frontend', 'public', 'models', filename);
-        
-        console.log(`📦 Richiesta modello: ${filename}`);
-        console.log(`   Path: ${modelPath}`);
-        console.log(`   Esiste: ${fs.existsSync(modelPath)}`);
-        
-        if (fs.existsSync(modelPath)) {
-            res.setHeader('Content-Type', 'model/gltf-binary');
-            res.setHeader('Cache-Control', 'public, max-age=31536000');
-            res.sendFile(path.resolve(modelPath));
-        } else {
-            console.error(`❌ Modello non trovato: ${filename} in ${modelPath}`);
-            res.status(404).json({ error: 'Model not found', filename, path: modelPath });
-        }
-    });
-    console.log('✅ Endpoint /api/models/* configurato per servire file dal droplet (GRATIS)');
-    // Serve file da src/pages
-    app.use('/src/pages', express.static(path.join(__dirname, 'src', 'pages')));
-    // Serve file da src/styles
-    app.use('/src/styles', express.static(path.join(__dirname, 'src', 'styles')));
-    // Serve file da src/utils
-    app.use('/src/utils', express.static(path.join(__dirname, 'src', 'utils')));
-    
-    app._staticFilesConfigured = true;
-    console.log('Ã¢Å“â€¦ Static files middleware configured (after API routes)');
-}
-
 function startHttp() {
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ Starting HTTP server as fallback...');
+    console.log('� Starting HTTP server as fallback...');
     const httpServer = app.listen(PORT, '0.0.0.0', () => {
         const addr = httpServer.address();
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Shappa Backend Server Running (HTTP)');
-    console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â URL: http://localhost:' + PORT);
+    console.log('✅ Shappa Backend Server Running (HTTP)');
+    console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('🌐 URL: http://localhost:' + PORT);
     });
 }
 
@@ -5531,31 +2768,31 @@ try {
         try {
             httpsOptions.pfx = fs.readFileSync(pfxPath);
             httpsOptions.passphrase = process.env.DEV_PFX_PASSPHRASE || 'shappa-dev';
-            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Using PFX for HTTPS from', pfxPath);
+            console.log('🔐 Using PFX for HTTPS from', pfxPath);
         } catch (e) {
-            console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Failed to read PFX, falling back to PEM if available', e.message);
+            console.warn('⚠️ Failed to read PFX, falling back to PEM if available', e.message);
         }
     }
     if (!httpsOptions.pfx && fs.existsSync(pemKeyPath) && fs.existsSync(pemCertPath)) {
         httpsOptions.key = fs.readFileSync(pemKeyPath);
         httpsOptions.cert = fs.readFileSync(pemCertPath);
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Using PEM key/cert for HTTPS from ssl folder');
+        console.log('🔐 Using PEM key/cert for HTTPS from ssl folder');
     }
-    console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½ Starting HTTPS server...');
+    console.log('� Starting HTTPS server...');
     const httpsServer = https.createServer(httpsOptions, app);
     httpsServer.on('error', (err) => {
-        console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ HTTPS server error:', err.message);
-        console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ Falling back to HTTP...');
+        console.error('❌ HTTPS server error:', err.message);
+        console.warn('🔄 Falling back to HTTP...');
         startHttp();
     });
     httpsServer.listen(PORT, '0.0.0.0', () => {
         const addr = httpsServer.address();
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬Å“ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚Â¦ Shappa Backend Server Running (HTTPS)');
-        console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
-        console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â URL: https://localhost:' + PORT);
+        console.log('✅ Shappa Backend Server Running (HTTPS)');
+        console.log(`🌐 Bound to ${addr ? (typeof addr === 'string' ? addr : `${addr.address}:${addr.port}`) : 'unknown'}`);
+        console.log('🌐 URL: https://localhost:' + PORT);
         try {
             priceMonitor.startPriceMonitor();
-            console.log('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â±ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Price monitor started (every 30m)');
+            console.log('⏱️ Price monitor started (every 30m)');
         } catch (e) {
             console.log('Price monitor failed to start:', e.message);
         }
@@ -5563,17 +2800,14 @@ try {
         // Carica monitor attivi al boot
         monitorManager.loadAllMonitors().then(result => {
             if (result.success) {
-                console.log(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ Loaded ${result.loaded} active monitors`);
+                console.log(`🚀 Loaded ${result.loaded} active monitors`);
             }
         }).catch(err => {
-            console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ Failed to load monitors:', err.message);
+            console.error('❌ Failed to load monitors:', err.message);
         });
     });
 } catch (err) {
-    console.error('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ¢â‚¬â„¢ HTTPS startup failed:', err.message);
-    console.warn('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€šÃ¢â€šÂ¬Ãƒâ€šÃ…Â¾ Falling back to HTTP...');
+    console.error('❌ HTTPS startup failed:', err.message);
+    console.warn('🔄 Falling back to HTTP...');
     startHttp();
 }
-
-// Export app for Vercel
-module.exports = app;
