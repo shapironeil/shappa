@@ -167,12 +167,6 @@
         scene.add(hemisphereLight);
         console.log('✅ HemisphereLight aggiunta (intensity: 0.6)');
         
-        // Environment map for PBR materials (migliora riflessioni e materiali)
-        const pmremGenerator = new THREE.PMREMGenerator(renderer);
-        scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-        pmremGenerator.dispose();
-        console.log('✅ Environment map generata per PBR');
-        
         // Camera walls - Pareti della camera (10x10 metri)
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
         const wallHeight = 3;
