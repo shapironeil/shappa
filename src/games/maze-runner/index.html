@@ -167,6 +167,12 @@
         scene.add(hemisphereLight);
         console.log('✅ HemisphereLight aggiunta (intensity: 0.6)');
         
+        // Environment map for PBR materials (migliora riflessioni e materiali)
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        pmremGenerator.dispose();
+        console.log('✅ Environment map generata per PBR');
+        
         // Camera walls - Pareti della camera (10x10 metri)
         const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5f5 });
         const wallHeight = 3;
@@ -279,27 +285,67 @@
                             model.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
                         }
                         
-                        // Materiali (METODO SEMPLICE COME REACT - FUNZIONA!)
+                        // Materiali - Gestione completa texture e PBR
                         model.traverse((child) => {
                             if (child instanceof THREE.Mesh) {
                                 child.visible = true;
                                 child.castShadow = true;
                                 child.receiveShadow = true;
+                                child.frustumCulled = false; // Evita problemi di culling
                                 
                                 if (child.material) {
                                     const mats = Array.isArray(child.material) ? child.material : [child.material];
                                     mats.forEach((mat) => {
                                         mat.needsUpdate = true;
-                                        if (mat instanceof THREE.MeshStandardMaterial) {
+                                        
+                                        if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
+                                            // Forza visibilità
                                             mat.transparent = false;
                                             mat.opacity = 1.0;
-                                            if (mat.map) mat.map.needsUpdate = true;
+                                            mat.depthWrite = true;
+                                            mat.depthTest = true;
+                                            mat.side = THREE.FrontSide;
+                                            
+                                            // Texture handling
+                                            if (mat.map) {
+                                                mat.map.needsUpdate = true;
+                                                mat.map.encoding = THREE.sRGBEncoding;
+                                                mat.map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                                                console.log(`  🖼️ Texture applicata: ${mat.map.image ? mat.map.image.width + 'x' + mat.map.image.height : 'loading'}`);
+                                            }
+                                            
+                                            // Normal map
+                                            if (mat.normalMap) {
+                                                mat.normalMap.needsUpdate = true;
+                                                console.log(`  🗺️ Normal map presente`);
+                                            }
+                                            
+                                            // Roughness map
+                                            if (mat.roughnessMap) {
+                                                mat.roughnessMap.needsUpdate = true;
+                                            }
+                                            
+                                            // Metalness map
+                                            if (mat.metalnessMap) {
+                                                mat.metalnessMap.needsUpdate = true;
+                                            }
+                                            
+                                            // AO map
+                                            if (mat.aoMap) {
+                                                mat.aoMap.needsUpdate = true;
+                                                mat.aoMapIntensity = 1.0;
+                                            }
                                             
                                             // Se non ha texture, applica colore visibile
-                                            if (!mat.map) {
-                                                const currentColor = mat.color ? mat.color.getHex() : 0xffffff;
-                                                if (currentColor === 0x000000 || currentColor === 0xffffff) {
-                                                    // Colori di default basati sul nome
+                                            if (!mat.map && !mat.color) {
+                                                mat.color = new THREE.Color(0x888888);
+                                            }
+                                            
+                                            // Fix per materiali troppo scuri
+                                            if (mat.color) {
+                                                const currentColor = mat.color.getHex();
+                                                if (currentColor === 0x000000) {
+                                                    // Colori di default basati sul nome del modello
                                                     const defaultColors = {
                                                         'bench': 0x8b4513,
                                                         'laptop': 0x2c2c2c,
@@ -319,10 +365,33 @@
                                                         }
                                                     }
                                                     mat.color = new THREE.Color(defaultColor);
-                                                    mat.roughness = 0.7;
-                                                    mat.metalness = 0.1;
+                                                    console.log(`  🎨 Colore applicato: ${defaultColor.toString(16)}`);
                                                 }
                                             }
+                                            
+                                            // PBR properties
+                                            if (mat.roughness === undefined || mat.roughness === 0) {
+                                                mat.roughness = 0.7;
+                                            }
+                                            if (mat.metalness === undefined) {
+                                                mat.metalness = 0.1;
+                                            }
+                                            
+                                            // Emissive per visibilità
+                                            if (mat.emissive && mat.emissive.getHex() === 0x000000) {
+                                                mat.emissive = new THREE.Color(0x111111);
+                                                mat.emissiveIntensity = 0.05;
+                                            }
+                                        } else if (mat instanceof THREE.MeshBasicMaterial) {
+                                            // Converti MeshBasicMaterial in MeshStandardMaterial per lighting
+                                            const standardMat = new THREE.MeshStandardMaterial({
+                                                map: mat.map,
+                                                color: mat.color || 0xffffff,
+                                                roughness: 0.7,
+                                                metalness: 0.1
+                                            });
+                                            child.material = standardMat;
+                                            console.log(`  🔄 Convertito da BasicMaterial a StandardMaterial`);
                                         }
                                     });
                                 }
