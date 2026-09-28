@@ -26,7 +26,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT) || 4310;
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.4.1';
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));
@@ -253,22 +253,38 @@ function publicSettings(s) {
   };
 }
 
+const atacProject = () => ({
+  id: 'atac',
+  name: 'ATAC',
+  description: 'Data Platform — checkpoint settimanali',
+  recipients: '',
+  subjectTemplate: 'ATAC | Checkpoint {data} — punti discussi',
+  templateId: 'checkpoint-settimanale',
+  glossary: 'ATAC, Databricks, Azure, Terraform, Virtual Network, Data Platform, bronze, silver, gold, ETL, MVP, Data Quality, GdL, Dado, BITP',
+  exampleEmail: DEFAULT_EXAMPLE_EMAIL,
+  createdAt: new Date().toISOString(),
+});
+
+// All'avvio e prima di elencare i progetti: nessuna cartella progetto deve restare senza project.json
+// (es. dopo un recupero dal cestino) e deve esistere sempre almeno un progetto.
 async function ensureSeed() {
   await fsp.mkdir(PROJECTS_DIR, { recursive: true });
-  const entries = await fsp.readdir(PROJECTS_DIR).catch(() => []);
-  if (entries.length === 0) {
-    await writeJson(projectFile('atac'), {
-      id: 'atac',
-      name: 'ATAC',
-      description: 'Data Platform — checkpoint settimanali',
-      recipients: '',
-      subjectTemplate: 'ATAC | Checkpoint {data} — punti discussi',
-      templateId: 'checkpoint-settimanale',
-      glossary: 'ATAC, Databricks, Azure, Terraform, Virtual Network, Data Platform, bronze, silver, gold, ETL, MVP, Data Quality, GdL, Dado, BITP',
-      exampleEmail: DEFAULT_EXAMPLE_EMAIL,
-      createdAt: new Date().toISOString(),
-    });
+  const entries = await fsp.readdir(PROJECTS_DIR, { withFileTypes: true }).catch(() => []);
+  let valid = 0;
+  for (const e of entries) {
+    if (!e.isDirectory()) continue;
+    const pf = projectFile(e.name);
+    const current = await readJson(pf, null);
+    if (current?.id) { valid++; continue; }
+    // cartella senza progetto valido: si ricrea la scheda del progetto dai dati disponibili
+    const id = safeId(e.name) || 'progetto';
+    const repaired = id === 'atac' ? atacProject() : { ...atacProject(), id, name: e.name.toUpperCase(), glossary: '', subjectTemplate: `${e.name.toUpperCase()} | Checkpoint {data} — punti discussi` };
+    if (fs.existsSync(pf)) await fsp.copyFile(pf, `${pf}.danneggiato-${Date.now()}`).catch(() => {});
+    await writeJson(projectFile(id), { ...repaired, ...(current || {}), id, repairedAt: new Date().toISOString() });
+    console.log(`Progetto riparato: ${id}`);
+    valid++;
   }
+  if (!valid) await writeJson(projectFile('atac'), atacProject());
 }
 
 async function listProjects() {
@@ -456,6 +472,7 @@ const route = (method, pattern, handler) => {
 };
 
 route('GET', '/api/state', async (req, res) => {
+  await ensureSeed();
   const settings = await getSettings();
   send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea), version: APP_VERSION, runningFromTemp: RUNNING_FROM_TEMP });
 });
@@ -525,6 +542,7 @@ route('DELETE', '/api/projects/:pid', async (req, res, { pid }) => {
   const project = await readJson(projectFile(pid), null);
   if (!project) return send(res, 404, { error: 'Progetto non trovato' });
   await backup.moveToTrash(projectDir(pid), { kind: 'progetto', projectId: project.id, projectName: project.name, title: project.name });
+  await ensureSeed();
   send(res, 200, { ok: true });
 });
 
@@ -1015,6 +1033,15 @@ route('POST', '/api/ollama/chat', async (req, res) => {
     /* connessione interrotta */
   }
   res.end();
+});
+
+// Errori dell'interfaccia: registrati in data/errori.log (utile per capire cosa è successo)
+route('POST', '/api/log', async (req, res) => {
+  const body = await readJsonBody(req).catch(() => ({}));
+  const line = `[${new Date().toISOString()}] ${APP_VERSION} ${String(body.message || '').slice(0, 500)}\n${String(body.stack || '').slice(0, 2000)}\n${body.context ? 'Contesto: ' + String(body.context).slice(0, 300) + '\n' : ''}\n`;
+  await fsp.appendFile(path.join(DATA_DIR, 'errori.log'), line).catch(() => {});
+  console.error('Errore interfaccia:', body.message);
+  send(res, 200, { ok: true });
 });
 
 // ------------------------------ Template -----------------------------------

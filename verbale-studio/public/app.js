@@ -182,6 +182,7 @@
         .catch((e) => {
           $('#saveState').textContent = 'Non salvato: conservato nel browser';
           if (/fetch|network|Failed/i.test(e.message)) setOffline(true);
+          else if (/non trovato/i.test(e.message)) $('#saveState').textContent = ''; // checkpoint eliminato nel frattempo
           else toast(e.message, { error: true });
         })
     );
@@ -275,6 +276,17 @@
       .sort((a, b) => a.date.localeCompare(b.date));
   }
 
+  // Se per qualunque motivo non c'è un progetto selezionato (es. dopo un'eliminazione), si ricarica l'elenco
+  async function ensureProject() {
+    if (state.project) return true;
+    const data = await api('GET', '/api/state');
+    state.projects = data.projects;
+    renderProjectSelect();
+    if (!state.projects.length) return false;
+    await selectProject(state.projects[0].id);
+    return Boolean(state.project);
+  }
+
   async function selectProject(pid) {
     await saveNow();
     state.project = state.projects.find((p) => p.id === pid) || null;
@@ -288,8 +300,16 @@
     renderCheckpointList();
     const lastCp = LS.get('cp.' + pid, null);
     const target = state.checkpoints.find((c) => c.id === lastCp) || state.checkpoints[0];
-    if (target) await openCheckpoint(target.id, { keepView: true });
-    else showNoCheckpoint();
+    if (target) {
+      try {
+        await openCheckpoint(target.id, { keepView: true });
+      } catch (e) {
+        // checkpoint non leggibile: non deve bloccare l'app
+        LS.set('cp.' + pid, null);
+        showNoCheckpoint();
+        reportError(e, 'apertura checkpoint');
+      }
+    } else showNoCheckpoint();
     setView(state.view);
   }
 
@@ -380,7 +400,13 @@
     $('.tb-title').style.visibility = ws && state.cp ? '' : 'hidden';
     $('.tb-right').style.visibility = ws && state.cp ? '' : 'hidden';
     const render = { history: renderHistory, forecast: renderForecastView, settings: renderSettings, folder: renderFolder, templates: renderTemplates, localai: renderLocalAi }[v];
-    if (render) Promise.resolve(render()).catch((e) => toast(e.message, { error: true }));
+    if (render)
+      Promise.resolve()
+        .then(async () => {
+          if (!(await ensureProject())) return;
+          await render();
+        })
+        .catch((e) => reportError(e, `pagina ${v}`));
     if (!ws) video.pause();
     if (window.innerWidth <= 1100) setSidebar(false);
   }
@@ -1816,7 +1842,7 @@
     $('#checkpointList').onclick = (e) => { const b = e.target.closest('.cp-item'); if (b) openCheckpoint(b.dataset.id); };
 
     const newCp = async () => {
-      if (!state.project) return;
+      if (!(await ensureProject())) return;
       const v = await dialog('Nuovo checkpoint', newCpFields(), { okText: 'Crea' });
       if (!v) return;
       const cp = await api('POST', `/api/projects/${state.project.id}/checkpoints`, v);
@@ -2433,8 +2459,13 @@
     });
     $('#deleteProjectBtn').onclick = async () => {
       if (!(await confirmDlg('Eliminare il progetto?', `Tutti i checkpoint e i transcript di “${state.project.name}” verranno spostati nel Cestino (recuperabili da Impostazioni → Salvataggi).`, 'Sposta nel Cestino', true))) return;
+      clearTimeout(saveTimer);
+      saveTimer = null;
+      state.cp = null;
+      state.dashId = null;
       await api('DELETE', `/api/projects/${state.project.id}`);
-      state.projects = state.projects.filter((p) => p.id !== state.project.id);
+      state.project = null;
+      state.projects = (await api('GET', '/api/state')).projects;
       await selectProject(state.projects[0]?.id);
     };
     $('#saveSettingsBtn').onclick = (e) => busy(e.currentTarget, async () => {
@@ -2533,5 +2564,14 @@
     });
   }
 
-  init().catch((e) => toast('Impossibile avviare: ' + e.message, { error: true }));
+  // Errori imprevisti: messaggio comprensibile + dettagli in data/errori.log (per l'assistenza)
+  function reportError(e, context) {
+    const message = e?.message || String(e);
+    toast(`Si è verificato un problema${context ? ` (${context})` : ''}: ${message}. Dettagli salvati in data\\errori.log`, { error: true, ms: 7000 });
+    fetch('/api/log', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, stack: e?.stack || '', context: `${context || ''} · vista ${state.view} · progetto ${state.project?.id || '-'} · checkpoint ${state.cp?.id || '-'}` }) }).catch(() => {});
+  }
+  window.addEventListener('error', (ev) => reportError(ev.error || ev.message, 'interfaccia'));
+  window.addEventListener('unhandledrejection', (ev) => reportError(ev.reason, 'operazione'));
+
+  init().catch((e) => reportError(e, 'avvio'));
 })();
