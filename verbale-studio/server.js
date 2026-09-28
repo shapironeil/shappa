@@ -664,7 +664,7 @@ route('POST', '/api/projects/:pid/checkpoints/:cid/video-link', async (req, res,
 
 const VIDEO_EXT = new Set(['.mp4', '.m4v', '.mov', '.webm', '.mkv', '.m4a', '.mp3', '.wav']);
 const TRANSCRIPT_EXT = new Set(['.vtt', '.docx', '.srt', '.txt']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release', 'Archivio', 'motore-mac', 'alternativa-node']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release', 'Archivio', 'motore-mac', 'alternativa-node', 'app']);
 
 async function scanFolder(dir, depth, out) {
   if (out.length > 2000) return;
@@ -673,7 +673,9 @@ async function scanFolder(dir, depth, out) {
     if (e.name.startsWith('.') || e.name.startsWith('~$')) continue;
     const abs = path.join(dir, e.name);
     if (e.isDirectory()) {
-      if (depth < 4 && !SKIP_DIRS.has(e.name) && path.resolve(abs) !== path.resolve(DATA_DIR)) await scanFolder(abs, depth + 1, out);
+      // "node" / "node-v22…-win-x64": Node.js portatile messo nella cartella dall'utente
+      const isNode = /^node(-v[\d.]+-[a-z0-9-]+)?$/i.test(e.name);
+      if (depth < 4 && !SKIP_DIRS.has(e.name) && !isNode && path.resolve(abs) !== path.resolve(DATA_DIR)) await scanFolder(abs, depth + 1, out);
       continue;
     }
     const ext = path.extname(e.name).toLowerCase();
