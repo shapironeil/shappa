@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const { exec } = require('child_process');
 const ai = require('./lib/ai');
 const ollama = require('./lib/ollama');
+const backup = require('./lib/backup');
 
 // Quando gira come eseguibile (Node SEA) l'interfaccia è incorporata nel file
 // e la cartella di lavoro è quella in cui si trova l'eseguibile.
@@ -109,11 +110,25 @@ async function readJson(file, fallback) {
   }
 }
 
+// Scrittura atomica (file temporaneo + rinomina). Su Windows antivirus/indicizzazione possono bloccare
+// il file per un istante: si riprova, e in ultima istanza si copia sopra.
 async function writeJson(file, data) {
   await fsp.mkdir(path.dirname(file), { recursive: true });
-  const tmp = `${file}.${process.pid}.tmp`;
+  const tmp = `${file}.${process.pid}.${Date.now().toString(36)}.tmp`;
   await fsp.writeFile(tmp, JSON.stringify(data, null, 2));
-  await fsp.rename(tmp, file);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await fsp.rename(tmp, file);
+      return;
+    } catch (err) {
+      if (attempt >= 5) {
+        await fsp.copyFile(tmp, file);
+        await fsp.rm(tmp, { force: true });
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
+    }
+  }
 }
 
 const projectDir = (pid) => path.join(PROJECTS_DIR, safeId(pid));
@@ -124,6 +139,7 @@ const forecastFile = (pid) => path.join(projectDir(pid), 'forecast.json');
 const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
 // Copie leggibili e ordinate dei file di ogni checkpoint: Archivio/<Progetto>/<data> <titolo>/
 const ARCHIVE_DIR = path.join(WORK_DIR, 'Archivio');
+const BACKUP_DIR = path.join(WORK_DIR, 'Backup');
 // Windows estrae in %TEMP% un .exe aperto direttamente dallo zip: lì i dati andrebbero persi
 const RUNNING_FROM_TEMP = Boolean(sea) && /[\\/](temp|tmp)[\\/]|Temp\d+_|\.zip[\\/]/i.test(process.execPath);
 
@@ -201,6 +217,14 @@ async function writeExports(pid, c) {
     const txt = `Oggetto: ${c.email.subject || ''}\r\n\r\n${c.email.body.replace(/\r?\n/g, '\r\n')}\r\n`;
     await fsp.writeFile(path.join(dir, 'Email di riepilogo.txt'), '\ufeff' + txt);
   }
+  if (c.pins?.length) {
+    const txt = `${header} — punti chiave\r\n\r\n` + c.pins.map((p) => `[${fmtShort(p.start)}] ${p.speaker ? p.speaker + ': ' : ''}${p.text}${p.section ? '  (inserito nel riepilogo)' : ''}`).join('\r\n') + '\r\n';
+    await fsp.writeFile(path.join(dir, 'Punti chiave.txt'), '\ufeff' + txt);
+  }
+  if (c.notes?.trim()) await fsp.writeFile(path.join(dir, 'Note.txt'), '\ufeff' + c.notes.replace(/\r?\n/g, '\r\n'));
+  // copia completa dei dati: la cartella del checkpoint basta a se stessa anche senza data/
+  await writeJson(path.join(dir, '_dati-app', 'checkpoint.json'), { ...c, projectName: project?.name || '' });
+  await backup.mirrorFolder(dir);
 }
 
 // Percorso relativo alla cartella di lavoro → assoluto, senza uscire dalla cartella
@@ -220,6 +244,7 @@ function publicSettings(s) {
     model: s.model || ai.DEFAULT_MODEL,
     author: s.author || '',
     ollamaModel: s.ollamaModel || '',
+    mirrorDir: s.mirrorDir || '',
     hasApiKey: Boolean(key),
     apiKeySource: s.apiKey ? 'impostazioni' : process.env.ANTHROPIC_API_KEY ? 'variabile ambiente' : null,
     apiKeyHint: key ? `…${key.slice(-4)}` : '',
@@ -440,6 +465,21 @@ route('PUT', '/api/settings', async (req, res) => {
   if (typeof body.model === 'string' && body.model.trim()) next.model = body.model.trim();
   if (typeof body.author === 'string') next.author = body.author;
   if (typeof body.ollamaModel === 'string') next.ollamaModel = body.ollamaModel.trim();
+  if (typeof body.mirrorDir === 'string') {
+    const dir = body.mirrorDir.trim().replace(/^"|"$/g, '');
+    if (dir) {
+      const abs = path.resolve(dir);
+      if (abs === WORK_DIR || abs.startsWith(WORK_DIR + path.sep)) return send(res, 400, { error: 'La copia aggiuntiva deve stare fuori dalla cartella di Verbale Studio (es. una cartella OneDrive o una chiavetta).' });
+      try {
+        await fsp.mkdir(abs, { recursive: true });
+        await fsp.writeFile(path.join(abs, '.verbale-studio-test'), 'ok');
+        await fsp.rm(path.join(abs, '.verbale-studio-test'), { force: true });
+      } catch {
+        return send(res, 400, { error: `Impossibile scrivere nella cartella ${abs}` });
+      }
+      next.mirrorDir = abs;
+    } else next.mirrorDir = '';
+  }
   await writeJson(SETTINGS_FILE, next);
   send(res, 200, publicSettings(next));
 });
@@ -478,8 +518,9 @@ route('PUT', '/api/projects/:pid', async (req, res, { pid }) => {
 });
 
 route('DELETE', '/api/projects/:pid', async (req, res, { pid }) => {
-  if (!fs.existsSync(projectFile(pid))) return send(res, 404, { error: 'Progetto non trovato' });
-  await fsp.rm(projectDir(pid), { recursive: true, force: true });
+  const project = await readJson(projectFile(pid), null);
+  if (!project) return send(res, 404, { error: 'Progetto non trovato' });
+  await backup.moveToTrash(projectDir(pid), { kind: 'progetto', projectId: project.id, projectName: project.name, title: project.name });
   send(res, 200, { ok: true });
 });
 
@@ -528,27 +569,67 @@ route('GET', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid 
   send(res, 200, c);
 });
 
-route('PUT', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid }) => {
-  const body = await readJsonBody(req);
-  const result = await withLock(`${pid}/${cid}`, async () => {
+const SAVE_FIELDS = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis', 'pins'];
+
+async function saveCheckpoint(pid, cid, body) {
+  return withLock(`${pid}/${cid}`, async () => {
     const current = await readJson(checkpointFile(pid, cid), null);
     if (!current) return null;
-    const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis', 'pins'];
-    for (const k of allowed) if (k in body) current[k] = body[k];
+    const before = JSON.stringify(SAVE_FIELDS.map((k) => current[k]));
+    const previous = JSON.parse(JSON.stringify(current));
+    for (const k of SAVE_FIELDS) if (k in body) current[k] = body[k];
+    if (JSON.stringify(SAVE_FIELDS.map((k) => current[k])) !== before) {
+      // versione precedente conservata: sempre prima di sostituire il transcript, altrimenti ogni 3 minuti
+      const replacedTranscript = previous.transcript?.cues?.length && body.transcript && body.transcript.importedAt !== previous.transcript.importedAt;
+      await backup.snapshot(checkpointDir(pid, cid), previous, replacedTranscript ? 'prima-del-nuovo-transcript' : 'auto').catch(() => {});
+    }
     current.updatedAt = new Date().toISOString();
     await renameFolderIfNeeded(current);
     await writeExports(pid, current).catch((err) => console.error('Esportazione non riuscita:', err.message));
     await writeJson(checkpointFile(pid, cid), current);
     return current;
   });
+}
+
+route('PUT', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid }) => {
+  const result = await saveCheckpoint(pid, cid, await readJsonBody(req));
   if (!result) return send(res, 404, { error: 'Checkpoint non trovato' });
   send(res, 200, { ok: true, updatedAt: result.updatedAt, folder: result.folder || '', video: result.video || null, transcriptFile: result.transcriptFile || '' });
 });
 
+// Salvataggio alla chiusura della pagina (navigator.sendBeacon invia solo POST)
+route('POST', '/api/projects/:pid/checkpoints/:cid/save', async (req, res, { pid, cid }) => {
+  const result = await saveCheckpoint(pid, cid, await readJsonBody(req));
+  send(res, result ? 200 : 404, { ok: Boolean(result) });
+});
+
+route('GET', '/api/projects/:pid/checkpoints/:cid/versions', async (req, res, { pid, cid }) => {
+  send(res, 200, await backup.listVersions(checkpointDir(pid, cid)));
+});
+
+route('POST', '/api/projects/:pid/checkpoints/:cid/versions/restore', async (req, res, { pid, cid }) => {
+  const { file } = await readJsonBody(req);
+  const version = await backup.readVersion(checkpointDir(pid, cid), file);
+  const result = await withLock(`${pid}/${cid}`, async () => {
+    const current = await readJson(checkpointFile(pid, cid), null);
+    if (!current) return null;
+    await backup.snapshot(checkpointDir(pid, cid), current, 'prima-del-ripristino');
+    for (const k of SAVE_FIELDS) if (k in version) current[k] = version[k];
+    current.updatedAt = new Date().toISOString();
+    await writeExports(pid, current).catch(() => {});
+    await writeJson(checkpointFile(pid, cid), current);
+    return current;
+  });
+  if (!result) return send(res, 404, { error: 'Checkpoint non trovato' });
+  send(res, 200, result);
+});
+
 route('DELETE', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid }) => {
   const dir = checkpointDir(pid, cid);
-  if (!fs.existsSync(dir)) return send(res, 404, { error: 'Checkpoint non trovato' });
-  await fsp.rm(dir, { recursive: true, force: true });
+  const c = await readJson(checkpointFile(pid, cid), null);
+  if (!c) return send(res, 404, { error: 'Checkpoint non trovato' });
+  const project = await readJson(projectFile(pid), null);
+  await withLock(`${pid}/${cid}`, () => backup.moveToTrash(dir, { kind: 'checkpoint', projectId: safeId(pid), projectName: project?.name || pid, checkpointId: c.id, title: c.title, date: c.date }));
   send(res, 200, { ok: true });
 });
 
@@ -664,7 +745,7 @@ route('POST', '/api/projects/:pid/checkpoints/:cid/video-link', async (req, res,
 
 const VIDEO_EXT = new Set(['.mp4', '.m4v', '.mov', '.webm', '.mkv', '.m4a', '.mp3', '.wav']);
 const TRANSCRIPT_EXT = new Set(['.vtt', '.docx', '.srt', '.txt']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release', 'Archivio', 'motore-mac', 'alternativa-node', 'app']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release', 'Archivio', 'Backup', 'motore-mac', 'alternativa-node', 'app']);
 
 async function scanFolder(dir, depth, out) {
   if (out.length > 2000) return;
@@ -716,7 +797,9 @@ route('POST', '/api/folder/read', async (req, res) => {
 route('POST', '/api/folder/open', async (req, res) => {
   // Apre la cartella di lavoro (o dei dati) in Esplora risorse / Finder
   const { which, rel } = await readJsonBody(req);
-  const target = which === 'data' ? DATA_DIR : which === 'archive' ? ARCHIVE_DIR : rel ? workPath(rel) : WORK_DIR;
+  const settings = await getSettings();
+  const target =
+    which === 'data' ? DATA_DIR : which === 'archive' ? ARCHIVE_DIR : which === 'backup' ? BACKUP_DIR : which === 'mirror' && settings.mirrorDir ? settings.mirrorDir : rel ? workPath(rel) : WORK_DIR;
   await fsp.mkdir(target, { recursive: true }).catch(() => {});
   const cmd = process.platform === 'win32' ? `explorer "${target}"` : process.platform === 'darwin' ? `open "${target}"` : `xdg-open "${target}"`;
   exec(cmd, () => {});
@@ -794,6 +877,27 @@ route('POST', '/api/ollama/task', async (req, res) => {
   if (!model) return send(res, 400, { error: 'Scegli un modello nella finestra “AI locale”.' });
   const text = await ollama.task({ model, project, author: settings.author, task: body.task, text: String(body.text || '').slice(0, 4000) });
   send(res, 200, { text });
+});
+
+// ------------------------------ Cestino e backup ---------------------------
+
+route('GET', '/api/trash', async (req, res) => send(res, 200, await backup.listTrash()));
+route('POST', '/api/trash/restore', async (req, res) => {
+  const { id } = await readJsonBody(req);
+  send(res, 200, await backup.restoreFromTrash(id));
+});
+route('DELETE', '/api/trash/:id', async (req, res, { id }) => {
+  await backup.purgeTrash(decodeURIComponent(id));
+  send(res, 200, { ok: true });
+});
+
+route('GET', '/api/backup/status', async (req, res) => {
+  const settings = await getSettings();
+  send(res, 200, { backupDir: BACKUP_DIR, archiveDir: ARCHIVE_DIR, mirrorDir: settings.mirrorDir || '', ...backup.status, backups: await backup.lastBackups() });
+});
+route('POST', '/api/backup/now', async (req, res) => {
+  const name = await backup.dailyBackup({ force: true });
+  send(res, 200, { name });
 });
 
 // ------------------------------ Template -----------------------------------
@@ -922,6 +1026,8 @@ function existingInstance(port) {
 
 async function main() {
   await ensureSeed();
+  backup.init({ dataDir: DATA_DIR, workDir: WORK_DIR, archiveDir: ARCHIVE_DIR, backupDir: BACKUP_DIR, getMirror: async () => (await getSettings()).mirrorDir || '' });
+  backup.startScheduler();
   const shouldOpen = process.argv.includes('--open') || (sea && !process.argv.includes('--no-open'));
   const server = http.createServer((req, res) => {
     handle(req, res).catch((err) => {

@@ -122,6 +122,7 @@ COSA C'E' NELLA CARTELLA
   Archivio\\            creata dall'app: una cartella per ogni checkpoint, ordinata per progetto e data,
                        con registrazione, transcript originale, transcript revisionato ed email
   data\\                creata dall'app: archivio interno (checkpoint, template, apprendimento)
+  Backup\\              creata dall'app: copia giornaliera di tutto l'archivio (ultimi 30 giorni)
 
   Tutto resta su questo computer. Per il backup copia l'intera cartella VerbaleStudio.
 `));
@@ -197,9 +198,14 @@ Funziona con Node.js "standalone": NON serve installare niente (va bene anche su
    Si apre una finestra nera (lasciala aperta) e il browser con l'app.
    Per chiudere l'app chiudi la finestra nera.
 
-Registrazioni\  metti qui video e transcript di Teams (oppure trascinali nell'app)
-Archivio\       creata dall'app: una cartella per ogni checkpoint (progetto / data titolo)
-data\           creata dall'app: archivio interno
+Registrazioni\\  metti qui video e transcript di Teams (oppure trascinali nell'app)
+Archivio\\       creata dall'app: una cartella per ogni checkpoint (progetto / data titolo)
+               con video, transcript, email, punti chiave, note e copia completa dei dati
+data\\           creata dall'app: archivio interno (con versioni precedenti e cestino)
+Backup\\         creata dall'app: copia giornaliera di tutto l'archivio (ultimi 30 giorni)
+
+Consigliato: in Impostazioni -> "Salvataggi e copie" indica una cartella OneDrive o una chiavetta
+per avere una copia aggiuntiva automatica.
 
 Tutto resta su questo computer. Backup: copia l'intera cartella VerbaleStudio.
 `));

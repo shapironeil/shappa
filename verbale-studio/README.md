@@ -51,6 +51,17 @@ I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<da
 7. **Storico**: timeline, punti di attenzione aperti con le scadenze e *Filo delle attività* (come una voce è passata da prossimo passo a in corso a completata).
 8. **Prossimo checkpoint**: i temi previsti per il prossimo incontro, calcolati dallo storico.
 
+## Salvataggi: come non perdere nulla
+
+Il lavoro viene salvato in più posti, in modo indipendente:
+
+1. **Salvataggio automatico** a ogni modifica. Se il motore dell'app (la finestra nera) si chiude mentre lavori, le modifiche restano nel browser: compare un avviso e vengono salvate appena riavvii l'app. Anche chiudendo la scheda, alla riapertura l'app propone di recuperarle.
+2. **Versioni precedenti** di ogni checkpoint (fino a 80, una ogni ~3 minuti di lavoro e sempre prima di sostituire il transcript): menu `⋯` → *Versioni precedenti…* → *Ripristina*. Anche il ripristino salva prima la versione attuale.
+3. **Cartella del checkpoint in `Archivio/`**: video, transcript originale e revisionato, email, punti chiave, note e `_dati-app/checkpoint.json` (copia completa dei dati), leggibili anche senza l'app.
+4. **Backup giornaliero** di tutto l'archivio dati in `Backup/<data>/` (ultimi 30 giorni), più *Esegui backup adesso* in Impostazioni.
+5. **Cestino**: checkpoint e progetti eliminati si recuperano da *Impostazioni → Salvataggi e copie*.
+6. **Copia aggiuntiva** (facoltativa, consigliata): in Impostazioni indica una cartella fuori da VerbaleStudio, per esempio una cartella OneDrive o una chiavetta. Lì vengono copiati `Archivio/` (senza video) e i backup giornalieri.
+
 ## Template email
 
 Nella sezione *Template email* trovi i modelli predefiniti:

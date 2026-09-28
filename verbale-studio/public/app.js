@@ -149,28 +149,69 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(saveNow, 700);
   }
+  const payloadOf = (cp) => ({ title: cp.title, date: cp.date, status: cp.status, templateId: cp.templateId, transcript: cp.transcript, notes: cp.notes, summary: cp.summary, email: cp.email, analysis: cp.analysis, pins: cp.pins });
+
+  // Bozza di emergenza nel browser: se il motore dell'app non risponde le modifiche non vanno perse
+  const draftKey = (cp) => `draft.${cp.projectId}.${cp.id}`;
+  let retryTimer = null;
+  function setOffline(on) {
+    $('#offlineBanner').hidden = !on;
+    clearTimeout(retryTimer);
+    if (on) retryTimer = setTimeout(() => { if (state.cp) saveNow(); }, 5000);
+  }
+
   function saveNow() {
     clearTimeout(saveTimer);
     saveTimer = null;
     if (!state.cp) return saving;
     const cp = state.cp;
-    const payload = { title: cp.title, date: cp.date, status: cp.status, templateId: cp.templateId, transcript: cp.transcript, notes: cp.notes, summary: cp.summary, email: cp.email, analysis: cp.analysis, pins: cp.pins };
+    const payload = payloadOf(cp);
+    LS.set(draftKey(cp), { at: Date.now(), payload });
     saving = saving.then(() =>
       api('PUT', `/api/projects/${cp.projectId}/checkpoints/${cp.id}`, payload)
         .then((r) => {
-          if (state.cp === cp) { cp.folder = r.folder; cp.transcriptFile = r.transcriptFile; if (r.video) cp.video = r.video; }
-          $('#saveState').textContent = `Salvato ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+          try { localStorage.removeItem('vs.' + draftKey(cp)); } catch { /* ignore */ }
+          setOffline(false);
+          if (state.cp === cp) { cp.folder = r.folder; cp.transcriptFile = r.transcriptFile; cp.updatedAt = r.updatedAt; if (r.video) cp.video = r.video; }
+          $('#saveState').textContent = `Salvato ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}${r.folder ? ' · copia in Archivio' : ''}${state.settings.mirrorDir ? ' + copia aggiuntiva' : ''}`;
+          $('#saveState').title = r.folder ? `Archivio: ${r.folder}` : '';
           const s = state.checkpoints.find((c) => c.id === cp.id);
           if (s) { Object.assign(s, { title: cp.title, date: cp.date, status: cp.status }); renderCheckpointList(); }
           state.history = null; // lo storico va ricaricato
         })
-        .catch((e) => { $('#saveState').textContent = 'Errore di salvataggio'; toast(e.message, { error: true }); })
+        .catch((e) => {
+          $('#saveState').textContent = 'Non salvato: conservato nel browser';
+          if (/fetch|network|Failed/i.test(e.message)) setOffline(true);
+          else toast(e.message, { error: true });
+        })
     );
     return saving;
   }
-  window.addEventListener('beforeunload', (e) => {
-    if (saveTimer) { saveNow(); e.preventDefault(); }
-  });
+  // Alla chiusura della scheda: invio immediato delle modifiche in sospeso
+  function flushOnExit() {
+    if (!state.cp || !saveTimer) return;
+    const cp = state.cp;
+    const payload = payloadOf(cp);
+    LS.set(draftKey(cp), { at: Date.now(), payload });
+    navigator.sendBeacon(`/api/projects/${cp.projectId}/checkpoints/${cp.id}/save`, new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  window.addEventListener('pagehide', flushOnExit);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushOnExit(); });
+
+  // All'apertura: se nel browser c'è una bozza più recente di quella salvata, si propone di recuperarla
+  async function recoverDraft(cp) {
+    const d = LS.get(draftKey(cp), null);
+    if (!d?.payload) return;
+    const saved = Date.parse(cp.updatedAt || 0) || 0;
+    if (d.at <= saved + 1000) { try { localStorage.removeItem('vs.' + draftKey(cp)); } catch { /* ignore */ } return; }
+    const when = new Date(d.at).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const ok = await confirmDlg('Modifiche non salvate trovate', `Nel browser ci sono modifiche del ${when} che non risultano salvate nell'archivio (probabilmente l'app è stata chiusa mentre lavoravi). Vuoi recuperarle?`, 'Recupera');
+    if (!ok) { try { localStorage.removeItem('vs.' + draftKey(cp)); } catch { /* ignore */ } return; }
+    Object.assign(cp, d.payload);
+    return true;
+  }
 
   let learnTimer = null;
   function learnFrom(text, role) {
@@ -289,6 +330,7 @@
   async function openCheckpoint(id, { keepView } = {}) {
     await saveNow();
     const cp = await api('GET', `/api/projects/${state.project.id}/checkpoints/${id}`);
+    const recovered = await recoverDraft(cp);
     cp.templateId = cp.templateId || state.project.templateId || 'checkpoint-settimanale';
     state.tpl = Templates.get(cp.templateId);
     cp.summary = Templates.normalize(cp.summary, state.tpl);
@@ -319,6 +361,7 @@
     renderPins();
     renderCheckpointList();
     refreshAnalysisPanels();
+    if (recovered) { markDirty(); toast('Modifiche recuperate e salvate'); }
     if (!keepView && state.view !== 'workspace') setView('workspace');
     if (window.innerWidth <= 1100) setSidebar(false);
   }
@@ -1412,6 +1455,47 @@
     if (state.view === 'localai' && (inst?.state === 'running' || pull?.state === 'running' || (inst?.state === 'done' && !running))) aiPoll = setTimeout(renderLocalAi, 2000);
   }
 
+  // ------------------------------------------------------------------ versioni e salvataggi
+  const REASONS = { auto: 'Salvataggio automatico', 'prima-del-nuovo-transcript': 'Prima di sostituire il transcript', 'prima-del-ripristino': 'Prima di un ripristino' };
+  async function showVersions() {
+    await saveNow();
+    const cp = state.cp;
+    const list = await api('GET', `/api/projects/${cp.projectId}/checkpoints/${cp.id}/versions`);
+    const rows = list.map((v) => `<div class="ver-row"><div><b>${new Date(v.savedAt).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</b>
+        <div class="muted small">${esc(REASONS[v.reason] || v.reason)} · ${v.cues} blocchi · ${v.items} voci · ${v.pins} punti chiave</div></div>
+        <button class="btn btn-sm" data-restore="${esc(v.file)}">Ripristina</button></div>`).join('');
+    const p = dialog('Versioni precedenti', `<p class="muted small">L'app conserva automaticamente le versioni precedenti di questo checkpoint (fino a 80). Ripristinare una versione non cancella quella attuale: viene salvata anch'essa.</p>
+      <div class="ver-list">${rows || '<p class="muted">Nessuna versione precedente: compare dopo le prime modifiche.</p>'}</div>`, { okText: null, wide: true });
+    $('#dlgBody').onclick = async (e) => {
+      const b = e.target.closest('[data-restore]');
+      if (!b) return;
+      $('#dialog').close();
+      await api('POST', `/api/projects/${cp.projectId}/checkpoints/${cp.id}/versions/restore`, { file: b.dataset.restore });
+      await openCheckpoint(cp.id, { keepView: true });
+      toast('Versione ripristinata');
+    };
+    await p;
+    $('#dlgBody').onclick = null;
+  }
+
+  async function renderBackupSettings() {
+    const [st, trash] = await Promise.all([api('GET', '/api/backup/status'), api('GET', '/api/trash')]);
+    $('#sMirror').value = st.mirrorDir || '';
+    const fmt = (iso) => (iso ? new Date(iso).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—');
+    $('#backupInfo').innerHTML = `
+      <li><b>Salvataggio automatico</b> a ogni modifica, con bozza di emergenza nel browser.</li>
+      <li><b>Versioni precedenti</b> di ogni checkpoint (menu ⋯ → Versioni precedenti).</li>
+      <li><b>Cartella del checkpoint in Archivio</b> con video, transcript, email, punti chiave, note e una copia completa dei dati (<i>_dati-app</i>).</li>
+      <li><b>Backup giornaliero</b> di tutto l'archivio dati in <i>Backup\\</i> (ultimi 30 giorni) · ultimo: ${fmt(st.lastDaily) !== '—' ? fmt(st.lastDaily) : esc(st.backups[0] || 'in preparazione')}</li>
+      <li><b>Copia aggiuntiva</b> ${st.mirrorDir ? `attiva in <i>${esc(st.mirrorDir)}</i> · ultima copia: ${fmt(st.lastMirror)}` : 'non attiva (consigliata: una cartella OneDrive o una chiavetta)'}</li>
+      ${st.lastError ? `<li class="danger">Ultimo errore: ${esc(st.lastError)}</li>` : ''}`;
+    $('#trashList').innerHTML = trash.length
+      ? trash.map((t) => `<div class="ver-row"><div><b>${esc(t.kind === 'progetto' ? `Progetto ${t.projectName}` : `${t.title} · ${itDate(t.date)}`)}</b>
+          <div class="muted small">${t.kind === 'checkpoint' ? esc(t.projectName) + ' · ' : ''}eliminato il ${fmt(t.deletedAt)}</div></div>
+          <div class="row gap-6"><button class="btn btn-sm" data-trash-restore="${esc(t.id)}">Recupera</button><button class="icon-btn" data-trash-purge="${esc(t.id)}" title="Elimina definitivamente">✕</button></div></div>`).join('')
+      : '<p class="muted small">Il cestino è vuoto.</p>';
+  }
+
   // ------------------------------------------------------------------ impostazioni
   function renderSettings() {
     const p = state.project;
@@ -1424,6 +1508,7 @@
     $('#sAuthor').value = state.settings.author || '';
     $('#sModel').value = state.settings.model || '';
     $('#sKey').value = '';
+    renderBackupSettings().catch((e) => toast(e.message, { error: true }));
     $('#sKeyInfo').textContent = state.settings.hasApiKey
       ? `API key configurata (${state.settings.apiKeySource}, ${state.settings.apiKeyHint}). Lascia il campo vuoto per mantenerla.`
       : 'Nessuna API key: l\'app funziona completamente in modalità manuale; i pulsanti “Claude” compaiono quando ne inserisci una.';
@@ -1501,6 +1586,7 @@
       if (!act || !state.cp) return;
       const base = `${state.project.name}_${state.cp.date}`.replace(/[^\w-]+/g, '_');
       const header = `${state.project.name} — ${state.cp.title} — ${itDate(state.cp.date)}`;
+      if (act === 'versions') return showVersions();
       if (act === 'open-folder') {
         await saveNow();
         if (!state.cp.folder) return toast('La cartella del checkpoint viene creata quando aggiungi video o transcript');
@@ -1514,7 +1600,7 @@
         state.cp.video = null;
         loadVideo();
       }
-      if (act === 'delete-checkpoint' && await confirmDlg('Eliminare il checkpoint?', `“${state.cp.title}” del ${itDate(state.cp.date)} verrà eliminato definitivamente dall'archivio (i file nella cartella di lavoro non vengono toccati).`, 'Elimina', true)) {
+      if (act === 'delete-checkpoint' && await confirmDlg('Eliminare il checkpoint?', `“${state.cp.title}” del ${itDate(state.cp.date)} verrà spostato nel Cestino (recuperabile da Impostazioni → Salvataggi). La sua cartella in Archivio resta al suo posto.`, 'Sposta nel Cestino', true)) {
         clearTimeout(saveTimer); saveTimer = null;
         await api('DELETE', `/api/projects/${state.cp.projectId}/checkpoints/${state.cp.id}`);
         state.checkpoints = state.checkpoints.filter((c) => c.id !== state.cp.id);
@@ -1981,7 +2067,7 @@
       toast('Progetto salvato');
     });
     $('#deleteProjectBtn').onclick = async () => {
-      if (!(await confirmDlg('Eliminare il progetto?', `Tutti i checkpoint e i transcript di “${state.project.name}” verranno eliminati dall'archivio (i file nella cartella di lavoro non vengono toccati).`, 'Elimina', true))) return;
+      if (!(await confirmDlg('Eliminare il progetto?', `Tutti i checkpoint e i transcript di “${state.project.name}” verranno spostati nel Cestino (recuperabili da Impostazioni → Salvataggi).`, 'Sposta nel Cestino', true))) return;
       await api('DELETE', `/api/projects/${state.project.id}`);
       state.projects = state.projects.filter((p) => p.id !== state.project.id);
       await selectProject(state.projects[0]?.id);
@@ -1995,6 +2081,37 @@
       toast('Impostazioni salvate');
     });
     $$('#themeSeg .seg-btn').forEach((b) => (b.onclick = () => applyTheme(b.dataset.theme)));
+    $('#saveMirrorBtn').onclick = (e) => busy(e.currentTarget, async () => {
+      state.settings = await api('PUT', '/api/settings', { mirrorDir: $('#sMirror').value });
+      if (state.settings.mirrorDir) await api('POST', '/api/backup/now');
+      await renderBackupSettings();
+      toast(state.settings.mirrorDir ? 'Copia aggiuntiva attiva: primo backup eseguito' : 'Copia aggiuntiva disattivata');
+    });
+    $('#backupNowBtn').onclick = (e) => busy(e.currentTarget, async () => {
+      await saveNow();
+      const r = await api('POST', '/api/backup/now');
+      await renderBackupSettings();
+      toast(`Backup creato: Backup\\${r.name}`);
+    });
+    $('#openBackupBtn').onclick = () => api('POST', '/api/folder/open', { which: 'backup' });
+    $('#trashList').onclick = async (e) => {
+      const r = e.target.closest('[data-trash-restore]');
+      const p = e.target.closest('[data-trash-purge]');
+      try {
+        if (r) {
+          const res = await api('POST', '/api/trash/restore', { id: r.dataset.trashRestore });
+          toast('Recuperato');
+          const data = await api('GET', '/api/state');
+          state.projects = data.projects;
+          await selectProject(res.projectId || state.project?.id);
+          setView('settings');
+        }
+        if (p && (await confirmDlg('Eliminare definitivamente?', 'Non sarà più possibile recuperarlo (restano eventuali copie in Backup).', 'Elimina', true))) {
+          await api('DELETE', `/api/trash/${encodeURIComponent(p.dataset.trashPurge)}`);
+          await renderBackupSettings();
+        }
+      } catch (err) { toast(err.message, { error: true }); }
+    };
 
     // splitters
     const split = $('#split');

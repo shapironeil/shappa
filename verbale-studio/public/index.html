@@ -74,6 +74,9 @@
 
   <!-- ============ MAIN ============ -->
   <main class="main">
+    <div class="temp-banner" id="offlineBanner" hidden>
+      <b>Il motore dell'app non risponde</b> (la finestra nera è stata chiusa?). Le modifiche sono conservate in questo browser e verranno salvate appena torna disponibile: <b>non chiudere questa scheda</b> e riavvia Verbale Studio.
+    </div>
     <div class="temp-banner" id="tempBanner" hidden>
       <b>Stai usando l'app dall'interno dello zip:</b> quello che salvi andrebbe perso. Chiudi la finestra nera, fai tasto destro sullo zip → <i>Estrai tutto</i> e avvia <i>VerbaleStudio.exe</i> dalla cartella estratta.
     </div>
@@ -103,6 +106,7 @@
           <button class="icon-btn" id="moreBtn" aria-label="Altro"><svg viewBox="0 0 20 20"><circle cx="5" cy="10" r="1.2"/><circle cx="10" cy="10" r="1.2"/><circle cx="15" cy="10" r="1.2"/></svg></button>
           <div class="menu" id="moreMenu" hidden>
             <button data-act="open-folder">Apri cartella del checkpoint</button>
+            <button data-act="versions">Versioni precedenti…</button>
             <hr />
             <button data-act="export-txt">Esporta transcript (.txt)</button>
             <button data-act="export-vtt">Esporta transcript (.vtt)</button>
@@ -334,6 +338,17 @@
           <label class="field"><span>Modello</span><input class="input" id="sModel" /></label>
           <p class="muted small" id="sKeyInfo"></p>
           <div class="row end"><button class="btn btn-primary btn-sm" id="saveSettingsBtn">Salva impostazioni</button></div>
+        </div>
+
+        <div class="card">
+          <h3>Salvataggi e copie</h3>
+          <p class="muted small">Il lavoro viene salvato in più posti, così non si perde nulla:</p>
+          <ul class="backup-info" id="backupInfo"></ul>
+          <label class="field"><span>Cartella per la copia aggiuntiva (facoltativa: es. C:\Users\nome\OneDrive\VerbaleStudio o una chiavetta)</span><input class="input" id="sMirror" placeholder="Lascia vuoto per non usarla" /></label>
+          <div class="row between"><div class="row gap-6"><button class="btn btn-ghost btn-sm" id="backupNowBtn">Esegui backup adesso</button><button class="btn btn-ghost btn-sm" id="openBackupBtn">Apri cartella Backup</button></div>
+          <button class="btn btn-primary btn-sm" id="saveMirrorBtn">Salva cartella di copia</button></div>
+          <h3 style="margin-top:18px">Cestino</h3>
+          <div id="trashList" class="ver-list"></div>
         </div>
 
         <div class="card">
