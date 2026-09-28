@@ -26,7 +26,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT) || 4310;
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.4.2';
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));
@@ -470,6 +470,14 @@ const route = (method, pattern, handler) => {
   );
   routes.push({ method, re, keys, handler });
 };
+
+// Chiusura richiesta da una versione più recente avviata sulla stessa cartella.
+// L'intestazione personalizzata impedisce che una pagina web qualsiasi possa chiamarla.
+route('POST', '/api/shutdown', async (req, res) => {
+  if (req.headers['x-verbale'] !== '1') return send(res, 403, { error: 'Vietato' });
+  send(res, 200, { ok: true });
+  setTimeout(() => process.exit(0), 200);
+});
 
 route('GET', '/api/state', async (req, res) => {
   await ensureSeed();
@@ -1150,21 +1158,34 @@ function openBrowser(url) {
 }
 
 // Se sulla porta c'è già Verbale Studio per la stessa cartella, basta riaprire il browser
-function existingInstance(port) {
+// Informazioni sull'eventuale Verbale Studio già in ascolto su una porta
+function instanceInfo(port) {
   return new Promise((resolve) => {
     const req = http.get({ host: '127.0.0.1', port, path: '/api/state', timeout: 1500 }, (res) => {
       let body = '';
       res.on('data', (c) => (body += c));
       res.on('end', () => {
         try {
-          resolve(JSON.parse(body).workDir === WORK_DIR);
+          resolve(JSON.parse(body));
         } catch {
-          resolve(false);
+          resolve(null);
         }
       });
     });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => (req.destroy(), resolve(null)));
+  });
+}
+
+function askShutdown(port) {
+  return new Promise((resolve) => {
+    const req = http.request({ host: '127.0.0.1', port, path: '/api/shutdown', method: 'POST', headers: { 'X-Verbale': '1' }, timeout: 1500 }, (res) => {
+      res.resume();
+      res.on('end', () => resolve(res.statusCode === 200));
+    });
     req.on('error', () => resolve(false));
     req.on('timeout', () => (req.destroy(), resolve(false)));
+    req.end();
   });
 }
 
@@ -1201,11 +1222,22 @@ async function main() {
       if (shouldOpen) openBrowser(url);
       return;
     }
-    if (await existingInstance(port)) {
+    const other = await instanceInfo(port);
+    if (other && other.workDir === WORK_DIR && other.version === APP_VERSION) {
       console.log(`Verbale Studio è già aperto su http://localhost:${port}`);
       if (shouldOpen) openBrowser(`http://localhost:${port}`);
       setTimeout(() => process.exit(0), 500);
       return;
+    }
+    if (other && other.workDir === WORK_DIR) {
+      // è rimasta aperta una versione precedente dell'app: la si chiude (se possibile) e si prende il suo posto
+      console.log(`Trovata una versione precedente (${other.version || 'vecchia'}) ancora aperta: la chiudo…`);
+      if (await askShutdown(port)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        port--; // riprova la stessa porta
+        continue;
+      }
+      console.log(`  Non riesco a chiuderla: chiudi la vecchia finestra nera. Intanto uso un'altra porta.`);
     }
   }
   console.error('Nessuna porta libera tra ' + PORT + ' e ' + (PORT + 9));

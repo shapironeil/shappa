@@ -10,6 +10,9 @@
     set(k, v) { try { localStorage.setItem('vs.' + k, JSON.stringify(v)); } catch { /* ignore */ } },
   };
 
+  // Deve coincidere con la versione del motore (server): se diverse, è rimasta aperta una finestra vecchia
+  const CLIENT_VERSION = '1.4.2';
+
   const state = {
     projects: [],
     settings: {},
@@ -229,8 +232,9 @@
     setSidebar(LS.get('sidebar', window.innerWidth > 1100));
     restoreSizes();
     bindEvents();
-    const [data, custom, presets] = await Promise.all([api('GET', '/api/state'), api('GET', '/api/templates'), api('GET', '/api/presets')]);
+    const [data, custom, presets] = await Promise.all([api('GET', '/api/state'), api('GET', '/api/templates').catch(() => []), api('GET', '/api/presets').catch(() => [])]);
     customPresets = presets.map((p) => ({ ...p, custom: true }));
+    if (data.version !== CLIENT_VERSION) $('#versionBanner').hidden = false;
     $('#appVersion').textContent = `v${data.version}`;
     Templates.setCustom(custom);
     state.projects = data.projects;
@@ -1581,7 +1585,7 @@
       if (f?.missing) return `<span class="res miss" title="${esc(f.rel)}">✗ <small>non trovato</small></span>`;
       return `<span class="res ${required ? 'miss' : 'none'}">— <small>${required ? 'manca' : ''}</small></span>`;
     };
-    const cps = folderData.checkpoints.filter((r) => r.projectId === state.project?.id);
+    const cps = (folderData.checkpoints || []).filter((r) => r.projectId === state.project?.id);
     const incomplete = (r) => !(r.video && !r.video.missing) || !(r.transcriptOriginal || r.cueCount) || !r.email;
     const rows = cps.filter((r) => !onlyMissing || incomplete(r));
     let html = `<h2 class="h2">Checkpoint in Archivio <span class="muted small">· ${esc(state.project?.name || '')} · ${cps.length} checkpoint${cps.filter(incomplete).length ? ` · <span class="danger">${cps.filter(incomplete).length} incompleti</span>` : ''}</span></h2>`;

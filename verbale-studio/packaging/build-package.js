@@ -19,7 +19,8 @@ const UPDATE_NOTE = `AGGIORNARE VERBALE STUDIO SENZA PERDERE I DATI
 Questo pacchetto contiene SOLO il programma: non contiene dati, quindi estraendolo
 sopra la cartella esistente i tuoi lavori non vengono toccati.
 
-1. Chiudi Verbale Studio (chiudi la finestra nera).
+1. Chiudi Verbale Studio: chiudi TUTTE le finestre nere aperte.
+   (Dalla versione 1.4.2 in poi, se ne resta aperta una vecchia l'app la chiude da sola.)
 2. Estrai lo zip nella stessa cartella di prima (es. C:\\$$SHAPPA$$\\APPS\\)
    e, se Windows lo chiede, scegli "Sostituisci i file nella destinazione".
 3. Riavvia con "Avvia Verbale Studio (Windows).bat".
