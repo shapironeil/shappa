@@ -48,10 +48,11 @@ I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<da
    - `Alt+1…9` aggiunge alla sezione il testo selezionato nel transcript.
    - “↺ N collegate” mostra la storia di quella voce nei checkpoint passati.
 6. **Email**: il testo si compone dal template. *Copia per Outlook* copia la versione formattata; *.eml* scarica una bozza.
-7. **Storico checkpoint**: tutte le sessioni a cascata, una per riga, con template, durata, voci per tipo, punti chiave, file presenti (🎥 📝 ✉️) e stato. Cliccando una sessione si apre la **dashboard del checkpoint**:
-   - video e transcript da consultare (clic su una riga → il video parte da lì), con ricerca;
-   - **✨ Chat AI** con Ollama sul contesto scelto (punti chiave, riepilogo, email, email di esempio, note, transcript). Preimpostazioni pronte: *📌 → Riepilogo dal template* (trasforma i punti chiave scritti di fretta nelle voci del template, poi *Aggiungi al riepilogo* o *Sostituisci il riepilogo*), *Scrivi l'email finale* e *Migliora l'email attuale* (poi *Usa come email finale*), *Sistema i punti chiave*, *Azioni e scadenze*, *Riassunto della riunione*. Le proprie richieste si salvano con *Salva come preimpostazione*; la chat resta memorizzata nel checkpoint;
-   - riepilogo ed email finale, punti chiave e file del checkpoint (apri o mostra in Esplora risorse).
+7. **Storico checkpoint**: tutte le sessioni a cascata, una per riga, con template, durata, voci per tipo, punti chiave, avanzamento a pallini, file presenti (🎥 📝 ✉️) e stato. Cliccando una sessione si apre la **dashboard del checkpoint**, pensata per consultare e consegnare (non per rivedere l'audio come la Revisione):
+   - **avanzamento** del checkpoint (transcript → revisione → punti chiave → riepilogo → email → inviata) con il pulsante del **prossimo passo** consigliato;
+   - **il verbale come documento**: ogni voce ha un chip **▶ 12:30** che apre il momento della riunione in cui se n'è parlato (con “?” quando il momento è stato trovato automaticamente cercando nel transcript);
+   - il video compare solo in un **mini-lettore** con i sottotitoli di chi parla, che si chiude a fine verifica; *Apri in revisione da qui* porta alla revisione nello stesso punto;
+   - **✨ Assistente AI** (chat con Ollama e preimpostazioni: *📌 → Riepilogo dal template*, *Scrivi l'email finale*, *Migliora l'email attuale*, *Sistema i punti chiave*, *Azioni e scadenze*, *Riassunto della riunione*; le proprie richieste si salvano con *Salva come preimpostazione*), **✉️ Email finale** (anteprima formattata, copia per Outlook, .eml, *Email inviata*) e **Fonti** (transcript con ricerca, punti chiave, file).
 8. **Cartella di lavoro**: gestore risorse. Una tabella con ogni checkpoint e la presenza di registrazione, transcript originale e revisionato, email finale e punti chiave (✓ apre il file, ✗ o *manca* in rosso), con il filtro *solo incompleti*; sotto, i file di Teams presenti nella cartella e non ancora usati. I video presi dalla cartella restano al loro posto e, di default, vengono anche copiati in Archivio.
 9. **Prossimo checkpoint**: i temi previsti per il prossimo incontro e il *Filo delle attività*.
 

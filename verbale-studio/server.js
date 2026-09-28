@@ -26,7 +26,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT) || 4310;
-const APP_VERSION = '1.4.2';
+const APP_VERSION = '1.5.0';
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));

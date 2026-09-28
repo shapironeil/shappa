@@ -11,7 +11,7 @@
   };
 
   // Deve coincidere con la versione del motore (server): se diverse, è rimasta aperta una finestra vecchia
-  const CLIENT_VERSION = '1.4.2';
+  const CLIENT_VERSION = '1.5.0';
 
   const state = {
     projects: [],
@@ -1319,12 +1319,21 @@
       list
         .map((c) => {
           const r = resFor(c.id);
-          const pins = (h.checkpoints.find((x) => x.id === c.id) || {}).pinCount || 0;
+          const hc = h.checkpoints.find((x) => x.id === c.id) || {};
+          const pins = hc.pinCount || 0;
           return `<button class="session" data-dash="${c.id}">
             <span class="s-date"><b>${c.date.slice(8, 10)}</b><small>${MONTHS[Number(c.date.slice(5, 7)) - 1].slice(0, 3)} ${c.date.slice(0, 4)}</small></span>
             <span class="s-main"><span class="s-title">${esc(c.title)}</span>
               <span class="s-meta">${esc(c.tpl.name)}${c.duration ? ` · ${Math.max(1, Math.round(c.duration / 60))} min` : ''}${c.cueCount ? ` · ${c.cueCount} blocchi` : ''}${pins ? ` · 📌 ${pins}` : ''}</span></span>
             <span class="s-chips">${chip(count(c, 'done'), 'done', 'completate')}${chip(count(c, 'doing'), 'doing', 'in corso')}${chip(count(c, 'next'), 'next', 'prossimi passi')}${chip(count(c, 'risk'), 'risk', 'attenzione')}${c.items.length ? '' : '<span class="muted small">punti da compilare</span>'}</span>
+            <span class="s-progress" title="Avanzamento: transcript · revisione · punti chiave · riepilogo · email · inviata">${[
+              c.cueCount > 0,
+              (hc.reviewedCount || 0) >= 0.8 * (c.cueCount || 1) || ['revisionato', 'inviato'].includes(c.status),
+              pins > 0,
+              c.items.length > 0,
+              Boolean(r?.email),
+              c.status === 'inviato',
+            ].map((d) => `<i class="${d ? 'done' : ''}"></i>`).join('')}</span>
             <span class="s-assets">${asset(r?.video && !r.video.missing, '🎥', 'Registrazione')}${asset(r?.transcriptOriginal || c.cueCount, '📝', 'Transcript')}${asset(r?.email, '✉️', 'Email di riepilogo')}</span>
             <span class="pill s-status" data-s="${esc(c.status)}">${esc(STATUS_LABEL[c.status] || c.status)}</span>
             <span class="s-go">›</span>
@@ -1334,19 +1343,39 @@
   }
 
   // ------------------------------------------------------------------ dashboard del singolo checkpoint
-  const dash = { tab: LS.get('dashTab', 'chat'), search: '', streaming: null };
+  // Diversa dalla revisione: qui si consulta e si consegna. Protagonista è il verbale; il video
+  // compare solo su richiesta, in un mini-lettore aperto sul momento in cui si è parlato di una voce.
+  const dash = { tab: LS.get('dashTab2', 'assistant'), search: '', streaming: null, fonti: LS.get('dashFonti', 'transcript') };
 
   async function openDashboard(id) {
     state.dashId = id;
     if (state.cp?.id !== id) await openCheckpoint(id, { keepView: true });
     video.pause();
+    closeMini();
     if (state.view !== 'history') setView('history');
     else renderDashboard();
   }
   function closeDashboard() {
     state.dashId = null;
-    $('#dashVideo').pause();
+    closeMini();
     renderHistory();
+  }
+
+  // Avanzamento del checkpoint: tappe e prossimo passo consigliato
+  function progressOf(cp) {
+    const list = cp.transcript?.cues || [];
+    const reviewedPct = list.length ? list.filter((c) => c.reviewed).length / list.length : 0;
+    const items = Templates.roleItems(cp.summary, state.tpl).length;
+    const steps = [
+      { key: 'transcript', label: 'Transcript', done: list.length > 0, action: 'Importa il transcript', go: 'review' },
+      { key: 'review', label: 'Revisione', done: reviewedPct >= 0.8 || ['revisionato', 'inviato'].includes(cp.status), hint: list.length ? `${Math.round(reviewedPct * 100)}%` : '', action: 'Completa la revisione del transcript', go: 'review' },
+      { key: 'pins', label: 'Punti chiave', done: cp.pins.length > 0, hint: cp.pins.length ? String(cp.pins.length) : '', action: 'Fissa i punti chiave (📌) durante l\'ascolto', go: 'review', optional: true },
+      { key: 'summary', label: 'Riepilogo', done: items > 0, hint: items ? String(items) : '', action: cp.pins.length ? 'Genera il riepilogo dai punti chiave con l\'AI' : 'Compila il riepilogo', go: cp.pins.length ? 'ai-summary' : 'review' },
+      { key: 'email', label: 'Email', done: items > 0 && Boolean(cp.email?.body?.trim()), action: 'Controlla l\'email finale', go: 'email' },
+      { key: 'sent', label: 'Inviata', done: cp.status === 'inviato', action: 'Invia l\'email e segnala come inviata', go: 'email' },
+    ];
+    const next = steps.find((s) => !s.done && !s.optional) || null;
+    return { steps, next, reviewedPct };
   }
 
   async function renderDashboard() {
@@ -1355,67 +1384,128 @@
     $('#histListPage').hidden = true;
     $('#cpDash').hidden = false;
     if (!resources) await loadResources();
+    const speakers = speakersList();
+    const dur = cues().length ? cues()[cues().length - 1].end : 0;
     $('#dashTitle').textContent = cp.title;
-    $('#dashMeta').innerHTML = `${esc(longDate(cp.date))} · ${esc(state.tpl.name)} · <span class="pill s-status" data-s="${esc(cp.status)}">${esc(STATUS_LABEL[cp.status] || cp.status)}</span>`;
-    const dv = $('#dashVideo');
-    const src = cp.video ? `/media/${cp.projectId}/${cp.id}?v=${encodeURIComponent(cp.video.uploadedAt || '')}` : '';
-    if (src && !dv.src.endsWith(src)) dv.src = src;
-    if (!src) dv.removeAttribute('src');
-    $('#dashVideoWrap').classList.toggle('empty', !src);
-    renderDashTranscript();
+    $('#dashMeta').innerHTML = [
+      esc(longDate(cp.date)),
+      esc(state.tpl.name),
+      dur ? `${Math.max(1, Math.round(dur / 60))} min` : '',
+      speakers.length ? `${speakers.length} partecipanti: ${speakers.map((s) => `<span style="color:${speakerColor(s.name)}">${esc(s.name)}</span>`).join(', ')}` : '',
+    ].filter(Boolean).join(' · ');
+    const { steps, next } = progressOf(cp);
+    $('#dashSteps').innerHTML =
+      steps.map((s, i) => `<div class="step-i ${s.done ? 'done' : ''} ${next === s ? 'current' : ''} ${s.optional && !s.done ? 'opt' : ''}"><span class="dot">${s.done ? '✓' : i + 1}</span><span class="lbl">${esc(s.label)}${s.hint ? ` <small>${esc(s.hint)}</small>` : ''}</span></div>`).join('<span class="step-line"></span>') +
+      (next ? `<button class="btn btn-primary btn-sm next-btn" data-next="${next.go}">${esc(next.action)} →</button>` : '<span class="pill ok next-done">Checkpoint completato</span>');
+    renderVerbale();
     $$('.dash-tab').forEach((t) => t.classList.toggle('active', t.dataset.dtab === dash.tab));
     $$('.dash-panel').forEach((p) => p.classList.toggle('active', p.id === `dash-${dash.tab}`));
     renderDashPanel();
   }
 
-  function renderDashTranscript() {
-    const list = cues();
-    const q = dash.search.toLowerCase();
-    const pinned = new Set(state.cp.pins.map((p) => p.cueId));
-    $('#dashTranscript').innerHTML = list.length
-      ? list
-          .filter((c) => !q || (c.text + ' ' + c.speaker).toLowerCase().includes(q))
-          .map((c) => `<div class="dt-row ${pinned.has(c.id) ? 'pinned' : ''}" data-t="${c.start}" data-cue="${c.id}"><button class="dt-time" title="Riproduci da qui">▶ ${fmtT(c.start)}</button><div><b style="color:${speakerColor(c.speaker)}">${esc(c.speaker || '')}</b> ${esc(c.text)}</div></div>`)
-          .join('') || '<p class="muted small">Nessun risultato.</p>'
-      : '<p class="muted">Nessun transcript per questo checkpoint.</p>';
+  // Momento della riunione collegato a una voce: quello salvato, altrimenti il più probabile (ricerca nel transcript)
+  let guessCache = new Map();
+  function sourceOf(it) {
+    if (it.ref?.start != null) return { start: it.ref.start, sure: true };
+    const g = guessCache.get(it.text);
+    return g != null ? { start: g, sure: false } : null;
+  }
+
+  function renderVerbale() {
+    const cp = state.cp;
+    const s = cp.summary;
+    // una sola ricerca nel transcript per tutte le voci senza collegamento
+    const loose = Templates.roleItems(s, state.tpl).filter((it) => !it.paragraph && it.ref?.start == null);
+    guessCache = new Map();
+    if (loose.length && cues().length) for (const m of Analysis.touchedItems(loose, cues())) if (m.mentions.length) guessCache.set(m.text, m.mentions[0].start);
+    const html = state.tpl.sections
+      .map((sec) => {
+        const v = s[sec.key];
+        if (sec.kind === 'paragraph') return v?.trim() ? `<section class="vb-sec"><h4>${esc(sec.title)}</h4><p class="vb-para">${esc(v)}</p></section>` : '';
+        if (!v?.length) return '';
+        const items = v
+          .map((it) => {
+            const src = sourceOf(it);
+            const meta = [it.note && `→ ${esc(it.note)}`, it.owner && `<span class="pill">${esc(it.owner)}</span>`, it.deadline && `<span class="pill soon">Deadline ${esc(it.deadline)}</span>`].filter(Boolean).join(' ');
+            return `<li><span class="vb-text">${esc(it.text)}</span>${meta ? `<span class="vb-meta">${meta}</span>` : ''}
+              ${src ? `<button class="src-chip ${src.sure ? '' : 'guess'}" data-play="${src.start}" title="${src.sure ? 'Guarda il momento della riunione' : 'Momento probabile (trovato cercando nel transcript)'}">▶ ${fmtT(src.start)}${src.sure ? '' : ' ?'}</button>` : ''}</li>`;
+          })
+          .join('');
+        return `<section class="vb-sec"><h4>${esc(sec.title)} ${rolePill(sec.role)}</h4><${sec.kind === 'list' ? 'ul' : 'ol'} class="vb-list">${items}</${sec.kind === 'list' ? 'ul' : 'ol'}></section>`;
+      })
+      .join('');
+    $('#dashVerbale').innerHTML = html
+      ? `<div class="vb-doc">${html}</div>`
+      : `<div class="vb-empty"><b>Il verbale è ancora vuoto</b><p class="muted">${cp.pins.length ? `Hai ${cp.pins.length} punti chiave: l'assistente AI può trasformarli nelle voci del template.` : 'Compila i punti in revisione, oppure fissa i punti chiave e usa l\'assistente AI.'}</p>
+          <div class="row gap-6" style="justify-content:center">${cp.pins.length ? '<button class="btn btn-primary btn-sm" data-next="ai-summary">✨ Genera dai punti chiave</button>' : ''}<button class="btn btn-sm" data-next="review">Apri in revisione</button></div></div>`;
   }
 
   function renderDashPanel() {
     const cp = state.cp;
-    if (dash.tab === 'chat') return renderChat();
-    if (dash.tab === 'summary') {
-      const s = cp.summary;
-      const secs = state.tpl.sections
-        .map((sec) => {
-          const v = s[sec.key];
-          if (sec.kind === 'paragraph') return v?.trim() ? `<h5>${esc(sec.title)}</h5><p>${esc(v)}</p>` : '';
-          return v?.length ? `<h5>${esc(sec.title)}</h5><ul>${v.map((i) => `<li>${esc(i.text)}${i.note ? ` <span class="muted">→ ${esc(i.note)}</span>` : ''}${i.owner || i.deadline ? ` <span class="muted">(${esc([i.owner, i.deadline].filter(Boolean).join(' · '))})</span>` : ''}</li>`).join('')}</ul>` : '';
-        })
-        .join('');
-      $('#dash-summary').innerHTML = `<div class="row between"><h4 class="an-h">Riepilogo (${esc(state.tpl.name)})</h4><button class="btn btn-sm btn-ghost" data-dact="edit">Modifica in revisione</button></div>
-        <div class="dash-sum">${secs || '<p class="muted">Nessun punto compilato.</p>'}</div>
-        <div class="row between"><h4 class="an-h">Email finale</h4><div class="row gap-6"><button class="btn btn-sm btn-ghost" data-dact="eml">.eml</button><button class="btn btn-sm btn-primary" data-dact="copy">Copia per Outlook</button></div></div>
-        <div class="muted small">Oggetto: ${esc(cp.email.subject || '')}</div>
-        <pre class="tpl-preview">${esc(cp.email.body || '')}</pre>
-        <label class="toggle" style="margin-top:8px"><input type="checkbox" data-dact="sent" ${cp.status === 'inviato' ? 'checked' : ''}/><span>Email inviata</span></label>`;
+    if (dash.tab === 'assistant') return renderChat();
+    if (dash.tab === 'email') {
+      $('#dash-email').innerHTML = `<div class="row between"><span class="muted small">Oggetto</span><label class="toggle"><input type="checkbox" data-dact="sent" ${cp.status === 'inviato' ? 'checked' : ''}/><span>Email inviata</span></label></div>
+        <div class="mail-subject">${esc(cp.email.subject || '')}</div>
+        <div class="mail-body">${Email.textToHtml(cp.email.body || '')}</div>
+        <div class="row gap-6" style="margin-top:10px"><button class="btn btn-sm btn-primary" data-dact="copy">Copia per Outlook</button><button class="btn btn-sm btn-ghost" data-dact="eml">Scarica .eml</button><button class="btn btn-sm btn-ghost" data-dact="edit">Modifica</button></div>`;
       return;
     }
-    if (dash.tab === 'pins') {
-      $('#dash-pins').innerHTML = cp.pins.length
-        ? cp.pins.map((p) => `<div class="an-card"><div class="an-top"><button class="link" data-seek="${p.start}">▶ ${fmtT(p.start)}</button><span class="muted small">${esc(p.speaker)}</span>${p.section ? `<span class="pill ok">nel riepilogo</span>` : '<span class="pill">da inserire</span>'}</div><div>${esc(p.text)}</div></div>`).join('')
-        : '<p class="muted">Nessun punto chiave: in revisione premi 📌 accanto alle frasi importanti.</p>';
-      return;
+    if (dash.tab === 'fonti') {
+      const sub = dash.fonti;
+      const seg = `<div class="seg fonti-seg">${[['transcript', 'Transcript'], ['pins', `Punti chiave (${cp.pins.length})`], ['files', 'File']].map(([k, l]) => `<button class="seg-btn ${sub === k ? 'active' : ''}" data-fonti="${k}">${l}</button>`).join('')}</div>`;
+      let body = '';
+      if (sub === 'transcript') {
+        const q = dash.search.toLowerCase();
+        const pinned = new Set(cp.pins.map((p) => p.cueId));
+        const rows = cues().filter((c) => !q || (c.text + ' ' + c.speaker).toLowerCase().includes(q));
+        body = `<div class="search"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="m13 13 4 4"/></svg><input id="dashSearch" placeholder="Cerca nel transcript" value="${esc(dash.search)}" /></div>
+          <div class="dash-transcript">${cues().length ? rows.map((c) => `<div class="dt-row ${pinned.has(c.id) ? 'pinned' : ''}" data-play="${c.start}"><span class="dt-time">${fmtT(c.start)}</span><div><b style="color:${speakerColor(c.speaker)}">${esc(c.speaker || '')}</b> ${esc(c.text)}</div></div>`).join('') || '<p class="muted small">Nessun risultato.</p>' : '<p class="muted">Nessun transcript.</p>'}</div>`;
+      } else if (sub === 'pins') {
+        body = cp.pins.length
+          ? cp.pins.map((p) => `<div class="an-card"><div class="an-top"><button class="src-chip" data-play="${p.start}">▶ ${fmtT(p.start)}</button><span class="muted small">${esc(p.speaker)}</span>${p.section ? '<span class="pill ok">nel riepilogo</span>' : '<span class="pill">da inserire</span>'}</div><div>${esc(p.text)}</div></div>`).join('')
+          : '<p class="muted">Nessun punto chiave: in revisione premi 📌 accanto alle frasi importanti.</p>';
+      } else {
+        const r = resFor(cp.id);
+        const row = (label, f, hint) =>
+          `<div class="file-row"><span class="file-ico ${f && !f.missing ? 'ft-video' : ''}">${f && !f.missing ? '✓' : '—'}</span><div class="file-main"><div class="file-name">${esc(label)}</div><div class="muted small">${f ? (f.missing ? 'file non trovato: ' + esc(f.rel) : fmtSize(f.size)) : esc(hint)}</div></div>
+            ${f && !f.missing ? `<div class="row gap-6"><button class="btn btn-sm btn-ghost" data-openfile="${esc(f.rel)}">Apri</button><button class="btn btn-sm btn-ghost" data-reveal="${esc(f.rel)}">Mostra</button></div>` : '<span></span>'}</div>`;
+        body = r
+          ? `<div class="row between"><span class="muted small">${esc(r.folder || 'Cartella non ancora creata')}</span>${r.folder ? `<button class="btn btn-sm" data-openfolder="${esc(r.folder)}">Apri cartella</button>` : ''}</div>
+            <div class="file-table" style="margin-top:8px">${row('Registrazione', r.video, 'nessun video')}${row('Transcript originale', r.transcriptOriginal, 'nessun file originale')}${row('Transcript revisionato', r.transcriptRevised, 'si crea salvando')}${row('Email di riepilogo', r.email, 'si crea compilando l\'email')}${row('Punti chiave', r.pins, 'nessuno')}${row('Note', r.notes, 'nessuna')}${r.other.map((f) => row(f.rel.split(/[\\/]/).pop(), f, '')).join('')}</div>`
+          : '<p class="muted">Caricamento…</p>';
+      }
+      $('#dash-fonti').innerHTML = seg + body;
     }
-    if (dash.tab === 'files') {
-      const r = resFor(cp.id);
-      const row = (label, f, hint) =>
-        `<div class="file-row"><span class="file-ico ${f && !f.missing ? 'ft-video' : ''}">${f && !f.missing ? '✓' : '—'}</span><div class="file-main"><div class="file-name">${esc(label)}</div><div class="muted small">${f ? (f.missing ? 'file non trovato: ' + esc(f.rel) : esc(f.rel) + ' · ' + fmtSize(f.size)) : esc(hint)}</div></div>
-          ${f && !f.missing ? `<div class="row gap-6"><button class="btn btn-sm btn-ghost" data-openfile="${esc(f.rel)}">Apri</button><button class="btn btn-sm btn-ghost" data-reveal="${esc(f.rel)}">Mostra</button></div>` : '<span></span>'}</div>`;
-      $('#dash-files').innerHTML = r
-        ? `<div class="row between"><span class="muted small">${esc(r.folder || 'Cartella non ancora creata')}</span>${r.folder ? `<button class="btn btn-sm" data-openfolder="${esc(r.folder)}">Apri cartella</button>` : ''}</div>
-          <div class="file-table" style="margin-top:8px">${row('Registrazione', r.video, 'nessun video caricato')}${row('Transcript originale', r.transcriptOriginal, 'nessun file originale')}${row('Transcript revisionato', r.transcriptRevised, 'si crea salvando il transcript')}${row('Email di riepilogo', r.email, 'si crea compilando l\'email')}${row('Punti chiave', r.pins, 'nessun punto chiave')}${row('Note', r.notes, 'nessuna nota')}${r.other.map((f) => row(f.rel.split(/[\\/]/).pop(), f, '')).join('')}</div>`
-        : '<p class="muted">Caricamento…</p>';
-    }
+  }
+
+  // ------------------------------------------------------------------ mini-lettore
+  const mini = () => $('#miniPlayer');
+  function playMoment(t) {
+    const cp = state.cp;
+    if (!cp.video) return toast('Nessuna registrazione per questo checkpoint');
+    const dv = $('#dashVideo');
+    const src = `/media/${cp.projectId}/${cp.id}?v=${encodeURIComponent(cp.video.uploadedAt || '')}`;
+    if (!dv.src.endsWith(src)) dv.src = src;
+    mini().hidden = false;
+    $('#cpDash').classList.add('mini-open');
+    const start = Math.max(0, t - 1); // un secondo prima, per non perdere l'inizio della frase
+    const go = () => { dv.currentTime = start; dv.play().catch(() => {}); };
+    if (dv.readyState >= 1) go();
+    else dv.addEventListener('loadedmetadata', go, { once: true });
+    mini().dataset.t = String(t);
+  }
+  function closeMini() {
+    const dv = $('#dashVideo');
+    dv.pause();
+    mini().hidden = true;
+    $('#cpDash').classList.remove('mini-open');
+  }
+  function updateCaption() {
+    const t = $('#dashVideo').currentTime;
+    const i = findActive(t);
+    const c = cues()[i];
+    $('#miniCaption').innerHTML = c ? `<b style="color:${speakerColor(c.speaker)}">${esc(c.speaker || '')}</b> ${esc(c.text)}` : '';
+    $('#miniTime').textContent = fmtT(t);
   }
 
   // ------------------------------------------------------------------ chat con Ollama
@@ -1453,7 +1543,7 @@
     const ctx = chatCtx();
     const msgs = cp.chat || [];
     const ctxLabels = { pins: 'Punti chiave', summary: 'Riepilogo', email: 'Email', example: 'Email di esempio', notes: 'Note', transcript: 'Transcript (più lento)' };
-    $('#dash-chat').innerHTML = `
+    $('#dash-assistant').innerHTML = `
       ${ready ? '' : `<div class="note-box">L'AI locale non è pronta: ${state.ollama?.running ? 'scegli un modello' : 'avvia Ollama'} nella sezione <button class="link" data-goto="localai">AI locale</button>.</div>`}
       <div class="chat-presets">${allPresets().map((p) => `<button class="chip" data-preset="${esc(p.id)}" title="${esc(p.prompt)}">${esc(p.name)}${p.custom ? ' <span data-delpreset="' + esc(p.id) + '" title="Elimina preimpostazione">×</span>' : ''}</button>`).join('')}</div>
       <div class="chat-log" id="chatLog">${msgs.length ? msgs.map((m, i) => chatMsgHtml(m, i)).join('') : `<div class="chat-empty"><b>Chiedi all'AI locale</b><p class="muted small">Usa una preimpostazione qui sopra (es. <i>📌 → Riepilogo dal template</i> per trasformare i punti chiave scritti di fretta nelle voci del verbale) oppure scrivi una richiesta. L'AI lavora sul contesto selezionato qui sotto.</p></div>`}</div>
@@ -1535,7 +1625,7 @@
       reply.done = true;
       dash.streaming = null;
       markDirty();
-      if (state.dashId === cp.id && dash.tab === 'chat') renderChat();
+      if (state.dashId === cp.id && dash.tab === 'assistant') renderChat();
     }
   }
 
@@ -1563,6 +1653,7 @@
     renderPins();
     markDirty();
     renderChat();
+    if (state.dashId) { renderVerbale(); renderDashboard(); }
     toast('Riepilogo aggiornato: l\'email è stata rigenerata dal template');
   }
 
@@ -2235,25 +2326,23 @@
     $('#histFilter').oninput = () => renderHistory();
     $('#sessionList').onclick = (e) => { const b = e.target.closest('[data-dash]'); if (b) openDashboard(b.dataset.dash); };
     $('#dashBack').onclick = closeDashboard;
-    $('#dashOpenReview').onclick = () => { state.dashId = null; $('#dashVideo').pause(); setView('workspace'); };
-    $('#dashSearch').oninput = (e) => { dash.search = e.target.value.trim(); renderDashTranscript(); };
-    $('#dashTranscript').onclick = (e) => {
-      const row = e.target.closest('.dt-row');
-      if (!row) return;
-      const dv = $('#dashVideo');
-      if (!dv.src) return;
-      dv.currentTime = Number(row.dataset.t);
-      dv.play();
+    $('#dashOpenReview').onclick = () => { state.dashId = null; closeMini(); setView('workspace'); };
+    const dv = $('#dashVideo');
+    dv.addEventListener('timeupdate', updateCaption);
+    dv.addEventListener('play', () => ($('#miniToggle').textContent = '❚❚'));
+    dv.addEventListener('pause', () => ($('#miniToggle').textContent = '▶'));
+    $('#miniClose').onclick = closeMini;
+    $('#miniBack').onclick = () => { dv.currentTime = Math.max(0, dv.currentTime - 5); };
+    $('#miniToggle').onclick = () => (dv.paused ? dv.play() : dv.pause());
+    $('#miniSize').onclick = () => mini().classList.toggle('big');
+    $('#miniReview').onclick = () => {
+      const t = dv.currentTime;
+      closeMini();
+      state.dashId = null;
+      setView('workspace');
+      setTimeout(() => seekTo(t, false), 300);
     };
-    $('#dashVideo').addEventListener('timeupdate', () => {
-      const t = $('#dashVideo').currentTime;
-      const rows = $$('#dashTranscript .dt-row');
-      let cur = null;
-      for (const r of rows) { if (Number(r.dataset.t) <= t + 0.05) cur = r; else break; }
-      rows.forEach((r) => r.classList.toggle('now', r === cur));
-      if (cur && !$('#dashVideo').paused) cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    });
-    $$('.dash-tab').forEach((t) => (t.onclick = () => { dash.tab = t.dataset.dtab; LS.set('dashTab', dash.tab); renderDashboard(); }));
+    $$('.dash-tab').forEach((t) => (t.onclick = () => { dash.tab = t.dataset.dtab; LS.set('dashTab2', dash.tab); renderDashboard(); }));
     const cd = $('#cpDash');
     cd.addEventListener('click', async (e) => {
       const t = e.target;
@@ -2262,8 +2351,22 @@
         if (d?.dataset.dact === 'edit') { state.dashId = null; return setView('workspace'); }
         if (d?.dataset.dact === 'copy') return copyEmail();
         if (d?.dataset.dact === 'eml') return $('#emlBtn').click();
-        const seek = t.closest('[data-seek]');
-        if (seek) { const dv = $('#dashVideo'); if (dv.src) { dv.currentTime = Number(seek.dataset.seek); dv.play(); } return; }
+        const play = t.closest('[data-play]');
+        if (play) return playMoment(Number(play.dataset.play));
+        const nx = t.closest('[data-next]');
+        if (nx) {
+          const go = nx.dataset.next;
+          if (go === 'review') { state.dashId = null; closeMini(); return setView('workspace'); }
+          if (go === 'email') { dash.tab = 'email'; return renderDashboard(); }
+          if (go === 'ai-summary') {
+            dash.tab = 'assistant';
+            renderDashboard();
+            const preset = allPresets().find((p) => p.id === 'pins-to-template');
+            return sendChat(preset.prompt, preset);
+          }
+        }
+        const fonti = t.closest('[data-fonti]');
+        if (fonti) { dash.fonti = fonti.dataset.fonti; LS.set('dashFonti', dash.fonti); return renderDashPanel(); }
         const of = t.closest('[data-openfile]');
         if (of) return api('POST', '/api/folder/open-file', { rel: of.dataset.openfile });
         const rv = t.closest('[data-reveal]');
@@ -2319,6 +2422,16 @@
       const t = e.target;
       if (t.dataset.ctx) LS.set('chatCtx', { ...chatCtx(), [t.dataset.ctx]: t.checked });
       if (t.dataset.dact === 'sent') { state.cp.status = t.checked ? 'inviato' : 'revisionato'; $('#cpStatus').value = state.cp.status; markDirty(); renderDashboard(); }
+    });
+    cd.addEventListener('input', (e) => {
+      if (e.target.id === 'dashSearch') {
+        dash.search = e.target.value;
+        const pos = e.target.selectionStart;
+        renderDashPanel();
+        const el = $('#dashSearch');
+        el.focus();
+        el.setSelectionRange(pos, pos);
+      }
     });
     cd.addEventListener('keydown', (e) => {
       if (e.target.id === 'chatInput' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const v = e.target.value.trim(); if (v) sendChat(v); }
