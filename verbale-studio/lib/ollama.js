@@ -207,4 +207,80 @@ async function task({ model, project, author, task: kind, text, glossary }) {
   return String(res.message?.content || '').trim().replace(/^["«]|["»]$/g, '');
 }
 
-module.exports = { RECOMMENDED, jobs, status, install, startApp, pull, removeModel, train, task, trainedName };
+// ------------------------------------------------------------------ chat sul checkpoint
+
+const fmtTime = (s) => {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + `:${String(s % 60).padStart(2, '0')}`;
+};
+
+function summaryText(summary, template) {
+  if (!summary) return '';
+  const secs = template?.sections || Object.keys(summary).map((key) => ({ key, title: key }));
+  const out = [];
+  for (const sec of secs) {
+    const v = summary[sec.key];
+    if (Array.isArray(v) && v.length) {
+      out.push(`${sec.title}:`);
+      for (const it of v) {
+        const extra = [it.note && `→ ${it.note}`, it.owner && `owner ${it.owner}`, it.deadline && `deadline ${it.deadline}`].filter(Boolean).join(', ');
+        out.push(`- ${it.text}${extra ? ` (${extra})` : ''}`);
+      }
+    } else if (typeof v === 'string' && v.trim()) out.push(`${sec.title}: ${v.trim()}`);
+  }
+  return out.join('\n');
+}
+
+// Contesto del checkpoint per la chat: solo le parti scelte dall'utente, per restare nei limiti dei modelli piccoli
+function checkpointSystemPrompt({ project, author, checkpoint: c, context = {}, template }) {
+  const parts = [
+    `Sei l'assistente di ${author || 'una consulente'} per i verbali delle riunioni di progetto con il cliente ${project.name}.`,
+    `Rispondi sempre in italiano, in modo professionale e conciso. Usa correttamente questi nomi e termini: ${project.glossary || '-'}.`,
+    `Non inventare fatti, owner o date che non compaiono nel materiale fornito.`,
+    `\n## Riunione\n${c.title} del ${String(c.date || '').split('-').reverse().join('/')}`,
+  ];
+  if (template?.sections?.length) {
+    parts.push(
+      `\n## Template del riepilogo "${template.name}"\n` +
+        template.sections.map((s) => `- ${s.key}: ${s.title} (${s.kind === 'paragraph' ? 'paragrafo' : s.kind === 'actions' ? 'elenco con owner e deadline' : 'elenco'})`).join('\n')
+    );
+  }
+  if (context.example && project.exampleEmail) parts.push(`\n## Email di esempio (stile di riferimento)\n${project.exampleEmail.slice(0, 2500)}`);
+  if (context.pins && c.pins?.length) parts.push(`\n## Punti chiave evidenziati durante la riunione (appunti grezzi)\n${c.pins.map((p) => `- [${p.id}] ${p.speaker ? p.speaker + ': ' : ''}${p.text}`).join('\n')}`);
+  if (context.summary) {
+    const t = summaryText(c.summary, template);
+    if (t) parts.push(`\n## Riepilogo attuale\n${t}`);
+  }
+  if (context.email && c.email?.body) parts.push(`\n## Email attuale\n${c.email.body.slice(0, 5000)}`);
+  if (context.notes && c.notes) parts.push(`\n## Note\n${c.notes.slice(0, 3000)}`);
+  if (context.transcript && c.transcript?.cues?.length) {
+    let t = c.transcript.cues.map((q) => `[${fmtTime(q.start)}] ${q.speaker ? q.speaker + ': ' : ''}${q.text}`).join('\n');
+    if (t.length > 24000) t = t.slice(0, 24000) + '\n(transcript troncato per lunghezza)';
+    parts.push(`\n## Transcript\n${t}`);
+  }
+  return parts.join('\n');
+}
+
+// Chat in streaming: restituisce la risposta di Ollama (NDJSON) da inoltrare al browser
+async function chatStream({ model, messages, format, numCtx = 8192 }) {
+  const send = (fmt) =>
+    fetch(HOST + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, stream: true, ...(fmt ? { format: fmt } : {}), options: { temperature: 0.3, num_ctx: numCtx } }),
+    });
+  let res;
+  try {
+    res = await send(format);
+    // versioni di Ollama senza output strutturato: si ripiega su JSON generico
+    if (!res.ok && format && typeof format === 'object') res = await send('json');
+  } catch {
+    throw Object.assign(new Error('Ollama non è in esecuzione. Aprilo dalla finestra “AI locale”.'), { status: 503 });
+  }
+  if (!res.ok) throw Object.assign(new Error(`Ollama: ${(await res.text()).slice(0, 200)}`), { status: 502 });
+  return res;
+}
+
+module.exports = { RECOMMENDED, jobs, status, install, startApp, pull, removeModel, train, task, trainedName, checkpointSystemPrompt, chatStream };

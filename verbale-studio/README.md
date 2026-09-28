@@ -31,7 +31,7 @@ I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<da
 
 ## Flusso di lavoro
 
-1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella (esclusa `Archivio/`). *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video vengono collegati, non copiati né spostati. In alternativa puoi trascinare i file direttamente nella finestra.
+1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella (esclusa `Archivio/`). *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video restano al loro posto e, di default, vengono anche copiati in Archivio. In alternativa puoi trascinare i file direttamente nella finestra.
 2. **Revisione** (colonna destra): il transcript scorre in sincrono con il video, parola per parola.
    - Accanto a ogni frase: **▶** porta il video a quel punto e lo fa partire; **📌** (o il tasto `P`) fissa la frase tra i *Punti chiave* da mettere nel verbale. Se prima selezioni solo una parte della frase, viene fissata quella.
    - Clic sul testo per modificarlo (`Invio` salva, `Tab` passa al blocco successivo).
@@ -48,8 +48,25 @@ I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<da
    - `Alt+1…9` aggiunge alla sezione il testo selezionato nel transcript.
    - “↺ N collegate” mostra la storia di quella voce nei checkpoint passati.
 6. **Email**: il testo si compone dal template. *Copia per Outlook* copia la versione formattata; *.eml* scarica una bozza.
-7. **Storico**: timeline, punti di attenzione aperti con le scadenze e *Filo delle attività* (come una voce è passata da prossimo passo a in corso a completata).
-8. **Prossimo checkpoint**: i temi previsti per il prossimo incontro, calcolati dallo storico.
+7. **Storico checkpoint**: tutte le sessioni a cascata, una per riga, con template, durata, voci per tipo, punti chiave, file presenti (🎥 📝 ✉️) e stato. Cliccando una sessione si apre la **dashboard del checkpoint**:
+   - video e transcript da consultare (clic su una riga → il video parte da lì), con ricerca;
+   - **✨ Chat AI** con Ollama sul contesto scelto (punti chiave, riepilogo, email, email di esempio, note, transcript). Preimpostazioni pronte: *📌 → Riepilogo dal template* (trasforma i punti chiave scritti di fretta nelle voci del template, poi *Aggiungi al riepilogo* o *Sostituisci il riepilogo*), *Scrivi l'email finale* e *Migliora l'email attuale* (poi *Usa come email finale*), *Sistema i punti chiave*, *Azioni e scadenze*, *Riassunto della riunione*. Le proprie richieste si salvano con *Salva come preimpostazione*; la chat resta memorizzata nel checkpoint;
+   - riepilogo ed email finale, punti chiave e file del checkpoint (apri o mostra in Esplora risorse).
+8. **Cartella di lavoro**: gestore risorse. Una tabella con ogni checkpoint e la presenza di registrazione, transcript originale e revisionato, email finale e punti chiave (✓ apre il file, ✗ o *manca* in rosso), con il filtro *solo incompleti*; sotto, i file di Teams presenti nella cartella e non ancora usati. I video presi dalla cartella restano al loro posto e, di default, vengono anche copiati in Archivio.
+9. **Prossimo checkpoint**: i temi previsti per il prossimo incontro e il *Filo delle attività*.
+
+## Aggiornare senza perdere dati
+
+Il pacchetto di aggiornamento contiene solo il programma (`app\`, i file di avvio e le istruzioni): chiudi l'app, estrai lo zip sopra la cartella esistente sostituendo i file e riavvia. Il numero di versione è in basso a sinistra.
+
+**Non cancellare, spostare o sostituire mai** queste cartelle:
+
+| Cartella | Contiene |
+|---|---|
+| `data\` | checkpoint, transcript revisionati, punti, email, versioni, cestino, template, preimpostazioni della chat, impostazioni |
+| `Archivio\` | una cartella per checkpoint: video, transcript, email, punti chiave, note |
+| `Backup\` | copie giornaliere automatiche |
+| `Registrazioni\` | i file scaricati da Teams |
 
 ## Salvataggi: come non perdere nulla
 

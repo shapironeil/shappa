@@ -67,7 +67,7 @@
     <div class="sb-list" id="checkpointList"></div>
 
     <div class="sb-foot">
-      <span class="dot"></span><span id="localInfo">Archivio locale</span>
+      <span class="dot"></span><span id="localInfo">Archivio locale</span><span class="muted" id="appVersion" style="margin-left:auto"></span>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -240,19 +240,46 @@
 
     <!-- ===== VIEW: HISTORY ===== -->
     <section class="view scroll" id="view-history" hidden>
-      <div class="page">
-        <div class="page-head">
-          <h1 class="serif">Storico checkpoint</h1>
-          <p class="muted" id="historySub"></p>
+      <div class="page" id="histListPage">
+        <div class="page-head row between">
+          <div>
+            <h1 class="serif">Storico checkpoint</h1>
+            <p class="muted" id="historySub"></p>
+          </div>
+          <input class="input input-sm" id="histFilter" placeholder="Cerca per titolo, data o contenuto…" style="width:260px" />
         </div>
-        <div class="stats" id="historyStats"></div>
-        <h2 class="h2">Punti di attenzione aperti</h2>
-        <div id="openAttention"></div>
-        <h2 class="h2">Filo delle attività</h2>
-        <p class="muted small">Le voci che ricorrono in più checkpoint, collegate automaticamente: come sono passate da prossimo passo a in corso a completate.</p>
-        <div id="threads"></div>
-        <h2 class="h2">Timeline</h2>
-        <div class="timeline" id="timeline"></div>
+        <div class="stats mini-stats" id="historyStats"></div>
+        <div class="session-list" id="sessionList"></div>
+      </div>
+
+      <!-- Dashboard del singolo checkpoint -->
+      <div class="dash" id="cpDash" hidden>
+        <div class="dash-head">
+          <button class="btn btn-ghost btn-sm" id="dashBack">‹ Tutti i checkpoint</button>
+          <div class="dash-titles"><h2 class="serif" id="dashTitle"></h2><div class="muted small" id="dashMeta"></div></div>
+          <button class="btn btn-sm" id="dashOpenReview">Apri in revisione</button>
+        </div>
+        <div class="dash-grid">
+          <div class="dash-left">
+            <div class="dash-video" id="dashVideoWrap"><video id="dashVideo" controls preload="metadata"></video><div class="dash-novideo muted">Nessuna registrazione per questo checkpoint</div></div>
+            <div class="search dash-search"><svg viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="m13 13 4 4"/></svg><input id="dashSearch" placeholder="Cerca nel transcript" /></div>
+            <div class="dash-transcript" id="dashTranscript"></div>
+          </div>
+          <div class="dash-right">
+            <div class="tabs">
+              <button class="tab dash-tab" data-dtab="chat">✨ Chat AI</button>
+              <button class="tab dash-tab" data-dtab="summary">Riepilogo ed email</button>
+              <button class="tab dash-tab" data-dtab="pins">📌 Punti chiave</button>
+              <button class="tab dash-tab" data-dtab="files">File</button>
+            </div>
+            <div class="dash-body">
+              <div class="dash-panel" id="dash-chat"></div>
+              <div class="dash-panel" id="dash-summary"></div>
+              <div class="dash-panel" id="dash-pins"></div>
+              <div class="dash-panel" id="dash-files"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -287,7 +314,11 @@
             <button class="btn btn-primary btn-sm" id="refreshFolderBtn">Aggiorna</button>
           </div>
         </div>
-        <div class="note-box">Metti in questa cartella (anche in sottocartelle) le registrazioni e i transcript scaricati da Teams: compaiono qui sotto. I video presenti qui vengono <b>collegati senza spostarli</b>; i file che trascini nella finestra vengono invece <b>copiati in Archivio/&lt;progetto&gt;/&lt;data&gt; &lt;titolo&gt;/</b>, dove l'app salva anche il transcript revisionato e l'email di riepilogo.</div>
+        <div class="note-box">Qui controlli che per ogni checkpoint ci siano tutti i file (registrazione, transcript, email finale…) e trovi i file di Teams ancora da importare. I file trascinati nell'app vengono copiati in <b>Archivio\&lt;progetto&gt;\&lt;data&gt; &lt;titolo&gt;\</b>; quelli presi da questa cartella restano al loro posto e, di default, vengono <b>anche copiati</b> in Archivio.</div>
+        <div class="row gap-6" style="margin-bottom:6px;flex-wrap:wrap">
+          <label class="toggle"><input type="checkbox" id="onlyMissingToggle" /><span>Mostra solo i checkpoint incompleti</span></label>
+          <label class="toggle"><input type="checkbox" id="copyLinkedToggle" checked /><span>Copia in Archivio anche i video presi dalla cartella</span></label>
+        </div>
         <div id="folderBody"></div>
       </div>
     </section>

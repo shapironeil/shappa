@@ -26,6 +26,7 @@ try {
 }
 
 const PORT = Number(process.env.PORT) || 4310;
+const APP_VERSION = '1.4.0';
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));
@@ -245,6 +246,7 @@ function publicSettings(s) {
     author: s.author || '',
     ollamaModel: s.ollamaModel || '',
     mirrorDir: s.mirrorDir || '',
+    copyLinkedVideos: s.copyLinkedVideos !== false,
     hasApiKey: Boolean(key),
     apiKeySource: s.apiKey ? 'impostazioni' : process.env.ANTHROPIC_API_KEY ? 'variabile ambiente' : null,
     apiKeyHint: key ? `…${key.slice(-4)}` : '',
@@ -296,6 +298,7 @@ function checkpointSummary(c) {
     flaggedCount: cues.filter((q) => q.flagged).length,
     duration: cues.length ? cues[cues.length - 1].end : 0,
     itemCount: Object.values(s).reduce((n, v) => n + (Array.isArray(v) ? v.length : 0), 0),
+    pinCount: (c.pins || []).length,
   };
 }
 
@@ -454,7 +457,7 @@ const route = (method, pattern, handler) => {
 
 route('GET', '/api/state', async (req, res) => {
   const settings = await getSettings();
-  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea), runningFromTemp: RUNNING_FROM_TEMP });
+  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea), version: APP_VERSION, runningFromTemp: RUNNING_FROM_TEMP });
 });
 
 route('PUT', '/api/settings', async (req, res) => {
@@ -465,6 +468,7 @@ route('PUT', '/api/settings', async (req, res) => {
   if (typeof body.model === 'string' && body.model.trim()) next.model = body.model.trim();
   if (typeof body.author === 'string') next.author = body.author;
   if (typeof body.ollamaModel === 'string') next.ollamaModel = body.ollamaModel.trim();
+  if (typeof body.copyLinkedVideos === 'boolean') next.copyLinkedVideos = body.copyLinkedVideos;
   if (typeof body.mirrorDir === 'string') {
     const dir = body.mirrorDir.trim().replace(/^"|"$/g, '');
     if (dir) {
@@ -569,7 +573,7 @@ route('GET', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid 
   send(res, 200, c);
 });
 
-const SAVE_FIELDS = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis', 'pins'];
+const SAVE_FIELDS = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis', 'pins', 'chat'];
 
 async function saveCheckpoint(pid, cid, body) {
   return withLock(`${pid}/${cid}`, async () => {
@@ -721,19 +725,37 @@ route('GET', '/media/:pid/:cid', async (req, res, { pid, cid }) => {
   serveFile(req, res, path.join(checkpointDir(pid, cid), path.basename(current.video.file)));
 });
 
-// Collega un video già presente nella cartella di lavoro, senza copiarlo né spostarlo
+// Usa un video già presente nella cartella di lavoro: l'originale resta dov'è e, di default,
+// se ne fa anche una copia nella cartella del checkpoint in Archivio (impostazione "copyLinkedVideos")
 route('POST', '/api/projects/:pid/checkpoints/:cid/video-link', async (req, res, { pid, cid }) => {
   const { rel } = await readJsonBody(req);
   const abs = workPath(rel);
   const stat = await fsp.stat(abs).catch(() => null);
   if (!stat?.isFile()) return send(res, 404, { error: 'File non trovato nella cartella' });
+  const settings = await getSettings();
+  const copy = settings.copyLinkedVideos !== false;
   const video = await withLock(`${pid}/${cid}`, async () => {
     const c = await readJson(checkpointFile(pid, cid), null);
     if (!c) return null;
-    await removeOwnVideo(pid, cid, c, abs);
-    c.video = { external: path.relative(WORK_DIR, abs), name: path.basename(abs), size: stat.size, uploadedAt: new Date().toISOString() };
+    const dir = await ensureFolder(pid, c);
+    let target = abs;
+    if (copy && !abs.startsWith(dir + path.sep)) {
+      target = path.join(dir, `Registrazione${path.extname(abs).toLowerCase() || '.mp4'}`);
+      const tmp = `${target}.upload`;
+      await fsp.copyFile(abs, tmp);
+      await removeOwnVideo(pid, cid, c, target);
+      await fsp.rm(target, { force: true });
+      await fsp.rename(tmp, target);
+    } else await removeOwnVideo(pid, cid, c, abs);
+    c.video = {
+      external: path.relative(WORK_DIR, target),
+      copied: target !== abs,
+      source: path.relative(WORK_DIR, abs),
+      name: path.basename(abs),
+      size: stat.size,
+      uploadedAt: new Date().toISOString(),
+    };
     c.updatedAt = new Date().toISOString();
-    await ensureFolder(pid, c);
     await writeJson(checkpointFile(pid, cid), c);
     return c.video;
   });
@@ -777,12 +799,67 @@ route('GET', '/api/folder', async (req, res) => {
     for (const c of await loadCheckpoints(p.id)) {
       const mark = (rel) => rel && used.set(path.normalize(rel), { projectId: p.id, projectName: p.name, checkpointId: c.id, date: c.date, title: c.title });
       mark(c.video?.external);
+      mark(c.video?.source);
       mark(c.transcript?.sourcePath);
     }
   }
   for (const f of files) f.usedBy = used.get(path.normalize(f.rel)) || null;
   files.sort((a, b) => b.mtime.localeCompare(a.mtime));
-  send(res, 200, { workDir: WORK_DIR, dataDir: DATA_DIR, files });
+  send(res, 200, { workDir: WORK_DIR, dataDir: DATA_DIR, archiveDir: ARCHIVE_DIR, files, checkpoints: await resourceOverview() });
+});
+
+// Per ogni checkpoint: quali file ci sono nella sua cartella in Archivio (e quali mancano)
+async function resourceOverview() {
+  const out = [];
+  const info = async (rel) => {
+    if (!rel) return null;
+    const st = await fsp.stat(workPath(rel)).catch(() => null);
+    return st?.isFile() ? { rel: path.normalize(rel), size: st.size, mtime: st.mtime.toISOString() } : { rel: path.normalize(rel), missing: true };
+  };
+  const known = /^(Registrazione\.|Transcript originale\.|Transcript revisionato\.txt|Email di riepilogo\.txt|Punti chiave\.txt|Note\.txt|_dati-app)/i;
+  for (const p of await listProjects()) {
+    for (const c of await loadCheckpoints(p.id)) {
+      const folder = c.folder && fs.existsSync(workPath(c.folder)) ? path.normalize(c.folder) : '';
+      const names = folder ? await fsp.readdir(workPath(folder)).catch(() => []) : [];
+      const inFolder = (name) => (folder && names.includes(name) ? info(path.join(folder, name)) : null);
+      const original = names.find((n) => /^Transcript originale\./i.test(n));
+      const other = [];
+      for (const n of names.filter((x) => !known.test(x) && !x.endsWith('.tmp') && !x.endsWith('.upload'))) other.push(await info(path.join(folder, n)));
+      const videoRel = c.video?.external ? path.normalize(c.video.external) : '';
+      out.push({
+        projectId: p.id,
+        projectName: p.name,
+        id: c.id,
+        date: c.date,
+        title: c.title,
+        status: c.status,
+        folder,
+        video: videoRel ? { ...(await info(videoRel)), inArchive: Boolean(folder && videoRel.startsWith(folder + path.sep)), source: c.video.source || '' } : null,
+        transcriptOriginal: original ? await inFolder(original) : null,
+        transcriptRevised: await inFolder('Transcript revisionato.txt'),
+        email: await inFolder('Email di riepilogo.txt'),
+        pins: await inFolder('Punti chiave.txt'),
+        notes: await inFolder('Note.txt'),
+        data: folder && names.includes('_dati-app') ? await info(path.join(folder, '_dati-app', 'checkpoint.json')) : null,
+        other: other.filter(Boolean),
+        cueCount: c.transcript?.cues?.length || 0,
+      });
+    }
+  }
+  return out.sort((a, b) => b.date.localeCompare(a.date));
+}
+
+// Apre un file con il programma predefinito (o lo mostra in Esplora risorse)
+route('POST', '/api/folder/open-file', async (req, res) => {
+  const { rel, reveal } = await readJsonBody(req);
+  const abs = workPath(rel);
+  if (!fs.existsSync(abs)) return send(res, 404, { error: 'File non trovato' });
+  let cmd;
+  if (process.platform === 'win32') cmd = reveal ? `explorer /select,"${abs}"` : `start "" "${abs}"`;
+  else if (process.platform === 'darwin') cmd = `open ${reveal ? '-R ' : ''}"${abs}"`;
+  else cmd = `xdg-open "${reveal ? path.dirname(abs) : abs}"`;
+  exec(cmd, () => {});
+  send(res, 200, { ok: true });
 });
 
 route('POST', '/api/folder/read', async (req, res) => {
@@ -898,6 +975,46 @@ route('GET', '/api/backup/status', async (req, res) => {
 route('POST', '/api/backup/now', async (req, res) => {
   const name = await backup.dailyBackup({ force: true });
   send(res, 200, { name });
+});
+
+// ------------------------ Chat con l'AI locale --------------------------------
+
+const PRESETS_FILE = path.join(DATA_DIR, 'presets.json');
+route('GET', '/api/presets', async (req, res) => send(res, 200, await readJson(PRESETS_FILE, [])));
+route('PUT', '/api/presets', async (req, res) => {
+  const body = await readJsonBody(req);
+  if (!Array.isArray(body)) return send(res, 400, { error: 'Formato non valido' });
+  await writeJson(PRESETS_FILE, body);
+  send(res, 200, { ok: true });
+});
+
+// Chat sul checkpoint: il contesto (punti chiave, riepilogo, email, transcript) viene letto dall'archivio.
+// La risposta di Ollama arriva in streaming (una riga JSON per pezzo di testo).
+route('POST', '/api/ollama/chat', async (req, res) => {
+  const body = await readJsonBody(req);
+  const project = await readJson(projectFile(body.projectId), null);
+  const c = await readJson(checkpointFile(body.projectId, body.checkpointId), null);
+  if (!project || !c) return send(res, 404, { error: 'Checkpoint non trovato' });
+  const settings = await getSettings();
+  const model = settings.ollamaModel;
+  if (!model) return send(res, 400, { error: 'Scegli un modello nella finestra “AI locale”.' });
+  const system = ollama.checkpointSystemPrompt({ project, author: settings.author, checkpoint: c, context: body.context || {}, template: body.template });
+  const history = (Array.isArray(body.messages) ? body.messages : [])
+    .slice(-12)
+    .map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '').slice(0, 12000) }));
+  let upstream;
+  try {
+    upstream = await ollama.chatStream({ model, messages: [{ role: 'system', content: system }, ...history], format: body.format, numCtx: body.context?.transcript ? 16384 : 8192 });
+  } catch (err) {
+    return send(res, err.status || 503, { error: err.message });
+  }
+  res.writeHead(200, { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' });
+  try {
+    for await (const chunk of upstream.body) res.write(chunk);
+  } catch {
+    /* connessione interrotta */
+  }
+  res.end();
 });
 
 // ------------------------------ Template -----------------------------------
@@ -1046,7 +1163,7 @@ async function main() {
     });
     if (ok) {
       const url = `http://localhost:${port}`;
-      console.log(`\n  Verbale Studio attivo su ${url}`);
+      console.log(`\n  Verbale Studio ${APP_VERSION} attivo su ${url}`);
       console.log(`  Cartella di lavoro: ${WORK_DIR}`);
       console.log(`  Archivio:           ${DATA_DIR}`);
       if (RUNNING_FROM_TEMP) {

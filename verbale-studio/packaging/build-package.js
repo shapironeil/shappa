@@ -13,6 +13,35 @@ const OUT = path.join(ROOT, 'release', 'VerbaleStudio.zip');
 
 const CRLF = (s) => s.replace(/\r?\n/g, '\r\n');
 
+const UPDATE_NOTE = `AGGIORNARE VERBALE STUDIO SENZA PERDERE I DATI
+==============================================
+
+Questo pacchetto contiene SOLO il programma: non contiene dati, quindi estraendolo
+sopra la cartella esistente i tuoi lavori non vengono toccati.
+
+1. Chiudi Verbale Studio (chiudi la finestra nera).
+2. Estrai lo zip nella stessa cartella di prima (es. C:\\$$SHAPPA$$\\APPS\\)
+   e, se Windows lo chiede, scegli "Sostituisci i file nella destinazione".
+3. Riavvia con "Avvia Verbale Studio (Windows).bat".
+   In basso a sinistra nell'app vedi il numero di versione.
+
+Vengono sostituiti solo:
+   app\\                                 (il programma)
+   Avvia Verbale Studio (Windows).bat
+   Avvia Verbale Studio (Mac).command
+   LEGGIMI.txt e questo file
+
+NON cancellare, spostare o sostituire mai queste cartelle (contengono il tuo lavoro):
+   data\\           checkpoint, transcript revisionati, punti, email, versioni, cestino,
+                    template, preimpostazioni della chat, impostazioni
+   Archivio\\       le cartelle di ogni checkpoint (video, transcript, email, punti chiave, note)
+   Backup\\         le copie giornaliere automatiche
+   Registrazioni\\  i file scaricati da Teams
+
+Per sicurezza, prima di aggiornare puoi aprire Impostazioni -> Salvataggi e copie
+e premere "Esegui backup adesso".
+`;
+
 // Avvio con Node.js: cerca prima un Node "standalone" (zip estratto, senza installazione) dentro la cartella
 function nodeLauncherBat(appRoot, serverPath) {
   return CRLF(`@echo off
@@ -178,6 +207,7 @@ NODE=$(ls -d node*/bin/node 2>/dev/null | head -1)
   0o755
 );
 lput('Registrazioni/Metti qui video e transcript di Teams.txt', fs.readFileSync(path.join(STAGE, 'Registrazioni', 'Metti qui video e transcript di Teams.txt'), 'utf8'));
+lput('AGGIORNARE SENZA PERDERE DATI.txt', CRLF(UPDATE_NOTE));
 lput('LEGGIMI.txt', CRLF(`VERBALE STUDIO - versione leggera
 ==================================
 

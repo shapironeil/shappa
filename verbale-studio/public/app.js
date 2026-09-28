@@ -228,7 +228,9 @@
     setSidebar(LS.get('sidebar', window.innerWidth > 1100));
     restoreSizes();
     bindEvents();
-    const [data, custom] = await Promise.all([api('GET', '/api/state'), api('GET', '/api/templates')]);
+    const [data, custom, presets] = await Promise.all([api('GET', '/api/state'), api('GET', '/api/templates'), api('GET', '/api/presets')]);
+    customPresets = presets.map((p) => ({ ...p, custom: true }));
+    $('#appVersion').textContent = `v${data.version}`;
     Templates.setCustom(custom);
     state.projects = data.projects;
     state.settings = data.settings;
@@ -346,8 +348,9 @@
     state.undo = null;
     LS.set('cp.' + state.project.id, id);
     $('#noCheckpoint').hidden = true;
-    $('.tb-title').style.visibility = '';
-    $('.tb-right').style.visibility = '';
+    const inWorkspace = !keepView || state.view === 'workspace';
+    $('.tb-title').style.visibility = inWorkspace ? '' : 'hidden';
+    $('.tb-right').style.visibility = inWorkspace ? '' : 'hidden';
     $('#cpTitle').value = cp.title;
     $('#cpDate').value = cp.date;
     $('#cpStatus').value = cp.status;
@@ -863,7 +866,7 @@
       el.innerHTML = `<div class="pins-empty"><b>Nessun punto chiave</b><p class="muted">Mentre ascolti, premi 📌 accanto a una frase del transcript (o il tasto <kbd>P</kbd>) per ricordarti che va nel verbale. Se selezioni solo una parte della frase, viene fissata quella.</p></div>`;
       return;
     }
-    const secTitle = (key) => state.tpl.sections.find((s) => s.key === key)?.title || key;
+    const secTitle = (key) => (key === 'ai' ? 'riepilogo (tramite AI)' : state.tpl.sections.find((s) => s.key === key)?.title || key);
     el.innerHTML = `<div class="pins-head"><span class="muted small">${open ? `${open} da inserire nel riepilogo` : 'Tutti inseriti nel riepilogo'}</span>
       ${open ? '<button class="btn btn-sm btn-primary" id="pinsAll">Inserisci tutti nel riepilogo</button>' : ''}</div>`
       + pins.map((p) => `<div class="an-card pin-card ${p.section ? 'is-added' : ''}" data-pin-card="${p.id}">
@@ -1234,6 +1237,12 @@
       html = `<div class="card"><p class="muted">Compila i “Punti discussi” di almeno un checkpoint: la previsione del prossimo incontro si costruisce da lì.</p></div>`;
     }
     lastForecast = { local, ai: h.forecast };
+    // filo delle attività: voci che ricorrono in più checkpoint
+    const threads = Analysis.threads(historyItems(h)).filter((t) => t.length >= 2).sort((a, b) => b.last.date.localeCompare(a.last.date));
+    html += `<h2 class="h2">Filo delle attività</h2><p class="muted small">Le voci che ricorrono in più checkpoint, collegate automaticamente: come sono passate da prossimo passo a in corso a completate.</p>`;
+    html += threads.length
+      ? threads.map((t) => `<div class="thread"><div class="thread-title">${esc(t.title)}</div><div class="thread-steps">${t.entries.map((e) => `<span class="step ${ROLE_CLASS[e.role]}" title="${esc(e.text)}"><b>${itDate(e.date).slice(0, 5)}</b> ${esc(roleLabel(e.role))}</span>`).join('<span class="arrow">→</span>')}</div></div>`).join('')
+      : '<p class="muted">Le attività che compaiono in più checkpoint verranno collegate qui automaticamente.</p>';
     body.innerHTML = html;
   }
 
@@ -1246,58 +1255,288 @@
       : `<p class="muted">Nessun checkpoint precedente con punti compilati: la previsione sarà disponibile dal prossimo incontro.</p>`;
   }
 
-  // ------------------------------------------------------------------ storico
+  // ------------------------------------------------------------------ storico: elenco delle sessioni
+  const STATUS_LABEL = { bozza: 'Bozza', 'in revisione': 'In revisione', revisionato: 'Revisionato', inviato: 'Email inviata' };
+  let resources = null; // file presenti nelle cartelle dei checkpoint (da /api/folder)
+
+  async function loadResources() {
+    resources = await api('GET', '/api/folder').catch(() => null);
+    return resources;
+  }
+  const resFor = (id) => resources?.checkpoints.find((r) => r.id === id) || null;
+
   async function renderHistory() {
-    const h = await loadHistory(true);
-    const hist = historyItems(h);
-    const list = hist.slice().reverse(); // più recenti prima
-    $('#historySub').textContent = `${state.project.name} · ${list.length} checkpoint archiviati`;
-    const latest = list.find((c) => c.items.length);
-    const att = [];
-    list.forEach((c) => c.items.filter((it) => it.role === 'risk' && !it.paragraph).forEach((a) => {
-      if (att.some((x) => similar(x.text, a.text) > 0.6)) return;
-      att.push({ ...a, date: c.date, stillOpen: latest && c.id === latest.id });
-    }));
-    const now = new Date();
-    let overdue = 0;
-    const attHtml = att.map((a) => {
-      const d = parseItDate(a.deadline);
-      const days = d ? Math.round((d - now) / 86400000) : null;
-      if (days != null && days < 0 && a.stillOpen) overdue++;
-      const cls = days == null ? '' : days < 0 ? 'overdue' : days <= 14 ? 'soon' : '';
-      return `<div class="att-row"><div>${esc(a.text)}<div class="from">${a.stillOpen ? 'Aperto nell\'ultimo checkpoint' : 'Non ripreso nell\'ultimo checkpoint'} · ${itDate(a.date)}</div></div>
-        <div>${a.owner ? `<span class="pill">${esc(a.owner)}</span>` : ''}</div>
-        <div>${a.deadline ? `<span class="pill ${cls}">Deadline ${esc(a.deadline)}</span>` : ''}</div></div>`;
-    }).join('');
-    $('#openAttention').innerHTML = att.length ? `<div class="att-list">${attHtml}</div>` : '<p class="muted">Nessun punto di attenzione registrato.</p>';
+    if (state.dashId) return renderDashboard();
+    $('#histListPage').hidden = false;
+    $('#cpDash').hidden = true;
+    const [h] = await Promise.all([loadHistory(true), loadResources()]);
+    const hist = historyItems(h).reverse(); // più recenti prima
+    const q = ($('#histFilter').value || '').trim().toLowerCase();
+    const list = hist.filter((c) => !q || c.title.toLowerCase().includes(q) || itDate(c.date).includes(q) || c.items.some((i) => i.text.toLowerCase().includes(q)));
+    $('#historySub').textContent = `${state.project.name} · ${hist.length} checkpoint archiviati`;
     const doneCount = hist.reduce((n, c) => n + c.items.filter((i) => i.role === 'done').length, 0);
     const minutes = Math.round(hist.reduce((a, c) => a + (c.duration || 0), 0) / 60);
     $('#historyStats').innerHTML = [
-      [list.length, 'checkpoint'],
+      [hist.length, 'checkpoint'],
+      [hist.filter((c) => c.status === 'inviato').length, 'email inviate'],
       [doneCount, 'attività completate'],
-      [att.filter((a) => a.stillOpen).length, 'punti di attenzione aperti'],
-      [overdue, 'deadline scadute'],
-      [minutes, 'minuti di riunione archiviati'],
-    ].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');
-
-    // filo delle attività: voci che ricorrono in più checkpoint
-    const threads = Analysis.threads(hist).filter((t) => t.length >= 2).sort((a, b) => b.last.date.localeCompare(a.last.date));
-    $('#threads').innerHTML = threads.length
-      ? threads.map((t) => `<div class="thread"><div class="thread-title">${esc(t.title)}</div><div class="thread-steps">${t.entries.map((e) => `<span class="step ${ROLE_CLASS[e.role]}" title="${esc(e.text)}"><b>${itDate(e.date).slice(0, 5)}</b> ${esc(roleLabel(e.role))}</span>`).join('<span class="arrow">→</span>')}</div></div>`).join('')
-      : '<p class="muted">Le attività che compaiono in più checkpoint verranno collegate qui automaticamente.</p>';
-
-    const col = (title, items) => items.length ? `<div><h5>${esc(title)}</h5><ul>${items.map((i) => `<li>${esc(i.text)}${i.note ? ` <span class="muted">→ ${esc(i.note)}</span>` : ''}${i.deadline ? ` <span class="muted">(${esc(i.deadline)})</span>` : ''}</li>`).join('')}</ul></div>` : '';
-    $('#timeline').innerHTML = list.map((c) => {
-      const bySec = c.tpl.sections.filter((s) => s.kind !== 'paragraph').map((s) => col(s.title, c.items.filter((i) => i.key === s.key))).join('');
-      return `<div class="tl-item"><div class="tl-card">
-        <header><h3>${esc(c.title)}</h3><span class="muted">${longDate(c.date)} · ${esc(c.status)} · ${esc(c.tpl.name)}${c.cueCount ? ` · ${Math.round(c.duration / 60)} min` : ''}</span>
-        <button class="btn btn-ghost btn-sm" data-open="${c.id}">Apri</button></header>
-        ${c.items.length ? `<div class="tl-cols">${bySec}</div>` : '<p class="muted small">Punti non ancora compilati.</p>'}
-      </div></div>`;
-    }).join('') || '<p class="muted">Nessun checkpoint.</p>';
+      [minutes, 'minuti di riunione'],
+    ].map(([n, l]) => `<div class="stat mini"><b>${n}</b><span>${l}</span></div>`).join('');
+    const count = (c, role) => c.items.filter((i) => i.role === role && !i.paragraph).length;
+    const chip = (n, role, label) => (n ? `<span class="pill ${ROLE_CLASS[role]}" title="${esc(label)}">${n} ${esc(label)}</span>` : '');
+    const asset = (ok, icon, label) => `<span class="asset ${ok ? 'ok' : 'miss'}" title="${esc(label)}${ok ? '' : ' — mancante'}">${icon}</span>`;
+    $('#sessionList').innerHTML =
+      list
+        .map((c) => {
+          const r = resFor(c.id);
+          const pins = (h.checkpoints.find((x) => x.id === c.id) || {}).pinCount || 0;
+          return `<button class="session" data-dash="${c.id}">
+            <span class="s-date"><b>${c.date.slice(8, 10)}</b><small>${MONTHS[Number(c.date.slice(5, 7)) - 1].slice(0, 3)} ${c.date.slice(0, 4)}</small></span>
+            <span class="s-main"><span class="s-title">${esc(c.title)}</span>
+              <span class="s-meta">${esc(c.tpl.name)}${c.duration ? ` · ${Math.max(1, Math.round(c.duration / 60))} min` : ''}${c.cueCount ? ` · ${c.cueCount} blocchi` : ''}${pins ? ` · 📌 ${pins}` : ''}</span></span>
+            <span class="s-chips">${chip(count(c, 'done'), 'done', 'completate')}${chip(count(c, 'doing'), 'doing', 'in corso')}${chip(count(c, 'next'), 'next', 'prossimi passi')}${chip(count(c, 'risk'), 'risk', 'attenzione')}${c.items.length ? '' : '<span class="muted small">punti da compilare</span>'}</span>
+            <span class="s-assets">${asset(r?.video && !r.video.missing, '🎥', 'Registrazione')}${asset(r?.transcriptOriginal || c.cueCount, '📝', 'Transcript')}${asset(r?.email, '✉️', 'Email di riepilogo')}</span>
+            <span class="pill s-status" data-s="${esc(c.status)}">${esc(STATUS_LABEL[c.status] || c.status)}</span>
+            <span class="s-go">›</span>
+          </button>`;
+        })
+        .join('') || `<div class="card"><p class="muted">${q ? 'Nessun checkpoint corrisponde al filtro.' : 'Nessun checkpoint: creane uno con “Nuovo checkpoint”.'}</p></div>`;
   }
 
-  // ------------------------------------------------------------------ cartella di lavoro
+  // ------------------------------------------------------------------ dashboard del singolo checkpoint
+  const dash = { tab: LS.get('dashTab', 'chat'), search: '', streaming: null };
+
+  async function openDashboard(id) {
+    state.dashId = id;
+    if (state.cp?.id !== id) await openCheckpoint(id, { keepView: true });
+    video.pause();
+    if (state.view !== 'history') setView('history');
+    else renderDashboard();
+  }
+  function closeDashboard() {
+    state.dashId = null;
+    $('#dashVideo').pause();
+    renderHistory();
+  }
+
+  async function renderDashboard() {
+    const cp = state.cp;
+    if (!cp || cp.id !== state.dashId) return openDashboard(state.dashId);
+    $('#histListPage').hidden = true;
+    $('#cpDash').hidden = false;
+    if (!resources) await loadResources();
+    $('#dashTitle').textContent = cp.title;
+    $('#dashMeta').innerHTML = `${esc(longDate(cp.date))} · ${esc(state.tpl.name)} · <span class="pill s-status" data-s="${esc(cp.status)}">${esc(STATUS_LABEL[cp.status] || cp.status)}</span>`;
+    const dv = $('#dashVideo');
+    const src = cp.video ? `/media/${cp.projectId}/${cp.id}?v=${encodeURIComponent(cp.video.uploadedAt || '')}` : '';
+    if (src && !dv.src.endsWith(src)) dv.src = src;
+    if (!src) dv.removeAttribute('src');
+    $('#dashVideoWrap').classList.toggle('empty', !src);
+    renderDashTranscript();
+    $$('.dash-tab').forEach((t) => t.classList.toggle('active', t.dataset.dtab === dash.tab));
+    $$('.dash-panel').forEach((p) => p.classList.toggle('active', p.id === `dash-${dash.tab}`));
+    renderDashPanel();
+  }
+
+  function renderDashTranscript() {
+    const list = cues();
+    const q = dash.search.toLowerCase();
+    const pinned = new Set(state.cp.pins.map((p) => p.cueId));
+    $('#dashTranscript').innerHTML = list.length
+      ? list
+          .filter((c) => !q || (c.text + ' ' + c.speaker).toLowerCase().includes(q))
+          .map((c) => `<div class="dt-row ${pinned.has(c.id) ? 'pinned' : ''}" data-t="${c.start}" data-cue="${c.id}"><button class="dt-time" title="Riproduci da qui">▶ ${fmtT(c.start)}</button><div><b style="color:${speakerColor(c.speaker)}">${esc(c.speaker || '')}</b> ${esc(c.text)}</div></div>`)
+          .join('') || '<p class="muted small">Nessun risultato.</p>'
+      : '<p class="muted">Nessun transcript per questo checkpoint.</p>';
+  }
+
+  function renderDashPanel() {
+    const cp = state.cp;
+    if (dash.tab === 'chat') return renderChat();
+    if (dash.tab === 'summary') {
+      const s = cp.summary;
+      const secs = state.tpl.sections
+        .map((sec) => {
+          const v = s[sec.key];
+          if (sec.kind === 'paragraph') return v?.trim() ? `<h5>${esc(sec.title)}</h5><p>${esc(v)}</p>` : '';
+          return v?.length ? `<h5>${esc(sec.title)}</h5><ul>${v.map((i) => `<li>${esc(i.text)}${i.note ? ` <span class="muted">→ ${esc(i.note)}</span>` : ''}${i.owner || i.deadline ? ` <span class="muted">(${esc([i.owner, i.deadline].filter(Boolean).join(' · '))})</span>` : ''}</li>`).join('')}</ul>` : '';
+        })
+        .join('');
+      $('#dash-summary').innerHTML = `<div class="row between"><h4 class="an-h">Riepilogo (${esc(state.tpl.name)})</h4><button class="btn btn-sm btn-ghost" data-dact="edit">Modifica in revisione</button></div>
+        <div class="dash-sum">${secs || '<p class="muted">Nessun punto compilato.</p>'}</div>
+        <div class="row between"><h4 class="an-h">Email finale</h4><div class="row gap-6"><button class="btn btn-sm btn-ghost" data-dact="eml">.eml</button><button class="btn btn-sm btn-primary" data-dact="copy">Copia per Outlook</button></div></div>
+        <div class="muted small">Oggetto: ${esc(cp.email.subject || '')}</div>
+        <pre class="tpl-preview">${esc(cp.email.body || '')}</pre>
+        <label class="toggle" style="margin-top:8px"><input type="checkbox" data-dact="sent" ${cp.status === 'inviato' ? 'checked' : ''}/><span>Email inviata</span></label>`;
+      return;
+    }
+    if (dash.tab === 'pins') {
+      $('#dash-pins').innerHTML = cp.pins.length
+        ? cp.pins.map((p) => `<div class="an-card"><div class="an-top"><button class="link" data-seek="${p.start}">▶ ${fmtT(p.start)}</button><span class="muted small">${esc(p.speaker)}</span>${p.section ? `<span class="pill ok">nel riepilogo</span>` : '<span class="pill">da inserire</span>'}</div><div>${esc(p.text)}</div></div>`).join('')
+        : '<p class="muted">Nessun punto chiave: in revisione premi 📌 accanto alle frasi importanti.</p>';
+      return;
+    }
+    if (dash.tab === 'files') {
+      const r = resFor(cp.id);
+      const row = (label, f, hint) =>
+        `<div class="file-row"><span class="file-ico ${f && !f.missing ? 'ft-video' : ''}">${f && !f.missing ? '✓' : '—'}</span><div class="file-main"><div class="file-name">${esc(label)}</div><div class="muted small">${f ? (f.missing ? 'file non trovato: ' + esc(f.rel) : esc(f.rel) + ' · ' + fmtSize(f.size)) : esc(hint)}</div></div>
+          ${f && !f.missing ? `<div class="row gap-6"><button class="btn btn-sm btn-ghost" data-openfile="${esc(f.rel)}">Apri</button><button class="btn btn-sm btn-ghost" data-reveal="${esc(f.rel)}">Mostra</button></div>` : '<span></span>'}</div>`;
+      $('#dash-files').innerHTML = r
+        ? `<div class="row between"><span class="muted small">${esc(r.folder || 'Cartella non ancora creata')}</span>${r.folder ? `<button class="btn btn-sm" data-openfolder="${esc(r.folder)}">Apri cartella</button>` : ''}</div>
+          <div class="file-table" style="margin-top:8px">${row('Registrazione', r.video, 'nessun video caricato')}${row('Transcript originale', r.transcriptOriginal, 'nessun file originale')}${row('Transcript revisionato', r.transcriptRevised, 'si crea salvando il transcript')}${row('Email di riepilogo', r.email, 'si crea compilando l\'email')}${row('Punti chiave', r.pins, 'nessun punto chiave')}${row('Note', r.notes, 'nessuna nota')}${r.other.map((f) => row(f.rel.split(/[\\/]/).pop(), f, '')).join('')}</div>`
+        : '<p class="muted">Caricamento…</p>';
+    }
+  }
+
+  // ------------------------------------------------------------------ chat con Ollama
+  // Preimpostazioni: quelle incluse più quelle salvate dall'utente (data/presets.json)
+  const BUILTIN_PRESETS = [
+    {
+      id: 'pins-to-template',
+      name: '📌 → Riepilogo dal template',
+      prompt: 'Trasforma i punti chiave (sono appunti scritti di fretta) nelle voci del riepilogo secondo il template: frasi nominali professionali come nell\'email di esempio, ogni voce nella sezione giusta. Tieni conto anche del riepilogo attuale, senza duplicare voci già presenti.',
+      context: { pins: true, summary: true, example: true },
+      output: 'summary',
+    },
+    { id: 'email-final', name: '✉️ Scrivi l\'email finale', prompt: 'Scrivi l\'email di riepilogo finale seguendo esattamente lo stile e la struttura dell\'email di esempio, usando il riepilogo e i punti chiave. Restituisci solo il testo dell\'email.', context: { pins: true, summary: true, example: true }, output: 'email' },
+    { id: 'email-polish', name: '✨ Migliora l\'email attuale', prompt: 'Rileggi l\'email attuale: correggi errori, rendi il tono più professionale e scorrevole, mantieni struttura e contenuti. Restituisci solo il testo dell\'email corretta.', context: { email: true }, output: 'email' },
+    { id: 'pins-fix', name: '🔤 Sistema i punti chiave', prompt: 'Riscrivi ogni punto chiave in modo chiaro e professionale, mantenendo il significato. Restituisci un elenco puntato, un punto per riga, nello stesso ordine.', context: { pins: true }, output: 'text' },
+    { id: 'actions', name: '✅ Azioni e scadenze', prompt: 'Elenca le azioni emerse con owner e scadenza (se dette), in forma di elenco puntato. Se owner o scadenza non sono detti, scrivi "da definire".', context: { pins: true, summary: true, transcript: true }, output: 'text' },
+    { id: 'recap', name: '🧾 Riassunto della riunione', prompt: 'Fai un riassunto della riunione in 5-8 punti, con i temi principali e le decisioni prese.', context: { transcript: true, pins: true }, output: 'text' },
+  ];
+  let customPresets = [];
+  const allPresets = () => [...BUILTIN_PRESETS, ...customPresets];
+
+  const chatCtx = () => ({ ...{ pins: true, summary: true, email: false, example: false, transcript: false, notes: false }, ...LS.get('chatCtx', {}) });
+
+  function summarySchema(tpl) {
+    const note = { type: 'object', properties: { text: { type: 'string' }, note: { type: 'string' } }, required: ['text', 'note'] };
+    const act = { type: 'object', properties: { text: { type: 'string' }, owner: { type: 'string' }, deadline: { type: 'string' } }, required: ['text', 'owner', 'deadline'] };
+    const properties = {};
+    for (const s of tpl.sections) properties[s.key] = s.kind === 'paragraph' ? { type: 'string' } : { type: 'array', items: s.kind === 'actions' ? act : note };
+    return { type: 'object', properties, required: Object.keys(properties) };
+  }
+
+  function renderChat() {
+    const cp = state.cp;
+    const ready = state.ollama?.running && state.settings.ollamaModel;
+    const ctx = chatCtx();
+    const msgs = cp.chat || [];
+    const ctxLabels = { pins: 'Punti chiave', summary: 'Riepilogo', email: 'Email', example: 'Email di esempio', notes: 'Note', transcript: 'Transcript (più lento)' };
+    $('#dash-chat').innerHTML = `
+      ${ready ? '' : `<div class="note-box">L'AI locale non è pronta: ${state.ollama?.running ? 'scegli un modello' : 'avvia Ollama'} nella sezione <button class="link" data-goto="localai">AI locale</button>.</div>`}
+      <div class="chat-presets">${allPresets().map((p) => `<button class="chip" data-preset="${esc(p.id)}" title="${esc(p.prompt)}">${esc(p.name)}${p.custom ? ' <span data-delpreset="' + esc(p.id) + '" title="Elimina preimpostazione">×</span>' : ''}</button>`).join('')}</div>
+      <div class="chat-log" id="chatLog">${msgs.length ? msgs.map((m, i) => chatMsgHtml(m, i)).join('') : `<div class="chat-empty"><b>Chiedi all'AI locale</b><p class="muted small">Usa una preimpostazione qui sopra (es. <i>📌 → Riepilogo dal template</i> per trasformare i punti chiave scritti di fretta nelle voci del verbale) oppure scrivi una richiesta. L'AI lavora sul contesto selezionato qui sotto.</p></div>`}</div>
+      <div class="chat-ctx"><span class="muted small">Contesto:</span>${Object.entries(ctxLabels).map(([k, l]) => `<label class="toggle"><input type="checkbox" data-ctx="${k}" ${ctx[k] ? 'checked' : ''}/><span>${l}</span></label>`).join('')}</div>
+      <div class="chat-input"><textarea id="chatInput" rows="2" placeholder="Es. “riscrivi i prossimi passi in modo più formale” (Invio per inviare, Maiusc+Invio per andare a capo)"></textarea>
+        <div class="chat-btns"><button class="btn btn-primary btn-sm" id="chatSend" ${ready ? '' : 'disabled'}>Invia</button><button class="btn btn-ghost btn-sm" id="chatSavePreset" title="Salva la richiesta scritta come preimpostazione per il futuro">Salva come preimpostazione</button>${msgs.length ? '<button class="btn btn-ghost btn-sm" id="chatClear">Svuota</button>' : ''}</div></div>`;
+    const log = $('#chatLog');
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function chatMsgHtml(m, i) {
+    if (m.role === 'user') return `<div class="msg user"><div class="bubble">${esc(m.display || m.content)}</div></div>`;
+    let body = esc(m.content);
+    let actions = `<button class="link" data-copy="${i}">Copia</button>`;
+    if (m.output === 'summary' && m.parsed) {
+      body = esc(Email.toText(m.parsed, state.tpl, emailVars()).split('\n').slice(4).join('\n').split('\n\nIn allegato')[0]);
+      actions += ` · <button class="link" data-apply="${i}" data-mode="add">Aggiungi al riepilogo</button> · <button class="link" data-apply="${i}" data-mode="replace">Sostituisci il riepilogo</button>`;
+    } else if (m.output === 'email') actions += ` · <button class="link" data-useemail="${i}">Usa come email finale</button>`;
+    if (m.applied) actions += ` · <span class="ok-text">✓ ${esc(m.applied)}</span>`;
+    return `<div class="msg ai"><div class="bubble ${m.error ? 'err' : ''}">${body || '<span class="typing">…</span>'}</div>${m.done ? `<div class="msg-actions">${actions}</div>` : ''}</div>`;
+  }
+
+  async function sendChat(text, preset) {
+    const cp = state.cp;
+    if (dash.streaming) return;
+    const ctx = preset?.context ? { ...chatCtx(), ...preset.context } : chatCtx();
+    cp.chat = cp.chat || [];
+    const output = preset?.output || 'text';
+    cp.chat.push({ role: 'user', content: text, display: preset ? `${preset.name}` : text, at: new Date().toISOString() });
+    const reply = { role: 'assistant', content: '', output, done: false, at: new Date().toISOString() };
+    cp.chat.push(reply);
+    renderChat();
+    await saveNow();
+    const history = cp.chat.slice(0, -1).filter((m) => !m.error).map((m) => ({ role: m.role, content: m.content }));
+    const ctrl = new AbortController();
+    dash.streaming = ctrl;
+    try {
+      const res = await fetch('/api/ollama/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: cp.projectId, checkpointId: cp.id, messages: history, context: ctx, template: state.tpl, format: output === 'summary' ? summarySchema(state.tpl) : undefined }),
+        signal: ctrl.signal,
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Errore ${res.status}`);
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl;
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line);
+          if (ev.error) throw new Error(ev.error);
+          reply.content += ev.message?.content || '';
+        }
+        const last = $('#chatLog .msg.ai:last-child .bubble');
+        if (last && output !== 'summary') last.textContent = reply.content;
+        else if (last) last.innerHTML = '<span class="typing">Sto preparando le voci del riepilogo…</span>';
+        const log = $('#chatLog');
+        if (log) log.scrollTop = log.scrollHeight;
+      }
+      if (output === 'summary') {
+        try {
+          reply.parsed = Templates.normalize(JSON.parse(reply.content), state.tpl);
+        } catch {
+          reply.output = 'text'; // il modello non ha restituito JSON valido: si mostra il testo
+        }
+      }
+      reply.content = reply.content.trim();
+    } catch (e) {
+      reply.error = true;
+      reply.content = e.name === 'AbortError' ? (reply.content || '') + ' (interrotto)' : `Errore: ${e.message}`;
+    } finally {
+      reply.done = true;
+      dash.streaming = null;
+      markDirty();
+      if (state.dashId === cp.id && dash.tab === 'chat') renderChat();
+    }
+  }
+
+  function applyChatSummary(i, mode) {
+    const m = state.cp.chat[i];
+    if (!m?.parsed) return;
+    const s = state.cp.summary;
+    for (const sec of state.tpl.sections) {
+      const v = m.parsed[sec.key];
+      if (sec.kind === 'paragraph') {
+        if (v?.trim()) s[sec.key] = mode === 'replace' || !s[sec.key] ? v : `${s[sec.key]}\n\n${v}`;
+      } else {
+        const incoming = (v || []).filter((x) => x.text?.trim());
+        if (mode === 'replace') s[sec.key] = incoming;
+        else incoming.forEach((x) => { if (!s[sec.key].some((y) => similar(y.text, x.text) > 0.8)) s[sec.key].push(x); });
+      }
+    }
+    state.cp.summary = Templates.normalize(s, state.tpl);
+    // i punti chiave usati risultano inseriti nel riepilogo
+    state.cp.pins.forEach((p) => { if (!p.section) p.section = 'ai'; });
+    m.applied = mode === 'replace' ? 'Riepilogo sostituito' : 'Aggiunto al riepilogo';
+    state.cp.email.edited = false;
+    renderSummaryEditor();
+    renderEmail(true);
+    renderPins();
+    markDirty();
+    renderChat();
+    toast('Riepilogo aggiornato: l\'email è stata rigenerata dal template');
+  }
+
+  // ------------------------------------------------------------------ cartella di lavoro (gestore risorse)
   function guessDate(f) {
     const m = /(20\d{2})[-_.]?(\d{2})[-_.]?(\d{2})/.exec(f.name);
     if (m && Number(m[2]) <= 12 && Number(m[3]) <= 31) return `${m[1]}-${m[2]}-${m[3]}`;
@@ -1307,30 +1546,55 @@
   async function renderFolder() {
     const body = $('#folderBody');
     body.innerHTML = '<p class="muted">Ricerca dei file…</p>';
-    folderData = await api('GET', '/api/folder');
+    folderData = await loadResources();
     $('#folderPath').textContent = folderData.workDir;
-    if (!folderData.files.length) {
-      body.innerHTML = `<div class="card"><p class="muted">Nessun video o transcript trovato. Copia qui i file scaricati da Teams (.mp4, .vtt, .docx) e premi “Aggiorna”.</p></div>`;
-      return;
-    }
-    body.innerHTML = `<div class="file-table">${folderData.files.map((f, i) => `
+    $('#copyLinkedToggle').checked = state.settings.copyLinkedVideos !== false;
+    const onlyMissing = $('#onlyMissingToggle').checked;
+    const cell = (f, label, required) => {
+      if (f && !f.missing) return `<button class="res ok" data-openfile="${esc(f.rel)}" title="Apri ${esc(f.rel)} (${fmtSize(f.size)})">✓ <small>${esc(label)}</small></button>`;
+      if (f?.missing) return `<span class="res miss" title="${esc(f.rel)}">✗ <small>non trovato</small></span>`;
+      return `<span class="res ${required ? 'miss' : 'none'}">— <small>${required ? 'manca' : ''}</small></span>`;
+    };
+    const cps = folderData.checkpoints.filter((r) => r.projectId === state.project?.id);
+    const incomplete = (r) => !(r.video && !r.video.missing) || !(r.transcriptOriginal || r.cueCount) || !r.email;
+    const rows = cps.filter((r) => !onlyMissing || incomplete(r));
+    let html = `<h2 class="h2">Checkpoint in Archivio <span class="muted small">· ${esc(state.project?.name || '')} · ${cps.length} checkpoint${cps.filter(incomplete).length ? ` · <span class="danger">${cps.filter(incomplete).length} incompleti</span>` : ''}</span></h2>`;
+    html += rows.length
+      ? `<div class="res-table"><div class="res-row head"><span>Checkpoint</span><span>Registrazione</span><span>Transcript</span><span>Revisionato</span><span>Email finale</span><span>Punti chiave</span><span></span></div>
+        ${rows.map((r) => `<div class="res-row">
+          <span class="res-cp"><button class="link" data-dash="${r.id}">${esc(itDate(r.date))} · ${esc(r.title)}</button><small class="muted">${esc(STATUS_LABEL[r.status] || r.status)}${r.video?.source && r.video.inArchive ? ' · video copiato da ' + esc(r.video.source) : r.video && !r.video.inArchive ? ' · video collegato (fuori Archivio)' : ''}</small></span>
+          ${cell(r.video, r.video?.size ? fmtSize(r.video.size) : '', true)}
+          ${cell(r.transcriptOriginal, 'originale', !r.cueCount)}${cell(r.transcriptRevised, 'revisionato', false)}
+          ${cell(r.email, r.status === 'inviato' ? 'inviata' : 'bozza', true)}${cell(r.pins, '', false)}
+          <span class="row gap-6">${r.folder ? `<button class="icon-btn" data-openfolder="${esc(r.folder)}" title="Apri la cartella">📂</button>` : ''}</span>
+        </div>`).join('')}</div>`
+      : `<p class="muted">${onlyMissing ? 'Tutti i checkpoint hanno registrazione, transcript ed email.' : 'Nessun checkpoint.'}</p>`;
+
+    const loose = folderData.files;
+    html += `<h2 class="h2">File nella cartella di lavoro <span class="muted small">· da importare o già usati</span></h2>`;
+    html += loose.length
+      ? `<div class="file-table">${loose.map((f, i) => `
       <div class="file-row">
         <span class="file-ico ft-${f.type}">${f.type === 'video' ? '▶' : '¶'}</span>
         <div class="file-main"><div class="file-name" title="${esc(f.rel)}">${esc(f.name)}</div>
-          <div class="muted small">${f.dir ? esc(f.dir) + ' · ' : ''}${fmtSize(f.size)} · ${itDate(guessDate(f))}${f.usedBy ? ` · <span class="pill ok">collegato a ${esc(f.usedBy.projectName)} ${itDate(f.usedBy.date)}</span>` : ''}</div></div>
+          <div class="muted small">${f.dir ? esc(f.dir) + ' · ' : ''}${fmtSize(f.size)} · ${itDate(guessDate(f))}${f.usedBy ? ` · <span class="pill ok">usato in ${esc(f.usedBy.projectName)} ${itDate(f.usedBy.date)}</span>` : ' · <span class="pill">non ancora usato</span>'}</div></div>
         <div class="row gap-6">
+          <button class="btn btn-ghost btn-sm" data-openfile="${esc(f.rel)}">Apri</button>
           <button class="btn btn-ghost btn-sm" data-use="${i}" ${state.cp ? '' : 'disabled'} title="Usa nel checkpoint aperto">Usa nel checkpoint aperto</button>
           <button class="btn btn-sm" data-newcp="${i}">Nuovo checkpoint</button>
         </div>
-      </div>`).join('')}</div>`;
+      </div>`).join('')}</div>`
+      : `<div class="card"><p class="muted">Nessun video o transcript fuori dall'Archivio. Puoi scaricare qui (ad esempio in <b>Registrazioni</b>) i file di Teams: compariranno in questo elenco.</p></div>`;
+    body.innerHTML = html;
   }
 
   async function useFolderFile(f) {
     if (f.type === 'video') {
+      toast(state.settings.copyLinkedVideos !== false ? 'Copia del video in Archivio…' : 'Collegamento del video…');
       const v = await api('POST', `/api/projects/${state.cp.projectId}/checkpoints/${state.cp.id}/video-link`, { rel: f.rel });
       state.cp.video = v;
       loadVideo();
-      toast(`Video collegato: ${f.name}`);
+      toast(v.copied ? `Video copiato in ${v.external} (l'originale resta al suo posto)` : `Video collegato: ${f.name}`);
     } else {
       const r = await api('POST', '/api/folder/read', { rel: f.rel });
       Transcript.parseTranscript(r.text);
@@ -1546,7 +1810,7 @@
     $('#sbClose').onclick = () => setSidebar(false);
     $('#sbOpen').onclick = () => setSidebar(true);
     $('#scrim').onclick = () => setSidebar(false);
-    $$('.nav-item').forEach((b) => (b.onclick = () => setView(b.dataset.view)));
+    $$('.nav-item').forEach((b) => (b.onclick = () => { if (b.dataset.view === 'history') state.dashId = null; setView(b.dataset.view); }));
     $('#projectSelect').onchange = (e) => selectProject(e.target.value);
     $('#cpFilter').oninput = renderCheckpointList;
     $('#checkpointList').onclick = (e) => { const b = e.target.closest('.cp-item'); if (b) openCheckpoint(b.dataset.id); };
@@ -1937,13 +2201,114 @@
     };
 
     // storico
-    $('#timeline').onclick = (e) => { const b = e.target.closest('[data-open]'); if (b) openCheckpoint(b.dataset.open); };
+    // storico e dashboard
+    $('#histFilter').oninput = () => renderHistory();
+    $('#sessionList').onclick = (e) => { const b = e.target.closest('[data-dash]'); if (b) openDashboard(b.dataset.dash); };
+    $('#dashBack').onclick = closeDashboard;
+    $('#dashOpenReview').onclick = () => { state.dashId = null; $('#dashVideo').pause(); setView('workspace'); };
+    $('#dashSearch').oninput = (e) => { dash.search = e.target.value.trim(); renderDashTranscript(); };
+    $('#dashTranscript').onclick = (e) => {
+      const row = e.target.closest('.dt-row');
+      if (!row) return;
+      const dv = $('#dashVideo');
+      if (!dv.src) return;
+      dv.currentTime = Number(row.dataset.t);
+      dv.play();
+    };
+    $('#dashVideo').addEventListener('timeupdate', () => {
+      const t = $('#dashVideo').currentTime;
+      const rows = $$('#dashTranscript .dt-row');
+      let cur = null;
+      for (const r of rows) { if (Number(r.dataset.t) <= t + 0.05) cur = r; else break; }
+      rows.forEach((r) => r.classList.toggle('now', r === cur));
+      if (cur && !$('#dashVideo').paused) cur.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+    $$('.dash-tab').forEach((t) => (t.onclick = () => { dash.tab = t.dataset.dtab; LS.set('dashTab', dash.tab); renderDashboard(); }));
+    const cd = $('#cpDash');
+    cd.addEventListener('click', async (e) => {
+      const t = e.target;
+      const d = t.closest('[data-dact]');
+      try {
+        if (d?.dataset.dact === 'edit') { state.dashId = null; return setView('workspace'); }
+        if (d?.dataset.dact === 'copy') return copyEmail();
+        if (d?.dataset.dact === 'eml') return $('#emlBtn').click();
+        const seek = t.closest('[data-seek]');
+        if (seek) { const dv = $('#dashVideo'); if (dv.src) { dv.currentTime = Number(seek.dataset.seek); dv.play(); } return; }
+        const of = t.closest('[data-openfile]');
+        if (of) return api('POST', '/api/folder/open-file', { rel: of.dataset.openfile });
+        const rv = t.closest('[data-reveal]');
+        if (rv) return api('POST', '/api/folder/open-file', { rel: rv.dataset.reveal, reveal: true });
+        const fo = t.closest('[data-openfolder]');
+        if (fo) return api('POST', '/api/folder/open', { rel: fo.dataset.openfolder });
+        const go = t.closest('[data-goto]');
+        if (go) return setView(go.dataset.goto);
+        const del = t.closest('[data-delpreset]');
+        if (del) {
+          e.stopPropagation();
+          customPresets = customPresets.filter((p) => p.id !== del.dataset.delpreset);
+          await api('PUT', '/api/presets', customPresets.map(({ custom, ...p }) => p));
+          return renderChat();
+        }
+        const pr = t.closest('[data-preset]');
+        if (pr) {
+          const preset = allPresets().find((p) => p.id === pr.dataset.preset);
+          const extra = $('#chatInput')?.value.trim();
+          return sendChat(extra ? `${preset.prompt}\n\nIndicazioni aggiuntive: ${extra}` : preset.prompt, preset);
+        }
+        if (t.closest('#chatSend')) { const v = $('#chatInput').value.trim(); if (v) sendChat(v); return; }
+        if (t.closest('#chatClear')) { if (await confirmDlg('Svuotare la chat?', 'I messaggi di questo checkpoint verranno cancellati.', 'Svuota', true)) { state.cp.chat = []; markDirty(); renderChat(); } return; }
+        if (t.closest('#chatSavePreset')) {
+          const text = $('#chatInput').value.trim();
+          const v = await dialog('Salva preimpostazione', `<label class="field"><span>Nome del pulsante</span><input class="input" name="name" placeholder="Es. Tono più formale" /></label>
+            <label class="field"><span>Richiesta</span><textarea class="input" name="prompt" rows="4">${esc(text)}</textarea></label>
+            <label class="field"><span>Risultato</span><select class="select" name="output"><option value="text">Testo</option><option value="email">Email finale (pulsante “Usa come email”)</option><option value="summary">Voci del riepilogo (pulsante “Aggiungi al riepilogo”)</option></select></label>`, { okText: 'Salva' });
+          if (!v?.name?.trim() || !v.prompt.trim()) return;
+          customPresets.push({ id: 'u' + Date.now().toString(36), name: v.name.trim(), prompt: v.prompt.trim(), output: v.output, context: chatCtx(), custom: true });
+          await api('PUT', '/api/presets', customPresets.map(({ custom, ...p }) => p));
+          toast('Preimpostazione salvata: la trovi tra i pulsanti della chat');
+          return renderChat();
+        }
+        const cp = t.closest('[data-copy]');
+        if (cp) { await navigator.clipboard.writeText(state.cp.chat[Number(cp.dataset.copy)].content); return toast('Copiato'); }
+        const ap = t.closest('[data-apply]');
+        if (ap) return applyChatSummary(Number(ap.dataset.apply), ap.dataset.mode);
+        const ue = t.closest('[data-useemail]');
+        if (ue) {
+          const m = state.cp.chat[Number(ue.dataset.useemail)];
+          state.cp.email.body = m.content;
+          state.cp.email.edited = true;
+          m.applied = 'Usata come email finale';
+          renderEmail();
+          markDirty();
+          renderChat();
+          return toast('Email finale aggiornata');
+        }
+      } catch (err) { toast(err.message, { error: true }); }
+    });
+    cd.addEventListener('change', (e) => {
+      const t = e.target;
+      if (t.dataset.ctx) LS.set('chatCtx', { ...chatCtx(), [t.dataset.ctx]: t.checked });
+      if (t.dataset.dact === 'sent') { state.cp.status = t.checked ? 'inviato' : 'revisionato'; $('#cpStatus').value = state.cp.status; markDirty(); renderDashboard(); }
+    });
+    cd.addEventListener('keydown', (e) => {
+      if (e.target.id === 'chatInput' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const v = e.target.value.trim(); if (v) sendChat(v); }
+    });
+
+    // gestore risorse
+    $('#onlyMissingToggle').onchange = () => renderFolder();
+    $('#copyLinkedToggle').onchange = async (e) => { state.settings = await api('PUT', '/api/settings', { copyLinkedVideos: e.target.checked }); };
 
     // cartella
     $('#refreshFolderBtn').onclick = () => renderFolder().catch((e) => toast(e.message, { error: true }));
     $('#openWorkDirBtn').onclick = () => api('POST', '/api/folder/open', { which: 'work' });
     $('#openDataDirBtn').onclick = () => api('POST', '/api/folder/open', { which: 'archive' });
     $('#folderBody').onclick = async (e) => {
+      const of = e.target.closest('[data-openfile]');
+      if (of) return api('POST', '/api/folder/open-file', { rel: of.dataset.openfile }).catch((err) => toast(err.message, { error: true }));
+      const fo = e.target.closest('[data-openfolder]');
+      if (fo) return api('POST', '/api/folder/open', { rel: fo.dataset.openfolder });
+      const db = e.target.closest('[data-dash]');
+      if (db) return openDashboard(db.dataset.dash);
       const use = e.target.closest('[data-use]');
       const nc = e.target.closest('[data-newcp]');
       try {
