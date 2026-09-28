@@ -122,6 +122,86 @@ const checkpointDir = (pid, cid) => path.join(projectDir(pid), 'checkpoints', sa
 const checkpointFile = (pid, cid) => path.join(checkpointDir(pid, cid), 'checkpoint.json');
 const forecastFile = (pid) => path.join(projectDir(pid), 'forecast.json');
 const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
+// Copie leggibili e ordinate dei file di ogni checkpoint: Archivio/<Progetto>/<data> <titolo>/
+const ARCHIVE_DIR = path.join(WORK_DIR, 'Archivio');
+// Windows estrae in %TEMP% un .exe aperto direttamente dallo zip: lì i dati andrebbero persi
+const RUNNING_FROM_TEMP = Boolean(sea) && /[\\/](temp|tmp)[\\/]|Temp\d+_|\.zip[\\/]/i.test(process.execPath);
+
+// Scritture su checkpoint.json serializzate per checkpoint (upload lunghi + salvataggi automatici)
+const locks = new Map();
+function withLock(key, fn) {
+  const prev = locks.get(key) || Promise.resolve();
+  const next = prev.then(fn, fn);
+  locks.set(key, next.catch(() => {}));
+  return next;
+}
+
+const winSafe = (s) =>
+  String(s || '')
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/, '')
+    .slice(0, 80) || 'Senza titolo';
+const folderName = (c) => `${c.date} ${winSafe(c.title)}`;
+
+// Cartella ordinata del checkpoint dentro Archivio/, creata alla prima necessità
+async function ensureFolder(pid, c) {
+  if (c.folder) {
+    const abs = workPath(c.folder);
+    if (fs.existsSync(abs)) return abs;
+  }
+  const project = await readJson(projectFile(pid), null);
+  const base = path.join(ARCHIVE_DIR, winSafe(project?.name || pid));
+  let dir = path.join(base, folderName(c));
+  for (let i = 2; fs.existsSync(dir); i++) dir = path.join(base, `${folderName(c)} (${i})`);
+  await fsp.mkdir(dir, { recursive: true });
+  c.folder = path.relative(WORK_DIR, dir);
+  return dir;
+}
+
+// Se cambiano data o titolo, rinomina la cartella (se possibile) e aggiorna i riferimenti
+async function renameFolderIfNeeded(c) {
+  if (!c.folder) return;
+  const abs = workPath(c.folder);
+  const wanted = path.join(path.dirname(abs), folderName(c));
+  if (path.basename(abs).startsWith(folderName(c)) || fs.existsSync(wanted) || !fs.existsSync(abs)) return;
+  try {
+    await fsp.rename(abs, wanted);
+  } catch {
+    return; // file in uso (es. video in riproduzione): si riproverà al prossimo salvataggio
+  }
+  const oldRel = c.folder;
+  const newRel = path.relative(WORK_DIR, wanted);
+  const fix = (rel) => (rel && rel.startsWith(oldRel + path.sep) ? newRel + rel.slice(oldRel.length) : rel);
+  c.folder = newRel;
+  if (c.video?.external) c.video.external = fix(c.video.external);
+  if (c.transcriptFile) c.transcriptFile = fix(c.transcriptFile);
+}
+
+const fmtShort = (sec) => {
+  sec = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + `:${String(sec % 60).padStart(2, '0')}`;
+};
+
+// Scrive nella cartella del checkpoint il transcript revisionato e l'email, leggibili senza l'app
+async function writeExports(pid, c) {
+  const cues = c.transcript?.cues || [];
+  if (!c.folder && !cues.length && !c.video) return;
+  const dir = await ensureFolder(pid, c);
+  const project = await readJson(projectFile(pid), null);
+  const header = `${project?.name || ''} — ${c.title} — ${c.date.split('-').reverse().join('/')}`;
+  if (cues.length) {
+    const txt = `${header}\r\n\r\n` + cues.map((q) => `[${fmtShort(q.start)}] ${q.speaker ? q.speaker + ': ' : ''}${q.text}`).join('\r\n') + '\r\n';
+    await fsp.writeFile(path.join(dir, 'Transcript revisionato.txt'), '\ufeff' + txt);
+  }
+  if (c.email?.body?.trim()) {
+    const txt = `Oggetto: ${c.email.subject || ''}\r\n\r\n${c.email.body.replace(/\r?\n/g, '\r\n')}\r\n`;
+    await fsp.writeFile(path.join(dir, 'Email di riepilogo.txt'), '\ufeff' + txt);
+  }
+}
 
 // Percorso relativo alla cartella di lavoro → assoluto, senza uscire dalla cartella
 function workPath(rel) {
@@ -349,7 +429,7 @@ const route = (method, pattern, handler) => {
 
 route('GET', '/api/state', async (req, res) => {
   const settings = await getSettings();
-  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea) });
+  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea), runningFromTemp: RUNNING_FROM_TEMP });
 });
 
 route('PUT', '/api/settings', async (req, res) => {
@@ -449,14 +529,20 @@ route('GET', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid 
 });
 
 route('PUT', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid }) => {
-  const current = await readJson(checkpointFile(pid, cid), null);
-  if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
   const body = await readJsonBody(req);
-  const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis'];
-  for (const k of allowed) if (k in body) current[k] = body[k];
-  current.updatedAt = new Date().toISOString();
-  await writeJson(checkpointFile(pid, cid), current);
-  send(res, 200, { ok: true, updatedAt: current.updatedAt });
+  const result = await withLock(`${pid}/${cid}`, async () => {
+    const current = await readJson(checkpointFile(pid, cid), null);
+    if (!current) return null;
+    const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis'];
+    for (const k of allowed) if (k in body) current[k] = body[k];
+    current.updatedAt = new Date().toISOString();
+    await renameFolderIfNeeded(current);
+    await writeExports(pid, current).catch((err) => console.error('Esportazione non riuscita:', err.message));
+    await writeJson(checkpointFile(pid, cid), current);
+    return current;
+  });
+  if (!result) return send(res, 404, { error: 'Checkpoint non trovato' });
+  send(res, 200, { ok: true, updatedAt: result.updatedAt, folder: result.folder || '', video: result.video || null, transcriptFile: result.transcriptFile || '' });
 });
 
 route('DELETE', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid }) => {
@@ -466,14 +552,20 @@ route('DELETE', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, c
   send(res, 200, { ok: true });
 });
 
-// Upload video in streaming (può essere di diversi GB)
+// Upload video in streaming (può essere di diversi GB): copia ordinata in Archivio/<Progetto>/<data> <titolo>/
 route('PUT', '/api/projects/:pid/checkpoints/:cid/video', async (req, res, { pid, cid }) => {
-  const current = await readJson(checkpointFile(pid, cid), null);
-  if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
+  const initial = await readJson(checkpointFile(pid, cid), null);
+  if (!initial) return send(res, 404, { error: 'Checkpoint non trovato' });
   const url = new URL(req.url, 'http://x');
-  const original = url.searchParams.get('name') || 'video.mp4';
+  const original = path.basename(url.searchParams.get('name') || 'video.mp4');
   const ext = (path.extname(original).toLowerCase().match(/^\.[a-z0-9]{1,5}$/) || ['.mp4'])[0];
-  const target = path.join(checkpointDir(pid, cid), `video${ext}`);
+  const dir = await withLock(`${pid}/${cid}`, async () => {
+    const c = await readJson(checkpointFile(pid, cid), null);
+    const d = await ensureFolder(pid, c);
+    await writeJson(checkpointFile(pid, cid), c);
+    return d;
+  });
+  const target = path.join(dir, `Registrazione${ext}`);
   const tmp = `${target}.upload`;
   await new Promise((resolve, reject) => {
     const out = fs.createWriteStream(tmp);
@@ -482,23 +574,62 @@ route('PUT', '/api/projects/:pid/checkpoints/:cid/video', async (req, res, { pid
     out.on('error', reject);
     req.on('error', reject);
   });
-  if (current.video?.file && current.video.file !== path.basename(target)) {
-    await fsp.rm(path.join(checkpointDir(pid, cid), current.video.file), { force: true });
+  const video = await withLock(`${pid}/${cid}`, async () => {
+    // riletto dopo l'upload: nel frattempo il checkpoint può essere stato salvato
+    const c = await readJson(checkpointFile(pid, cid), null);
+    await removeOwnVideo(pid, cid, c, target);
+    await fsp.rm(target, { force: true });
+    await fsp.rename(tmp, target);
+    const stat = await fsp.stat(target);
+    c.video = { external: path.relative(WORK_DIR, target), copied: true, name: original, size: stat.size, uploadedAt: new Date().toISOString() };
+    c.updatedAt = new Date().toISOString();
+    await writeJson(checkpointFile(pid, cid), c);
+    return c.video;
+  });
+  send(res, 200, video);
+});
+
+// Elimina il video solo se è una copia fatta dall'app (mai i file originali dell'utente)
+async function removeOwnVideo(pid, cid, c, keep) {
+  if (c.video?.file) await fsp.rm(path.join(checkpointDir(pid, cid), path.basename(c.video.file)), { force: true });
+  if (c.video?.copied && c.video.external) {
+    const abs = workPath(c.video.external);
+    if (abs !== keep) await fsp.rm(abs, { force: true });
   }
-  await fsp.rename(tmp, target);
-  const stat = await fsp.stat(target);
-  current.video = { file: path.basename(target), name: original, size: stat.size, uploadedAt: new Date().toISOString() };
-  current.updatedAt = new Date().toISOString();
-  await writeJson(checkpointFile(pid, cid), current);
-  send(res, 200, current.video);
+}
+
+// Copia del file transcript originale nella cartella del checkpoint
+route('PUT', '/api/projects/:pid/checkpoints/:cid/transcript-file', async (req, res, { pid, cid }) => {
+  const url = new URL(req.url, 'http://x');
+  const fromRel = url.searchParams.get('rel'); // file già presente nella cartella di lavoro
+  const original = path.basename(fromRel || url.searchParams.get('name') || 'transcript.vtt');
+  const ext = (path.extname(original).toLowerCase().match(/^\.(vtt|srt|txt|docx)$/) || ['.txt'])[0];
+  const buf = fromRel ? await fsp.readFile(workPath(fromRel)) : await readBody(req);
+  const rel = await withLock(`${pid}/${cid}`, async () => {
+    const c = await readJson(checkpointFile(pid, cid), null);
+    if (!c) return null;
+    const dir = await ensureFolder(pid, c);
+    if (c.transcriptFile) await fsp.rm(workPath(c.transcriptFile), { force: true });
+    const target = path.join(dir, `Transcript originale${ext}`);
+    await fsp.writeFile(target, buf);
+    c.transcriptFile = path.relative(WORK_DIR, target);
+    await writeJson(checkpointFile(pid, cid), c);
+    return c.transcriptFile;
+  });
+  if (!rel) return send(res, 404, { error: 'Checkpoint non trovato' });
+  send(res, 200, { transcriptFile: rel });
 });
 
 route('DELETE', '/api/projects/:pid/checkpoints/:cid/video', async (req, res, { pid, cid }) => {
-  const current = await readJson(checkpointFile(pid, cid), null);
-  if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
-  if (current.video?.file) await fsp.rm(path.join(checkpointDir(pid, cid), current.video.file), { force: true });
-  current.video = null;
-  await writeJson(checkpointFile(pid, cid), current);
+  const ok = await withLock(`${pid}/${cid}`, async () => {
+    const c = await readJson(checkpointFile(pid, cid), null);
+    if (!c) return false;
+    await removeOwnVideo(pid, cid, c);
+    c.video = null;
+    await writeJson(checkpointFile(pid, cid), c);
+    return true;
+  });
+  if (!ok) return send(res, 404, { error: 'Checkpoint non trovato' });
   send(res, 200, { ok: true });
 });
 
@@ -511,24 +642,29 @@ route('GET', '/media/:pid/:cid', async (req, res, { pid, cid }) => {
 
 // Collega un video già presente nella cartella di lavoro, senza copiarlo né spostarlo
 route('POST', '/api/projects/:pid/checkpoints/:cid/video-link', async (req, res, { pid, cid }) => {
-  const current = await readJson(checkpointFile(pid, cid), null);
-  if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
   const { rel } = await readJsonBody(req);
   const abs = workPath(rel);
   const stat = await fsp.stat(abs).catch(() => null);
   if (!stat?.isFile()) return send(res, 404, { error: 'File non trovato nella cartella' });
-  if (current.video?.file) await fsp.rm(path.join(checkpointDir(pid, cid), current.video.file), { force: true });
-  current.video = { external: path.relative(WORK_DIR, abs), name: path.basename(abs), size: stat.size, uploadedAt: new Date().toISOString() };
-  current.updatedAt = new Date().toISOString();
-  await writeJson(checkpointFile(pid, cid), current);
-  send(res, 200, current.video);
+  const video = await withLock(`${pid}/${cid}`, async () => {
+    const c = await readJson(checkpointFile(pid, cid), null);
+    if (!c) return null;
+    await removeOwnVideo(pid, cid, c, abs);
+    c.video = { external: path.relative(WORK_DIR, abs), name: path.basename(abs), size: stat.size, uploadedAt: new Date().toISOString() };
+    c.updatedAt = new Date().toISOString();
+    await ensureFolder(pid, c);
+    await writeJson(checkpointFile(pid, cid), c);
+    return c.video;
+  });
+  if (!video) return send(res, 404, { error: 'Checkpoint non trovato' });
+  send(res, 200, video);
 });
 
 // ------------------------- Cartella di lavoro -------------------------------
 
 const VIDEO_EXT = new Set(['.mp4', '.m4v', '.mov', '.webm', '.mkv', '.m4a', '.mp3', '.wav']);
 const TRANSCRIPT_EXT = new Set(['.vtt', '.docx', '.srt', '.txt']);
-const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release', 'Archivio', 'motore-mac', 'alternativa-node']);
 
 async function scanFolder(dir, depth, out) {
   if (out.length > 2000) return;
@@ -542,7 +678,7 @@ async function scanFolder(dir, depth, out) {
     }
     const ext = path.extname(e.name).toLowerCase();
     const type = VIDEO_EXT.has(ext) ? 'video' : TRANSCRIPT_EXT.has(ext) ? 'transcript' : null;
-    if (!type || /^(readme|license|changelog)/i.test(e.name)) continue;
+    if (!type || /^(readme|license|changelog|leggimi|metti qui)/i.test(e.name)) continue;
     const stat = await fsp.stat(abs).catch(() => null);
     if (!stat) continue;
     out.push({ rel: path.relative(WORK_DIR, abs), name: e.name, dir: path.relative(WORK_DIR, dir), type, size: stat.size, mtime: stat.mtime.toISOString() });
@@ -577,8 +713,9 @@ route('POST', '/api/folder/read', async (req, res) => {
 
 route('POST', '/api/folder/open', async (req, res) => {
   // Apre la cartella di lavoro (o dei dati) in Esplora risorse / Finder
-  const { which } = await readJsonBody(req);
-  const target = which === 'data' ? DATA_DIR : WORK_DIR;
+  const { which, rel } = await readJsonBody(req);
+  const target = which === 'data' ? DATA_DIR : which === 'archive' ? ARCHIVE_DIR : rel ? workPath(rel) : WORK_DIR;
+  await fsp.mkdir(target, { recursive: true }).catch(() => {});
   const cmd = process.platform === 'win32' ? `explorer "${target}"` : process.platform === 'darwin' ? `open "${target}"` : `xdg-open "${target}"`;
   exec(cmd, () => {});
   send(res, 200, { ok: true });
@@ -804,6 +941,10 @@ async function main() {
       console.log(`\n  Verbale Studio attivo su ${url}`);
       console.log(`  Cartella di lavoro: ${WORK_DIR}`);
       console.log(`  Archivio:           ${DATA_DIR}`);
+      if (RUNNING_FROM_TEMP) {
+        console.log(`\n  ATTENZIONE: l'app è stata aperta dall'interno dello zip.`);
+        console.log(`  Chiudi questa finestra, estrai lo zip (tasto destro → Estrai tutto) e avvia VerbaleStudio.exe dalla cartella estratta.`);
+      }
       console.log(`\n  Per chiudere l'app chiudi questa finestra.\n`);
       if (shouldOpen) openBrowser(url);
       return;

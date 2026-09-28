@@ -74,6 +74,9 @@
 
   <!-- ============ MAIN ============ -->
   <main class="main">
+    <div class="temp-banner" id="tempBanner" hidden>
+      <b>Stai usando l'app dall'interno dello zip:</b> quello che salvi andrebbe perso. Chiudi la finestra nera, fai tasto destro sullo zip → <i>Estrai tutto</i> e avvia <i>VerbaleStudio.exe</i> dalla cartella estratta.
+    </div>
     <header class="topbar">
       <button class="icon-btn" id="sbOpen" title="Menu (Ctrl+B)" aria-label="Apri menu">
         <svg viewBox="0 0 20 20"><path d="M3.5 5.5h13M3.5 10h13M3.5 14.5h13"/></svg>
@@ -99,6 +102,8 @@
         <div class="menu-wrap">
           <button class="icon-btn" id="moreBtn" aria-label="Altro"><svg viewBox="0 0 20 20"><circle cx="5" cy="10" r="1.2"/><circle cx="10" cy="10" r="1.2"/><circle cx="15" cy="10" r="1.2"/></svg></button>
           <div class="menu" id="moreMenu" hidden>
+            <button data-act="open-folder">Apri cartella del checkpoint</button>
+            <hr />
             <button data-act="export-txt">Esporta transcript (.txt)</button>
             <button data-act="export-vtt">Esporta transcript (.vtt)</button>
             <button data-act="export-json">Esporta checkpoint (.json)</button>
@@ -128,7 +133,7 @@
             <div class="dropzone" id="videoDrop">
               <svg viewBox="0 0 20 20"><rect x="2.5" y="5" width="11" height="10" rx="2"/><path d="M13.5 9l4-2.5v7l-4-2.5"/></svg>
               <strong>Trascina qui la registrazione Teams</strong>
-              <span>MP4 · verrà copiata nell'archivio locale</span>
+              <span>MP4 · verrà copiata in Archivio/&lt;progetto&gt;/&lt;data&gt;</span>
               <button class="btn btn-ghost btn-sm" id="videoPick">Scegli file</button>
             </div>
             <div class="upload-bar" id="uploadBar" hidden><div class="upload-fill" id="uploadFill"></div><span id="uploadText"></span></div>
@@ -270,11 +275,11 @@
           </div>
           <div class="row gap-6">
             <button class="btn btn-ghost btn-sm" id="openWorkDirBtn">Apri cartella</button>
-            <button class="btn btn-ghost btn-sm" id="openDataDirBtn">Apri archivio</button>
+            <button class="btn btn-ghost btn-sm" id="openDataDirBtn">Apri Archivio</button>
             <button class="btn btn-primary btn-sm" id="refreshFolderBtn">Aggiorna</button>
           </div>
         </div>
-        <div class="note-box">Metti in questa cartella (anche in sottocartelle) le registrazioni e i transcript scaricati da Teams: compaiono qui sotto. I video vengono <b>collegati senza copiarli né spostarli</b>; i transcript vengono letti e salvati nel checkpoint.</div>
+        <div class="note-box">Metti in questa cartella (anche in sottocartelle) le registrazioni e i transcript scaricati da Teams: compaiono qui sotto. I video presenti qui vengono <b>collegati senza spostarli</b>; i file che trascini nella finestra vengono invece <b>copiati in Archivio/&lt;progetto&gt;/&lt;data&gt; &lt;titolo&gt;/</b>, dove l'app salva anche il transcript revisionato e l'email di riepilogo.</div>
         <div id="folderBody"></div>
       </div>
     </section>

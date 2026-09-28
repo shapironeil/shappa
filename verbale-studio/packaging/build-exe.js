@@ -117,6 +117,9 @@ async function main() {
     if (name === 'mac') console.log('   Nota: su Mac va firmato con `codesign --sign - VerbaleStudio-mac` prima dell’uso.');
     console.log(`   → ${path.relative(ROOT, out)} (${Math.round(fs.statSync(out).size / 1e6)} MB)`);
   }
+  // Versione "alternativa" per chi ha Node installato: un solo file server.cjs + interfaccia
+  fs.mkdirSync(path.join(OUT, 'node'), { recursive: true });
+  fs.copyFileSync(path.join(TMP, 'server.cjs'), path.join(OUT, 'node', 'server.cjs'));
   fs.rmSync(TMP, { recursive: true, force: true });
 }
 

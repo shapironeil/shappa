@@ -7,7 +7,8 @@
     "start": "node server.js --open",
     "dev": "node server.js",
     "build:exe": "node packaging/build-exe.js win",
-    "build:all": "node packaging/build-exe.js win linux mac"
+    "build:all": "node packaging/build-exe.js win linux mac",
+    "build:zip": "node packaging/build-package.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0"

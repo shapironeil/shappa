@@ -435,3 +435,4 @@ textarea.input { resize: vertical; width: 100%; }
 .job-bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
 .disabled-card { opacity: .55; pointer-events: none; }
 .sep { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+.temp-banner { background: var(--danger); color: #fff; padding: 10px 16px; font-size: 13.5px; }

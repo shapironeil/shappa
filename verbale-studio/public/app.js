@@ -157,7 +157,8 @@
     const payload = { title: cp.title, date: cp.date, status: cp.status, templateId: cp.templateId, transcript: cp.transcript, notes: cp.notes, summary: cp.summary, email: cp.email, analysis: cp.analysis };
     saving = saving.then(() =>
       api('PUT', `/api/projects/${cp.projectId}/checkpoints/${cp.id}`, payload)
-        .then(() => {
+        .then((r) => {
+          if (state.cp === cp) { cp.folder = r.folder; cp.transcriptFile = r.transcriptFile; if (r.video) cp.video = r.video; }
           $('#saveState').textContent = `Salvato ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
           const s = state.checkpoints.find((c) => c.id === cp.id);
           if (s) { Object.assign(s, { title: cp.title, date: cp.date, status: cp.status }); renderCheckpointList(); }
@@ -191,6 +192,7 @@
     state.projects = data.projects;
     state.settings = data.settings;
     state.workDir = data.workDir;
+    if (data.runningFromTemp) $('#tempBanner').hidden = false;
     applySettings();
     refreshOllama();
     const pid = LS.get('project', null);
@@ -362,14 +364,14 @@
       if (!e.lengthComputable) return;
       const p = Math.round((e.loaded / e.total) * 100);
       $('#uploadFill').style.width = p + '%';
-      $('#uploadText').textContent = `Copia nell'archivio locale… ${p}%`;
+      $('#uploadText').textContent = `Copia in Archivio/${state.project.name}… ${p}%`;
     };
     xhr.onload = () => {
       bar.hidden = true;
       if (xhr.status >= 300) return toast('Errore nel salvataggio del video', { error: true });
       const v = JSON.parse(xhr.responseText);
       if (state.cp?.id === cp.id) state.cp.video = v;
-      toast('Video salvato nell\'archivio');
+      toast(`Video copiato in ${v.external}`);
     };
     xhr.onerror = () => { bar.hidden = true; toast('Errore nel caricamento del video', { error: true }); };
     xhr.send(file);
@@ -731,6 +733,18 @@
   async function confirmReplaceTranscript(name) {
     return !cues().length || confirmDlg('Sostituire il transcript?', `Il checkpoint contiene già ${cues().length} blocchi. Verranno sostituiti da quelli di “${name}”.`, 'Sostituisci', true);
   }
+  // Copia il file transcript originale nella cartella del checkpoint (Archivio/…), dopo il salvataggio
+  function archiveTranscript({ file, rel }) {
+    const cp = state.cp;
+    saveNow();
+    saving = saving.then(() => {
+      const q = rel ? `rel=${encodeURIComponent(rel)}` : `name=${encodeURIComponent(file.name)}`;
+      return api('PUT', `/api/projects/${cp.projectId}/checkpoints/${cp.id}/transcript-file?${q}`, undefined, file || '')
+        .then((r) => { cp.transcriptFile = r.transcriptFile; })
+        .catch((e) => toast('Copia del transcript non riuscita: ' + e.message, { error: true }));
+    });
+  }
+
   async function importTranscriptFile(file) {
     if (!state.cp) return toast('Crea prima un checkpoint', { error: true });
     try {
@@ -738,6 +752,7 @@
       Transcript.parseTranscript(text); // valida prima di chiedere conferma
       if (!(await confirmReplaceTranscript(file.name))) return;
       applyTranscript(text, file.name);
+      archiveTranscript({ file });
     } catch (e) {
       toast(e.message, { error: true });
     }
@@ -1199,6 +1214,7 @@
       Transcript.parseTranscript(r.text);
       if (!(await confirmReplaceTranscript(f.name))) return;
       applyTranscript(r.text, r.name, r.rel);
+      archiveTranscript({ rel: r.rel });
     }
   }
 
@@ -1406,6 +1422,11 @@
       if (!act || !state.cp) return;
       const base = `${state.project.name}_${state.cp.date}`.replace(/[^\w-]+/g, '_');
       const header = `${state.project.name} — ${state.cp.title} — ${itDate(state.cp.date)}`;
+      if (act === 'open-folder') {
+        await saveNow();
+        if (!state.cp.folder) return toast('La cartella del checkpoint viene creata quando aggiungi video o transcript');
+        return api('POST', '/api/folder/open', { rel: state.cp.folder });
+      }
       if (act === 'export-txt') download(`${base}_transcript.txt`, Transcript.toTxt(cues(), header));
       if (act === 'export-vtt') download(`${base}_transcript.vtt`, Transcript.toVtt(cues()));
       if (act === 'export-json') download(`${base}_checkpoint.json`, JSON.stringify(state.cp, null, 2), 'application/json');
@@ -1717,7 +1738,7 @@
     // cartella
     $('#refreshFolderBtn').onclick = () => renderFolder().catch((e) => toast(e.message, { error: true }));
     $('#openWorkDirBtn').onclick = () => api('POST', '/api/folder/open', { which: 'work' });
-    $('#openDataDirBtn').onclick = () => api('POST', '/api/folder/open', { which: 'data' });
+    $('#openDataDirBtn').onclick = () => api('POST', '/api/folder/open', { which: 'archive' });
     $('#folderBody').onclick = async (e) => {
       const use = e.target.closest('[data-use]');
       const nc = e.target.closest('[data-newcp]');

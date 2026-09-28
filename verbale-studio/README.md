@@ -6,30 +6,32 @@ App **locale e personale** per revisionare i transcript delle riunioni Teams in 
 - Lavora **nella cartella in cui la metti**: legge i video e i transcript presenti lì e salva l'archivio in `data/` nella stessa cartella.
 - Funziona **senza AI e senza token**. Opzionali: AI locale gratuita (Ollama) e Claude API.
 
-## Eseguibile portatile (Windows)
+## Pacchetto pronto (Windows e Mac)
 
-1. Scarica `release/VerbaleStudio-Windows.zip` ed estrai `VerbaleStudio.exe`.
-2. Mettilo nella cartella dove tieni le registrazioni, per esempio `Documenti\ATAC\`.
-3. Doppio clic: si apre una finestra nera (il motore dell'app, da lasciare aperta) e il browser su Verbale Studio.
-   La prima volta Windows può mostrare “PC protetto da Windows”: *Ulteriori informazioni → Esegui comunque* (l'eseguibile non è firmato).
-4. Per chiudere l'app chiudi la finestra nera.
-
-Puoi anche indicare un'altra cartella: `VerbaleStudio.exe "D:\Lavoro\ATAC"`.
+1. Scarica `release/VerbaleStudio.zip` e **estrailo** (tasto destro → *Estrai tutto…*), ad esempio in Documenti. Se lo apri direttamente dall'interno dello zip, quello che salvi va perso; in quel caso l'app mostra un avviso rosso.
+2. Avvio:
+   - **Windows:** doppio clic su `VerbaleStudio.exe`. Se compare “PC protetto da Windows”: *Ulteriori informazioni → Esegui comunque*. Si apre una finestra nera (il motore dell'app, da lasciare aperta) e il browser.
+   - **Mac (Apple Silicon):** tasto destro su `Avvia su Mac.command` → *Apri* (serve solo la prima volta).
+   - **Se l'eseguibile è bloccato** (es. su un PC aziendale): installa Node.js e usa `alternativa-node/Avvia con Node (Windows).bat`.
+3. Per chiudere l'app chiudi la finestra nera.
 
 ```
-Documenti\ATAC\
+VerbaleStudio\
   VerbaleStudio.exe
-  Registrazioni\                  ← qui scarichi i video e i transcript di Teams
-     Checkpoint ATAC 20260928.mp4
-     Checkpoint ATAC 20260928.vtt
-  data\                           ← archivio creato dall'app (checkpoint, template, apprendimento)
+  Registrazioni\                        ← qui scarichi video e transcript di Teams (opzionale)
+  Archivio\ATAC\2026-09-28 Checkpoint settimanale\
+      Registrazione.mp4                 ← copia del video trascinato nell'app
+      Transcript originale.vtt          ← copia del transcript trascinato
+      Transcript revisionato.txt        ← aggiornato a ogni salvataggio
+      Email di riepilogo.txt            ← aggiornata a ogni salvataggio
+  data\                                 ← archivio interno dell'app (checkpoint, template, apprendimento)
 ```
 
-Per il backup basta copiare l'intera cartella.
+I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<data> <titolo>/`; la cartella si rinomina se cambi data o titolo. I file già presenti nella cartella di lavoro (es. `Registrazioni/`) vengono invece collegati senza spostarli. Il menu `⋯` → *Apri cartella del checkpoint* apre la cartella in Esplora risorse. Per il backup basta copiare l'intera cartella `VerbaleStudio`.
 
 ## Flusso di lavoro
 
-1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella. *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video vengono collegati, non copiati né spostati. In alternativa puoi trascinare i file direttamente nella finestra.
+1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella (esclusa `Archivio/`). *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video vengono collegati, non copiati né spostati. In alternativa puoi trascinare i file direttamente nella finestra.
 2. **Revisione** (colonna destra): il transcript scorre in sincrono con il video, parola per parola.
    - Clic sull'orario per saltare a quel punto; clic sul testo per modificarlo (`Invio` salva, `Tab` passa al blocco successivo).
    - Clic sul nome per rinominare lo speaker ovunque; ⚑ segna i blocchi da verificare; *Pulizia rapida* toglie gli intercalari.
@@ -77,4 +79,5 @@ Tutto resta sul computer.
 npm install
 npm start               # avvia dal codice sorgente (cartella di lavoro = questa cartella)
 npm run build:exe       # crea dist/VerbaleStudio.exe (Node SEA, nessuna installazione richiesta)
+npm run build:zip       # crea release/VerbaleStudio.zip (Windows + Mac + alternativa Node)
 ```
