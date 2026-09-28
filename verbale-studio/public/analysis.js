@@ -338,5 +338,5 @@
     return res.sort((a, b) => a.date.localeCompare(b.date));
   }
 
-  window.Analysis = { terms, similarity, utterances, sentences, candidates, touchedItems, topics, threads, related, findDeadline, learn, predict, emptyModel };
+  window.Analysis = { classify, terms, similarity, utterances, sentences, candidates, touchedItems, topics, threads, related, findDeadline, learn, predict, emptyModel };
 })();

@@ -154,7 +154,7 @@
     saveTimer = null;
     if (!state.cp) return saving;
     const cp = state.cp;
-    const payload = { title: cp.title, date: cp.date, status: cp.status, templateId: cp.templateId, transcript: cp.transcript, notes: cp.notes, summary: cp.summary, email: cp.email, analysis: cp.analysis };
+    const payload = { title: cp.title, date: cp.date, status: cp.status, templateId: cp.templateId, transcript: cp.transcript, notes: cp.notes, summary: cp.summary, email: cp.email, analysis: cp.analysis, pins: cp.pins };
     saving = saving.then(() =>
       api('PUT', `/api/projects/${cp.projectId}/checkpoints/${cp.id}`, payload)
         .then((r) => {
@@ -295,6 +295,7 @@
     cp.email = cp.email || { subject: '', body: '', edited: false };
     cp.transcript = cp.transcript || { sourceName: '', cues: [] };
     cp.analysis = cp.analysis || { dismissed: [], added: [] };
+    cp.pins = cp.pins || [];
     state.cp = cp;
     state.activeIdx = -1;
     state.editingId = null;
@@ -315,6 +316,7 @@
     renderTranscript();
     renderSummaryEditor();
     renderEmail();
+    renderPins();
     renderCheckpointList();
     refreshAnalysisPanels();
     if (!keepView && state.view !== 'workspace') setView('workspace');
@@ -439,9 +441,13 @@
   function cueHtml(c, i) {
     const sugg = state.suggestions.get(c.id);
     const role = state.cueRoles.get(c.id);
-    const cls = ['cue', c.flagged && 'flagged', c.reviewed && 'reviewed', i === state.activeIdx && 'active'].filter(Boolean).join(' ');
+    const pinned = state.cp.pins.some((p) => p.cueId === c.id);
+    const cls = ['cue', c.flagged && 'flagged', c.reviewed && 'reviewed', pinned && 'pinned', i === state.activeIdx && 'active'].filter(Boolean).join(' ');
     return `<div class="${cls}" data-id="${c.id}" data-i="${i}">
-      <button class="cue-time" data-act="seek" title="Vai a questo punto">${fmtT(c.start)}</button>
+      <div class="cue-side">
+        <button class="side-btn play-btn" data-act="seek" title="Riproduci da qui (${fmtT(c.start)})"><svg viewBox="0 0 20 20"><path d="M6.5 4.5v11l9-5.5z"/></svg></button>
+        <button class="side-btn pin-btn" data-act="pin" title="${pinned ? 'Rimuovi dai punti chiave' : 'Fissa tra i punti chiave del verbale (P)'}"><svg viewBox="0 0 20 20"><path d="M7.5 3.5h5M8.5 3.5v4.5L6 10.5h8L11.5 8V3.5M10 10.5v6"/></svg></button>
+      </div>
       <div class="cue-body">
         ${c.speaker ? `<span class="cue-speaker" data-act="speaker" style="color:${speakerColor(c.speaker)}">${esc(c.speaker)}</span>` : ''}
         ${role ? `<span class="cue-role ${ROLE_CLASS[role]}" data-act="analysis" title="Punto rilevato: apri l'analisi">${esc(roleLabel(role))}</span>` : ''}
@@ -471,6 +477,7 @@
     const q = state.search.toLowerCase();
     list.forEach((c, i) => {
       if (state.filter === 'flagged' && !c.flagged) return;
+      if (state.filter === 'pinned' && !state.cp.pins.some((p) => p.cueId === c.id)) return;
       if (state.filter === 'points' && !state.cueRoles.has(c.id)) return;
       if (q) {
         const hay = (c.text + ' ' + c.speaker).toLowerCase();
@@ -762,6 +769,78 @@
     if (/\.(vtt|srt|txt|docx)$/i.test(file.name)) importTranscriptFile(file);
     else if (/^(video|audio)\//.test(file.type) || /\.(mp4|m4v|mov|webm|mkv|m4a|mp3|wav)$/i.test(file.name)) uploadVideo(file);
     else toast(`Formato non supportato: ${file.name}`, { error: true });
+  }
+
+  // ------------------------------------------------------------------ punti chiave (frasi fissate)
+  function playFrom(c) {
+    if (!video.src) return toast('Carica prima il video del checkpoint');
+    state.lastUserScroll = 0;
+    video.currentTime = c.start;
+    video.play();
+    syncTranscript(true);
+  }
+
+  function refreshCue(cueId) {
+    const i = cues().findIndex((c) => c.id === cueId);
+    const el = cueEl(i);
+    if (el && state.editingId !== cueId) el.outerHTML = cueHtml(cues()[i], i);
+  }
+
+  function togglePin(c) {
+    const pins = state.cp.pins;
+    const at = pins.findIndex((p) => p.cueId === c.id);
+    if (at >= 0) {
+      pins.splice(at, 1);
+    } else {
+      // se nel blocco è selezionata solo una parte della frase, si fissa quella
+      const sel = getSelection();
+      const inCue = sel && !sel.isCollapsed && cueEl(cues().indexOf(c))?.contains(sel.anchorNode);
+      const source = (inCue ? sel.toString() : c.text).replace(/\s+/g, ' ').trim();
+      pins.push({ id: 'p' + Date.now().toString(36), cueId: c.id, start: c.start, speaker: c.speaker || '', text: cleanSentence(source), source, section: '', createdAt: new Date().toISOString() });
+      pins.sort((a, b) => a.start - b.start);
+      if (inCue) sel.removeAllRanges();
+    }
+    refreshCue(c.id);
+    renderPins();
+    markDirty();
+  }
+
+  function pinRole(p) {
+    const { role, score } = Analysis.classify(p.source || p.text, state.learning);
+    return score >= 1 ? role : 'info';
+  }
+
+  function renderPins() {
+    const el = $('#pinsBody');
+    if (!state.cp) return;
+    const pins = state.cp.pins;
+    const open = pins.filter((p) => !p.section).length;
+    $('.tab[data-tab="pins"]').textContent = `📌 Punti chiave${pins.length ? ` (${pins.length})` : ''}`;
+    if (!pins.length) {
+      el.innerHTML = `<div class="pins-empty"><b>Nessun punto chiave</b><p class="muted">Mentre ascolti, premi 📌 accanto a una frase del transcript (o il tasto <kbd>P</kbd>) per ricordarti che va nel verbale. Se selezioni solo una parte della frase, viene fissata quella.</p></div>`;
+      return;
+    }
+    const secTitle = (key) => state.tpl.sections.find((s) => s.key === key)?.title || key;
+    el.innerHTML = `<div class="pins-head"><span class="muted small">${open ? `${open} da inserire nel riepilogo` : 'Tutti inseriti nel riepilogo'}</span>
+      ${open ? '<button class="btn btn-sm btn-primary" id="pinsAll">Inserisci tutti nel riepilogo</button>' : ''}</div>`
+      + pins.map((p) => `<div class="an-card pin-card ${p.section ? 'is-added' : ''}" data-pin-card="${p.id}">
+        <div class="an-top"><button class="link" data-jump="${p.start}">▶ ${fmtT(p.start)}</button>${p.speaker ? `<span class="muted small">${esc(p.speaker)}</span>` : ''}
+          ${p.section ? `<span class="pill ok">✓ In “${esc(secTitle(p.section))}”</span>` : ''}
+          <button class="icon-btn an-x" data-unpin="${p.id}" title="Rimuovi dai punti chiave"><svg viewBox="0 0 20 20"><path d="M5 5l10 10M15 5 5 15"/></svg></button></div>
+        <div class="an-edit" contenteditable="true" spellcheck="true" data-pin-edit="${p.id}">${esc(p.text)}</div>
+        ${p.section ? '' : `<div class="row gap-6">${addButtons(pinRole(p), `data-pin="${p.id}"`)}<button class="btn btn-sm btn-ghost local-ai-only" data-pin-rewrite="${p.id}">✨ Riformula</button></div>`}
+      </div>`).join('');
+  }
+
+  function insertPin(pinId, sectionKey) {
+    const p = state.cp.pins.find((x) => x.id === pinId);
+    const sec = state.tpl.sections.find((s) => s.key === sectionKey);
+    if (!p || !sec) return;
+    addToSection(sectionKey, p.text, { ref: { start: p.start, source: p.source } });
+    learnFrom(p.source || p.text, sec.role);
+    p.section = sectionKey;
+    renderPins();
+    markDirty();
   }
 
   // ------------------------------------------------------------------ template & punti discussi
@@ -1467,13 +1546,14 @@
     $$('.tab').forEach((t) => (t.onclick = () => {
       $$('.tab').forEach((x) => x.classList.toggle('active', x === t));
       $$('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `tab-${t.dataset.tab}`));
-      LS.set('tab', t.dataset.tab);
+      LS.set('tab2', t.dataset.tab);
       if (!state.cp) return;
       if (t.dataset.tab === 'email') renderEmail();
       if (t.dataset.tab === 'points') $$('#summaryEditor textarea').forEach(autosize);
       if (t.dataset.tab === 'analysis') renderAnalysis();
+      if (t.dataset.tab === 'pins') renderPins();
     }));
-    $(`.tab[data-tab="${LS.get('tab', 'points')}"]`)?.click();
+    $(`.tab[data-tab="${LS.get('tab2', 'pins')}"]`)?.click();
 
     // transcript
     trEl.addEventListener('click', async (e) => {
@@ -1483,7 +1563,8 @@
       const id = cueNode.dataset.id;
       const i = Number(cueNode.dataset.i);
       const c = cues()[i];
-      if (act === 'seek') seekTo(c.start, true);
+      if (act === 'seek') playFrom(c);
+      else if (act === 'pin') togglePin(c);
       else if (act === 'speaker') renameSpeaker(c.speaker);
       else if (act === 'analysis') $('.tab[data-tab="analysis"]').click();
       else if (act === 'edit') {
@@ -1522,6 +1603,8 @@
       } else if (act === 'accept' || act === 'reject') applySuggestion(id, act === 'accept');
     });
     ['wheel', 'touchmove'].forEach((ev) => trEl.addEventListener(ev, () => (state.lastUserScroll = Date.now()), { passive: true }));
+    // i pulsanti ▶/📌 non devono cancellare la selezione del testo (si può fissare solo una parte della frase)
+    trEl.addEventListener('mousedown', (e) => { if (e.target.closest('.side-btn')) e.preventDefault(); });
     $('#speakers').onclick = (e) => { const s = e.target.closest('.speaker-chip'); if (s) renameSpeaker(s.dataset.speaker); };
     $('#followToggle').onchange = (e) => { LS.set('follow', e.target.checked); if (e.target.checked) autoScroll(true); };
     $('#followToggle').checked = LS.get('follow', true);
@@ -1682,6 +1765,41 @@
     an.addEventListener('change', (e) => {
       if (e.target.id === 'showDupToggle') { state.showDuplicates = e.target.checked; renderAnalysis(); }
       if (e.target.dataset.addsel !== undefined && e.target.value) addFromAnalysis(e.target, e.target.value);
+    });
+
+    // punti chiave
+    const pb = $('#pinsBody');
+    pb.addEventListener('click', async (e) => {
+      const jump = e.target.closest('[data-jump]');
+      if (jump) return jumpTo(Number(jump.dataset.jump));
+      const add = e.target.closest('[data-addto]');
+      if (add) return insertPin(add.dataset.pin, add.dataset.addto);
+      if (e.target.closest('#pinsAll')) {
+        state.cp.pins.filter((p) => !p.section).forEach((p) => insertPin(p.id, sectionForRole(pinRole(p)).key));
+        return toast('Punti chiave inseriti nel riepilogo: rivedili in “Punti discussi”');
+      }
+      const un = e.target.closest('[data-unpin]');
+      if (un) {
+        const p = state.cp.pins.find((x) => x.id === un.dataset.unpin);
+        state.cp.pins = state.cp.pins.filter((x) => x !== p);
+        if (p) refreshCue(p.cueId);
+        renderPins();
+        return markDirty();
+      }
+      const rw = e.target.closest('[data-pin-rewrite]');
+      if (rw) await busy(rw, async () => {
+        const p = state.cp.pins.find((x) => x.id === rw.dataset.pinRewrite);
+        const out = await localAi('rewrite', p.source || p.text);
+        if (out && out !== '-') { p.text = out; renderPins(); markDirty(); }
+      });
+    });
+    pb.addEventListener('input', (e) => {
+      const id = e.target.dataset.pinEdit;
+      const p = id && state.cp.pins.find((x) => x.id === id);
+      if (p) { p.text = e.target.innerText.trim(); markDirty(); }
+    });
+    pb.addEventListener('change', (e) => {
+      if (e.target.dataset.addsel !== undefined && e.target.value) insertPin(e.target.dataset.pin, e.target.value);
     });
 
     // email
@@ -1926,6 +2044,7 @@
         return;
       }
       if (typing) return;
+      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey && state.activeIdx >= 0) { e.preventDefault(); togglePin(cues()[state.activeIdx]); return; }
       if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); seekTo(video.currentTime - 5); }
       else if (e.key === 'ArrowRight') { e.preventDefault(); seekTo(video.currentTime + 5); }

@@ -533,7 +533,7 @@ route('PUT', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid 
   const result = await withLock(`${pid}/${cid}`, async () => {
     const current = await readJson(checkpointFile(pid, cid), null);
     if (!current) return null;
-    const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis'];
+    const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis', 'pins'];
     for (const k of allowed) if (k in body) current[k] = body[k];
     current.updatedAt = new Date().toISOString();
     await renameFolderIfNeeded(current);

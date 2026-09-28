@@ -33,21 +33,23 @@ I file **trascinati nella finestra** vengono copiati in `Archivio/<progetto>/<da
 
 1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella (esclusa `Archivio/`). *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video vengono collegati, non copiati né spostati. In alternativa puoi trascinare i file direttamente nella finestra.
 2. **Revisione** (colonna destra): il transcript scorre in sincrono con il video, parola per parola.
-   - Clic sull'orario per saltare a quel punto; clic sul testo per modificarlo (`Invio` salva, `Tab` passa al blocco successivo).
+   - Accanto a ogni frase: **▶** porta il video a quel punto e lo fa partire; **📌** (o il tasto `P`) fissa la frase tra i *Punti chiave* da mettere nel verbale. Se prima selezioni solo una parte della frase, viene fissata quella.
+   - Clic sul testo per modificarlo (`Invio` salva, `Tab` passa al blocco successivo).
    - Clic sul nome per rinominare lo speaker ovunque; ⚑ segna i blocchi da verificare; *Pulizia rapida* toglie gli intercalari.
    - Le etichette colorate (Prossimo passo, Attenzione…) indicano i punti rilevati dall'analisi; il filtro *Punti rilevati* mostra solo quelli.
-3. **Analisi** (scheda in basso a sinistra), tutto da confermare a mano:
+3. **📌 Punti chiave** (prima scheda sotto il video): le frasi fissate durante l'ascolto, cioè le cose che andranno nel riassunto. Puoi ritoccarne il testo e inserirle nella sezione giusta del riepilogo (la sezione è suggerita), una alla volta o tutte insieme.
+4. **Analisi** (scheda in basso a sinistra), tutto da confermare a mano:
    - *Temi del checkpoint precedente*: per ogni attività in corso, prossimo passo o punto di attenzione dell'incontro precedente dice se è stato discusso, dove (orari cliccabili) e se sembra completato, in corso o bloccato. Un clic la aggiunge alla sezione giusta.
    - *Nuovi punti rilevati*: frasi che sembrano attività completate, prossimi passi, criticità o decisioni, con scadenze (“entro venerdì”, “24/10”) e owner rilevati. Puoi correggere il testo prima di aggiungerlo oppure scartarlo con ✕.
    - *Argomenti principali*: i temi più citati; clic per cercarli nel transcript.
    - Il rilevatore **impara dalle tue scelte**: ogni punto aggiunto o scartato lo rende più preciso sul progetto.
-4. **Punti discussi**: le sezioni del template scelto (menu in alto nella scheda).
+5. **Punti discussi**: le sezioni del template scelto (menu in alto nella scheda).
    - *Riporta dal precedente* copia le voci ancora aperte; ✓ le segna come completate.
    - `Alt+1…9` aggiunge alla sezione il testo selezionato nel transcript.
    - “↺ N collegate” mostra la storia di quella voce nei checkpoint passati.
-5. **Email**: il testo si compone dal template. *Copia per Outlook* copia la versione formattata; *.eml* scarica una bozza.
-6. **Storico**: timeline, punti di attenzione aperti con le scadenze e *Filo delle attività* (come una voce è passata da prossimo passo a in corso a completata).
-7. **Prossimo checkpoint**: i temi previsti per il prossimo incontro, calcolati dallo storico.
+6. **Email**: il testo si compone dal template. *Copia per Outlook* copia la versione formattata; *.eml* scarica una bozza.
+7. **Storico**: timeline, punti di attenzione aperti con le scadenze e *Filo delle attività* (come una voce è passata da prossimo passo a in corso a completata).
+8. **Prossimo checkpoint**: i temi previsti per il prossimo incontro, calcolati dallo storico.
 
 ## Template email
 

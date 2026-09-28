@@ -153,15 +153,18 @@
 
           <div class="bottom-pane">
             <div class="tabs" role="tablist">
-              <button class="tab active" data-tab="points">Punti discussi</button>
+              <button class="tab active" data-tab="pins">📌 Punti chiave</button>
+              <button class="tab" data-tab="points">Punti discussi</button>
               <button class="tab" data-tab="analysis">Analisi</button>
               <button class="tab" data-tab="email">Email</button>
               <button class="tab" data-tab="notes">Note</button>
               <button class="tab" data-tab="next">Previsione</button>
             </div>
             <div class="tab-body">
+              <!-- Punti chiave: frasi fissate dal transcript, da inserire nel riepilogo -->
+              <div class="tab-panel active" id="tab-pins"><div id="pinsBody"></div></div>
               <!-- Punti strutturati -->
-              <div class="tab-panel active" id="tab-points">
+              <div class="tab-panel" id="tab-points">
                 <div class="panel-actions">
                   <select id="tplSelect" class="select select-sm" title="Template del riepilogo"></select>
                   <button class="btn btn-ghost btn-sm" id="carryOverBtn" title="Riporta attività in corso, prossimi passi e punti di attenzione dal checkpoint precedente">
@@ -212,6 +215,7 @@
             <div class="seg">
               <button class="seg-btn active" data-filter="all">Tutto</button>
               <button class="seg-btn" data-filter="flagged">⚑ Da verificare</button>
+              <button class="seg-btn" data-filter="pinned">📌 Fissati</button>
               <button class="seg-btn" data-filter="points">Punti rilevati</button>
             </div>
             <button class="btn btn-ghost btn-sm" id="cleanupBtn" title="Rimuove intercalari (ehm, cioè…), doppi spazi e sistema le maiuscole">Pulizia rapida</button>
@@ -348,7 +352,8 @@
             <tr><td><kbd>Ctrl</kbd>+<kbd>Spazio</kbd></td><td>Play / pausa anche mentre scrivi</td></tr>
             <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Indietro / avanti 5 secondi</td></tr>
             <tr><td><kbd>Alt</kbd>+<kbd>←</kbd></td><td>Riascolta ultimi 3 secondi (anche mentre scrivi)</td></tr>
-            <tr><td>Clic sull'orario</td><td>Salta a quel punto del video</td></tr>
+            <tr><td>▶ accanto alla frase</td><td>Porta il video a quel punto e lo fa partire</td></tr>
+            <tr><td>📌 accanto alla frase · <kbd>P</kbd></td><td>Fissa la frase (o la parte selezionata) tra i punti chiave del verbale</td></tr>
             <tr><td>Clic sul testo</td><td>Modifica il blocco · <kbd>Esc</kbd> chiude · <kbd>Tab</kbd> blocco successivo</td></tr>
             <tr><td>Clic sul nome</td><td>Rinomina lo speaker in tutto il transcript</td></tr>
             <tr><td><kbd>Alt</kbd>+<kbd>1..9</kbd></td><td>Aggiungi il testo selezionato alla sezione 1…9 del template</td></tr>

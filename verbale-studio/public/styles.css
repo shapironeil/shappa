@@ -197,8 +197,8 @@ textarea.input { resize: vertical; width: 100%; }
 .seek { flex: 1; accent-color: var(--accent); min-width: 60px; }
 
 .bottom-pane { flex: 1; min-height: 120px; display: flex; flex-direction: column; }
-.tabs { display: flex; gap: 2px; padding: 6px 10px 0; border-bottom: 1px solid var(--border); flex: none; }
-.tab { border: 0; background: none; padding: 7px 12px; color: var(--text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
+.tabs { display: flex; gap: 0; padding: 6px 8px 0; border-bottom: 1px solid var(--border); flex: none; overflow-x: auto; scrollbar-width: none; }
+.tab { white-space: nowrap; flex: none; border: 0; background: none; padding: 7px 10px; color: var(--text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
 .tab:hover { color: var(--text); }
 .tab.active { color: var(--text); border-bottom-color: var(--accent); }
 .tab-body { flex: 1; min-height: 0; position: relative; }
@@ -251,10 +251,18 @@ textarea.input { resize: vertical; width: 100%; }
 .tr-empty { color: var(--text-3); text-align: center; margin-top: 12vh; line-height: 1.7; }
 .tr-empty strong { color: var(--text); font-family: var(--serif); font-size: 20px; font-weight: 400; display: block; margin-bottom: 4px; }
 
-.cue { display: grid; grid-template-columns: 58px 1fr 28px; gap: 4px 10px; padding: 8px 10px; border-radius: 10px; margin-bottom: 2px; position: relative; transition: background .15s; }
+.cue { display: grid; grid-template-columns: 30px 1fr 28px; gap: 4px 10px; padding: 8px 10px; border-radius: 10px; margin-bottom: 2px; position: relative; transition: background .15s; }
 .cue:hover { background: var(--hover); }
-.cue-time { font: 12px var(--mono); color: var(--text-3); padding-top: 3px; cursor: pointer; border: 0; background: none; text-align: left; height: fit-content; border-radius: 4px; }
-.cue-time:hover { color: var(--accent); text-decoration: underline; }
+.cue-side { display: flex; flex-direction: column; gap: 4px; padding-top: 2px; }
+.side-btn { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text-3); padding: 0; transition: color .15s, background .15s, border-color .15s; }
+.side-btn svg { width: 15px; height: 15px; }
+.pin-btn svg { stroke-width: 1.8; }
+.side-btn:hover { color: var(--accent); border-color: var(--accent); }
+.play-btn svg { fill: currentColor; stroke: none; margin-left: 2px; }
+.cue.active .play-btn { color: var(--accent-text); background: var(--accent); border-color: var(--accent); }
+.cue.pinned .pin-btn { color: var(--accent-text); background: var(--accent); border-color: var(--accent); }
+.cue.pinned { box-shadow: inset 3px 0 0 var(--accent); }
+.cue.reviewed .play-btn { border-color: color-mix(in srgb, var(--ok) 50%, transparent); }
 .cue-body { min-width: 0; }
 .cue-speaker { font-size: 12px; font-weight: 600; cursor: pointer; margin-bottom: 1px; display: inline-block; }
 .cue-speaker:hover { text-decoration: underline; }
@@ -273,7 +281,7 @@ textarea.input { resize: vertical; width: 100%; }
 .cue-tools .icon-btn svg { width: 15px; height: 15px; }
 .cue.flagged { box-shadow: inset 3px 0 0 var(--warn); }
 .cue.flagged .flag-btn { color: var(--warn); }
-.cue.reviewed .cue-time::after { content: " ✓"; color: var(--ok); }
+
 .cue mark { background: var(--hl); color: inherit; border-radius: 2px; }
 .cue .sugg { margin-top: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; font-size: 13.5px; background: var(--bg); }
 .cue .sugg del { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); text-decoration: line-through; }
@@ -436,3 +444,9 @@ textarea.input { resize: vertical; width: 100%; }
 .disabled-card { opacity: .55; pointer-events: none; }
 .sep { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
 .temp-banner { background: var(--danger); color: #fff; padding: 10px 16px; font-size: 13.5px; }
+
+/* ---------- Punti chiave ---------- */
+.pins-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pins-empty { text-align: center; padding: 28px 16px; }
+.pins-empty b { font-family: var(--serif); font-weight: 400; font-size: 18px; }
+.pin-card .an-edit { font-size: 15.5px; }
