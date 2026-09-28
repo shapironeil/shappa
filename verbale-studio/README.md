@@ -1,48 +1,80 @@
 # Verbale Studio
 
-App **locale e personale** per revisionare i transcript dei checkpoint Teams in sincrono con la registrazione, preparare l'email di riepilogo e tenere lo storico dei checkpoint per progetto (es. ATAC).
+App **locale e personale** per revisionare i transcript delle riunioni Teams in sincrono con la registrazione, preparare l'email di riepilogo con il template giusto e tenere lo storico dei checkpoint per progetto (es. ATAC).
 
-- Gira solo sul tuo computer (`http://localhost:4310`, accessibile solo da questa macchina).
-- Tutto viene salvato nella cartella `data/` accanto all'app: nessun cloud, nessun account.
-- Funziona **senza AI**. Se in futuro inserisci una API key Claude nelle Impostazioni compaiono i pulsanti “Compila con AI”, “Correggi con AI” e “Previsione con AI”.
+- Gira solo sul tuo computer (`http://localhost:4310`, raggiungibile solo da questa macchina).
+- Lavora **nella cartella in cui la metti**: legge i video e i transcript presenti lì e salva l'archivio in `data/` nella stessa cartella.
+- Funziona **senza AI e senza token**. Opzionali: AI locale gratuita (Ollama) e Claude API.
 
-## Avvio
+## Eseguibile portatile (Windows)
 
-Serve [Node.js](https://nodejs.org) (versione 18 o superiore).
+1. Scarica `release/VerbaleStudio-Windows.zip` ed estrai `VerbaleStudio.exe`.
+2. Mettilo nella cartella dove tieni le registrazioni, per esempio `Documenti\ATAC\`.
+3. Doppio clic: si apre una finestra nera (il motore dell'app, da lasciare aperta) e il browser su Verbale Studio.
+   La prima volta Windows può mostrare “PC protetto da Windows”: *Ulteriori informazioni → Esegui comunque* (l'eseguibile non è firmato).
+4. Per chiudere l'app chiudi la finestra nera.
 
-- **Windows**: doppio clic su `Avvia Verbale Studio.bat`
-- **Mac**: doppio clic su `Avvia Verbale Studio.command`
-- Da terminale: `npm install` (solo la prima volta) e poi `npm start`
+Puoi anche indicare un'altra cartella: `VerbaleStudio.exe "D:\Lavoro\ATAC"`.
 
-Si apre il browser su `http://localhost:4310`. Per chiudere l'app chiudi la finestra del terminale.
+```
+Documenti\ATAC\
+  VerbaleStudio.exe
+  Registrazioni\                  ← qui scarichi i video e i transcript di Teams
+     Checkpoint ATAC 20260928.mp4
+     Checkpoint ATAC 20260928.vtt
+  data\                           ← archivio creato dall'app (checkpoint, template, apprendimento)
+```
+
+Per il backup basta copiare l'intera cartella.
 
 ## Flusso di lavoro
 
-1. **Nuovo checkpoint** (menu a sinistra): scegli la data della riunione.
-2. Trascina nella finestra il **video** scaricato da Teams (MP4) e il **transcript** (`.vtt` o `.docx`). Vengono copiati in `data/`.
-3. **Revisione** (colonna destra): il testo scorre in sincrono con il video, parola per parola, come il testo di una canzone.
-   - clic sull'orario → salta a quel punto; clic sul testo → modifica (`Invio` salva, `Tab` passa al blocco successivo);
-   - clic sul nome → rinomina lo speaker ovunque;
-   - ⚑ segna i punti da verificare; *Pulizia rapida* toglie gli intercalari (ehm, eh…) e le parole ripetute;
-   - cerca / sostituisci in tutto il transcript; ogni modifica massiva si può annullare dal messaggio in basso.
-   - `Ctrl+Spazio` play/pausa anche mentre scrivi, `Alt+←` riascolta gli ultimi 3 secondi.
-4. **Punti discussi** (in basso a sinistra): compila Attività completate / In corso / Prossimi passi / Punti di attenzione.
-   - *Riporta dal precedente* copia attività in corso, prossimi passi e punti di attenzione del checkpoint precedente: poi segni con ✓ quelle concluse;
-   - seleziona una frase nel transcript e premi `Alt+1…4` per aggiungerla alla sezione corrispondente;
-   - trascina le voci per spostarle tra le sezioni.
-5. **Email**: il testo si genera automaticamente nello stesso formato delle email di riepilogo. *Copia per Outlook* copia la versione formattata con gli elenchi; *.eml* scarica una bozza apribile con Outlook.
-6. **Storico checkpoint**: timeline di tutti i checkpoint, punti di attenzione ancora aperti e deadline scadute.
-7. **Prossimo checkpoint**: temi previsti per la prossima riunione, calcolati dallo storico (deadline vicine, prossimi passi ricorrenti, attività in corso da troppo tempo).
+1. **Cartella di lavoro** (menu a sinistra): trovi i video e i transcript presenti nella cartella. *Nuovo checkpoint* crea il checkpoint dal file, con la data letta dal nome, e collega anche il file “gemello” (video ↔ transcript). I video vengono collegati, non copiati né spostati. In alternativa puoi trascinare i file direttamente nella finestra.
+2. **Revisione** (colonna destra): il transcript scorre in sincrono con il video, parola per parola.
+   - Clic sull'orario per saltare a quel punto; clic sul testo per modificarlo (`Invio` salva, `Tab` passa al blocco successivo).
+   - Clic sul nome per rinominare lo speaker ovunque; ⚑ segna i blocchi da verificare; *Pulizia rapida* toglie gli intercalari.
+   - Le etichette colorate (Prossimo passo, Attenzione…) indicano i punti rilevati dall'analisi; il filtro *Punti rilevati* mostra solo quelli.
+3. **Analisi** (scheda in basso a sinistra), tutto da confermare a mano:
+   - *Temi del checkpoint precedente*: per ogni attività in corso, prossimo passo o punto di attenzione dell'incontro precedente dice se è stato discusso, dove (orari cliccabili) e se sembra completato, in corso o bloccato. Un clic la aggiunge alla sezione giusta.
+   - *Nuovi punti rilevati*: frasi che sembrano attività completate, prossimi passi, criticità o decisioni, con scadenze (“entro venerdì”, “24/10”) e owner rilevati. Puoi correggere il testo prima di aggiungerlo oppure scartarlo con ✕.
+   - *Argomenti principali*: i temi più citati; clic per cercarli nel transcript.
+   - Il rilevatore **impara dalle tue scelte**: ogni punto aggiunto o scartato lo rende più preciso sul progetto.
+4. **Punti discussi**: le sezioni del template scelto (menu in alto nella scheda).
+   - *Riporta dal precedente* copia le voci ancora aperte; ✓ le segna come completate.
+   - `Alt+1…9` aggiunge alla sezione il testo selezionato nel transcript.
+   - “↺ N collegate” mostra la storia di quella voce nei checkpoint passati.
+5. **Email**: il testo si compone dal template. *Copia per Outlook* copia la versione formattata; *.eml* scarica una bozza.
+6. **Storico**: timeline, punti di attenzione aperti con le scadenze e *Filo delle attività* (come una voce è passata da prossimo passo a in corso a completata).
+7. **Prossimo checkpoint**: i temi previsti per il prossimo incontro, calcolati dallo storico.
 
-## Dove sono i dati
+## Template email
+
+Nella sezione *Template email* trovi i modelli predefiniti:
+
+- Checkpoint settimanale (formato ATAC)
+- Stato avanzamento lavori (SAL)
+- Verbale di riunione formale
+- Riunione tecnica / troubleshooting
+- Kick-off di progetto
+- Riepilogo breve
+
+*Duplica* crea una copia modificabile: sezioni, titoli, tipo (elenco, numerato, azioni con owner e deadline, paragrafo), ruolo, saluto, chiusura e firma. Il **ruolo** di ogni sezione (completato, in corso, prossimo passo, attenzione, decisione, informazione) collega tra loro template diversi: riporto dal checkpoint precedente, analisi, storico e previsione funzionano con qualsiasi template.
+
+## AI locale (Ollama), facoltativa
+
+Dalla sezione *AI locale*:
+
+1. **Installa Ollama**: su Windows l'app scarica l'installer e lo apre.
+2. **Scarica un modello**: consigliato `qwen2.5:3b`, circa 2 GB; dopo il download funziona anche offline.
+3. **Addestra**: crea un modello personalizzato (`verbale-atac`) con il tuo stile, il glossario e gli esempi dai tuoi verbali. Ogni frase del transcript che trasformi in una voce approvata diventa un esempio. Riaddestralo ogni tanto.
+4. Compaiono i pulsanti ✨ per riformulare un punto in stile verbale e per correggere un blocco del transcript.
+
+Tutto resta sul computer.
+
+## Sviluppo
 
 ```
-data/
-  settings.json                       firma, (eventuale) API key
-  projects/atac/project.json          destinatari, oggetto, glossario, email di esempio
-  projects/atac/checkpoints/2026-09-28-xxxx/
-      checkpoint.json                 transcript revisionato, punti, email, note
-      video.mp4                       registrazione
+npm install
+npm start               # avvia dal codice sorgente (cartella di lavoro = questa cartella)
+npm run build:exe       # crea dist/VerbaleStudio.exe (Node SEA, nessuna installazione richiesta)
 ```
-
-Per fare un backup basta copiare la cartella `data/`. La cartella è esclusa da git.

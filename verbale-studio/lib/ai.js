@@ -89,45 +89,53 @@ const noteItem = {
   required: ['text', 'note'],
   additionalProperties: false,
 };
-const SUMMARY_SCHEMA = {
+const actionItem = {
   type: 'object',
-  properties: {
-    completed: { type: 'array', items: noteItem },
-    inProgress: { type: 'array', items: noteItem },
-    nextSteps: { type: 'array', items: noteItem },
-    nextStepsNote: { type: 'string' },
-    attention: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: { text: { type: 'string' }, owner: { type: 'string' }, deadline: { type: 'string' } },
-        required: ['text', 'owner', 'deadline'],
-        additionalProperties: false,
-      },
-    },
-    closingNotes: strArr,
-  },
-  required: ['completed', 'inProgress', 'nextSteps', 'nextStepsNote', 'attention', 'closingNotes'],
+  properties: { text: { type: 'string' }, owner: { type: 'string' }, deadline: { type: 'string' } },
+  required: ['text', 'owner', 'deadline'],
   additionalProperties: false,
 };
 
-async function generateSummary({ settings, project, checkpoint, previous }) {
+// Lo schema di output segue le sezioni del template scelto per il checkpoint
+function summarySchema(template) {
+  const properties = {};
+  for (const sec of template.sections) {
+    properties[sec.key] =
+      sec.kind === 'paragraph' ? { type: 'string' } : { type: 'array', items: sec.kind === 'actions' ? actionItem : noteItem };
+  }
+  return { type: 'object', properties, required: Object.keys(properties), additionalProperties: false };
+}
+
+const ROLE_HINT = {
+  done: 'attività concluse',
+  doing: 'attività in corso',
+  next: 'prossimi passi / azioni da fare',
+  risk: 'criticità, rischi, punti di attenzione, blocchi',
+  decision: 'decisioni prese o accordi',
+  info: 'informazioni e contesto',
+};
+
+async function generateSummary({ settings, project, checkpoint, previous, template }) {
+  if (!template?.sections?.length) throw Object.assign(new Error('Template mancante'), { status: 400 });
   const cues = checkpoint.transcript?.cues || [];
   if (!cues.length && !checkpoint.notes) throw Object.assign(new Error('Transcript vuoto.'), { status: 400 });
   const prev = previous
     .map((c) => `### Checkpoint ${c.date}\n${JSON.stringify(c.summary)}`)
     .join('\n\n');
-  const system = `Sei l'assistente di una consulente che redige il riepilogo dei checkpoint di progetto con il cliente ${project.name}.
-Estrai dal transcript revisionato i punti per l'email di riepilogo, con lo stesso stile dell'email di esempio: italiano professionale, frasi nominali sintetiche, termini tecnici corretti.
+  const sections = template.sections
+    .map((s) => `- "${s.key}" (${s.title}, ${s.kind === 'paragraph' ? 'paragrafo di testo' : s.kind === 'actions' ? 'elenco con owner e deadline' : 'elenco'}): ${ROLE_HINT[s.role] || ''}${s.hint ? ' — ' + s.hint : ''}`)
+    .join('\n');
+  const system = `Sei l'assistente di una consulente che redige il riepilogo delle riunioni di progetto con il cliente ${project.name}.
+Estrai dal transcript revisionato i punti per l'email di riepilogo secondo il template "${template.name}", con lo stile dell'email di esempio: italiano professionale, frasi nominali sintetiche, termini tecnici corretti.
+Sezioni del template:
+${sections}
 Regole:
 - Riporta solo ciò che è stato effettivamente detto nella riunione; non inventare attività, owner o date.
-- Usa i checkpoint precedenti per dare continuità (es. attività prima "in corso" ora completate) e per riconoscere i nomi.
-- "note" contiene un eventuale aggiornamento/esito dell'attività (es. "mandato in review dal GdL ai referenti"), altrimenti stringa vuota.
-- "nextStepsNote" è un paragrafo di dettaglio su blocchi o criticità dei prossimi passi, altrimenti stringa vuota.
-- Deadline nel formato gg/mm/aaaa, owner come "ATAC", "GdL" o nome; stringa vuota se non detti.
-- "closingNotes": accordi generali (date dei prossimi incontri, pause, ecc.).`;
-  const user = `## Email di esempio (stile e struttura)\n${project.exampleEmail}\n\n## Checkpoint precedenti\n${prev || '(nessuno)'}\n\n## Glossario\n${project.glossary || '-'}\n\n## Note della consulente\n${checkpoint.notes || '-'}\n\n## Transcript del checkpoint del ${checkpoint.date}\n${transcriptText(cues)}`;
-  return callJson(settings, { system, user, schema: SUMMARY_SCHEMA, effort: 'high' });
+- Usa i riepiloghi precedenti per dare continuità (es. attività prima "in corso" ora concluse) e per riconoscere i nomi.
+- Negli elenchi, "note" contiene un eventuale aggiornamento/esito (es. "mandato in review dal GdL ai referenti"), altrimenti stringa vuota.
+- Deadline nel formato gg/mm/aaaa, owner come "ATAC", "GdL" o nome; stringa vuota se non detti. Sezioni senza contenuto: elenco vuoto o stringa vuota.`;
+  const user = `## Email di esempio (stile)\n${project.exampleEmail}\n\n## Riepiloghi precedenti\n${prev || '(nessuno)'}\n\n## Glossario\n${project.glossary || '-'}\n\n## Note della consulente\n${checkpoint.notes || '-'}\n\n## Transcript della riunione del ${checkpoint.date}\n${transcriptText(cues)}`;
+  return callJson(settings, { system, user, schema: summarySchema(template), effort: 'high' });
 }
 
 const PROOF_SCHEMA = {

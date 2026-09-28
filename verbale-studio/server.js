@@ -12,11 +12,25 @@ const zlib = require('zlib');
 const crypto = require('crypto');
 const { exec } = require('child_process');
 const ai = require('./lib/ai');
+const ollama = require('./lib/ollama');
+
+// Quando gira come eseguibile (Node SEA) l'interfaccia è incorporata nel file
+// e la cartella di lavoro è quella in cui si trova l'eseguibile.
+let sea = null;
+try {
+  sea = require('node:sea');
+  if (!sea.isSea()) sea = null;
+} catch {
+  sea = null;
+}
 
 const PORT = Number(process.env.PORT) || 4310;
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const DATA_DIR = process.env.VERBALE_DATA_DIR || path.join(ROOT, 'data');
+const argDir = process.argv.slice(2).find((a) => !a.startsWith('--'));
+// Cartella di lavoro: argomento da riga di comando > variabile d'ambiente > cartella dell'eseguibile/app
+const WORK_DIR = path.resolve(argDir || process.env.VERBALE_WORK_DIR || (sea ? path.dirname(process.execPath) : ROOT));
+const DATA_DIR = process.env.VERBALE_DATA_DIR || path.join(WORK_DIR, 'data');
 const PROJECTS_DIR = path.join(DATA_DIR, 'projects');
 const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 
@@ -107,6 +121,14 @@ const projectFile = (pid) => path.join(projectDir(pid), 'project.json');
 const checkpointDir = (pid, cid) => path.join(projectDir(pid), 'checkpoints', safeId(cid));
 const checkpointFile = (pid, cid) => path.join(checkpointDir(pid, cid), 'checkpoint.json');
 const forecastFile = (pid) => path.join(projectDir(pid), 'forecast.json');
+const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
+
+// Percorso relativo alla cartella di lavoro → assoluto, senza uscire dalla cartella
+function workPath(rel) {
+  const abs = path.resolve(WORK_DIR, String(rel || ''));
+  if (abs !== WORK_DIR && !abs.startsWith(WORK_DIR + path.sep)) throw Object.assign(new Error('Percorso non valido'), { status: 400 });
+  return abs;
+}
 
 async function getSettings() {
   return readJson(SETTINGS_FILE, { apiKey: '', model: ai.DEFAULT_MODEL, author: 'Lucrezia' });
@@ -117,6 +139,7 @@ function publicSettings(s) {
   return {
     model: s.model || ai.DEFAULT_MODEL,
     author: s.author || '',
+    ollamaModel: s.ollamaModel || '',
     hasApiKey: Boolean(key),
     apiKeySource: s.apiKey ? 'impostazioni' : process.env.ANTHROPIC_API_KEY ? 'variabile ambiente' : null,
     apiKeyHint: key ? `…${key.slice(-4)}` : '',
@@ -133,6 +156,7 @@ async function ensureSeed() {
       description: 'Data Platform — checkpoint settimanali',
       recipients: '',
       subjectTemplate: 'ATAC | Checkpoint {data} — punti discussi',
+      templateId: 'checkpoint-settimanale',
       glossary: 'ATAC, Databricks, Azure, Terraform, Virtual Network, Data Platform, bronze, silver, gold, ETL, MVP, Data Quality, GdL, Dado, BITP',
       exampleEmail: DEFAULT_EXAMPLE_EMAIL,
       createdAt: new Date().toISOString(),
@@ -166,12 +190,7 @@ function checkpointSummary(c) {
     reviewedCount: cues.filter((q) => q.reviewed).length,
     flaggedCount: cues.filter((q) => q.flagged).length,
     duration: cues.length ? cues[cues.length - 1].end : 0,
-    counts: {
-      completed: (s.completed || []).length,
-      inProgress: (s.inProgress || []).length,
-      nextSteps: (s.nextSteps || []).length,
-      attention: (s.attention || []).length,
-    },
+    itemCount: Object.values(s).reduce((n, v) => n + (Array.isArray(v) ? v.length : 0), 0),
   };
 }
 
@@ -330,7 +349,7 @@ const route = (method, pattern, handler) => {
 
 route('GET', '/api/state', async (req, res) => {
   const settings = await getSettings();
-  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings) });
+  send(res, 200, { projects: await listProjects(), settings: publicSettings(settings), workDir: WORK_DIR, dataDir: DATA_DIR, packaged: Boolean(sea) });
 });
 
 route('PUT', '/api/settings', async (req, res) => {
@@ -340,6 +359,7 @@ route('PUT', '/api/settings', async (req, res) => {
   if (typeof body.apiKey === 'string') next.apiKey = body.apiKey.trim();
   if (typeof body.model === 'string' && body.model.trim()) next.model = body.model.trim();
   if (typeof body.author === 'string') next.author = body.author;
+  if (typeof body.ollamaModel === 'string') next.ollamaModel = body.ollamaModel.trim();
   await writeJson(SETTINGS_FILE, next);
   send(res, 200, publicSettings(next));
 });
@@ -357,6 +377,7 @@ route('POST', '/api/projects', async (req, res) => {
     description: body.description || '',
     recipients: '',
     subjectTemplate: `${name} | Checkpoint {data} — punti discussi`,
+    templateId: String(body.templateId || 'checkpoint-settimanale'),
     glossary: '',
     exampleEmail: DEFAULT_EXAMPLE_EMAIL,
     createdAt: new Date().toISOString(),
@@ -369,7 +390,7 @@ route('PUT', '/api/projects/:pid', async (req, res, { pid }) => {
   const current = await readJson(projectFile(pid), null);
   if (!current) return send(res, 404, { error: 'Progetto non trovato' });
   const body = await readJsonBody(req);
-  const allowed = ['name', 'description', 'recipients', 'subjectTemplate', 'glossary', 'exampleEmail'];
+  const allowed = ['name', 'description', 'recipients', 'subjectTemplate', 'glossary', 'exampleEmail', 'templateId'];
   for (const k of allowed) if (typeof body[k] === 'string') current[k] = body[k];
   current.updatedAt = new Date().toISOString();
   await writeJson(projectFile(pid), current);
@@ -391,7 +412,7 @@ route('GET', '/api/projects/:pid/checkpoints', async (req, res, { pid }) => {
 route('GET', '/api/projects/:pid/history', async (req, res, { pid }) => {
   const list = await loadCheckpoints(pid);
   send(res, 200, {
-    checkpoints: list.map((c) => ({ ...checkpointSummary(c), summary: c.summary || null, notes: c.notes || '' })),
+    checkpoints: list.map((c) => ({ ...checkpointSummary(c), templateId: c.templateId || '', summary: c.summary || null })),
     forecast: await readJson(forecastFile(pid), null),
   });
 });
@@ -407,6 +428,7 @@ route('POST', '/api/projects/:pid/checkpoints', async (req, res, { pid }) => {
     projectId: safeId(pid),
     date,
     title: String(body.title || 'Checkpoint'),
+    templateId: String(body.templateId || ''),
     status: 'bozza',
     createdAt: now,
     updatedAt: now,
@@ -430,7 +452,7 @@ route('PUT', '/api/projects/:pid/checkpoints/:cid', async (req, res, { pid, cid 
   const current = await readJson(checkpointFile(pid, cid), null);
   if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
   const body = await readJsonBody(req);
-  const allowed = ['date', 'title', 'status', 'transcript', 'notes', 'summary', 'email', 'reviewState'];
+  const allowed = ['date', 'title', 'status', 'templateId', 'transcript', 'notes', 'summary', 'email', 'analysis'];
   for (const k of allowed) if (k in body) current[k] = body[k];
   current.updatedAt = new Date().toISOString();
   await writeJson(checkpointFile(pid, cid), current);
@@ -482,8 +504,170 @@ route('DELETE', '/api/projects/:pid/checkpoints/:cid/video', async (req, res, { 
 
 route('GET', '/media/:pid/:cid', async (req, res, { pid, cid }) => {
   const current = await readJson(checkpointFile(pid, cid), null);
+  if (current?.video?.external) return serveFile(req, res, workPath(current.video.external));
   if (!current?.video?.file) return send(res, 404, 'Nessun video');
   serveFile(req, res, path.join(checkpointDir(pid, cid), path.basename(current.video.file)));
+});
+
+// Collega un video già presente nella cartella di lavoro, senza copiarlo né spostarlo
+route('POST', '/api/projects/:pid/checkpoints/:cid/video-link', async (req, res, { pid, cid }) => {
+  const current = await readJson(checkpointFile(pid, cid), null);
+  if (!current) return send(res, 404, { error: 'Checkpoint non trovato' });
+  const { rel } = await readJsonBody(req);
+  const abs = workPath(rel);
+  const stat = await fsp.stat(abs).catch(() => null);
+  if (!stat?.isFile()) return send(res, 404, { error: 'File non trovato nella cartella' });
+  if (current.video?.file) await fsp.rm(path.join(checkpointDir(pid, cid), current.video.file), { force: true });
+  current.video = { external: path.relative(WORK_DIR, abs), name: path.basename(abs), size: stat.size, uploadedAt: new Date().toISOString() };
+  current.updatedAt = new Date().toISOString();
+  await writeJson(checkpointFile(pid, cid), current);
+  send(res, 200, current.video);
+});
+
+// ------------------------- Cartella di lavoro -------------------------------
+
+const VIDEO_EXT = new Set(['.mp4', '.m4v', '.mov', '.webm', '.mkv', '.m4a', '.mp3', '.wav']);
+const TRANSCRIPT_EXT = new Set(['.vtt', '.docx', '.srt', '.txt']);
+const SKIP_DIRS = new Set(['node_modules', '.git', 'public', 'lib', 'build', 'packaging', 'dist', 'release']);
+
+async function scanFolder(dir, depth, out) {
+  if (out.length > 2000) return;
+  const entries = await fsp.readdir(dir, { withFileTypes: true }).catch(() => []);
+  for (const e of entries) {
+    if (e.name.startsWith('.') || e.name.startsWith('~$')) continue;
+    const abs = path.join(dir, e.name);
+    if (e.isDirectory()) {
+      if (depth < 4 && !SKIP_DIRS.has(e.name) && path.resolve(abs) !== path.resolve(DATA_DIR)) await scanFolder(abs, depth + 1, out);
+      continue;
+    }
+    const ext = path.extname(e.name).toLowerCase();
+    const type = VIDEO_EXT.has(ext) ? 'video' : TRANSCRIPT_EXT.has(ext) ? 'transcript' : null;
+    if (!type || /^(readme|license|changelog)/i.test(e.name)) continue;
+    const stat = await fsp.stat(abs).catch(() => null);
+    if (!stat) continue;
+    out.push({ rel: path.relative(WORK_DIR, abs), name: e.name, dir: path.relative(WORK_DIR, dir), type, size: stat.size, mtime: stat.mtime.toISOString() });
+  }
+}
+
+route('GET', '/api/folder', async (req, res) => {
+  const files = [];
+  await scanFolder(WORK_DIR, 0, files);
+  // Quali file sono già collegati a un checkpoint
+  const used = new Map();
+  for (const p of await listProjects()) {
+    for (const c of await loadCheckpoints(p.id)) {
+      const mark = (rel) => rel && used.set(path.normalize(rel), { projectId: p.id, projectName: p.name, checkpointId: c.id, date: c.date, title: c.title });
+      mark(c.video?.external);
+      mark(c.transcript?.sourcePath);
+    }
+  }
+  for (const f of files) f.usedBy = used.get(path.normalize(f.rel)) || null;
+  files.sort((a, b) => b.mtime.localeCompare(a.mtime));
+  send(res, 200, { workDir: WORK_DIR, dataDir: DATA_DIR, files });
+});
+
+route('POST', '/api/folder/read', async (req, res) => {
+  const { rel } = await readJsonBody(req);
+  const abs = workPath(rel);
+  const buf = await fsp.readFile(abs).catch(() => null);
+  if (!buf) return send(res, 404, { error: 'File non trovato' });
+  const text = path.extname(abs).toLowerCase() === '.docx' ? docxToText(buf) : buf.toString('utf8');
+  send(res, 200, { text, name: path.basename(abs), rel: path.relative(WORK_DIR, abs) });
+});
+
+route('POST', '/api/folder/open', async (req, res) => {
+  // Apre la cartella di lavoro (o dei dati) in Esplora risorse / Finder
+  const { which } = await readJsonBody(req);
+  const target = which === 'data' ? DATA_DIR : WORK_DIR;
+  const cmd = process.platform === 'win32' ? `explorer "${target}"` : process.platform === 'darwin' ? `open "${target}"` : `xdg-open "${target}"`;
+  exec(cmd, () => {});
+  send(res, 200, { ok: true });
+});
+
+// --------------------- Apprendimento locale (per progetto) -----------------
+
+const learningFile = (pid) => path.join(projectDir(pid), 'learning.json');
+route('GET', '/api/projects/:pid/learning', async (req, res, { pid }) => {
+  send(res, 200, await readJson(learningFile(pid), null));
+});
+route('PUT', '/api/projects/:pid/learning', async (req, res, { pid }) => {
+  if (!fs.existsSync(projectFile(pid))) return send(res, 404, { error: 'Progetto non trovato' });
+  await writeJson(learningFile(pid), await readJsonBody(req));
+  send(res, 200, { ok: true });
+});
+
+// ------------------------------ AI locale (Ollama) --------------------------
+
+// Esempi di addestramento: frase originale del transcript → voce approvata nel riepilogo
+async function trainingExamples(pid) {
+  const out = [];
+  for (const c of await loadCheckpoints(pid)) {
+    for (const v of Object.values(c.summary || {})) {
+      if (!Array.isArray(v)) continue;
+      for (const it of v) if (it?.ref?.source && it.text && it.ref.source.trim() !== it.text.trim()) out.push({ source: it.ref.source, text: it.text });
+    }
+  }
+  return out;
+}
+
+route('GET', '/api/ollama/status', async (req, res) => {
+  const url = new URL(req.url, 'http://x');
+  const pid = url.searchParams.get('projectId');
+  const st = await ollama.status();
+  send(res, 200, {
+    ...st,
+    recommended: ollama.RECOMMENDED,
+    jobs: ollama.jobs,
+    platform: process.platform,
+    trainedModel: pid ? ollama.trainedName(pid) : null,
+    trainingExamples: pid ? (await trainingExamples(pid)).length : 0,
+  });
+});
+route('POST', '/api/ollama/install', async (req, res) => send(res, 200, ollama.install()));
+route('POST', '/api/ollama/start', async (req, res) => {
+  ollama.startApp();
+  send(res, 200, { ok: true });
+});
+route('POST', '/api/ollama/pull', async (req, res) => {
+  const { model } = await readJsonBody(req);
+  if (!/^[\w.:/-]{2,80}$/.test(model || '')) return send(res, 400, { error: 'Nome modello non valido' });
+  send(res, 200, ollama.pull(model));
+});
+route('POST', '/api/ollama/delete', async (req, res) => {
+  const { model } = await readJsonBody(req);
+  await ollama.removeModel(model);
+  send(res, 200, { ok: true });
+});
+route('POST', '/api/ollama/train', async (req, res) => {
+  const { projectId, base } = await readJsonBody(req);
+  const project = await readJson(projectFile(projectId), null);
+  if (!project) return send(res, 404, { error: 'Progetto non trovato' });
+  const settings = await getSettings();
+  const result = await ollama.train({ project, author: settings.author, base: base || settings.ollamaModel || 'qwen2.5:3b', examples: await trainingExamples(projectId) });
+  send(res, 200, result);
+});
+route('POST', '/api/ollama/task', async (req, res) => {
+  const body = await readJsonBody(req);
+  const project = await readJson(projectFile(body.projectId), null);
+  if (!project) return send(res, 404, { error: 'Progetto non trovato' });
+  const settings = await getSettings();
+  const model = body.model || settings.ollamaModel;
+  if (!model) return send(res, 400, { error: 'Scegli un modello nella finestra “AI locale”.' });
+  const text = await ollama.task({ model, project, author: settings.author, task: body.task, text: String(body.text || '').slice(0, 4000) });
+  send(res, 200, { text });
+});
+
+// ------------------------------ Template -----------------------------------
+
+route('GET', '/api/templates', async (req, res) => {
+  send(res, 200, await readJson(TEMPLATES_FILE, []));
+});
+
+route('PUT', '/api/templates', async (req, res) => {
+  const body = await readJsonBody(req);
+  if (!Array.isArray(body)) return send(res, 400, { error: 'Formato non valido' });
+  await writeJson(TEMPLATES_FILE, body);
+  send(res, 200, { ok: true });
 });
 
 route('POST', '/api/docx-text', async (req, res) => {
@@ -511,7 +695,7 @@ route('POST', '/api/ai/summary', async (req, res) => {
   const body = await readJsonBody(req);
   const { project, all, settings, current } = await aiContext(body.projectId, body.checkpointId);
   const previous = all.filter((c) => c.id !== current.id && (c.date || '') <= (current.date || '') && c.summary).slice(0, 4);
-  const summary = await ai.generateSummary({ settings, project, checkpoint: current, previous });
+  const summary = await ai.generateSummary({ settings, project, checkpoint: current, previous, template: body.template });
   send(res, 200, { summary });
 });
 
@@ -558,13 +742,48 @@ async function handle(req, res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, 'Metodo non consentito');
 
   const rel = pathname === '/' ? '/index.html' : pathname;
+  if (sea) {
+    let asset;
+    try {
+      asset = sea.getAsset('public' + rel.replace(/\\/g, '/'));
+    } catch {
+      return send(res, 404, 'Non trovato');
+    }
+    res.writeHead(200, { 'Content-Type': MIME[path.extname(rel).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    return res.end(Buffer.from(asset));
+  }
   const file = path.normalize(path.join(PUBLIC_DIR, rel));
   if (!file.startsWith(PUBLIC_DIR)) return send(res, 403, 'Vietato');
   return serveFile(req, res, file);
 }
 
+function openBrowser(url) {
+  const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open ${url}` : `xdg-open ${url}`;
+  exec(cmd, () => {});
+}
+
+// Se sulla porta c'è già Verbale Studio per la stessa cartella, basta riaprire il browser
+function existingInstance(port) {
+  return new Promise((resolve) => {
+    const req = http.get({ host: '127.0.0.1', port, path: '/api/state', timeout: 1500 }, (res) => {
+      let body = '';
+      res.on('data', (c) => (body += c));
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body).workDir === WORK_DIR);
+        } catch {
+          resolve(false);
+        }
+      });
+    });
+    req.on('error', () => resolve(false));
+    req.on('timeout', () => (req.destroy(), resolve(false)));
+  });
+}
+
 async function main() {
   await ensureSeed();
+  const shouldOpen = process.argv.includes('--open') || (sea && !process.argv.includes('--no-open'));
   const server = http.createServer((req, res) => {
     handle(req, res).catch((err) => {
       const status = err.status || 500;
@@ -574,16 +793,32 @@ async function main() {
     });
   });
   server.requestTimeout = 0; // upload video e chiamate AI possono durare a lungo
-  server.listen(PORT, '127.0.0.1', () => {
-    const url = `http://localhost:${PORT}`;
-    console.log(`\n  Verbale Studio attivo su ${url}\n  Dati salvati in ${DATA_DIR}\n`);
-    if (process.argv.includes('--open')) {
-      const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open ${url}` : `xdg-open ${url}`;
-      exec(cmd, () => {});
+
+  for (let port = PORT; port < PORT + 10; port++) {
+    const ok = await new Promise((resolve) => {
+      server.once('error', () => resolve(false));
+      server.listen(port, '127.0.0.1', () => resolve(true));
+    });
+    if (ok) {
+      const url = `http://localhost:${port}`;
+      console.log(`\n  Verbale Studio attivo su ${url}`);
+      console.log(`  Cartella di lavoro: ${WORK_DIR}`);
+      console.log(`  Archivio:           ${DATA_DIR}`);
+      console.log(`\n  Per chiudere l'app chiudi questa finestra.\n`);
+      if (shouldOpen) openBrowser(url);
+      return;
     }
-  });
+    if (await existingInstance(port)) {
+      console.log(`Verbale Studio è già aperto su http://localhost:${port}`);
+      if (shouldOpen) openBrowser(`http://localhost:${port}`);
+      setTimeout(() => process.exit(0), 500);
+      return;
+    }
+  }
+  console.error('Nessuna porta libera tra ' + PORT + ' e ' + (PORT + 9));
+  process.exit(1);
 }
 
-if (require.main === module) main();
+if (sea || require.main === module) main();
 
 module.exports = { docxToText, unzipEntry };
