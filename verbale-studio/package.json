@@ -1,0 +1,24 @@
+{
+  "name": "verbale-studio",
+  "version": "1.0.0",
+  "description": "Revisione transcript Teams sincronizzata al video, riepilogo checkpoint e storico — uso locale",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js --open",
+    "dev": "node server.js",
+    "build:exe": "node packaging/build-exe.js win",
+    "build:all": "node packaging/build-exe.js win linux mac",
+    "build:zip": "node packaging/build-package.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "postject": "^1.0.0-alpha.6"
+  }
+}
